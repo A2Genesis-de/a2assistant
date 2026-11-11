@@ -22,7 +22,7 @@ def _add_catch_up(parser) -> None:
     parser.add_argument(
         "--catch-up", dest="catch_up", type=_catch_up_flag, metavar="{on,off}",
         help="Runs missed while the machine was off: 'on' runs once on return, 'off' skips "
-             "them (each is booked as a 'missed' row in `hermes cron runs`). Default: "
+             "them (each is booked as a 'missed' row in `a2assistant cron runs`). Default: "
              "cron.catch_up_missed for recurring jobs; one-shots skip.")
 
 
@@ -49,7 +49,7 @@ def build_cron_parser(subparsers, *, cmd_cron: Callable) -> None:
     cron_create.add_argument("--failure-deliver", dest="failure_deliver",
         help="Override target for FAILURE notices only (same grammar as "
             "--deliver). 'local' suppresses failure notices entirely; run "
-            "state stays visible in `hermes cron list`. Omit = failures "
+            "state stays visible in `a2assistant cron list`. Omit = failures "
             "follow --deliver.")
     cron_create.add_argument("--repeat", type=int, help="Optional repeat count")
     _add_catch_up(cron_create)
@@ -83,10 +83,10 @@ def build_cron_parser(subparsers, *, cmd_cron: Callable) -> None:
     cron_create.add_argument("--model",
         help="Pin this job to a specific inference model (user-owned; the "
             "agent's cronjob tool cannot set this). Omit to follow "
-            "cron.model, then the main agent model (`hermes model`), at fire time.")
+            "cron.model, then the main agent model (`a2assistant model`), at fire time.")
     cron_create.add_argument("--pin", dest="pinned", action="store_true", default=None,
         help="Lock the CURRENT main agent model (and its provider) onto this job so later "
-            "`hermes model` changes never touch it. Ignored when --model is given.")
+            "`a2assistant model` changes never touch it. Ignored when --model is given.")
     cron_create.add_argument("--provider", dest="model_provider",
         help="Inference provider paired with --model (e.g. 'openrouter', 'nous').")
     cron_create.add_argument("--reasoning-effort", dest="reasoning_effort",
@@ -96,8 +96,8 @@ def build_cron_parser(subparsers, *, cmd_cron: Callable) -> None:
             "clamped by the provider at request time. Omit to follow config.")
     cron_create.add_argument("--interpreter",
         help="Absolute or ~ path to a Python in your own venv (e.g. ~/venvs/report/bin/python) "
-            "for a .py --script / --monitor-script, so it can import packages Hermes does not "
-            "ship. .sh/.bash still run under bash. Omit to use Hermes' Python.")
+            "for a .py --script / --monitor-script, so it can import packages A2Assistant does not "
+            "ship. .sh/.bash still run under bash. Omit to use A2Assistant's Python.")
     cron_create.add_argument("--timezone",
         help="IANA zone for this job's schedule (e.g. Asia/Hong_Kong), so the cron "
             "expression is read as THAT zone's wall clock whatever the profile's timezone "
@@ -152,7 +152,7 @@ def build_cron_parser(subparsers, *, cmd_cron: Callable) -> None:
     cron_edit.add_argument("--no-continuity", dest="continuity", action="store_const", const=False,
         help=("Turn off run-to-run continuity (other context_from job refs are preserved)."))
     cron_edit.add_argument("--monitor-script", dest="monitor_script",
-        help="Set/replace the monitor source script (see `hermes cron create "
+        help="Set/replace the monitor source script (see `a2assistant cron create "
             "--monitor-script`). Pass empty string to clear.")
     cron_edit.add_argument("--monitor-url", dest="monitor_url",
         help=("Set/replace the monitor source URL. Pass empty string to clear."))
@@ -176,7 +176,7 @@ def build_cron_parser(subparsers, *, cmd_cron: Callable) -> None:
             "the pin and follow config resolution.")
     cron_edit.add_argument("--interpreter",
         help="Absolute or ~ path to a Python for a .py script / monitor script. "
-            "Pass empty string to clear (back to Hermes' Python).")
+            "Pass empty string to clear (back to A2Assistant's Python).")
     cron_edit.add_argument("--timezone",
         help="IANA zone for this job's schedule. Pass empty string to clear the pin "
             "(back to the profile timezone); next_run_at is recomputed in the new zone.")

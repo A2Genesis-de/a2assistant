@@ -1843,7 +1843,7 @@ class SlackAdapter(BasePlatformAdapter):
             "gateway.", env_name, env_name)
         self._set_fatal_error(
             f"missing_{env_name.lower()}",
-            f"{env_name} not configured. Use `hermes gateway setup` "
+            f"{env_name} not configured. Use `a2assistant gateway setup` "
             "or add it to your active profile's ~/.hermes/.env file, then restart the gateway.",
             retryable=False)
 
@@ -6807,7 +6807,7 @@ _SETUP_STEPS = (
     "   3. Install to Workspace: Settings → Install App",
     "   4. After installing, invite the bot to channels: /invite @YourBot",)
 _SETUP_HOME_CHANNEL_HELP = (
-    "📬 Home Channel: where Hermes delivers cron job results,",
+    "📬 Home Channel: where A2Assistant delivers cron job results,",
     "   cross-platform messages, and notifications.",
     "   To get a channel ID: open the channel in Slack, then right-click",
     "   the channel name → Copy link — the ID starts with C (e.g. C01ABC2DE3F).",
@@ -6821,7 +6821,7 @@ def _write_slack_manifest_and_instruct() -> None:
         from hermes_cli.slack_cli import _build_full_manifest
         from hermes_constants import get_hermes_home
         manifest = _build_full_manifest(
-            bot_name="Hermes", bot_description="Your Hermes agent on Slack")
+            bot_name="A2Assistant", bot_description="Your A2Assistant agent on Slack")
         target = _Path(get_hermes_home()) / "slack-manifest.json"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
@@ -6832,8 +6832,8 @@ def _write_slack_manifest_and_instruct() -> None:
             "→ App Manifest → Edit, then Save.  Slack will prompt to "
             "reinstall if scopes or slash commands changed.")
         print_info(
-            "   Re-run `hermes slack manifest --write` anytime to refresh after "
-            "Hermes adds new commands.")
+            "   Re-run `a2assistant slack manifest --write` anytime to refresh after "
+            "A2Assistant adds new commands.")
     except Exception as e:
         print_warning(f"Could not write Slack manifest: {e}")
 
@@ -6851,7 +6851,7 @@ def interactive_setup() -> None:
         # Still offer a manifest refresh so new commands get registered.
         if prompt_yes_no(
             "Regenerate the Slack app manifest with the latest command "
-            "list? (recommended after `hermes update`)", True):
+            "list? (recommended after `a2assistant update`)", True):
             _write_slack_manifest_and_instruct()
         return
     for line in _SETUP_STEPS:
@@ -6933,7 +6933,7 @@ def register(ctx) -> None:
         ensure_deps_fn=check_slack_requirements,
         is_connected=_is_connected,
         required_env=["SLACK_BOT_TOKEN", "SLACK_APP_TOKEN"],
-        install_hint="Run `hermes setup` to install Slack support.",
+        install_hint="Run `a2assistant setup` to install Slack support.",
         setup_fn=interactive_setup,
         # YAML→env config bridge — owns the translation of config.yaml slack: keys (require_mention,
         # strict_mention, ignore_other_user_mentions, thread_require_mention, allow_bots,

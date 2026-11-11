@@ -28,7 +28,7 @@ let inFlight: { key: string; promise: Promise<string> } | null = null
 
 /** Extract the client version printed by the exact local installation launcher. */
 export function parseLocalRuntimeVersion(output: string): string {
-  const match = output.match(/^\s*Hermes Agent\s+([^\s(]+)/m)
+  const match = output.match(/^\s*(?:Hermes Agent|A2Assistant)\s+([^\s(]+)/m)
 
   return match?.[1]?.replace(/^v/, '') ?? ''
 }

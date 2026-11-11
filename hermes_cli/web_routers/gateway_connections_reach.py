@@ -118,7 +118,7 @@ async def oauth_callback(code: str = "", state: str = "", error: str = "", error
             store.ConnectionStoreBusy) as exc:
         page = _PAGE.format(title="Sign-in failed", body=html.escape(str(exc)))
         return HTMLResponse(page, status_code=400, headers=_NO_STORE)
-    page = _PAGE.format(title="&#10003; Signed in", body="You can close this tab and return to Hermes.")
+    page = _PAGE.format(title="&#10003; Signed in", body="You can close this tab and return to A2Assistant.")
     return HTMLResponse(page, headers=_NO_STORE)
 
 

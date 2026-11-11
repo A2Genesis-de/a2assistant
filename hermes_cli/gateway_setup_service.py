@@ -6,7 +6,7 @@ import sys
 logger = logging.getLogger(__name__)
 
 SERVICE_INSTALL_QUESTION = (
-    "Install the gateway service so Hermes starts automatically at login "
+    "Install the gateway service so A2Assistant starts automatically at login "
     "and keeps scheduled jobs and messaging available?"
 )
 
@@ -52,11 +52,11 @@ def ensure_gateway_service(context: str = "setup", *, interactive: bool = False,
     from hermes_constants import is_container
 
     if is_container():
-        gw.print_info("Run hermes gateway run as the container main process; use a Docker restart policy for persistence.")
+        gw.print_info("Run a2assistant gateway run as the container main process; use a Docker restart policy for persistence.")
         return False
     supports_systemd = gw.supports_systemd_services()
     if not (supports_systemd or gw.is_macos() or gw.is_windows()):
-        gw.print_info("No supported service manager found. Run: hermes gateway run")
+        gw.print_info("No supported service manager found. Run: a2assistant gateway run")
         return False
     try:
         if gw._is_service_running():
@@ -67,7 +67,7 @@ def ensure_gateway_service(context: str = "setup", *, interactive: bool = False,
             if context == "import" or not wants_service_install(
                 interactive=interactive, install=install, config=config
             ):
-                gw.print_info("No service installed. Run: hermes gateway run")
+                gw.print_info("No service installed. Run: a2assistant gateway run")
                 gw.print_info("Without a service, scheduled jobs and messaging stop at logout/reboot; jobs cannot run while the host is off.")
                 return False
             if supports_systemd and gw.has_conflicting_systemd_units():

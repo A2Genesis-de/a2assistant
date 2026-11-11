@@ -110,7 +110,7 @@ def _install_plugin_python_deps(
             if node_reason:
                 console.print(f"[yellow]⚠[/yellow] Node deps: {node_reason}")
         else:
-            console.print("[dim]Skipped Node deps — run `hermes plugins install` again to retry.[/dim]\n")
+            console.print("[dim]Skipped Node deps — run `a2assistant plugins install` again to retry.[/dim]\n")
 
     if not has_python:
         return True, None
@@ -145,12 +145,12 @@ def _consent_python_deps(
     if not (sys.stdin.isatty() and sys.stdout.isatty()):
         console.print(
             "[dim]Non-interactive install — skipping dependency install. "
-            "Run `hermes plugins enable` when ready to prepare them.[/dim]\n"
+            "Run `a2assistant plugins enable` when ready to prepare them.[/dim]\n"
         )
         return False, _ConsentRefusal("dependency install skipped (non-interactive)", "non_interactive")
-    if not _ask_yes_no(("python", plugin_name, deps), "  Prepare these with Hermes through PM now? [y/N]: ", console):
+    if not _ask_yes_no(("python", plugin_name, deps), "  Prepare these with A2Assistant through PM now? [y/N]: ", console):
         console.print(
-            "[dim]Skipped — run `hermes plugins enable` when ready "
+            "[dim]Skipped — run `a2assistant plugins enable` when ready "
             "to prepare them.[/dim]\n"
         )
         return False, _ConsentRefusal("dependency install declined", "deps_declined")
@@ -229,7 +229,7 @@ def _check_manifest_version(manifest: dict, plugin_name: str) -> None:
     reason = manifest_version_error(manifest, plugin_name)
     if reason:
         from hermes_cli.config import recommended_update_command
-        raise _pc().PluginOperationError(f"{reason} Run {recommended_update_command()} to update Hermes.",
+        raise _pc().PluginOperationError(f"{reason} Run {recommended_update_command()} to update A2Assistant.",
                                          failure_class="incompatible")
 
 
@@ -604,7 +604,7 @@ def _announce_source(identifier: str, console, *, brief: bool) -> tuple[Optional
     catalog pin (plus the entry's description unless *brief*) or the custom-source warning."""
     from hermes_cli import plugins_cmd_catalog as catalog
     if not catalog.looks_like_catalog_name(identifier):
-        console.print("[yellow]Warning:[/yellow] custom (unreviewed) source — not from the Hermes catalog.")
+        console.print("[yellow]Warning:[/yellow] custom (unreviewed) source — not from the A2Assistant catalog.")
         return None, identifier
     entry = catalog.resolve_catalog_name(identifier, console)
     console.print(f"[bold]{entry.name}[/bold] [cyan]\\[{entry.tier}][/cyan] [dim]pinned @ {entry.sha[:8]}[/dim]")
@@ -678,7 +678,7 @@ def cmd_install(
     if not _pc()._looks_like_plugin_dir(target):
         console.print(
             f"[yellow]Warning:[/yellow] {installed_name} doesn't contain plugin.yaml, "
-            f"plugin.json, or __init__.py. It may not be a valid Hermes plugin.")
+            f"plugin.json, or __init__.py. It may not be a valid A2Assistant plugin.")
     _prompt_plugin_env_vars(installed_manifest, console)
 
     from pm.workspace import enabled_plugin_dirs
@@ -747,7 +747,7 @@ def cmd_install(
     else:
         console.print(
             f"[dim]Plugin installed but not enabled. "
-            f"Run `hermes plugins enable {installed_name}` to activate.[/dim]")
+            f"Run `a2assistant plugins enable {installed_name}` to activate.[/dim]")
 
     from hermes_cli.plugin_provider_requests import requires_auth_notice
     if notice := requires_auth_notice(installed_manifest):
@@ -770,7 +770,7 @@ def _select_memory_provider(name: str, console, *, select: bool) -> None:
     does), or say how to; ``plugins enable`` cannot activate one (#119909)."""
     if not select:
         console.print(
-            f"[dim]Memory provider installed but not active. Run `hermes memory setup` "
+            f"[dim]Memory provider installed but not active. Run `a2assistant memory setup` "
             f"(or set memory.provider: {name}) to use it.[/dim]")
         return
     from hermes_cli.memory_setup import prepare_memory_provider_dependencies
@@ -783,7 +783,7 @@ def _select_memory_provider(name: str, console, *, select: bool) -> None:
     except Exception as exc:  # resolver conflict, network, PM refusal: report, leave the selection alone
         logger.debug("memory provider %s dependency preparation failed", name, exc_info=True)
         console.print(f"[red]✗[/red] Could not prepare {name}'s dependencies: {exc}")
-        console.print("[dim]memory.provider is unchanged; run `hermes memory setup` after resolving it.[/dim]")
+        console.print("[dim]memory.provider is unchanged; run `a2assistant memory setup` after resolving it.[/dim]")
         return
     # The loader refuses a provider parked in plugins.disabled; lift that through the same admission transaction.
     from hermes_cli.plugins_admission import AdmissionRefused
@@ -802,7 +802,7 @@ def _select_memory_provider(name: str, console, *, select: bool) -> None:
     console.print(
         f"[green]✓[/green] [bold]{name}[/bold] set as memory.provider"
         f"{f' (replacing {previous})' if previous and previous != name else ''}. "
-        f"Run `hermes memory setup {name}` to configure it; new sessions use it.")
+        f"Run `a2assistant memory setup {name}` to configure it; new sessions use it.")
 
 
 def _catalog_install_on_disk(catalog_name: str, ref: Optional[str],
@@ -840,11 +840,11 @@ def _resolve_source(identifier: str, catalog_name: Optional[str]) -> tuple:
     if catalog_name:
         entry = catalog.get_live_catalog_entry(catalog_name)
         if entry is None:
-            return None, identifier, warnings, {"ok": False, "error": f"'{catalog_name}' is not in the Hermes plugin catalog."}
+            return None, identifier, warnings, {"ok": False, "error": f"'{catalog_name}' is not in the A2Assistant plugin catalog."}
         warnings.extend(_known_issue_warnings(entry))
         identifier = entry.install_identifier
     else:
-        warnings.append("Custom (unreviewed) source — not from the Hermes catalog.")
+        warnings.append("Custom (unreviewed) source — not from the A2Assistant catalog.")
     try:
         git_url = _pc()._resolve_git_url(identifier)[0]
         if git_url.startswith(("http://", "file://")):

@@ -48,7 +48,7 @@ def register_cli(parent_parser: argparse.ArgumentParser) -> None:
                 "writing the new config/tokens (non-interactive default on a tty is to ask)."))),
             ("--no-restart", dict(dest="restart", action="store_false", help=(
                 "Do not restart a running daemon after setup; you'll need to run "
-                "`hermes egress restart` yourself for changes to take effect."))),
+                "`a2assistant egress restart` yourself for changes to take effect."))),
         ]),
         ("start", "Start the managed iron-proxy", cmd_start, []),
         ("stop", "Stop the managed iron-proxy", cmd_stop, []),
@@ -170,7 +170,7 @@ def _setup_mint_tokens(console: Console, args: argparse.Namespace):
         if sys.stdin.isatty():
             console.print(
                 "[yellow]⚠[/yellow]  --rotate-tokens will invalidate proxy "
-                "tokens in every running Hermes sandbox.  They will start 401-ing against upstreams until restarted."
+                "tokens in every running A2Assistant sandbox.  They will start 401-ing against upstreams until restarted."
             )
             if _prompt("Type 'rotate' to confirm: ") != "rotate":
                 console.print("[yellow]Cancelled.[/yellow]")
@@ -338,7 +338,7 @@ def cmd_start(args: argparse.Namespace) -> int:
     cfg = load_config()
     proxy_cfg = cfg.get("proxy") or {}
     if not proxy_cfg.get("enabled"):
-        console.print("[yellow]proxy.enabled is false — run `hermes egress setup` first.[/yellow]")
+        console.print("[yellow]proxy.enabled is false — run `a2assistant egress setup` first.[/yellow]")
         return 1
     # ``credential_source: bitwarden`` refreshes upstream secrets from BSM at startup — that is
     # the rotation guarantee distinguishing it from ``env``.
@@ -359,7 +359,7 @@ def cmd_start(args: argparse.Namespace) -> int:
                 console,
                 "proxy.credential_source is 'bitwarden' but secrets.bitwarden is disabled or missing.",
                 "Re-enable it (`secrets.bitwarden.enabled: true`), switch "
-                "back to env credentials with `hermes egress setup "
+                "back to env credentials with `a2assistant egress setup "
                 "--no-bitwarden`, or set `proxy.allow_env_fallback: true` to opt into the host-env fallback.",
             )
     # Pass the allow_env_fallback opt-in through to start_proxy: when set the daemon falls back
@@ -377,14 +377,14 @@ def cmd_start(args: argparse.Namespace) -> int:
                 console,
                 f"credential_source=bitwarden but {bw_access_env} is not set in the environment.",
                 "Either export the access token, or run "
-                "`hermes egress setup --no-bitwarden` to switch back to env-based credentials.",
+                "`a2assistant egress setup --no-bitwarden` to switch back to env-based credentials.",
             )
         if not (bw_cfg or {}).get("project_id"):
             return _refuse(
                 console,
                 "credential_source=bitwarden but secrets.bitwarden.project_id is empty.",
-                "Run `hermes secrets bitwarden setup` to configure the "
-                "project, or switch back via `hermes egress setup --no-bitwarden`.",
+                "Run `a2assistant secrets bitwarden setup` to configure the "
+                "project, or switch back via `a2assistant egress setup --no-bitwarden`.",
             )
     try:
         status = ip.start_proxy(
@@ -437,7 +437,7 @@ def cmd_reload(args: argparse.Namespace) -> int:
     console.print("[green]✓[/green] iron-proxy ruleset reloaded in-place (no restart, connections preserved)")
     console.print(
         "[dim]Note: new upstream secrets (rotated keys, new providers) "
-        "still need `hermes egress restart` — the daemon reads real "
+        "still need `a2assistant egress restart` — the daemon reads real "
         "credentials from its environment at spawn time.[/dim]"
     )
     return 0
@@ -466,9 +466,9 @@ def format_status_text(*, show_tokens: bool = False) -> str:
         for name in uncovered:
             lines.append(f"  - {name}")
     if bool(proxy_cfg.get("enabled")) and not status.configured:
-        lines.extend(["", "Next: run `hermes egress setup` to mint tokens and write proxy.yaml."])
+        lines.extend(["", "Next: run `a2assistant egress setup` to mint tokens and write proxy.yaml."])
     elif bool(proxy_cfg.get("enabled")) and not (status.pid and status.listening):
-        lines.extend(["", "Next: run `hermes egress start` before launching Docker sandboxes."])
+        lines.extend(["", "Next: run `a2assistant egress start` before launching Docker sandboxes."])
     return "\n".join(lines)
 
 
@@ -526,7 +526,7 @@ def cmd_config(args: argparse.Namespace) -> int:
     console = Console()
     status = ip.get_status()
     if status.config_path is None:
-        console.print("[yellow](no config generated — run `hermes egress setup`)[/yellow]")
+        console.print("[yellow](no config generated — run `a2assistant egress setup`)[/yellow]")
         return 1
     console.print(str(status.config_path))
     return 0
@@ -540,7 +540,7 @@ def _bitwarden_env_names(console: Console) -> Optional[list[str]]:
     bw_cfg = (cfg.get("secrets") or {}).get("bitwarden") or {}
     if not bw_cfg.get("enabled"):
         console.print("  [red]✗ --from-bitwarden requested but secrets.bitwarden.enabled is false.[/red]")
-        console.print("  Run `hermes secrets bitwarden setup` first, or omit --from-bitwarden.")
+        console.print("  Run `a2assistant secrets bitwarden setup` first, or omit --from-bitwarden.")
         return None
     try:
         from agent.secret_sources import bitwarden as bw

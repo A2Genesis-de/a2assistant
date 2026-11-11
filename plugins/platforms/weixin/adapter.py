@@ -1320,16 +1320,16 @@ def interactive_setup() -> None:
     print_setup_header("💬 Weixin / WeChat")
     print()
     gw._print_info_lines(
-        "  1. Hermes will open Tencent iLink QR login in this terminal.",
+        "  1. A2Assistant will open Tencent iLink QR login in this terminal.",
         "  2. Use WeChat to scan and confirm the QR code.",
-        "  3. Hermes will store the returned account_id/token in ~/.hermes/.env.",
+        "  3. A2Assistant will store the returned account_id/token in ~/.hermes/.env.",
         "  4. This adapter supports native text, image, video, and document delivery.",
     )
     if not confirm_reconfigure("Weixin", "WEIXIN_ACCOUNT_ID", "WEIXIN_TOKEN"):
         return
     if not check_weixin_requirements():
         gw.print_error("  Missing dependencies: Weixin needs aiohttp and cryptography.")
-        gw.print_info("  Install them, then rerun `hermes gateway setup`.")
+        gw.print_info("  Install them, then rerun `a2assistant gateway setup`.")
         return
     print()
     if not gw.prompt_yes_no("  Start QR login now?", True):
@@ -1371,7 +1371,7 @@ def interactive_setup() -> None:
         save_env_values(WEIXIN_DM_POLICY=policy, WEIXIN_ALLOW_ALL_USERS=allow_all, WEIXIN_ALLOWED_USERS="")
         (gw.print_success if level == "success" else gw.print_warning)(message)
         if access_idx == 0:
-            gw.print_info("  Unknown DM users can request access and you approve them with `hermes pairing approve`.")
+            gw.print_info("  Unknown DM users can request access and you approve them with `a2assistant pairing approve`.")
 
     print()
     gw._print_info_lines(*_WEIXIN_GROUP_NOTE)

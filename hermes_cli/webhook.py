@@ -165,7 +165,7 @@ def webhook_command(args):
     sub = getattr(args, "webhook_action", None)
     if not sub:
         print("Usage: hermes webhook {subscribe|list|remove|test}")
-        print("Run 'hermes webhook --help' for details.")
+        print("Run 'a2assistant webhook --help' for details.")
         return
     if not _is_webhook_enabled():
         print(_setup_hint())

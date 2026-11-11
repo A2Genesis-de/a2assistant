@@ -475,7 +475,7 @@ def copilot_relogin_notice(home: Path, *, process_env: bool = False) -> str:
     if isinstance(providers, dict) and isinstance(providers.get("copilot"), dict) and providers["copilot"]:
         return ""
     return ("This profile's Copilot login came from `gh auth token` or the GitHub/Copilot CLI, which the plugin "
-            "no longer reads: run `hermes auth add copilot` to sign in.")
+            "no longer reads: run `a2assistant auth add copilot` to sign in.")
 
 
 def _no_notice(home: Path, *, process_env: bool = False) -> str:
@@ -580,7 +580,7 @@ LEFT_CORE: tuple[LeftCoreFeature, ...] = (
     LeftCoreFeature(
         plugin="spotify", label="Spotify", in_use=spotify_in_use,
         unchanged="your Spotify login, the spotify toolset and the spotify_* tools are unchanged; "
-                  "`hermes auth spotify` is now `hermes spotify login`",
+                  "`a2assistant auth spotify` is now `a2assistant spotify login`",
         cli="spotify",
     ),
     LeftCoreFeature(
@@ -594,7 +594,7 @@ LEFT_CORE: tuple[LeftCoreFeature, ...] = (
     LeftCoreFeature(
         # MCP clients that launch `hermes mcp serve` are configured outside Hermes, so no home shows the
         # feature in use: nothing installs automatically, and the old spelling prints where it went.
-        plugin="mcp-serve", label="Hermes as an MCP server", in_use=lambda home, **_: False,
+        plugin="mcp-serve", label="A2Assistant as an MCP server", in_use=lambda home, **_: False,
         unchanged="the conversation tools keep their names; MCP clients change their args to [\"mcp-serve\"]",
         command="mcp-serve", old_command="hermes mcp serve",
     ),
@@ -616,15 +616,15 @@ LEFT_CORE: tuple[LeftCoreFeature, ...] = (
         terminal_backend="singularity",
     ),
     LeftCoreFeature(
-        plugin="agent-importers", label="`hermes import-agent`", in_use=agent_imports_in_use,
-        unchanged="`hermes import-agent`, its flags and your import-sync.json sync sources are unchanged",
+        plugin="agent-importers", label="`a2assistant import-agent`", in_use=agent_imports_in_use,
+        unchanged="`a2assistant import-agent`, its flags and your import-sync.json sync sources are unchanged",
         command="import-agent", old_cli=("claw",),
     ),
     LeftCoreFeature(
         # Core kept COPILOT_GITHUB_TOKEN and the two base-URL overrides out of children as provider env
         # (Tier 2: credentialed CLIs still get them); GH_TOKEN/GITHUB_TOKEN stay on core's static lists.
         plugin="github-copilot", label="GitHub Copilot", in_use=copilot_in_use,
-        unchanged="your COPILOT_GITHUB_TOKEN / GH_TOKEN / GITHUB_TOKEN and `hermes auth add copilot` logins, model "
+        unchanged="your COPILOT_GITHUB_TOKEN / GH_TOKEN / GITHUB_TOKEN and `a2assistant auth add copilot` logins, model "
                   "names and copilot-acp settings are unchanged",
         private_env=("COPILOT_GITHUB_TOKEN", "COPILOT_API_BASE_URL", "COPILOT_ACP_BASE_URL"),
         providers=_COPILOT_API + _COPILOT_ACP, hosts=("githubcopilot.com", "models.github.ai"),
@@ -695,7 +695,7 @@ def provider_install_hint(name: str) -> str:
     error = _load_error(feature)
     return (f"{feature.label} moved out of core into the '{feature.plugin}' plugin, which is installed but failed "
             f"to load{f' ({error})' if error else ''}: run `{command.replace(' install ', ' update ')}`, or "
-            f"see `hermes logs` for the cause.")
+            f"see `a2assistant logs` for the cause.")
 
 
 def _load_error(feature: LeftCoreFeature) -> str:
@@ -1102,7 +1102,7 @@ def _pending(home: Path, *, say: Callable[[str], None], process_env: bool = Fals
             _record_migration(home, feature)
         except Exception as exc:
             say(f"  ⚠ {feature.label} moved out of core into the '{feature.plugin}' plugin: its per-platform "
-                f"toolset selection could not be kept ({exc}). Check `hermes tools`"
+                f"toolset selection could not be kept ({exc}). Check `a2assistant tools`"
                 + ("." if present else f" and run `{_install_command(feature.plugin, home)}`."))
             continue
         if present:
@@ -1114,7 +1114,7 @@ def _pending(home: Path, *, say: Callable[[str], None], process_env: bool = Fals
         if catalog_source(feature.plugin) is None:
             _note_failure(home, feature.plugin)
             say(_noticed(f"  ⚠ {feature.label} moved out of core into the '{feature.plugin}' plugin, which this "
-                         f"Hermes cannot find in the plugin catalog yet. Run "
+                         f"A2Assistant cannot find in the plugin catalog yet. Run "
                          f"`{_install_command(feature.plugin, home)}` once it is listed.", home, feature, process_env))
             continue
         out.append(feature)
@@ -1241,7 +1241,7 @@ def migrate_all_homes(*, say: Callable[[str], None] = print) -> list[str]:
                     break
     except KeyboardInterrupt:
         say("  ⚠ Plugin migration cancelled. Profiles already migrated keep their plugin; run "
-            "`hermes plugins install <name>` (with `-p <profile>`) for the rest.")
+            "`a2assistant plugins install <name>` (with `-p <profile>`) for the rest.")
     return installed
 
 
@@ -1307,7 +1307,7 @@ def recover_at_startup(*, say: Optional[Callable[[str], None]] = None, gateway_s
         if not lazy_installs_allowed():
             for feature in features:
                 report(_noticed(f"⚠ {feature.label} moved out of core and its '{feature.plugin}' plugin is not "
-                                f"installed, so it is off. security.allow_lazy_installs is off, so Hermes did not "
+                                f"installed, so it is off. security.allow_lazy_installs is off, so A2Assistant did not "
                                 f"fetch it: run `{_install_command(feature.plugin, home)}`.", home, feature, True))
             return []
         installed = []
@@ -1318,7 +1318,7 @@ def recover_at_startup(*, say: Optional[Callable[[str], None]] = None, gateway_s
             if _install_one(home, feature, install=_install_into(home, consent=True), say=report, process_env=True):
                 installed.append(feature.plugin)
                 if not gateway_start and feature.platform and _gateway_serves(home):
-                    report(f"Restart the gateway (`hermes gateway restart`) so it serves {feature.label}.")
+                    report(f"Restart the gateway (`a2assistant gateway restart`) so it serves {feature.label}.")
         return installed
     except Exception as exc:  # never take agent/gateway start down
         logger.warning("left-core plugin migration failed: %s", exc, exc_info=True)

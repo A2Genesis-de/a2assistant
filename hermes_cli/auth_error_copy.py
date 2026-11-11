@@ -21,12 +21,12 @@ DEVICE_FLOW_ERROR_COPY = {
     "expired_token": (
         "The sign-in code expired before it was approved in the browser. Run `{retry}` to get a new code."),
     "access_denied": (
-        "Sign-in was declined in the browser. Run `{retry}` to try again, or `hermes model` to pick a "
+        "Sign-in was declined in the browser. Run `{retry}` to try again, or `a2assistant model` to pick a "
         "different provider."),
     "invalid_grant": (
         "The sign-in code was not accepted by the server. Run `{retry}` to get a new code."),
     "invalid_client": (
-        "The server did not recognize this copy of Hermes. Run `hermes update`, then `{retry}` again."),
+        "The server did not recognize this copy of A2Assistant. Run `a2assistant update`, then `{retry}` again."),
 }
 
 
@@ -105,12 +105,12 @@ def sign_in_failure_lines(
     rules: Sequence[_Rule] = (
         (is_cancelled, "Sign-in was cancelled. Run `{retry}` when you want to try again."),
         (is_network_error,
-         "Could not sign in: Hermes could not reach {host}. Check your internet connection or proxy, "
+         "Could not sign in: A2Assistant could not reach {host}. Check your internet connection or proxy, "
          "then run `{retry}` again."),
     )
     lead = _classify(
         exc, rules,
-        "Could not sign in. Run `{retry}` to try again, or `hermes model` to pick a different provider.")
+        "Could not sign in. Run `{retry}` to try again, or `a2assistant model` to pick a different provider.")
     lines = [lead.format(host=service_host, retry=retry_command)]
     if not is_cancelled(exc):
         lines.append(_details_line(exc))
@@ -153,7 +153,7 @@ def unknown_provider_hint(provider_name: str) -> str:
         issues = validate_config_structure()
         if not issues:
             return ""
-        lines = ["Config issue detected — run 'hermes doctor' for full diagnostics:"]
+        lines = ["Config issue detected — run 'a2assistant doctor' for full diagnostics:"]
         for ci in issues:
             lines.append(f"  [{'ERROR' if ci.severity == 'error' else 'WARNING'}] {ci.message}")
             if ci.hint and ci.hint.splitlines()[0]:

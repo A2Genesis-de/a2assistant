@@ -88,7 +88,7 @@ def cmd_setup(args: argparse.Namespace) -> int:
     console.print(
         Panel.fit(
             "[bold]1Password secret source setup[/bold]\n\n"
-            "Hermes resolves [cyan]op://vault/item/field[/cyan] references through your\n"
+            "A2Assistant resolves [cyan]op://vault/item/field[/cyan] references through your\n"
             "already-installed, already-authenticated 1Password CLI (`op`).\n\n"
             f"Don't have it yet? Install + sign in: [cyan]{_DOCS_URL}[/cyan]",
             border_style="cyan",
@@ -197,7 +197,7 @@ def cmd_status(args: argparse.Namespace) -> int:
         else:
             console.print(
                 f"\n  [yellow]No active op session and {token_env} is unset — "
-                "Hermes will warn and skip 1Password on next startup.[/yellow]"
+                "A2Assistant will warn and skip 1Password on next startup.[/yellow]"
             )
     if not references:
         console.print(
@@ -282,7 +282,7 @@ def cmd_token(args: argparse.Namespace) -> int:
         save=save_env_value, env_path=get_env_path, clear_caches=op_src.clear_caches,
         disabled_note=None if op_cfg.get("enabled") else (
             "[yellow]Note: the 1Password integration is currently disabled — "
-            "run `hermes secrets onepassword setup` to turn it on.[/yellow]"
+            "run `a2assistant secrets onepassword setup` to turn it on.[/yellow]"
         ),
     )
 
@@ -297,7 +297,7 @@ def cmd_sync(args: argparse.Namespace) -> int:
     if not references:
         console.print(
             "[yellow]No op:// references configured.  Add one with "
-            "`hermes secrets onepassword set ENV_VAR \"op://…\"`.[/yellow]"
+            "`a2assistant secrets onepassword set ENV_VAR \"op://…\"`.[/yellow]"
         )
         return 0
 
@@ -367,7 +367,7 @@ def cmd_disable(args: argparse.Namespace) -> int:
     return disable_secret_source(
         "onepassword",
         "[green]Disabled.[/green]  1Password references will NOT be resolved on the "
-        "next Hermes invocation.\n"
+        "next A2Assistant invocation.\n"
         "  Your reference mappings are left in config.yaml — remove them with "
         "[cyan]hermes secrets onepassword remove ENV_VAR[/cyan] if you no longer "
         "need them.",

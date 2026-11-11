@@ -128,7 +128,7 @@ class SessionPruneResult(Result):
 
 
 canonical_method("session.prune", params=SessionPruneParams, result=SessionPruneResult,
-                 doc="Local operator only: the owner deletes the ended sessions `hermes sessions prune` "
+                 doc="Local operator only: the owner deletes the ended sessions `a2assistant sessions prune` "
                      "selected, skipping busy sessions and retained reset owners.")
 
 

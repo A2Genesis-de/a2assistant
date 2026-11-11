@@ -135,7 +135,7 @@ def downgrade_refusal(git_cmd, root: Path, target_ref: str, home: Path | None = 
              "these session stores now use. Downgrading is unsupported.",
              *(f"  {h / 'state.db'} has gateway runtime history." for _name, h in ledgered),
              "  The older release could not delete or prune those sessions.",
-             "  To go back anyway: run `hermes gateway stop`, check out the older release with git, then put back "
+             "  To go back anyway: run `a2assistant gateway stop`, check out the older release with git, then put back "
              "each store's copy from before the upgrade:"]
     for name, h in ledgered:
         snapshot = _pre_runtime_snapshot(h)

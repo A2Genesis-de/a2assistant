@@ -174,7 +174,7 @@ test.each(['refused', 'closed before ready'] as const)('a public dial %s keeps t
   const client = new HermesGateway()
 
   try {
-    await expect(client.connect(url)).rejects.toThrow(failure === 'refused' ? 'Could not connect to Hermes gateway' : 'before protocol readiness')
+    await expect(client.connect(url)).rejects.toThrow(failure === 'refused' ? 'Could not connect to A2Assistant gateway' : 'before protocol readiness')
     await expect(client.request('config.get')).rejects.toThrow(GATEWAY_NOT_CONNECTED_MESSAGE)
   } finally {
     if (failure === 'refused') { client.close() } else { await shut(client, server) }

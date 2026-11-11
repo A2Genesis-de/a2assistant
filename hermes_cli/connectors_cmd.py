@@ -9,7 +9,7 @@ from typing import Any, Callable, NoReturn
 
 _POLL_SECONDS = 2.0
 _DONE_STATES = frozenset({"connected", "skipped", "failed", "expired", "not_connected"})
-_SIGN_IN = "Run `hermes auth upgrade` to sign in."
+_SIGN_IN = "Run `a2assistant auth upgrade` to sign in."
 
 
 class _CommandError(Exception):
@@ -209,7 +209,7 @@ def _disconnect(args) -> int:
     if not args.yes:
         if not sys.stdin.isatty():
             _fail("Refusing to remove an account without confirmation. Pass --yes to confirm.")
-        answer = input(f"Remove {app} account {name}? This signs Hermes out of it. [y/N] ").strip().lower()
+        answer = input(f"Remove {app} account {name}? This signs A2Assistant out of it. [y/N] ").strip().lower()
         if answer not in ("y", "yes"):
             print("Nothing removed.")
             return 0

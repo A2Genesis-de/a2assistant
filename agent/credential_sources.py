@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 EXTERNAL_LOGINS_NOT_ADOPTED_NOTICE = (
     "External CLI logins (Codex CLI, Claude Code) are not adopted: auth.adopt_external_logins is false. "
-    "Hermes uses only its own logins; run `hermes auth add <provider>` to add one."
+    "A2Assistant uses only its own logins; run `a2assistant auth add <provider>` to add one."
 )
 _notice_logged = False
 
@@ -145,9 +145,9 @@ def _remove_env_source(provider: str, removed) -> RemovalResult:
             f"Note: {env_var} is still set in your shell environment "
             f"(not in ~/.hermes/.env).",
             "  Unset it there (shell profile, systemd EnvironmentFile, "
-            "launchd plist, etc.) or it will keep being visible to Hermes.",
-            f"  The pool entry is now suppressed — Hermes will ignore "
-            f"{env_var} until you run `hermes auth add {provider}`.",
+            "launchd plist, etc.) or it will keep being visible to A2Assistant.",
+            f"  The pool entry is now suppressed — A2Assistant will ignore "
+            f"{env_var} until you run `a2assistant auth add {provider}`.",
         ])
     else:
         result.hints.append(
@@ -166,7 +166,7 @@ def _remove_hermes_pkce(provider: str, removed) -> RemovalResult:
     if oauth_file.exists():
         try:
             oauth_file.unlink()
-            result.cleaned.append("Cleared Hermes Anthropic OAuth credentials")
+            result.cleaned.append("Cleared A2Assistant Anthropic OAuth credentials")
         except OSError as exc:
             result.hints.append(f"Could not delete {oauth_file}: {exc}")
     return result
@@ -194,7 +194,7 @@ def _remove_auth_store_oauth(provider: str, removed) -> RemovalResult:
 def _remove_xai_oauth_device_code(provider: str, removed) -> RemovalResult:
     result = _remove_auth_store_oauth(provider, removed)
     result.hints.append(
-        "Run `hermes model` → xAI Grok OAuth (SuperGrok / Premium+) to re-authenticate if needed."
+        "Run `a2assistant model` → xAI Grok OAuth (SuperGrok / Premium+) to re-authenticate if needed."
     )
     return result
 
@@ -212,7 +212,7 @@ def _remove_codex_device_code(provider: str, removed) -> RemovalResult:
     result.hints.extend([
         "Suppressed openai-codex device_code source — it will not be re-seeded.",
         "Note: Codex CLI credentials still live in ~/.codex/auth.json",
-        "Run `hermes auth add openai-codex` to re-enable if needed.",
+        "Run `a2assistant auth add openai-codex` to re-enable if needed.",
     ])
     return result
 
@@ -240,7 +240,7 @@ _REGISTRY: list[RemovalStep] = [
         remove_fn=_suppress_only(
             "Suppressed claude_code credential — it will not be re-seeded.",
             "Note: Claude Code credentials still live in ~/.claude/.credentials.json",
-            "Run `hermes auth add anthropic` to re-enable if needed.",
+            "Run `a2assistant auth add anthropic` to re-enable if needed.",
         ),
         description="~/.claude/.credentials.json",
     ),
@@ -270,7 +270,7 @@ _REGISTRY: list[RemovalStep] = [
         remove_fn=_suppress_only(
             "Suppressed qwen-cli credential — it will not be re-seeded.",
             "Note: Qwen CLI credentials still live in ~/.qwen/oauth_creds.json",
-            "Run `hermes auth add qwen-oauth` to re-enable if needed.",
+            "Run `a2assistant auth add qwen-oauth` to re-enable if needed.",
         ),
         description="~/.qwen/oauth_creds.json",
     ),

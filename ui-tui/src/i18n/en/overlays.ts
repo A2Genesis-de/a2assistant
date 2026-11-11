@@ -14,8 +14,8 @@ export const overlaysEn = {
       session: 'Allow this session',
       always: 'Always allow',
       deny: 'Deny',
-      tell: 'No, and tell Hermes what to do instead',
-      tellHint: 'type what Hermes should do instead · Enter deny and send · Esc back'
+      tell: 'No, and tell A2Assistant what to do instead',
+      tellHint: 'type what A2Assistant should do instead · Enter deny and send · Esc back'
     },
     rewind: {
       prime: 'esc again to edit previous message',

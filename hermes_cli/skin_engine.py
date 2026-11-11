@@ -94,6 +94,8 @@ _BUILTIN_SKINS: dict[str, dict[str, Any]] = {
             "goodbye": "Bis bald! ▲", "response_label": " ▲ A2Assistant ", "prompt_symbol": "❯",
             "help_header": "(▲) Befehle"},
         "banner_logo": "[bold]▲ A2Assistant[/bold]\n[dim]A2Genesis GmbH · mit A2Intelligence[/dim]",
+        "banner_hero": "[#71717a]          ▄▄[/]\n[#71717a]        ▄████▄[/]\n"
+                       "[#71717a]      ▄████████▄[/]\n[#71717a]    ▄████████████▄[/]",
         "tool_prefix": "┊"},
     "default": {
         "name": "default", "description": "Classic Hermes — gold and kawaii",

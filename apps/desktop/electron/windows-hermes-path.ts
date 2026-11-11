@@ -171,7 +171,7 @@ export async function resolveVenvHermesCommand(
   }
 
   return {
-    label: `existing Hermes Python at ${python}`,
+    label: `existing A2Assistant Python at ${python}`,
     command: python,
     args: ['-m', 'hermes_cli.main', ...backendArgs],
     bootstrap: false,

@@ -148,7 +148,7 @@ def cmd_fallback_add(args) -> None:
     model_before = copy.deepcopy(load_config().get("model"))
     active_provider_before = _snapshot_auth_active_provider()
     print("\n  Adding a fallback provider.  The picker below is the same one used by\n"
-          "  `hermes model` — select the provider + model you want as a fallback.\n")
+          "  `a2assistant model` — select the provider + model you want as a fallback.\n")
 
     try:
         select_provider_and_model(args=args)
@@ -191,7 +191,7 @@ def cmd_fallback_add(args) -> None:
     save_config(final_cfg)
     print(f"\n  Added fallback: {_format_entry(new_entry)}")
     print(f"  Chain is now {_entries(len(chain))} long.\n")
-    print("  Run `hermes fallback list` to view, or `hermes fallback remove` to delete.")
+    print("  Run `a2assistant fallback list` to view, or `a2assistant fallback remove` to delete.")
 
 
 def cmd_fallback_remove(args) -> None:

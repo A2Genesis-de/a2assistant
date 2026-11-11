@@ -21,13 +21,13 @@ _JOURNAL_HINT = 'journalctl --user -u hermes-gateway --since "5 min ago"'
 
 _SYSTEMCTL_FAILED_LINES = (
     "Could not {verb} the gateway service; systemd reported an error.",
-    "See why with `hermes gateway status --deep` or `{journal}`.",
-    "To reinstall the service run `hermes gateway install --force`.",
+    "See why with `a2assistant gateway status --deep` or `{journal}`.",
+    "To reinstall the service run `a2assistant gateway install --force`.",
 )
 
 _NO_SYSTEMCTL_LINES = (
-    "This system has no systemd, so Hermes cannot install a background service here.",
-    "Run the gateway directly with `hermes gateway run` (keep it alive with tmux or screen).",
+    "This system has no systemd, so A2Assistant cannot install a background service here.",
+    "Run the gateway directly with `a2assistant gateway run` (keep it alive with tmux or screen).",
 )
 
 

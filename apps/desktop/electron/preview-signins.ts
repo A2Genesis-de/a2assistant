@@ -87,7 +87,7 @@ export function runSigninExport(
 ): Promise<ExportVerdict> {
   return new Promise(resolve => {
     if (!backend.command) {
-      resolve({ status: 'error', error: 'Hermes runtime is not available' })
+      resolve({ status: 'error', error: 'A2Assistant runtime is not available' })
 
       return
     }
@@ -121,7 +121,7 @@ export function runSigninExport(
     })
     child.on('error', () => {
       clearTimeout(timer)
-      resolve({ status: 'error', error: 'could not run the Hermes sign-in export' })
+      resolve({ status: 'error', error: 'could not run the A2Assistant sign-in export' })
     })
     child.on('close', code => {
       clearTimeout(timer)

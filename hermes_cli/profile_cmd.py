@@ -47,7 +47,7 @@ def _render_distribution_plan(plan) -> None:
     if mf.author:
         print(f"  Author:   {mf.author}")
     if mf.hermes_requires:
-        print(f"  Requires: Hermes {mf.hermes_requires}")
+        print(f"  Requires: A2Assistant {mf.hermes_requires}")
     print(f"  Source:   {plan.provenance}")
     print(f"  Target:   {plan.target_dir}")
     if plan.existing:
@@ -383,7 +383,7 @@ def _profile_show(args):
         print(f"Distribution: {dist_name}@{dist_version or '?'}")
         if dist_source:
             print(f"Installed from: {dist_source}")
-        print(f"  (run `hermes profile info {name}` for full manifest)")
+        print(f"  (run `a2assistant profile info {name}` for full manifest)")
     if alias_name:
         print(f"Alias:   {alias_name} → hermes -p {name}  ({_wrapper_path(alias_name)})")
     print()
@@ -409,7 +409,7 @@ def _profile_alias(args):
         if remove_wrapper_script(alias_name):
             print(f"✓ Removed alias '{alias_name}'")
         elif not exists:
-            _die(f"Error: No alias '{alias_name}' and no profile '{name}'. `hermes doctor` lists orphan aliases.")
+            _die(f"Error: No alias '{alias_name}' and no profile '{name}'. `a2assistant doctor` lists orphan aliases.")
         else:
             print(f"No alias '{alias_name}' found to remove.")
         return
@@ -534,7 +534,7 @@ def _profile_update(args):
         if current is None:
             _die(
                 f"Error: Profile '{canon}' is not a distribution (no distribution.yaml). "
-                "Only profiles installed via `hermes profile install` can be updated."
+                "Only profiles installed via `a2assistant profile install` can be updated."
             )
         force_config = getattr(args, "force_config", False)
         if not getattr(args, "yes", False):
@@ -560,7 +560,7 @@ _INFO_FIELDS = (
     ("description", "Description:  "),
     ("author", "Author:       "),
     ("license", "License:      "),
-    ("hermes_requires", "Requires:     Hermes "),
+    ("hermes_requires", "Requires:     A2Assistant "),
     ("source", "Source:       "),
     ("installed_at", "Installed:    "),
 )

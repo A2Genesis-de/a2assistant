@@ -422,9 +422,9 @@ test('Windows managed launcher starts a hidden child and leaves exit 75 to the e
     {
       ssh: { exec: async () => '' },
       platform: 'Windows',
-      hermesPath: 'C:\\Hermes\\hermes.exe',
+      hermesPath: 'C:\\A2Assistant\\hermes.exe',
       hermesHome: 'C:\\Users\\alice\\.hermes',
-      pythonPath: 'C:\\Hermes\\python.exe'
+      pythonPath: 'C:\\A2Assistant\\python.exe'
     },
     CORRELATION
   )
@@ -572,7 +572,7 @@ test.runIf(process.platform !== 'win32')(
 
       assert.equal(clean.ok, true)
       assert.equal(clean.owed, undefined)
-      assert.equal(clean.message, 'Remote Hermes updated and every managed SSH profile is ready.')
+      assert.equal(clean.message, 'Remote A2Assistant updated and every managed SSH profile is ready.')
 
       // The debt survives a failed restoration: update and restore verdicts stay independent.
       const unrestored = await run([{ step: 'dependencies', reason: 'sync failed' }], { restoreFails: true })
@@ -724,9 +724,9 @@ test('Windows coordinator handoff is pending until its marker clears and correla
 
   const target = {
     platform: 'Windows' as const,
-    hermesPath: 'C:\\Hermes\\hermes.exe',
+    hermesPath: 'C:\\A2Assistant\\hermes.exe',
     hermesHome: 'C:\\Users\\alice\\.hermes',
-    pythonPath: 'C:\\Hermes\\python.exe',
+    pythonPath: 'C:\\A2Assistant\\python.exe',
     ssh: {
       exec: async () => {
         const reply = replies[Math.min(calls, replies.length - 1)]

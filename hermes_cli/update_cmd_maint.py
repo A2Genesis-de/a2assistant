@@ -48,9 +48,9 @@ def _sqlite_partial_completion_lines(sqlite_version: str) -> list[str]:
     from hermes_cli.update_cmd import _m
     return [
         f"⚠ Update partially complete — your Python's SQLite ({sqlite_version}) has a known "
-        "corruption bug. Hermes works, but sessions could be damaged.",
+        "corruption bug. A2Assistant works, but sessions could be damaged.",
         f"  Fix: run the installer again ({_REINSTALL_ONE_LINER[bool(_m()._is_windows())]}) "
-        "which installs a safe Python, then run `hermes doctor` to confirm.",
+        "which installs a safe Python, then run `a2assistant doctor` to confirm.",
     ]
 
 
@@ -167,7 +167,7 @@ def _print_fts_optimize_available_notice() -> None:
         print()
         print("◆ Session database optimization incomplete")
         print(
-            "  A previous `hermes sessions optimize-storage` run was "
+            "  A previous `a2assistant sessions optimize-storage` run was "
             "interrupted. Search still works; re-run the command to resume "
             "and finish reclaiming disk:"
         )
@@ -425,7 +425,7 @@ def _restore_state_db_from_snapshot(state_path: Path, snap_state: Path) -> bool:
         print("  ✗ Auto-restore refused or failed; state.db was not restored.")
         print("    Stop the owning runtime and close database handles before retrying.")
         print("    If the canonical runtime epoch is unreadable, do not restore in place:")
-        print("    use `hermes sessions recover --source <snapshot> --output <separate-path>`")
+        print("    use `a2assistant sessions recover --source <snapshot> --output <separate-path>`")
         print("    to salvage transcripts into a separate output.")
         return False
     restored = verify_sqlite_integrity(state_path, check_header=True, run_pragma=True)
@@ -823,7 +823,7 @@ def _sweep_bytecode_after_update(branch: str) -> None:
         _m()._refresh_bootstrap_cache_scripts(branch)
     except Exception as exc:  # health: allow BLE001 -- refreshed again by the next update
         record_followup("bootstrap_scripts", str(exc) or type(exc).__name__,
-                        retry="the next `hermes update` refreshes them")
+                        retry="the next `a2assistant update` refreshes them")
 
 
 def _profile_skill_sync_status(r) -> str:
@@ -879,7 +879,7 @@ def _refresh_cua_driver_after_update() -> None:
         # The scheduled task targets a versioned binary. Selecting a new pin
         # without re-registering leaves it stale; registration requires UAC.
         print("\n→ Windows cua-driver refresh deferred (autostart registration requires UAC).")
-        print("  Run `hermes computer-use install --upgrade` in an interactive terminal.")
+        print("  Run `a2assistant computer-use install --upgrade` in an interactive terminal.")
         return
     print("\n→ Preparing pinned cua-driver (Computer Use)...")
     if sys.platform == "darwin":
@@ -913,7 +913,7 @@ def _install_default_tools_after_update() -> None:
     for name in default_packages(Lockfile(lockfile_path()).names()):
         if pm.installed_package(name) is not None:
             continue
-        print(f"\n→ Installing {name} (default tool; opt out with `hermes pm install --without {name}`)...")
+        print(f"\n→ Installing {name} (default tool; opt out with `a2assistant pm install --without {name}`)...")
         try:
             pm.ensure(name, explicit=True)
         except (pm.InstallError, OSError) as exc:
@@ -1001,7 +1001,7 @@ def _run_post_update_maintenance(
     if sys.platform == "darwin" and had_desktop_app_before_update:
         print()
         print(
-            "  ℹ macOS: if Hermes re-prompts for permissions you already "
+            "  ℹ macOS: if A2Assistant re-prompts for permissions you already "
             "granted (toggle shows ON), the stored grant is stale — run "
             "`tccutil reset ScreenCapture com.nousresearch.hermes` (repeat "
             "per affected service), toggle it ON in System Settings, then "

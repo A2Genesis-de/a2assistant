@@ -1909,7 +1909,7 @@ def interactive_setup() -> None:
     existing_relay = get_env_value("BUZZ_RELAY_URL")
     if declines_reconfigure("Buzz", "Reconfigure Buzz?", "BUZZ_RELAY_URL"):
         return
-    print_info("Connect Hermes to a Buzz community (Block's Nostr-based human+agent platform).")
+    print_info("Connect A2Assistant to a Buzz community (Block's Nostr-based human+agent platform).")
     print_info("   Requires the buzz CLI binary and a Nostr key that is a community member.")
     print()
     relay = prompt("Relay URL (e.g. https://mycommunity.communities.buzz.xyz)", default=existing_relay or "")

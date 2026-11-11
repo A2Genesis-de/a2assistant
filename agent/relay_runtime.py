@@ -277,7 +277,7 @@ class RelayOperationLease:
         """Run cleanup while this lease still owns the runtime lifetime."""
         with self._lock:
             if self._runtime is None:
-                raise RuntimeError("Hermes Relay operation lease is released")
+                raise RuntimeError("A2Assistant Relay operation lease is released")
             return self._runtime._run_in_session_untracked(session, callback, *args, **kwargs)
 
     def release(self) -> None:
@@ -605,9 +605,9 @@ class RelayRuntime:
         """Copy the current context and overlay the session's saved Relay vars (a copy: re-entrant from callbacks)."""
         with session.lock:
             if session.closing and not allow_closing:
-                raise RuntimeError("Hermes Relay session is closing")
+                raise RuntimeError("A2Assistant Relay session is closing")
             if session.context is None or session.handle is None:
-                raise RuntimeError("Hermes Relay session context is unavailable")
+                raise RuntimeError("A2Assistant Relay session context is unavailable")
             relay_context = session.context.copy()
         context = contextvars.copy_context()
         for variable, value in relay_context.items():
@@ -677,7 +677,7 @@ class RelayRuntime:
         """Admit one Relay call while keeping process plugins alive."""
         with self._sessions_lock:
             if self._closing:
-                raise RuntimeError("Hermes Relay runtime is shutting down")
+                raise RuntimeError("A2Assistant Relay runtime is shutting down")
             self._active_operations += 1
             self._operations_idle.clear()
 
@@ -1052,7 +1052,7 @@ class RelaySessionCoordinator:
         metadata: dict[str, Any] | None = None,
     ) -> RelayTurnContext:
         if lease.released:
-            raise RuntimeError("Hermes Relay conversation lease is released")
+            raise RuntimeError("A2Assistant Relay conversation lease is released")
         turn = RelayTurnContext(lease=lease, turn_id=turn_id, task_id=task_id)
         key = (lease.profile_key, lease.session_id)
         with self._active_turns_lock:
@@ -1360,11 +1360,11 @@ def _explicit_plugins_toml() -> Path | None:
         with config_path.open("rb") as config_file:
             config = tomllib.load(config_file)
         if "dynamic_plugins" in config:
-            raise ValueError("Hermes [[dynamic_plugins]] records are unsupported; use Relay [[plugins.dynamic]] records")
+            raise ValueError("A2Assistant [[dynamic_plugins]] records are unsupported; use Relay [[plugins.dynamic]] records")
         return config_path
     except Exception as exc:
         raise _RelayPluginConfigurationLoadError(
-            f"Hermes Relay plugin configuration could not be loaded from {config_path}; continuing without Relay plugins"
+            f"A2Assistant Relay plugin configuration could not be loaded from {config_path}; continuing without Relay plugins"
         ) from exc
 
 

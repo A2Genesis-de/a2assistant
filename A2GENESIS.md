@@ -79,3 +79,20 @@ servers (`a2-server`, `kraftmatch-server`, `babau-server`, `gunna-server`), `a2-
 - German labels use plain words; missing German strings live in `apps/desktop/src/i18n/de_a2_gaps.ts`, deep-merged
   into `deOverrides` in `de.ts`. After upstream merges re-run
   `OVERLAY_GAPS_UPDATE=1 pnpm exec vitest run src/i18n/overlay-completeness.test.ts` and translate new gaps there.
+
+## Full white label (nothing visible says Hermes)
+
+Every user-visible "Hermes" reads **A2Assistant**: desktop app, Ink TUI, CLI output, gateway and messaging texts
+(Telegram menu, notices), web dashboard, tool descriptions and the agent identity (the model is told it runs on
+Hermes Agent internally but must call itself A2Assistant). The CLI also answers to `a2assistant` (published next to
+`hermes` by `hermes_cli/_launchers.py`); texts name `a2assistant`. Name constants: `hermes_cli/branding.py`.
+
+Deliberately unchanged: internal identifiers (package names, `~/.hermes`, `HERMES_*`, `X-Hermes-*` headers, bundle
+id, launchd label, keychain service, git author ids), third-party names ("Hermes Cloud", the Nous Portal "Hermes Agent"
+page, models "Hermes 3/4"), the wake word "Hey Hermes" (trained model) and log-only messages. The MIT notice ships as
+`ThirdPartyNotices-HermesAgent.txt` in the app resources and as `LICENSE` in the repo.
+
+After upstream merges re-run the rebrand and review the diff:
+- Locales: `uv run scripts/a2/rebrand_locales.py` (`--check` only reports).
+- TS string catalogs: `python3 scripts/a2/rebrand_strings.py <files>` (catalog files only, never on code with regexes).
+- New hard-coded strings in Python/TS: `git grep -n "Hermes"` on the merge diff and fix by hand.

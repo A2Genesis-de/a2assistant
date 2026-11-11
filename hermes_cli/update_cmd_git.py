@@ -507,7 +507,7 @@ def _damaged_checkout_message(root: Path) -> str:
                   f" -InstallDir {quoted}")
     else:
         repair = f"curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash -s -- --dir {shlex.quote(str(root))}"
-    return (f"✗ This Hermes checkout's git data is damaged (git no longer recognizes {root / '.git'}),"
+    return (f"✗ This A2Assistant checkout's git data is damaged (git no longer recognizes {root / '.git'}),"
             " so it cannot be updated in place.\n"
             "  Run the installer again to repair it; it moves the damaged checkout aside and keeps"
             f" your config and chats:\n    {repair}")

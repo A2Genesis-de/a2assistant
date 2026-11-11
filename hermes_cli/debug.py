@@ -134,7 +134,7 @@ after 6 hours, but may be archived by third parties in the meantime.
 
 If paste.rs is unreachable, uploads fall back to dpaste.com: those pastes
 stay public for the --expire window (default: 1 day) and CANNOT be deleted
-with `hermes debug delete`.
+with `a2assistant debug delete`.
 
 Use --local to view the report without uploading.
 """
@@ -142,7 +142,7 @@ Use --local to view the report without uploading.
 _GATEWAY_PRIVACY_NOTICE = (
     "⚠️ **Privacy notice:** This uploads system info + recent log tails "
     "(may contain conversation fragments) to a public paste service. "
-    "Full logs are NOT included from the gateway — use `hermes debug share` "
+    "Full logs are NOT included from the gateway — use `a2assistant debug share` "
     "from the CLI for full log uploads.\n"
     "Pastes auto-delete after 6 hours (dpaste.com fallback pastes: kept for "
     "1 day, cannot be deleted).")
@@ -256,7 +256,7 @@ def _primary_log_path(log_name: str) -> Optional[Path]:
 # share`; a bare "(file not found)" would read as "the app logged nothing" and misdirect triage.
 _CLIENT_SIDE_LOGS = {
     "desktop": (
-        "written by Hermes Desktop on the machine running the app, not by this "
+        "written by A2Assistant Desktop on the machine running the app, not by this "
         "backend. If the desktop connects to a remote/docker/SSH backend, collect "
         "it on that client machine")}
 
@@ -564,7 +564,7 @@ def run_debug_share(args):
         result = build_debug_share(log_lines=log_lines, expiry=expiry, redact=redact)
     except RuntimeError as exc:
         print(f"\nUpload failed: {redact_debug_support_text(exc)}", file=sys.stderr)
-        print("\nRun `hermes debug share --local` to print the report instead.\n")
+        print("\nRun `a2assistant debug share --local` to print the report instead.\n")
         sys.exit(1)
     label_width = max(len(k) for k in result.urls)
     print("\nDebug report uploaded:")
@@ -578,7 +578,7 @@ def run_debug_share(args):
               f"{result.auto_delete_seconds // 3600} hours.")
         print(f"⚠️  {len(dpaste_urls)} of {len(result.urls)} upload(s) fell back to "
               f"dpaste.com: those pastes stay public for {expiry} day(s) and CANNOT be "
-              "deleted with `hermes debug delete`.\n"
+              "deleted with `a2assistant debug delete`.\n"
               "\nShare these links with the Hermes team for support.")
     else:
         print(f"\n⏱  Pastes will auto-delete in {result.auto_delete_seconds // 3600} hours.\n"
@@ -625,8 +625,8 @@ def _run_debug_share_nous(args, *, log_lines: int, redact: bool) -> None:
         error = redact_debug_support_text(exc)
         cause = edge_block(exc) or "The Nous diagnostics service may be unavailable or not yet provisioned"
         print(f"\nNous upload failed: {error}\n\n{cause}.\n"
-              "Run `hermes debug share --local` to print the report instead, "
-              "or `hermes debug share` to upload to a public paste service.\n", file=sys.stderr)
+              "Run `a2assistant debug share --local` to print the report instead, "
+              "or `a2assistant debug share` to upload to a public paste service.\n", file=sys.stderr)
         sys.exit(1)
     view_url = res.get("viewUrl") or res.get("view_url")
     expires_at = res.get("expiresAt") or res.get("expires_at")

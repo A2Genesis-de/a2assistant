@@ -198,7 +198,7 @@ def _adapter_for_subscription(runner: Any, platform: Any, sub: dict, owner_profi
                     sub, platform,
                     "kanban notifier: subscription for %s on %s chat %s is stamped with profile %s but a "
                     "profile_routes entry pins that chat to profile %s; it will not be delivered. "
-                    "Re-subscribe with `hermes kanban notify-subscribe ... --notifier-profile %s`.",
+                    "Re-subscribe with `a2assistant kanban notify-subscribe ... --notifier-profile %s`.",
                     profile, route.profile, route.profile)
                 return None
             from gateway.run import _multiplex_profile_homes

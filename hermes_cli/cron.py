@@ -275,14 +275,14 @@ def _short_reason(text: Any, limit: int = 120) -> str:
 
 
 def _delivery_fix_hint(job: dict[str, Any]) -> str:
-    return (f"Check the target with `hermes cron status` or change it with "
-            f"`hermes cron edit {job.get('id', '<id>')} --deliver <target>`.")
+    return (f"Check the target with `a2assistant cron status` or change it with "
+            f"`a2assistant cron edit {job.get('id', '<id>')} --deliver <target>`.")
 
 
 def _missed_fire_issue(job: dict[str, Any], fire_err: dict[str, Any]) -> str:
     return (f"missed scheduled fire at {fire_err.get('at', '?')}: {_short_reason(fire_err['detail'])}. "
-            "The messaging gateway was unreachable. Run `hermes gateway restart`, then "
-            f"`hermes cron run {job.get('id', '<id>')}` to run it now.")
+            "The messaging gateway was unreachable. Run `a2assistant gateway restart`, then "
+            f"`a2assistant cron run {job.get('id', '<id>')}` to run it now.")
 
 
 def _job_warnings(job: dict[str, Any]) -> list[str]:
@@ -337,7 +337,7 @@ def cron_tick():
         # For the one-shot CLI surface, report cleanly instead of dumping a traceback; the gateway ticker
         # loop handles its own retry. See #87644.
         print(color(f"✗ Cron tick failed: {exc}", Colors.RED))
-        print("  Check `hermes cron status` and the gateway log for details.")
+        print("  Check `a2assistant cron status` and the gateway log for details.")
         return 1
     return 0
 
@@ -447,7 +447,7 @@ def _probe_then_list_jobs(*, include_disabled: bool, brief: bool = False):
 def _print_store_unwritable(report: dict, *, brief: bool = False) -> None:
     if brief:  # `cron list`: one line
         print(color(f"⚠ Cron store {report['store']} is NOT writable ({report['error']}) — scheduled jobs "
-                    f"are being skipped; {report['fix']}. See `hermes cron status`.", Colors.RED))
+                    f"are being skipped; {report['fix']}. See `a2assistant cron status`.", Colors.RED))
         return
     print(color("⚠ Cron store is NOT writable — scheduled jobs are being skipped", Colors.RED))
     print(color(f"  {report['store']}: {report['error']} (last successful write {report['since']})", Colors.RED))
@@ -479,7 +479,7 @@ def _print_ticker_health(pids: list, restart_command: str = "hermes gateway rest
         # Ticker never started (non-cron profile, gateway just started, or a config issue).
         _warn("⚠ Gateway is running but the cron ticker has not reported a heartbeat.")
         print("  Cron jobs will NOT fire until the ticker writes its first heartbeat.\n"
-              "  If the gateway just started, wait ~60s and re-run `hermes cron status`.\n"
+              "  If the gateway just started, wait ~60s and re-run `a2assistant cron status`.\n"
               f"  If heartbeat never appears, restart: {restart_command}")
     elif not _ticker_age_is_fresh(hb_age):  # ticker thread is gone
         _warn("⚠ Gateway is running but the cron ticker looks STALLED — "
@@ -590,7 +590,7 @@ def cron_status():
                 _print_ticker_health([], restart_command="hermes --profile default gateway restart")
             elif in_process_ticker:
                 print(f"  Scheduler host: an in-process ticker (hermes serve / Desktop backend) ticking profile '{active}'")
-                _print_ticker_health([], restart_command="restart the Hermes Desktop app (or its serve backend)")
+                _print_ticker_health([], restart_command="restart the A2Assistant Desktop app (or its serve backend)")
             else:
                 _print_ticker_health(pids)
         else:
@@ -772,7 +772,7 @@ def cron_doctor() -> int:
         for issue in issues:
             print(f"    - {issue}")
     print()
-    print(color("Review the findings above, then run `hermes cron doctor` again.", Colors.DIM))
+    print(color("Review the findings above, then run `a2assistant cron doctor` again.", Colors.DIM))
     return 1
 
 

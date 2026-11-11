@@ -138,12 +138,12 @@ def build_gateway_parser(
                     "is a credential: it is printed for the calling process only, never logged, and "
                     "expires 30 seconds after it is minted.",
         epilog="Exit codes: 0 attached; 2 invalid invocation; otherwise the exit code "
-               "`hermes gateway ensure` gives the same verdict.")
+               "`a2assistant gateway ensure` gives the same verdict.")
     _flag(gateway_attach, "--json", help="Emit one JSON result (default)")
     attach_mode = gateway_attach.add_mutually_exclusive_group()
     _flag(attach_mode, "--start", help="Start the gateway when none serves this profile")
     _flag(attach_mode, "--recover",
-        help="Discover first; start (or replace an older Hermes's) gateway only when it is not ready")
+        help="Discover first; start (or replace an older A2Assistant's) gateway only when it is not ready")
     gateway_attach.add_argument("--timeout", default="60",
                                 help="Start deadline in seconds for --start/--recover (default: 60)")
     gateway_attach.set_defaults(func=cmd_gateway_attach)
@@ -211,7 +211,7 @@ def build_gateway_parser(
 
     gateway_migrate_legacy = gateway_subparsers.add_parser(
         "migrate-legacy", help="Remove legacy hermes.service units from pre-rename installs",
-        description="Stop, disable, and remove legacy Hermes gateway unit files "
+        description="Stop, disable, and remove legacy A2Assistant gateway unit files "
             "(e.g. hermes.service) left over from older installs. Profile "
             "units (hermes-gateway-<profile>.service) and unrelated "
             "third-party services are never touched.")
@@ -273,7 +273,7 @@ def build_gateway_parser(
 
     proxy_start = proxy_subparsers.add_parser("start", help="Run the proxy in the foreground")
     proxy_start.add_argument("--provider", default="nous",
-        help="Upstream provider: nous or xai (default: nous). See `hermes proxy providers`.")
+        help="Upstream provider: nous or xai (default: nous). See `a2assistant proxy providers`.")
     proxy_start.add_argument("--host", default=None,
         help="Bind address (default: 127.0.0.1). Use 0.0.0.0 to expose on LAN.")
     proxy_start.add_argument("--port", type=int, default=None, help="Bind port (default: 8645)")

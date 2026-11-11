@@ -148,7 +148,7 @@ def _submit_fal_request(model: str, arguments: dict[str, Any]):
                 f"Nous Subscription gateway rejected model '{model}' (HTTP {status}). This model "
                 f"may not yet be enabled on the Nous Portal's FAL proxy. Either:\n"
                 f"  • Set FAL_KEY in your environment to use FAL.ai directly, or\n"
-                f"  • Pick a different model via `hermes tools` → Image Generation."
+                f"  • Pick a different model via `a2assistant tools` → Image Generation."
                 f"{gateway_message}") from exc
         raise
 
@@ -442,7 +442,7 @@ def _prepare_fal_request(model_id, meta, prompt, aspect_ratio, seed, overrides, 
         raise ValueError(
             f"Model '{display}' ({model_id}) is not capable of image-to-image / editing. "
             f"Provide a text-only prompt (omit image_url), or switch to an edit-capable model "
-            f"via `hermes tools` → Image Generation.")
+            f"via `a2assistant tools` → Image Generation.")
     aspect_lc = (aspect_ratio or DEFAULT_ASPECT_RATIO).lower().strip()
     if aspect_lc not in VALID_ASPECT_RATIOS:
         logger.warning("Invalid aspect_ratio '%s', defaulting to '%s'", aspect_ratio, DEFAULT_ASPECT_RATIO)
@@ -564,9 +564,9 @@ def _build_no_backend_setup_message() -> str:
               "(then restart the session)"]
     if managed:
         lines.append("  2. Sign in to a Nous account that has the managed FAL gateway enabled "
-                     "(`hermes setup`)")
-    lines.append("  3. Configure a different image_gen provider via `hermes tools` → Image Generation "
-                 "(run `hermes plugins list` to see installed backends)")
+                     "(`a2assistant setup`)")
+    lines.append("  3. Configure a different image_gen provider via `a2assistant tools` → Image Generation "
+                 "(run `a2assistant plugins list` to see installed backends)")
     return "\n".join(lines)
 
 
@@ -705,7 +705,7 @@ def _dispatch_to_plugin_provider(
     if provider is None:
         return _provider_error(
             f"image_gen.provider='{configured}' is set but no plugin registered that name. "
-            f"Run `hermes plugins list` to see available image gen backends.", "provider_not_registered")
+            f"Run `a2assistant plugins list` to see available image gen backends.", "provider_not_registered")
     pname = getattr(provider, "name", "?")
     kwargs: dict[str, Any] = {"prompt": prompt, "aspect_ratio": aspect_ratio}
     try:
@@ -722,7 +722,7 @@ def _dispatch_to_plugin_provider(
             return _provider_error(
                 f"Provider '{pname}' does not support image-to-image / editing (its generate() "
                 f"signature is out of date with the image_generate schema). Omit image_url for "
-                f"text-to-image, or pick a backend that supports editing via `hermes tools` → "
+                f"text-to-image, or pick a backend that supports editing via `a2assistant tools` → "
                 f"Image Generation.", "modality_unsupported")
         logger.warning("Image gen provider '%s' raised%s: %s", pname,
                        " TypeError" if is_type_error else "", exc)
@@ -776,7 +776,7 @@ def _maybe_route_managed_model(
             return None
         return _provider_error(
             f"image_gen.model='{model_id}' is a Nous Portal model but the Portal image backend is not "
-            f"available. Pick another model via `hermes tools` → Image Generation.", "provider_not_registered")
+            f"available. Pick another model via `a2assistant tools` → Image Generation.", "provider_not_registered")
     kwargs: dict[str, Any] = {"prompt": prompt, "aspect_ratio": aspect_ratio, "model": model_id}
     try:
         _add_provider_kwargs(kwargs, image_url, reference_image_urls, upscale,

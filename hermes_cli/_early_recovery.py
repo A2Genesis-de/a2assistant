@@ -982,7 +982,7 @@ def restore_interrupted_pull(project_root: Path | None = None, *, after_failure:
                 # The tree is still torn (the marker is there): importing checkout code now would run
                 # the half-written files. Fail closed like unprovable custody does, as one line and
                 # exit 1 (SystemExit's message), never a traceback (F20).
-                raise SystemExit("hermes: another Hermes launch is finishing an interrupted `hermes update`; "
+                raise SystemExit("hermes: another A2Assistant launch is finishing an interrupted `a2assistant update`; "
                                  "launch again in a moment.")
             if not marker.is_file():
                 return True  # another launch finished while this one started: rerun from its tree
@@ -995,7 +995,7 @@ def restore_interrupted_pull(project_root: Path | None = None, *, after_failure:
                 return _restore_holding_claim(root, marker, after_failure=after_failure)
     except (OSError, subprocess.SubprocessError, ValueError) as exc:
         # Never block launch: the import that follows surfaces any real breakage.
-        print(f"⚠ Could not check for an interrupted `hermes update`: {exc}", file=sys.stderr)
+        print(f"⚠ Could not check for an interrupted `a2assistant update`: {exc}", file=sys.stderr)
     return False
 
 
@@ -1019,7 +1019,7 @@ def _checkout_custody(root: Path):
             "Cannot safely repair the interrupted update: checkout custody is unavailable "
             f"({type(exc).__name__}: {exc}). The recovery marker was kept. "
             "Wait for any running update to finish; if this persists, repair the checkout "
-            "before launching Hermes again."
+            "before launching A2Assistant again."
         ) from exc
     holder = update_lock._acquire_checkout(Path(root))
     if holder is not None and not update_lock.checkout_lock_held(Path(root)):
@@ -1064,8 +1064,8 @@ def _resume_killed_rollback(git, fields: dict[str, str], git_dir: Path, root: Pa
         ref = fields.get("ref", "").strip().removeprefix("refs/heads/")
         back = (f"`git -C {root} checkout {ref}`" if ref
                 else f"`git -C {root} checkout --detach {fields.get('target', '').strip()[:10] or pre[:10]}`")
-        print(f"⚠ An interrupted `hermes update` rollback to {pre[:10]} was not resumed: HEAD now names "
-              f"another branch. Switch back with {back}, then launch `hermes` again to finish it.",
+        print(f"⚠ An interrupted `a2assistant update` rollback to {pre[:10]} was not resumed: HEAD now names "
+              f"another branch. Switch back with {back}, then launch `a2assistant` again to finish it.",
               file=sys.stderr)
         return None
     # A syntax rollback killed before it moved HEAD back: redo that step (HEAD and index, no file),
@@ -1074,7 +1074,7 @@ def _resume_killed_rollback(git, fields: dict[str, str], git_dir: Path, root: Pa
     # proven gone: until HEAD is on ``pre`` this marker is the rollback's only record.
     reason = _redo_rollback_head(git, git_dir, root, pre, rollback, after_failure=after_failure)
     if reason is not None:
-        print(f"⚠ An interrupted `hermes update` rollback to {pre[:10]} cannot resume yet ({reason}); "
+        print(f"⚠ An interrupted `a2assistant update` rollback to {pre[:10]} cannot resume yet ({reason}); "
               "the next launch retries.", file=sys.stderr)
         return None
     return _read_head(git)
@@ -1088,7 +1088,7 @@ def _advise_killed_merge(git_dir: Path, root: Path, target: str, stash: str) -> 
             and merge_head.read_text(encoding="utf-8-sig").strip() == target):
         # The killed updater's own merge: its conflict markers may sit in startup modules.
         _merge_advice_shown = True
-        print(f"⚠ A killed `hermes update` left its merge unfinished. Run `git -C {root} merge --abort`, "
+        print(f"⚠ A killed `a2assistant update` left its merge unfinished. Run `git -C {root} merge --abort`, "
               "then launch again." + (f" Your local changes are in its stash ({stash})." if stash else ""),
               file=sys.stderr)
 
@@ -1102,7 +1102,7 @@ def _custody_git(root: Path, recorded: str):
         raise RuntimeError(
             "Cannot safely repair the interrupted update: child custody is unavailable "
             f"({type(exc).__name__}: {exc}). The recovery marker was kept. "
-            "Repair the checkout before launching Hermes again."
+            "Repair the checkout before launching A2Assistant again."
         ) from exc
 
     def git(*args: str, stdin: str | None = None, text: bool = True) -> subprocess.CompletedProcess:
@@ -1145,7 +1145,7 @@ def _read_head(git) -> str | None:
     if _OID.fullmatch(oid):
         return oid
     detail = head.stderr.strip() or f"git printed {oid!r}, exit {head.returncode}"
-    print(f"⚠ Could not read HEAD to repair an interrupted `hermes update` ({detail}); "
+    print(f"⚠ Could not read HEAD to repair an interrupted `a2assistant update` ({detail}); "
           "the next launch retries.", file=sys.stderr)
     return None
 
@@ -1156,7 +1156,7 @@ def _retire_unattributable(git, git_dir: Path, root: Path, marker: Path, pre: st
     Unattributable bytes are not proof of a whole tree: only a clean tracked tree at ``pre`` retires
     the record, rollback or not (review G2)."""
     if not _rollback_verified(git, git_dir, pre):
-        print(f"⚠ An interrupted `hermes update` left tracked files that differ from {pre[:10]} and commit "
+        print(f"⚠ An interrupted `a2assistant update` left tracked files that differ from {pre[:10]} and commit "
               f"{target[:10]} is gone; the marker was kept. Inspect `git -C {root} status`, then "
               f"`git -C {root} checkout {pre[:10]} -- <file>` for each file the update wrote.", file=sys.stderr)
         return
@@ -1194,7 +1194,7 @@ def _restore_holding_claim(root: Path, marker: Path, *, after_failure: bool = Fa
     # After a git that EXITED (``after_failure``) no git of ours is left: a lock now is another git's
     # (often the very reason ours failed), never ours to drop. The scan below only reads.
     if not index_free:
-        print(f"⚠ {_index_lock_holder(git_dir, root)} holds the index after an interrupted `hermes update`; "
+        print(f"⚠ {_index_lock_holder(git_dir, root)} holds the index after an interrupted `a2assistant update`; "
               "the next launch finishes the restore.", file=sys.stderr)
         return False
     written = _paths_git_wrote(git, root, pre, target)
@@ -1215,7 +1215,7 @@ def _put_back_written(git, root: Path, marker: Path, written, pre: str, stash: s
         return False
     if restore or added:
         print(("⚠ git stopped partway through writing the new code — " if after_failure else
-               "⚠ A previous `hermes update` was killed while git was writing the new code — ")
+               "⚠ A previous `a2assistant update` was killed while git was writing the new code — ")
               + f"restoring the checkout to {pre[:10]}...", file=sys.stderr)
         failed = _put_back_paths(git, root, restore, added, kept)
         if failed:
@@ -1238,7 +1238,7 @@ def _put_back_written(git, root: Path, marker: Path, written, pre: str, stash: s
     marker.unlink()
     if not restore and not added:
         return False  # the killed git never reached the tree: nothing to put back
-    print("  ✓ Checkout restored; `hermes update` updates it again.", file=sys.stderr)
+    print("  ✓ Checkout restored; `a2assistant update` updates it again.", file=sys.stderr)
     if stash:
         print(f"  Your local changes are still in the update's stash ({stash}).", file=sys.stderr)
     return True
@@ -1421,7 +1421,7 @@ def recover_if_needed(project_root: Path | None = None, argv: list[str] | None =
         if any(_marker_owner_is_live(marker) for marker in markers):
             return False
         if not explicit and any(_read_marker_attempts(marker) >= _EARLY_CORE_INSTALL_MAX_ATTEMPTS for marker in markers):
-            print("hermes: automatic dependency repair retry limit reached; run `hermes pm repair`", file=sys.stderr)
+            print("hermes: automatic dependency repair retry limit reached; run `a2assistant pm repair`", file=sys.stderr)
             return False
         from pm.recovery import repair_dependencies
 
@@ -1439,7 +1439,7 @@ def recover_if_needed(project_root: Path | None = None, argv: list[str] | None =
             raise  # The bootstrap or PM CLI reports the access error once.
         for marker in markers:
             _count_failed_attempt(marker)
-        print(f"hermes: dependency repair failed: {exc}; run `hermes pm repair`", file=sys.stderr)
+        print(f"hermes: dependency repair failed: {exc}; run `a2assistant pm repair`", file=sys.stderr)
         return False
     finally:
         os.close(lock)
