@@ -443,8 +443,22 @@ export const slateTheme: DesktopTheme = {
 
 const A2_SHAPE_CSS = `
 :root {
+  --a2-surface: #f4f4f4;
   --radius-scalar: 1;
   --stroke-nous: transparent;
+  --composer-width: 48rem;
+  --composer-surface-pad-x: 0.875rem;
+  --composer-surface-pad-y: 0.625rem;
+  --composer-row-gap: 0.5rem;
+  --composer-control-gap: 0.375rem;
+  --composer-control-size: 2rem;
+  --composer-control-primary-size: 2.25rem;
+  --composer-input-min-height: 2rem;
+  --composer-fallback-height: 4.25rem;
+  --composer-shell-pad-block-end: 1.25rem;
+}
+.dark {
+  --a2-surface: #171717;
 }
 [data-slot='button'] {
   border-radius: 9999px;
@@ -457,6 +471,38 @@ const A2_SHAPE_CSS = `
     color-mix(in srgb, currentColor 9%, transparent),
     color-mix(in srgb, currentColor 9%, transparent)
   );
+}
+[data-slot='composer-rich-input']:focus-visible {
+  background-image: none;
+}
+[data-slot='composer-root'],
+[data-slot='composer-root'][data-thread-scrolled-up],
+[data-slot='composer-dock']:is(:hover, :focus-within) [data-slot='composer-root'][data-thread-scrolled-up] {
+  --composer-fill: var(--a2-surface);
+  border-radius: 1.75rem;
+}
+[data-slot='composer-surface'],
+[data-slot='composer-surface']:has([data-slot='composer-rich-input']:focus-visible) {
+  border-color: transparent !important;
+}
+[data-slot='composer-fade'] {
+  min-height: 3.25rem;
+}
+[data-slot='composer-status-stack'] > div {
+  margin: 0 0 0.5rem;
+  border-color: transparent !important;
+  border-radius: 1.25rem !important;
+}
+.composer-human-message {
+  width: fit-content;
+  max-width: min(85%, 40rem);
+  margin-left: auto;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  padding-left: 1rem;
+  border-color: transparent !important;
+  border-radius: 1.25rem;
+  background: var(--a2-surface);
 }
 `
 
