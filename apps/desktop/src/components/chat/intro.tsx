@@ -1,10 +1,10 @@
 import { useState } from 'react'
 
+import { BrandMark } from '@/components/brand-mark'
 import { useI18n } from '@/i18n'
 import { capitalize, normalize } from '@/lib/text'
 
 import introCopyJsonl from './intro-copy.jsonl?raw'
-import { Wordmark } from './wordmark'
 
 type IntroCopy = {
   headline: string
@@ -32,7 +32,7 @@ const FALLBACK_COPY: IntroCopy[] = [
     body: "Bring the code, question, or stuck part. I'll read the room before making changes."
   },
   {
-    headline: 'What should Hermes look at?',
+    headline: 'What should A2Intelligence look at?',
     body: "Send the task, failing path, or half-formed plan. I'll help turn it into action."
   },
   {
@@ -124,7 +124,7 @@ function fallbackCopyForPersonality(personalityKey: string): IntroCopy[] {
       body: "Send the task, file, or rough idea. I'll use your configured voice and keep the work grounded in this repo."
     },
     {
-      headline: `What does ${label} Hermes need to see?`,
+      headline: `What does ${label} A2Intelligence need to see?`,
       body: "Bring the context or the stuck part. I'll adapt to your configured personality."
     },
     {
@@ -132,7 +132,7 @@ function fallbackCopyForPersonality(personalityKey: string): IntroCopy[] {
       body: "Send the problem, file, or idea. I'll follow the personality you've configured."
     },
     {
-      headline: `What should ${label} Hermes tackle?`,
+      headline: `What should ${label} A2Intelligence tackle?`,
       body: "Drop the task here. I'll keep the work grounded in the repo."
     },
     {
@@ -146,7 +146,7 @@ function pickCopy(copies: IntroCopy[], seed = 0): IntroCopy {
   return copies[Math.abs(seed) % copies.length] || FALLBACK_COPY[0]
 }
 
-const WORDMARK = 'HERMES AGENT'
+const PRODUCT_NAME = 'A2Intelligence'
 
 function resolveCopy(personality?: string, seed?: number): IntroCopy {
   const personalityKey = normalizeKey(personality)
@@ -176,7 +176,10 @@ export function Intro({ personality, seed }: IntroProps) {
       data-slot="aui_intro"
     >
       <div className="w-full min-w-0">
-        <Wordmark className="mb-1" text={WORDMARK} />
+        <BrandMark className="mx-auto mb-6 size-12" />
+        <h1 className="m-0 mb-3 text-[2.5rem] leading-none font-semibold tracking-[-0.04em] text-foreground">
+          {PRODUCT_NAME}
+        </h1>
 
         <p className="m-0 text-center leading-normal tracking-tight">{body}</p>
       </div>
