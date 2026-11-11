@@ -11,7 +11,7 @@ export const deNotices = {
   butterbar: {
     goTo: (index, total) => `Hinweis ${index} von ${total} anzeigen`,
     legal: {
-      before: 'Die Nutzung von A2Intelligence unterliegt unseren ',
+      before: 'Die Nutzung von A2Assistant unterliegt unseren ',
       terms: 'Nutzungsbedingungen',
       between: ' und unserer ',
       privacy: 'Datenschutzerklärung',
@@ -33,9 +33,9 @@ export const deNotices = {
     desktopCommands: deDesktopCommands
   },
   keepAwakeOffer: {
-    title: 'Ihr Computer ist eingeschlafen, während A2Intelligence gearbeitet hat',
+    title: 'Ihr Computer ist eingeschlafen, während A2Assistant gearbeitet hat',
     message:
-      'A2Intelligence kann den Computer wach halten, solange eine Aufgabe läuft. Der Bildschirm schaltet sich weiterhin aus, und im Akkubetrieb kann der Computer trotzdem einschlafen.',
+      'A2Assistant kann den Computer wach halten, solange eine Aufgabe läuft. Der Bildschirm schaltet sich weiterhin aus, und im Akkubetrieb kann der Computer trotzdem einschlafen.',
     action: 'Während der Arbeit wach halten'
   },
   billingBlock: {

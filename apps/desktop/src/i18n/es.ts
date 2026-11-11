@@ -63,7 +63,7 @@ export const esOverrides = {
       kindCatalog: 'MCP · Catálogo',
       kindCustom: 'MCP · Personalizado',
       kindPlugin: (plugin: string) => `MCP · Plugin ${plugin}`,
-      inCatalog: 'En el catálogo de A2Intelligence',
+      inCatalog: 'En el catálogo de A2Assistant',
       hostedTwin: 'Versión administrada disponible',
       alsoLocal: 'También se ejecuta en este dispositivo',
       open: (name: string) => `Abrir ${name}`,
@@ -113,7 +113,7 @@ export const esOverrides = {
       loading: 'Leyendo el catálogo y los servidores de este equipo',
       emptyTitle: 'Todavía no hay apps. Añade un servidor en este equipo para empezar.',
       noMatchTitle: 'No hay apps que coincidan',
-      noMatchBody: 'No hay coincidencias. Indica a A2Intelligence tu propio servidor MCP para añadirlo.',
+      noMatchBody: 'No hay coincidencias. Indica a A2Assistant tu propio servidor MCP para añadirlo.',
       clearSearch: 'Borrar la búsqueda',
       hostedFailedTitle: 'No se pudo acceder a las apps alojadas.',
       hostedFailedBody: 'Los servidores de este equipo no se ven afectados y siguen funcionando. No se desactivó nada.',
@@ -128,7 +128,7 @@ export const esOverrides = {
       writeFailed: 'No se guardó ese cambio.',
       refreshFailed: 'No se actualizó la lista de herramientas.',
       disconnectNoAccount:
-        'A2Intelligence no tiene ninguna cuenta que desconectar aquí. Actualiza la página e inténtalo de nuevo.',
+        'A2Assistant no tiene ninguna cuenta que desconectar aquí. Actualiza la página e inténtalo de nuevo.',
       disconnectRefused:
         'Nous no pudo quitar este inicio de sesión ahora. Desactiva la app con el interruptor o inténtalo más tarde.'
     },
@@ -168,23 +168,23 @@ export const esOverrides = {
     dialog: {
       disconnect: 'Desconectar',
       disconnectTitle: (name: string) => `¿Desconectar ${name}?`,
-      disconnectBody: 'A2Intelligence deja de actuar con esta cuenta. Puedes volver a conectarla cuando quieras.',
+      disconnectBody: 'A2Assistant deja de actuar con esta cuenta. Puedes volver a conectarla cuando quieras.',
       menuRefreshTools: 'Actualizar herramientas',
       moreActions: 'Más acciones',
       removeServerTitle: (name: string) => `¿Quitar ${name}?`,
       removeServerBody: 'La entrada se quita de mcp.json en este equipo. No se elimina nada más.',
-      appSwitch: (name: string) => `A2Intelligence puede usar ${name}`,
+      appSwitch: (name: string) => `A2Assistant puede usar ${name}`,
       waysTitle: (name: string) => `Dónde se ejecuta ${name}`,
       wayNotConnected: (name: string) => `Aún no está conectado. Inicia sesión en ${name} desde tu navegador.`,
       wayHosted: 'Administrado',
-      bothOn: (name: string) => `Ambos están activados, así que A2Intelligence ve cada herramienta de ${name} dos veces.`,
+      bothOn: (name: string) => `Ambos están activados, así que A2Assistant ve cada herramienta de ${name} dos veces.`,
       turnOffLocal: 'Desactivar el servidor local',
       providedByPlugin: (plugin: string) => `Proporcionado por el plugin ${plugin}`,
       openPlugins: 'Abrir la pestaña Plugins',
       nousLine: 'Las apps de Nous siguen a tu cuenta, no al perfil.',
       rulesReadOnly: 'Las reglas no se pueden cambiar ahora.',
       rulesAppOff: (name: string) => `Activa ${name} para cambiar sus herramientas.`,
-      rulesSignIn: 'Inicia sesión para cambiar lo que A2Intelligence puede hacer aquí.',
+      rulesSignIn: 'Inicia sesión para cambiar lo que A2Assistant puede hacer aquí.',
       orgNote: (count: number) => `Tu organización desactivó ${count} herramienta${count === 1 ? '' : 's'}.`,
       orgLink: 'Abrir la administración de conectores',
       connectEnded: 'El inicio de sesión no terminó.',
@@ -200,8 +200,8 @@ export const esOverrides = {
     tools: {
       title: 'Herramientas',
       notInstalledBody: 'Instálalo en este dispositivo para ver las herramientas que incluye.',
-      summaryTitle: (name: string) => `Lo que A2Intelligence puede hacer con ${name}`,
-      summaryPreviewTitle: (name: string) => `Lo que A2Intelligence podría hacer con ${name} cuando lo conectes`,
+      summaryTitle: (name: string) => `Lo que A2Assistant puede hacer con ${name}`,
+      summaryPreviewTitle: (name: string) => `Lo que A2Assistant podría hacer con ${name} cuando lo conectes`,
       summaryCount: (count: number) => `${count} herramienta${count === 1 ? '' : 's'}`,
       summaryAllTools: 'Todas las herramientas',
       summaryOther: 'Otras',
@@ -235,7 +235,7 @@ export const esOverrides = {
       needsAuthBody: 'El inicio de sesión se queda en este equipo. Nada sale de él.',
       retry: 'Reintentar',
       goneTitle: (name: string) => `${name} salió del catálogo.`,
-      goneBody: 'A2Intelligence ya no puede llamarlo. La fila se queda hasta que la quites, así que nada desaparece.',
+      goneBody: 'A2Assistant ya no puede llamarlo. La fila se queda hasta que la quites, así que nada desaparece.',
       remove: 'Quitar',
       offTitle: (name: string) => `${name} está desactivado.`,
       offBody: 'Actívalo con el interruptor de arriba para leer las herramientas que incluye.',
@@ -312,7 +312,7 @@ export const esOverrides = {
   },
   sessionImport: {
     title: 'Continuar desde otra app',
-    subtitle: 'Trae una conversación a A2Intelligence y retómala donde la dejaste.',
+    subtitle: 'Trae una conversación a A2Assistant y retómala donde la dejaste.',
     action: 'Importar sesión',
     readingFrom: 'Leyendo desde',
     connectedComputer: 'el equipo conectado',
@@ -331,18 +331,18 @@ export const esOverrides = {
     more: 'Cargar más sesiones',
     messages: 'mensajes',
     choose: 'Una conversación que vale la pena continuar',
-    chooseHelp: 'Elige una sesión para leer su historial antes de traerla a A2Intelligence.',
+    chooseHelp: 'Elige una sesión para leer su historial antes de traerla a A2Assistant.',
     previewLoading: 'Abriendo la vista previa',
     previewError: 'Vista previa no disponible',
     previewHelp: 'Es posible que el origen se haya movido o cambiado. Actualiza la lista e inténtalo de nuevo.',
     previewLimit: 'Vista previa acortada para facilitar la lectura. Se importa la conversación completa.',
     you: 'Tú',
-    snapshot: 'Esta conversación ya está en A2Intelligence. Abre tu copia existente para continuar.',
+    snapshot: 'Esta conversación ya está en A2Assistant. Abre tu copia existente para continuar.',
     copyNotice:
       'Copia el texto de la conversación. Los archivos de origen no cambian. La salida de herramientas y el razonamiento no se trasladan.',
     importing: 'Importando…',
-    open: 'Abrir en A2Intelligence',
-    continue: 'Continuar en A2Intelligence',
+    open: 'Abrir en A2Assistant',
+    continue: 'Continuar en A2Assistant',
     importError: 'No se pudo importar esta conversación.'
   },
   common: {
@@ -421,13 +421,13 @@ export const esOverrides = {
     copyDetailFailed: 'No se pudo copiar el detalle de la notificación',
     backendOutOfDateTitle: 'Backend desactualizado',
     backendOutOfDateMessage:
-      'Tu backend de A2Intelligence es más antiguo que esta compilación de escritorio y puede no funcionar correctamente. Actualízalo para alinearlos.',
-    desktopOutOfDateTitle: 'Aplicación de A2Intelligence desactualizada',
+      'Tu backend de A2Assistant es más antiguo que esta compilación de escritorio y puede no funcionar correctamente. Actualízalo para alinearlos.',
+    desktopOutOfDateTitle: 'Aplicación de A2Assistant desactualizada',
     desktopOutOfDateMessage:
-      'Esta aplicación de A2Intelligence es más antigua que el backend al que está conectada y puede no funcionar correctamente. Actualiza la aplicación para alinearlos.',
+      'Esta aplicación de A2Assistant es más antigua que el backend al que está conectada y puede no funcionar correctamente. Actualiza la aplicación para alinearlos.',
     updateDesktopApp: 'Actualizar aplicación',
     installMethodUnsupportedTitle: 'Método de instalación no compatible',
-    updateHermes: 'Actualizar A2Intelligence',
+    updateHermes: 'Actualizar A2Assistant',
     updateReadyTitle: 'Actualización lista',
     updateReadyMessage: count => `${count} ${count === 1 ? 'cambio nuevo disponible' : 'cambios nuevos disponibles'}.`,
     updateReadyMessageUnknown: 'Hay una nueva actualización disponible.',
@@ -448,22 +448,22 @@ export const esOverrides = {
       elevenLabsRejectedKey:
         'ElevenLabs no aceptó tu clave API. Actualízala en Configuración → Claves e inténtalo de nuevo.',
       diskFull: 'Disco lleno — libera espacio y vuelve a intentarlo.',
-      storageFailure: 'A2Intelligence no pudo guardar en su carpeta de datos. Abre Mantenimiento para comprobarla y repararla.',
+      storageFailure: 'A2Assistant no pudo guardar en su carpeta de datos. Abre Mantenimiento para comprobarla y repararla.',
       gatewayAuthFailed:
-        'Este A2Intelligence ya no acepta tu inicio de sesión guardado. Abre Gateways y vuelve a iniciar sesión (o pega un nuevo token de acceso) e inténtalo otra vez.',
+        'Este A2Assistant ya no acepta tu inicio de sesión guardado. Abre Gateways y vuelve a iniciar sesión (o pega un nuevo token de acceso) e inténtalo otra vez.',
       methodNotAllowed:
-        'El servicio en segundo plano de A2Intelligence no está sincronizado con la app, probablemente tras una actualización. Reinícialo para solucionarlo.',
+        'El servicio en segundo plano de A2Assistant no está sincronizado con la app, probablemente tras una actualización. Reinícialo para solucionarlo.',
       microphonePermission: 'Se denegó el permiso del micrófono.',
       openaiRejectedApiKey:
         'OpenAI no aceptó tu clave API. Actualízala en Configuración → Claves e inténtalo de nuevo.',
       openaiTtsNeedsKey: 'La voz necesita una clave de OpenAI. Añade una en Configuración → Claves.',
       codeSkewRestartRequired:
-        'A2Intelligence se actualizó, pero sigue ejecutando la versión anterior. Reinícialo para terminar la actualización.',
+        'A2Assistant se actualizó, pero sigue ejecutando la versión anterior. Reinícialo para terminar la actualización.',
       rpcOutOfSync: 'La app y el backend están en versiones distintas. Actualiza ambos.',
-      restartHermesFailed: 'No se pudo reiniciar A2Intelligence'
+      restartHermesFailed: 'No se pudo reiniciar A2Assistant'
     },
     actions: {
-      restartHermes: 'Reiniciar A2Intelligence',
+      restartHermes: 'Reiniciar A2Assistant',
       openKeys: 'Abrir Claves',
       openGateways: 'Abrir Gateways',
       openMaintenance: 'Abrir Mantenimiento'
@@ -493,7 +493,7 @@ export const esOverrides = {
       liveEndedConnectionLost: 'La sesión de voz en vivo perdió la conexión.',
       liveEndedClosed: 'El servicio cerró la sesión de voz en vivo.',
       liveError: 'Voz en vivo',
-      liveDelegationFailed: 'No se pudo pasar la solicitud a A2Intelligence',
+      liveDelegationFailed: 'No se pudo pasar la solicitud a A2Assistant',
       liveUnavailable: reason =>
         `El chat de voz GPT-Live no está disponible: ${reason}. Se usará voz a texto en su lugar.`
     },
@@ -504,8 +504,8 @@ export const esOverrides = {
       rejectAction: 'Rechazar',
       inputTitle: 'Se necesita información',
       inputTitleNamed: session => `Se necesita una respuesta — ${session}`,
-      inputBody: 'A2Intelligence espera tu respuesta.',
-      turnDoneTitle: 'A2Intelligence terminó',
+      inputBody: 'A2Assistant espera tu respuesta.',
+      turnDoneTitle: 'A2Assistant terminó',
       turnDoneBody: '',
       turnErrorTitle: 'El turno falló',
       backgroundDoneTitle: 'Tarea en segundo plano finalizada',
@@ -751,7 +751,7 @@ export const esOverrides = {
     exportConfig: 'Exportar configuración',
     importConfig: 'Importar configuración',
     resetToDefaults: 'Restablecer valores predeterminados',
-    resetConfirm: '¿Restablecer toda la configuración a los valores predeterminados de A2Intelligence?',
+    resetConfirm: '¿Restablecer toda la configuración a los valores predeterminados de A2Assistant?',
     exportFailed: 'Falló la exportación',
     resetFailed: 'Falló el restablecimiento',
     pluginPages: {
@@ -840,7 +840,7 @@ export const esOverrides = {
         desktopSuccess: name => `Plugin de escritorio ${name} instalado`,
         agentFailed: 'Error al instalar el plugin del agente',
         installUncertain:
-          'A2Intelligence dejó de esperar el resultado de la instalación, pero es posible que el plugin siga instalándose. Cierra este cuadro y actualiza la lista de plugins antes de volver a instalarlo.',
+          'A2Assistant dejó de esperar el resultado de la instalación, pero es posible que el plugin siga instalándose. Cierra este cuadro y actualiza la lista de plugins antes de volver a instalarlo.',
         desktopFailed: 'Error al instalar el plugin de escritorio',
         missingEnv: (name, vars) =>
           `${name} está instalado, pero necesita una clave para funcionar: ${vars}. Añádela ahora o las herramientas del plugin fallarán.`,
@@ -922,7 +922,7 @@ export const esOverrides = {
       otpField: 'Clave del autenticador',
       otpPlaceholder: 'Secreto Base32 o enlace otpauth://',
       otpHint:
-        'La “clave de configuración” que muestra el sitio al activar la 2FA. Si la guardas, A2Intelligence genera los códigos por sí mismo.',
+        'La “clave de configuración” que muestra el sitio al activar la 2FA. Si la guardas, A2Assistant genera los códigos por sí mismo.',
       twoFactorBadge: '2FA automática',
       deleteTitle: '¿Eliminar este elemento?',
       deleteDescription: label => `Se quitará “${label}”. Esto no se puede deshacer.`,
@@ -933,12 +933,12 @@ export const esOverrides = {
           'Los gestores de contraseñas instalados se detectan automáticamente. El agente te pide desbloquear uno la primera vez que necesita un inicio de sesión de él (una vez por sesión); solo se guarda en memoria un token de sesión, y el agente nunca ve tu contraseña maestra ni ningún inicio de sesión.',
         toggleFailed: 'No se pudo actualizar el gestor de contraseñas',
         notInstalled: name =>
-          `No detectado. Instala la herramienta de línea de comandos de ${name} e inicia sesión en ella; A2Intelligence la detectará automáticamente.`,
-        disabledDesc: 'Detectado, pero desactivado para A2Intelligence.',
+          `No detectado. Instala la herramienta de línea de comandos de ${name} e inicia sesión en ella; A2Assistant la detectará automáticamente.`,
+        disabledDesc: 'Detectado, pero desactivado para A2Assistant.',
         lockedDesc:
           'Detectado. El agente te pedirá desbloquearlo cuando necesite un inicio de sesión, o puedes desbloquearlo ahora.',
         unlockedDesc:
-          'Desbloqueado para esta sesión. Se bloquea automáticamente tras 30 minutos de inactividad o al cerrar A2Intelligence.',
+          'Desbloqueado para esta sesión. Se bloquea automáticamente tras 30 minutos de inactividad o al cerrar A2Assistant.',
         statusLocked: 'Bloqueado',
         statusNotDetected: 'No detectado',
         statusOff: 'Desactivado',
@@ -965,7 +965,7 @@ export const esOverrides = {
       advanced: 'Avanzado'
     },
     searchPlaceholder: {
-      about: 'Acerca de A2Intelligence Desktop',
+      about: 'Acerca de A2Assistant Desktop',
       config: 'Buscar configuración...',
       gateway: 'Conexión del gateway...',
       keys: 'Buscar claves API...',
@@ -993,7 +993,7 @@ export const esOverrides = {
       title: 'Apariencia',
       intro: 'Solo escritorio. El modo es el brillo; el tema es la paleta y el marco del chat.',
       colorMode: 'Modo de color',
-      colorModeDesc: 'Elige un modo fijo o deja que A2Intelligence siga la configuración del sistema.',
+      colorModeDesc: 'Elige un modo fijo o deja que A2Assistant siga la configuración del sistema.',
       toolViewTitle: 'Visualización de llamadas a herramientas',
       toolViewDesc: 'Producto oculta las cargas útiles sin procesar; Técnico muestra entrada/salida completas.',
       hideCodeDiffsTitle: 'Ocultar diffs de código',
@@ -1070,14 +1070,14 @@ export const esOverrides = {
         'Muestra los precios de entrada, salida y lectura de caché por millón de tokens en el selector de modelos.',
       reactionsTitle: 'Reacciones a mensajes',
       reactionsDesc:
-        'Reacciones emoji estilo iMessage — reacciona a los mensajes, y A2Intelligence puede reaccionar a los tuyos.',
+        'Reacciones emoji estilo iMessage — reacciona a los mensajes, y A2Assistant puede reaccionar a los tuyos.',
       tipsTitle: 'Consejos en la app',
       tipsDesc:
-        'Sugerencias ocasionales de la app y de A2Intelligence. Cada consejo aparece una vez. Se desactiva automáticamente tras tus primeros 30 días; puedes volver a activarlo.',
+        'Sugerencias ocasionales de la app y de A2Assistant. Cada consejo aparece una vez. Se desactiva automáticamente tras tus primeros 30 días; puedes volver a activarlo.',
       tipsReset: (count: number) => `Volver a mostrar ${count} ${count === 1 ? 'consejo' : 'consejos'}`,
       toursTitle: 'Recorridos guiados',
       toursDesc:
-        'Deja que A2Intelligence resalte cada paso mientras te guía por la app. Se desactiva automáticamente tras tus primeros 30 días; puedes volver a activarlo.',
+        'Deja que A2Assistant resalte cada paso mientras te guía por la app. Se desactiva automáticamente tras tus primeros 30 días; puedes volver a activarlo.',
       composerPopoutTitle: 'Compositor flotante',
       composerPopoutDesc:
         'Permite arrastrar el compositor fuera de su posición fija. Si está desactivado, permanece anclado abajo.',
@@ -1118,9 +1118,9 @@ export const esOverrides = {
       pet: {
         title: 'Mascota',
         intro:
-          'Adopta una mascota animada de petdex que flota sobre la app y reacciona a lo que hace A2Intelligence: corre mientras se ejecutan herramientas, celebra los éxitos y se entristece con los errores.',
+          'Adopta una mascota animada de petdex que flota sobre la app y reacciona a lo que hace A2Assistant: corre mientras se ejecutan herramientas, celebra los éxitos y se entristece con los errores.',
         restartHint:
-          'Las mascotas necesitan un reinicio rápido: la aplicación en ejecución se inició antes de que se añadiera esta función. Cierra y vuelve a abrir A2Intelligence y luego vuelve aquí.',
+          'Las mascotas necesitan un reinicio rápido: la aplicación en ejecución se inició antes de que se añadiera esta función. Cierra y vuelve a abrir A2Assistant y luego vuelve aquí.',
         scaleTitle: 'Tamaño',
         scaleDesc: 'Cambia el tamaño de la mascota flotante. Se aplica al instante en todas partes.',
         roamTitle: 'Moverse libremente',
@@ -1347,11 +1347,11 @@ export const esOverrides = {
       timezone: 'Identificador de zona horaria IANA. Vacío usa la zona horaria del sistema.',
       browser: {
         useRealProfile:
-          'La navegación local usa tus inicios de sesión reales. A2Intelligence copia el perfil de tu navegador predeterminado (cookies, inicios de sesión, preferencias) en una instantánea gestionada y lo controla con su Chromium integrado: tu perfil activo nunca se abre directamente y la copia se actualiza a partir de él en cada ejecución. También permite que el agente abra bajo petición una sesión local con tu perfil real, incluso si hay un backend de navegador en la nube configurado. Solo se admiten navegadores Chromium (Chrome, Edge, Brave, Brave Origin, Chromium); un navegador predeterminado que no sea Chromium falla con un mensaje claro. Desactivado de forma predeterminada.'
+          'La navegación local usa tus inicios de sesión reales. A2Assistant copia el perfil de tu navegador predeterminado (cookies, inicios de sesión, preferencias) en una instantánea gestionada y lo controla con su Chromium integrado: tu perfil activo nunca se abre directamente y la copia se actualiza a partir de él en cada ejecución. También permite que el agente abra bajo petición una sesión local con tu perfil real, incluso si hay un backend de navegador en la nube configurado. Solo se admiten navegadores Chromium (Chrome, Edge, Brave, Brave Origin, Chromium); un navegador predeterminado que no sea Chromium falla con un mensaje claro. Desactivado de forma predeterminada.'
       },
       agent: {
         imageInputMode: 'Controla cómo se envían los adjuntos de imagen al modelo.',
-        maxTurns: 'Límite superior de turnos con llamadas a herramientas antes de que A2Intelligence detenga una ejecución.'
+        maxTurns: 'Límite superior de turnos con llamadas a herramientas antes de que A2Assistant detenga una ejecución.'
       },
       terminal: {
         cwd: 'Carpeta de proyecto predeterminada para herramientas y terminal.',
@@ -1365,9 +1365,9 @@ export const esOverrides = {
       codeExecution: {
         mode: 'Qué tan estrictamente se limita la ejecución de código al proyecto actual.'
       },
-      fileReadMaxChars: 'Máximo de caracteres que A2Intelligence puede leer en una solicitud de archivo.',
+      fileReadMaxChars: 'Máximo de caracteres que A2Assistant puede leer en una solicitud de archivo.',
       approvals: {
-        mode: 'Cómo maneja A2Intelligence los comandos que necesitan aprobación explícita.',
+        mode: 'Cómo maneja A2Assistant los comandos que necesitan aprobación explícita.',
         timeout: 'Cuánto esperan los prompts de aprobación antes de vencer.'
       },
       security: {
@@ -1396,11 +1396,11 @@ export const esOverrides = {
       voice: {
         autoTts: 'Lee automáticamente en voz alta las respuestas del asistente.',
         voiceChatMode:
-          'chained: voz a texto → A2Intelligence → texto a voz con los proveedores de abajo. gpt-live: un modelo de voz full-duplex de OpenAI (gpt-live-1) escucha y habla, y pasa cada solicitud real a A2Intelligence; el modelo que hayas seleccionado responde con todas las herramientas. Requiere una clave API de OpenAI; la capa de voz cuesta 0,05 US$ por minuto.',
+          'chained: voz a texto → A2Assistant → texto a voz con los proveedores de abajo. gpt-live: un modelo de voz full-duplex de OpenAI (gpt-live-1) escucha y habla, y pasa cada solicitud real a A2Assistant; el modelo que hayas seleccionado responde con todas las herramientas. Requiere una clave API de OpenAI; la capa de voz cuesta 0,05 US$ por minuto.',
         gptLive: {
           voice: 'Voz del modo GPT-Live. Se aceptan ID de voz personalizados.',
           instructions:
-            'Frases adicionales para la personalidad de voz en vivo (tono, ritmo, idioma). A2Intelligence mantiene su propio prompt de sistema.'
+            'Frases adicionales para la personalidad de voz en vivo (tono, ritmo, idioma). A2Assistant mantiene su propio prompt de sistema.'
         }
       },
       tts: {
@@ -1428,13 +1428,13 @@ export const esOverrides = {
       },
       updates: {
         nonInteractiveLocalChanges:
-          'Cuando A2Intelligence se actualiza desde la app sin prompt de terminal, conserva los cambios locales de código fuente (stash) o descártalos. Las actualizaciones desde terminal siempre preguntan.'
+          'Cuando A2Assistant se actualiza desde la app sin prompt de terminal, conserva los cambios locales de código fuente (stash) o descártalos. Las actualizaciones desde terminal siempre preguntan.'
       }
     }),
     uninstallSection: {
       dangerZone: 'Zona de peligro',
       checkingInstalled: 'Comprobando lo que está instalado…',
-      uninstallHermes: 'Desinstalar A2Intelligence',
+      uninstallHermes: 'Desinstalar A2Assistant',
       chooseHowMuch:
         'Elige cuánto quieres quitar. La app se cierra para terminar; vuelve a abrir el instalador cuando quieras para volver.',
       confirmUninstall: 'Confirmar desinstalación',
@@ -1446,22 +1446,22 @@ export const esOverrides = {
       options: {
         gui: {
           title: 'Desinstalar solo la interfaz de chat',
-          description: 'Quita esta app de escritorio. El agente de A2Intelligence, tu configuración y tus chats se conservan.',
+          description: 'Quita esta app de escritorio. El agente de A2Assistant, tu configuración y tus chats se conservan.',
           consequence: 'la interfaz de chat de escritorio (esta app y sus datos)'
         },
         lite: {
           title: 'Desinstalar la interfaz y el agente, conservar mis datos',
           description:
-            'Quita la app y el agente de A2Intelligence, pero conserva la configuración, los chats y los secretos para una futura reinstalación.',
+            'Quita la app y el agente de A2Assistant, pero conserva la configuración, los chats y los secretos para una futura reinstalación.',
           consequence:
-            'la interfaz de chat y el agente de A2Intelligence (se conservan la configuración, los chats y los secretos)'
+            'la interfaz de chat y el agente de A2Assistant (se conservan la configuración, los chats y los secretos)'
         },
         full: {
           title: 'Desinstalar todo',
           description:
             'Quita la app, el agente y todos los datos de usuario: configuración, chats, tareas programadas, secretos y registros.',
           consequence:
-            'TODO: la interfaz de chat, el agente de A2Intelligence y toda tu configuración, chats, secretos y registros'
+            'TODO: la interfaz de chat, el agente de A2Assistant y toda tu configuración, chats, secretos y registros'
         }
       }
     },
@@ -1515,7 +1515,7 @@ export const esOverrides = {
     config: {
       minimizeToTrayTitle: 'Minimizar a la bandeja',
       minimizeToTrayDesc:
-        'Al minimizar las ventanas o cerrar la ventana principal, se ocultan en la bandeja del sistema (barra de menús en macOS) y A2Intelligence sigue ejecutándose. Usa Salir de A2Intelligence en el menú de la bandeja o Cmd+Q para salir. Desactivado por defecto; se aplica solo a este dispositivo.',
+        'Al minimizar las ventanas o cerrar la ventana principal, se ocultan en la bandeja del sistema (barra de menús en macOS) y A2Assistant sigue ejecutándose. Usa Salir de A2Assistant en el menú de la bandeja o Cmd+Q para salir. Desactivado por defecto; se aplica solo a este dispositivo.',
       minimizeToTrayUnavailable:
         'La bandeja del sistema no está disponible. Las ventanas se minimizarán y cerrarán con normalidad. Desactiva y vuelve a activar esta opción para reintentarlo.',
       none: 'Ninguno',
@@ -1526,7 +1526,7 @@ export const esOverrides = {
       searchPlaceholder: 'Buscar…',
       noResults: 'No se encontraron resultados',
       systemDefault: 'Valor del sistema',
-      loading: 'Cargando configuración de A2Intelligence...',
+      loading: 'Cargando configuración de A2Assistant...',
       emptyTitle: 'Nada que configurar',
       emptyDesc: 'Esta sección no tiene ajustes configurables.',
       failedLoad: 'No se pudo cargar la configuración',
@@ -1556,27 +1556,27 @@ export const esOverrides = {
       description:
         'Pulsa y suelta ⌘ + Opción en Mac, o Ctrl + Alt en Windows/Linux, para traer el HUD al frente desde cualquier app. Desactivado por defecto; se aplica solo a este dispositivo.',
       permission:
-        'Permite A2Intelligence en Ajustes del Sistema → Privacidad y seguridad → Monitorización de entrada y vuelve a intentarlo. Este gesto no registra pulsaciones de teclas ni captura tu pantalla.',
+        'Permite A2Assistant en Ajustes del Sistema → Privacidad y seguridad → Monitorización de entrada y vuelve a intentarlo. Este gesto no registra pulsaciones de teclas ni captura tu pantalla.',
       unavailable:
-        'El asistente del gesto del HUD no pudo iniciarse o se detuvo de forma inesperada. Reinténtalo o reinicia A2Intelligence. El atajo del HUD existente sigue funcionando dentro de A2Intelligence.',
+        'El asistente del gesto del HUD no pudo iniciarse o se detuvo de forma inesperada. Reinténtalo o reinicia A2Assistant. El atajo del HUD existente sigue funcionando dentro de A2Assistant.',
       missingHelper:
-        'A esta instalación de A2Intelligence le falta el asistente del gesto del HUD. Actualiza o reinstala A2Intelligence y vuelve a intentarlo.',
+        'A esta instalación de A2Assistant le falta el asistente del gesto del HUD. Actualiza o reinstala A2Assistant y vuelve a intentarlo.',
       unsupportedSession:
         'Esta sesión de escritorio no admite pulsaciones globales de teclas modificadoras. Linux requiere X11; Wayland no es compatible.'
     },
     screenshot: {
       enabledTitle: 'Atajo de captura de pantalla',
       enabledDesc:
-        'Pulsa las dos teclas Comando a la vez desde cualquier app para capturar su ventana frontal y adjuntarla a tu borrador actual de A2Intelligence. Nunca se envía automáticamente. Desactivado por defecto; se aplica solo a este Mac. El contenido de la ventana puede ser confidencial: revisa el adjunto antes de enviarlo.',
+        'Pulsa las dos teclas Comando a la vez desde cualquier app para capturar su ventana frontal y adjuntarla a tu borrador actual de A2Assistant. Nunca se envía automáticamente. Desactivado por defecto; se aplica solo a este Mac. El contenido de la ventana puede ser confidencial: revisa el adjunto antes de enviarlo.',
       statusTitle: 'Estado del atajo de captura',
       checking: 'Comprobando el atajo de captura…',
       disabled: 'El atajo de captura está desactivado.',
       starting: 'Iniciando la escucha del atajo. Todavía no está listo.',
       ready: 'El atajo está listo. Las capturas se adjuntan a tu borrador actual sin enviarse.',
       inputPermission:
-        'El permiso de Monitorización de entrada permite a A2Intelligence detectar las dos teclas Comando mientras otra app está activa. Permite A2Intelligence en Ajustes del Sistema → Privacidad y seguridad → Monitorización de entrada, vuelve aquí y reinténtalo.',
+        'El permiso de Monitorización de entrada permite a A2Assistant detectar las dos teclas Comando mientras otra app está activa. Permite A2Assistant en Ajustes del Sistema → Privacidad y seguridad → Monitorización de entrada, vuelve aquí y reinténtalo.',
       screenPermission:
-        'El permiso de Grabación de pantalla permite a A2Intelligence capturar la ventana frontal cuando usas este atajo. Permite A2Intelligence en Ajustes del Sistema → Privacidad y seguridad → Grabación de pantalla, vuelve aquí y reinténtalo. Reinicia A2Intelligence si macOS te lo pide.',
+        'El permiso de Grabación de pantalla permite a A2Assistant capturar la ventana frontal cuando usas este atajo. Permite A2Assistant en Ajustes del Sistema → Privacidad y seguridad → Grabación de pantalla, vuelve aquí y reinténtalo. Reinicia A2Assistant si macOS te lo pide.',
       openSettings: 'Abrir Ajustes del Sistema',
       retry: 'Reintentar',
       unavailable: 'El atajo de captura no está disponible. Reinténtalo o desactívalo.',
@@ -1591,7 +1591,7 @@ export const esOverrides = {
     quickEntry: {
       enabledTitle: 'Entrada rápida',
       enabledDesc:
-        'Invoca un pequeño compositor desde cualquier lugar con un atajo global y envía un prompt sin abrir A2Intelligence.',
+        'Invoca un pequeño compositor desde cualquier lugar con un atajo global y envía un prompt sin abrir A2Assistant.',
       shortcutTitle: 'Atajo de entrada rápida',
       shortcutDesc: 'Necesita al menos un modificador, p. ej. CommandOrControl+Shift+Espacio.',
       active: 'El atajo está activo.',
@@ -1621,7 +1621,7 @@ export const esOverrides = {
     connections: {
       title: 'Gateways registrados',
       intro:
-        'Gestiona este dispositivo y cada gateway de A2Intelligence al que puede llegar mediante conexiones remotas, SSH o Cloud.',
+        'Gestiona este dispositivo y cada gateway de A2Assistant al que puede llegar mediante conexiones remotas, SSH o Cloud.',
       stagedNote:
         'Todos los gateways permanecen conectados. Los perfiles, chats, mensajería y tareas cron se quedan con su gateway, y Sesiones puede mostrarlos todos a la vez.',
       launchModeTitle: 'Al iniciar, volver a Sesiones en el último gateway usado',
@@ -1653,10 +1653,10 @@ export const esOverrides = {
       kindRemote: 'Gateway remoto',
       kindCloud: 'Hermes Cloud',
       kindSsh: 'SSH',
-      kindLocalDesc: 'El entorno de ejecución de A2Intelligence administrado por esta app.',
-      kindRemoteDesc: 'Un gateway de A2Intelligence accesible por HTTP(S): LAN, Tailscale o internet.',
+      kindLocalDesc: 'El entorno de ejecución de A2Assistant administrado por esta app.',
+      kindRemoteDesc: 'Un gateway de A2Assistant accesible por HTTP(S): LAN, Tailscale o internet.',
       kindCloudDesc: 'Una instancia alojada detectada a través de tu cuenta de Hermes Cloud.',
-      kindSshDesc: 'Una instalación de A2Intelligence accesible por SSH.',
+      kindSshDesc: 'Una instalación de A2Assistant accesible por SSH.',
       labelTitle: 'Nombre',
       labelDesc:
         'Obligatorio. Se muestra en todos los lugares donde aparece esta instancia; debe ser único (p. ej., “Homelab”, “Portátil del trabajo”).',
@@ -1665,7 +1665,7 @@ export const esOverrides = {
       sshHostTitle: 'Host SSH',
       headersTitle: 'Encabezados adicionales del gateway',
       headersDesc:
-        'Se envían con cada solicitud HTTP y WebSocket a este gateway, para proxies de acceso como Cloudflare Access (CF-Access-Client-Id / CF-Access-Client-Secret). Los valores se guardan cifrados. Se ignoran los encabezados que gestiona A2Intelligence (Authorization, Cookie, Host…).',
+        'Se envían con cada solicitud HTTP y WebSocket a este gateway, para proxies de acceso como Cloudflare Access (CF-Access-Client-Id / CF-Access-Client-Secret). Los valores se guardan cifrados. Se ignoran los encabezados que gestiona A2Assistant (Authorization, Cookie, Host…).',
       headerValuePlaceholder: 'Valor',
       headerValueSaved: 'Guardado: déjalo en blanco para conservarlo',
       headerAdd: 'Añadir encabezado',
@@ -1706,16 +1706,16 @@ export const esOverrides = {
       title: 'Conexión del gateway',
       envOverride: 'anulación de entorno',
       intro:
-        'Local por predeterminado. Usa remoto cuando esta app deba controlar un backend de A2Intelligence en otro lugar. Anulaciones por perfil a continuación.',
-      envOverrideTitle: 'Esta conexión quedó fijada por la forma en que se inició A2Intelligence.',
+        'Local por predeterminado. Usa remoto cuando esta app deba controlar un backend de A2Assistant en otro lugar. Anulaciones por perfil a continuación.',
+      envOverrideTitle: 'Esta conexión quedó fijada por la forma en que se inició A2Assistant.',
       envOverrideDesc:
-        'Un ajuste de inicio externo a la app eligió esta conexión, así que las opciones de abajo son de solo lectura. Reinicia A2Intelligence sin ese ajuste (o pregunta a quien lo configuró) para cambiarla aquí.',
+        'Un ajuste de inicio externo a la app eligió esta conexión, así que las opciones de abajo son de solo lectura. Reinicia A2Assistant sin ese ajuste (o pregunta a quien lo configuró) para cambiarla aquí.',
       modeTitle: 'Modo de conexión',
       localTitle: 'Gateway local',
       localDesc:
-        'Inicia un backend privado de A2Intelligence en localhost. Es el valor predeterminado y funciona sin conexión.',
+        'Inicia un backend privado de A2Assistant en localhost. Es el valor predeterminado y funciona sin conexión.',
       remoteTitle: 'Gateway remoto',
-      remoteDesc: 'Conecta esta shell de escritorio a un backend remoto de A2Intelligence.',
+      remoteDesc: 'Conecta esta shell de escritorio a un backend remoto de A2Assistant.',
       remoteAuthHint:
         'Los gateways alojados usan OAuth o usuario y contraseña; los autohospedados pueden usar un token de sesión.',
       cloudTitle: 'Hermes Cloud',
@@ -1759,7 +1759,7 @@ export const esOverrides = {
       remoteUrlDesc: 'URL base del backend del dashboard remoto. Se admiten prefijos de ruta, por ejemplo /hermes.',
       probing: 'Comprobando cómo se autentica este gateway…',
       probeError:
-        'A2Intelligence no puede llegar a esa dirección. Comprueba la URL y que el otro equipo esté ejecutando A2Intelligence; las opciones de inicio de sesión aparecen cuando responde.',
+        'A2Assistant no puede llegar a esa dirección. Comprueba la URL y que el otro equipo esté ejecutando A2Assistant; las opciones de inicio de sesión aparecen cuando responde.',
       signedIn: 'Sesión iniciada',
       signIn: 'Iniciar sesión',
       signOut: 'Cerrar sesión',
@@ -1800,9 +1800,9 @@ export const esOverrides = {
       enterUrlFirst: 'Introduce primero una URL remota.',
       restartingTitle: 'Reiniciando conexión del gateway',
       savedTitle: 'Ajustes del gateway guardados',
-      restartingMessage: 'A2Intelligence Desktop se reconectará con los ajustes guardados.',
+      restartingMessage: 'A2Assistant Desktop se reconectará con los ajustes guardados.',
       savedMessage: 'Guardado para el próximo reinicio.',
-      connectedTo: (baseUrl, version) => `Conectado a ${baseUrl}${version ? ` · A2Intelligence ${version}` : ''}`,
+      connectedTo: (baseUrl, version) => `Conectado a ${baseUrl}${version ? ` · A2Assistant ${version}` : ''}`,
       reachableTitle: 'Gateway remoto accesible',
       signedOutTitle: 'Sesión cerrada',
       signedOutMessage: 'Se borró la sesión del gateway remoto.',
@@ -1814,7 +1814,7 @@ export const esOverrides = {
       saveFailed: 'No se pudieron guardar los ajustes del gateway',
       sshTitle: 'Conectar por SSH',
       sshDesc:
-        'A2Intelligence se inicia en el equipo remoto mediante SSH y se conecta a esta app a través de un túnel; no tienes que iniciar ni exponer nada por tu cuenta. Requiere acceso SSH mediante claves que ya funcione con el host.',
+        'A2Assistant se inicia en el equipo remoto mediante SSH y se conecta a esta app a través de un túnel; no tienes que iniciar ni exponer nada por tu cuenta. Requiere acceso SSH mediante claves que ya funcione con el host.',
       sshTrustHint:
         'La primera clave de host presentada se acepta y se fija; si cambia después, la conexión se rechaza.',
       sshHostTitle: 'Host',
@@ -1830,27 +1830,27 @@ export const esOverrides = {
       sshPortDesc: 'En blanco = 22 o el puerto de ~/.ssh/config.',
       sshKeyTitle: 'Archivo de identidad',
       sshKeyDesc: 'Ruta de la clave privada. En blanco = ssh-agent o ~/.ssh/config.',
-      sshHermesPathTitle: 'Ruta de A2Intelligence (opcional)',
-      sshHermesPathDesc: 'Ruta completa al binario remoto de A2Intelligence. En blanco = detección automática.',
+      sshHermesPathTitle: 'Ruta de A2Assistant (opcional)',
+      sshHermesPathDesc: 'Ruta completa al binario remoto de A2Assistant. En blanco = detección automática.',
       sshHermesPathPlaceholder: 'detección automática',
       sshTestConnection: 'Probar SSH',
       sshConnect: 'Conectar',
       sshButtonsHint: 'Guardar se aplica en el próximo inicio. Conectar vuelve a conectar ahora.',
-      sshReachable: (host, platform) => `Accesible: ${host} (${platform}) — se encontró A2Intelligence`,
+      sshReachable: (host, platform) => `Accesible: ${host} (${platform}) — se encontró A2Assistant`,
       sshIncompleteHost: 'Introduce un host SSH antes de conectar.',
       sshErrUnreachable: 'No se pudo acceder a ese host por SSH. Revisa el host, el puerto y tu red.',
       sshErrAuth:
-        'Falló la autenticación SSH. Carga tu clave en ssh-agent (ssh-add) o configura un IdentityFile en ~/.ssh/config; A2Intelligence ejecuta SSH de forma no interactiva.',
+        'Falló la autenticación SSH. Carga tu clave en ssh-agent (ssh-add) o configura un IdentityFile en ~/.ssh/config; A2Assistant ejecuta SSH de forma no interactiva.',
       sshErrHostKey:
         'La clave del host CAMBIÓ desde la última conexión. Confirma que sea un cambio esperado, ejecuta ssh-keygen -R <host> y vuelve a conectar.',
       sshErrNotInstalled:
-        'A2Intelligence no está instalado en el host remoto. Instálalo allí (curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh) o indica la ruta de A2Intelligence.',
+        'A2Assistant no está instalado en el host remoto. Instálalo allí (curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh) o indica la ruta de A2Assistant.',
       sshErrPlatform:
-        'Plataforma remota no compatible. El modo SSH de A2Intelligence Desktop admite hosts remotos Linux, macOS y Windows.',
+        'Plataforma remota no compatible. El modo SSH de A2Assistant Desktop admite hosts remotos Linux, macOS y Windows.',
       sshErrTimeout: 'La conexión SSH agotó el tiempo de espera. Es posible que el host no responda o esté en reposo.',
-      sshErrUpdateRequired: 'Actualiza A2Intelligence en el host remoto antes de conectarte con Desktop SSH.',
+      sshErrUpdateRequired: 'Actualiza A2Assistant en el host remoto antes de conectarte con Desktop SSH.',
       sshErrInteractiveAuth:
-        'Tailscale SSH requiere una comprobación interactiva del navegador. Ejecuta `ssh <host> true` en la terminal, completa la comprobación y vuelve a intentarlo; A2Intelligence ejecuta SSH de forma no interactiva.',
+        'Tailscale SSH requiere una comprobación interactiva del navegador. Ejecuta `ssh <host> true` en la terminal, completa la comprobación y vuelve a intentarlo; A2Assistant ejecuta SSH de forma no interactiva.',
       sshErrUnknown: 'Falló la conexión SSH.'
     },
     keys: {
@@ -1897,7 +1897,7 @@ export const esOverrides = {
       noOutput: 'Aún no hay salida.',
       deepLinkTitle: '¿Añadir servidor MCP?',
       deepLinkDescription:
-        'Un enlace pidió añadir este servidor MCP a A2Intelligence. Revisa la configuración exacta de abajo: viene del enlace, no de A2Intelligence.',
+        'Un enlace pidió añadir este servidor MCP a A2Assistant. Revisa la configuración exacta de abajo: viene del enlace, no de A2Assistant.',
       deepLinkStdioWarning:
         'Este servidor ejecuta un proceso local en tu equipo con el comando que se muestra abajo. Continúa solo si confías en su origen.',
       deepLinkConfirm: 'Añadir servidor',
@@ -2015,7 +2015,7 @@ export const esOverrides = {
       },
       keepGoingOnCredits: {
         title: 'Seguir con créditos',
-        description: 'Usa tus créditos cuando se agote el uso incluido. Desactivado: A2Intelligence espera al reinicio.',
+        description: 'Usa tus créditos cuando se agote el uso incluido. Desactivado: A2Assistant espera al reinicio.',
         approveInBrowser: 'Aprueba Remote Spending en tu navegador para cambiar esto. Se aplica en cuanto lo apruebes.',
         openAgain: 'Abrir de nuevo',
         cancel: 'Cancelar',
@@ -2151,7 +2151,7 @@ export const esOverrides = {
         cliBillingDisabled: {
           title: 'El gasto remoto está desactivado',
           message:
-            'El gasto remoto está desactivado para esta cuenta; un administrador de facturación puede activarlo desde la página de A2Intelligence del portal.'
+            'El gasto remoto está desactivado para esta cuenta; un administrador de facturación puede activarlo desde la página de A2Assistant del portal.'
         },
         roleRequired: {
           title: 'Se requiere rol de administrador',
@@ -2219,7 +2219,7 @@ export const esOverrides = {
       connectAccount: 'Conectar una cuenta',
       haveApiKey: '¿Tienes una clave API?',
       intro:
-        'Inicia sesión con una suscripción, sin copiar claves API. A2Intelligence ejecuta el inicio de sesión del navegador por ti, aquí mismo en la app.',
+        'Inicia sesión con una suscripción, sin copiar claves API. A2Assistant ejecuta el inicio de sesión del navegador por ti, aquí mismo en la app.',
       connected: 'Conectado',
       collapse: 'Contraer',
       connectAnother: 'Conectar otro proveedor',
@@ -2241,7 +2241,7 @@ export const esOverrides = {
       localEndpoint: {
         title: 'Endpoint local o personalizado',
         description:
-          'Conecta A2Intelligence con cualquier endpoint compatible con OpenAI (Zyphra, vLLM, llama.cpp, Ollama, etc.).'
+          'Conecta A2Assistant con cualquier endpoint compatible con OpenAI (Zyphra, vLLM, llama.cpp, Ollama, etc.).'
       },
       loading: 'Cargando proveedores...'
     },
@@ -2372,7 +2372,7 @@ export const esOverrides = {
         needsSetupConfirmAction: 'Seleccionar de todos modos',
         unavailableTitle: 'Los comandos de terminal no están disponibles',
         unavailableMessage: (backend: string) =>
-          `A2Intelligence no puede ejecutar comandos de shell ahora mismo: ${backend} no está listo. Cambia a Local o termina de configurar ${backend} y vuelve a intentarlo.`,
+          `A2Assistant no puede ejecutar comandos de shell ahora mismo: ${backend} no está listo. Cambia a Local o termina de configurar ${backend} y vuelve a intentarlo.`,
         openBackendSettings: 'Abrir ajustes del terminal',
         useLocal: 'Usar Local',
         switchedToLocal: 'Los comandos de terminal ahora se ejecutan localmente. Se aplica a las sesiones nuevas.'
@@ -2393,7 +2393,7 @@ export const esOverrides = {
         signinsFailed: 'No se pudieron importar los inicios de sesión al navegador integrado',
         prompt: {
           title: 'Mantén la sesión iniciada en tus sitios',
-          body: 'Deja que A2Intelligence navegue con una instantánea de tu perfil predeterminado del navegador, para que los sitios se abran con la sesión ya iniciada, para el agente y en el navegador integrado.',
+          body: 'Deja que A2Assistant navegue con una instantánea de tu perfil predeterminado del navegador, para que los sitios se abran con la sesión ya iniciada, para el agente y en el navegador integrado.',
           bulletSnapshot: 'Las cookies y los inicios de sesión se copian en una instantánea administrada.',
           bulletLiveProfile: 'Tu perfil del navegador en uso nunca se abre directamente.',
           bulletLocal: 'Nada sale de este equipo.',
@@ -2475,7 +2475,7 @@ export const esOverrides = {
       halfDesktopHint: 'esta app, igual para todos los perfiles',
       halfAgent: 'Agente',
       halfAgentIn: (profile: string) => `Agente en ${profile}`,
-      defaultProfile: 'A2Intelligence (predeterminado)',
+      defaultProfile: 'A2Assistant (predeterminado)',
       kindAgent: 'Agente',
       kindDesktop: 'Escritorio',
       kindBoth: 'Agente + Escritorio',
@@ -2500,7 +2500,7 @@ export const esOverrides = {
       toolsetToggleFailed: (name: string) =>
         `No se pudieron cambiar las herramientas de agente de ${name}; el panel de Escritorio no se modificó`,
       legacyBackend:
-        'Este backend es anterior a los interruptores de plugins por clave: actualiza A2Intelligence para gestionarlo aquí.',
+        'Este backend es anterior a los interruptores de plugins por clave: actualiza A2Assistant para gestionarlo aquí.',
       portableBadge: 'portátil',
       serverStates: {
         connected: 'conectado',
@@ -2515,7 +2515,7 @@ export const esOverrides = {
       },
       alreadyInstalled: (name: string) => `${name} ya está instalado en este perfil.`,
       catalogProvenance: (sha: string) =>
-        `Instalado desde el catálogo de A2Intelligence${sha ? ` en el commit fijado ${sha}` : ''}.`,
+        `Instalado desde el catálogo de A2Assistant${sha ? ` en el commit fijado ${sha}` : ''}.`,
       pinnedProvenance: (sha: string) =>
         `Fijado al commit ${sha}. Las actualizaciones se rechazan hasta que se reinstale con un nuevo commit fijado.`,
       pinnedBadge: (sha: string) => `fijado @ ${sha}`,
@@ -2536,9 +2536,9 @@ export const esOverrides = {
       deepLinkErrorTitle: 'Enlace de instalación de plugin rechazado',
       deepLinkCatalogInvalidName: 'Falta el nombre del catálogo del enlace o no es válido.',
       deepLinkCatalogUnknown: (name: string) =>
-        `\u201C${name}\u201D no está en el catálogo de plugins de A2Intelligence. No se instaló nada.`,
+        `\u201C${name}\u201D no está en el catálogo de plugins de A2Assistant. No se instaló nada.`,
       deepLinkCatalogUnavailable:
-        'No se pudo cargar el catálogo de plugins de A2Intelligence. Comprueba tu conexión y vuelve a abrir el enlace.',
+        'No se pudo cargar el catálogo de plugins de A2Assistant. Comprueba tu conexión y vuelve a abrir el enlace.',
       settingsToggle: (name: string) => `Configuración: ${name}`,
       settingsForm: {
         save: 'Guardar configuración',
@@ -2625,7 +2625,7 @@ export const esOverrides = {
     loadFailed: 'No se pudo cargar el grafo de memoria',
     loading: 'Cargando…',
     emptyTitle: 'Aún no se ha aprendido nada',
-    emptyDesc: 'A medida que A2Intelligence crea skills y memorias para tu trabajo, aparecerán aquí.',
+    emptyDesc: 'A medida que A2Assistant crea skills y memorias para tu trabajo, aparecerán aquí.',
     share: 'Compartir mapa',
     shareHint:
       'Copia el código para compartir este mapa o pega uno para cargarlo. Solo incluye el diseño, no el texto de tus memorias ni skills.',
@@ -2705,7 +2705,7 @@ export const esOverrides = {
       placeholder: 'Buscar mascotas…',
       loading: 'Cargando la galería petdex…',
       error: 'No se pudo acceder a la galería petdex.',
-      staleBackend: 'Reinicia A2Intelligence para usar mascotas; el backend es anterior a esta función.',
+      staleBackend: 'Reinicia A2Assistant para usar mascotas; el backend es anterior a esta función.',
       empty: 'No hay mascotas coincidentes.',
       turnOff: 'Desactivar',
       turnOn: 'Activar',
@@ -2732,8 +2732,8 @@ export const esOverrides = {
       hatchComposing: 'Uniendo las piezas…',
       hatchSaving: 'Ya casi…',
       namePlaceholder: 'Ponle nombre a tu mascota',
-      staleBackend: 'Actualiza A2Intelligence para generar mascotas.',
-      backgroundHint: 'Puedes cerrar esto; A2Intelligence te avisará cuando termine.',
+      staleBackend: 'Actualiza A2Assistant para generar mascotas.',
+      backgroundHint: 'Puedes cerrar esto; A2Assistant te avisará cuando termine.',
       slowProviderHint: 'Esto puede tardar varios minutos',
       remix: 'Remixar',
       remixConfirmTitle: '¿Remixar este aspecto?',
@@ -2773,7 +2773,7 @@ export const esOverrides = {
       },
       settings: {
         title: 'Configuración',
-        detail: 'Configura A2Intelligence Desktop'
+        detail: 'Configura A2Assistant Desktop'
       },
       capabilities: {
         title: 'Capacidades',
@@ -2814,7 +2814,7 @@ export const esOverrides = {
     noSessions: 'Aún no hay sesiones.',
     gatewayRunning: 'Gateway de mensajería en ejecución',
     gatewayStopped: 'Gateway de mensajería detenido',
-    hermesActiveSessions: (version, count) => `A2Intelligence ${version} · Sesiones activas ${count}`,
+    hermesActiveSessions: (version, count) => `A2Assistant ${version} · Sesiones activas ${count}`,
     restartGateway: 'Reiniciar gateway',
     openBrowser: 'Alternar navegador',
     toggleBrowser: 'Alternar navegador',
@@ -2824,7 +2824,7 @@ export const esOverrides = {
     sharedGatewayRestartConfirm: 'Reiniciar todo',
     sharedGatewayRestarted: (count: number) =>
       `Gateway compartido reiniciado (${count} ${count === 1 ? 'bot' : 'bots'})`,
-    updateHermes: 'Actualizar A2Intelligence',
+    updateHermes: 'Actualizar A2Assistant',
     reloadWindow: 'Recargar ventana',
     actionRunning: 'en ejecución',
     actionDone: 'listo',
@@ -2980,7 +2980,7 @@ export const esOverrides = {
     restartNeeded: 'Guardado. Reinicia el gateway de mensajería para que la nueva configuración surta efecto.',
     restartNow: 'Reiniciar ahora',
     restarting: 'Reiniciando…',
-    restartFailedManual: 'A2Intelligence no pudo reiniciarse para aplicar tu configuración de mensajería',
+    restartFailedManual: 'A2Assistant no pudo reiniciarse para aplicar tu configuración de mensajería',
     restartFailedManualDetail:
       'Vuelve a pulsar Reiniciar; si sigue fallando, abre los registros y envía un diagnóstico.',
     restartAgain: 'Reiniciar de nuevo',
@@ -2988,7 +2988,7 @@ export const esOverrides = {
     relayLink: {
       title: 'Team Gateway',
       badge: 'Sin token de bot',
-      intro: (platform: string) => `${platform} llega a este agente a través del bot compartido de A2Intelligence. Vincula tu cuenta de ${platform} y escribe al bot para hablar con tu agente.`,
+      intro: (platform: string) => `${platform} llega a este agente a través del bot compartido de A2Assistant. Vincula tu cuenta de ${platform} y escribe al bot para hablar con tu agente.`,
       link: (platform: string) => `Vincular ${platform}`,
       linkAnother: (platform: string) => `Vincular otra cuenta de ${platform}`,
       linkedAccounts: 'Cuentas vinculadas',
@@ -3014,11 +3014,11 @@ export const esOverrides = {
     telegramQr: {
       title: 'Elige cómo conectar tu bot de Telegram',
       subtitle:
-        'Ambas opciones conectan un bot que controlas y guardan sus credenciales solo en esta instalación de A2Intelligence.',
+        'Ambas opciones conectan un bot que controlas y guardan sus credenciales solo en esta instalación de A2Assistant.',
       quickSetup: 'Configuración rápida',
       recommended: 'Recomendado',
       quickHelp:
-        'Escanea un código QR y confirma en Telegram. A2Intelligence crea el bot y detecta tu ID de usuario de Telegram automáticamente.',
+        'Escanea un código QR y confirma en Telegram. A2Assistant crea el bot y detecta tu ID de usuario de Telegram automáticamente.',
       createWithQr: 'Crear con QR',
       starting: 'Iniciando…',
       replaceWarning:
@@ -3249,7 +3249,7 @@ export const esOverrides = {
     failedImport: 'No se pudo importar el perfil',
     failedExport: 'No se pudo exportar el perfil',
     exportNeedsHost: name =>
-      `El navegador no puede guardar un archivo de perfil. En el host de A2Intelligence, ejecuta: hermes profile export ${name}`,
+      `El navegador no puede guardar un archivo de perfil. En el host de A2Assistant, ejecuta: hermes profile export ${name}`,
     allProfiles: 'Todos los perfiles',
     showAllProfiles: 'Mostrar todos los perfiles',
     notServedHere: 'No se ofrece aquí',
@@ -3265,10 +3265,10 @@ export const esOverrides = {
       onGateway: (name: string, gateway: string) => `${name} · ${gateway}`,
       switchTo: (name: string, gateway: string) => `Abrir ${name} en ${gateway}`,
       deleteOn: (gateway: string) => ` en ${gateway}`,
-      localDevice: 'Este dispositivo (backend local: instala A2Intelligence si falta; si no, abre una sesión nueva)',
-      installDeviceTitle: '¿Instalar A2Intelligence en este dispositivo?',
+      localDevice: 'Este dispositivo (backend local: instala A2Assistant si falta; si no, abre una sesión nueva)',
+      installDeviceTitle: '¿Instalar A2Assistant en este dispositivo?',
       installDeviceDesc:
-        'Esto instalará A2Intelligence localmente y luego abrirá una sesión nueva en este equipo. No se instala nada hasta que confirmes.',
+        'Esto instalará A2Assistant localmente y luego abrirá una sesión nueva en este equipo. No se instala nada hasta que confirmes.',
       installDeviceConfirm: 'Instalar localmente',
       connectExistingInstead: 'Conectar uno existente en su lugar'
     },
@@ -3283,7 +3283,7 @@ export const esOverrides = {
       badge: (host: string) => `Se ejecuta en ${host}`,
       title: (profile: string) => `Conectar ${profile} a un host remoto`,
       description:
-        'Las sesiones de este perfil se ejecutarán en el A2Intelligence remoto que indiques, en lugar de en este equipo.',
+        'Las sesiones de este perfil se ejecutarán en el A2Assistant remoto que indiques, en lugar de en este equipo.',
       urlLabel: 'Dirección remota',
       urlPlaceholder: 'https://hermes.example.com',
       urlInvalid: 'Introduce una dirección completa que empiece por http:// o https://',
@@ -3319,7 +3319,7 @@ export const esOverrides = {
     defaultProfile: 'Perfil predeterminado',
     defaultSet: (name: string) => `${name} es ahora el predeterminado`,
     defaultDescription:
-      'Se usa al abrir A2Intelligence y para los chats nuevos. Las sesiones existentes se quedan en sus perfiles.',
+      'Se usa al abrir A2Assistant y para los chats nuevos. Las sesiones existentes se quedan en sus perfiles.',
     failedSetDefault: 'No se pudo establecer el perfil predeterminado',
     setColor: color => `Definir color ${color}`,
     autoColor: 'Auto',
@@ -3356,7 +3356,7 @@ export const esOverrides = {
     deleteDescMid: ' y quitará su directorio ',
     deleteDescSuffix: '. Esto no se puede deshacer.',
     deleting: 'Eliminando...',
-    createDesc: 'Los perfiles son entornos independientes de A2Intelligence: configuración, skills y SOUL.md separados.',
+    createDesc: 'Los perfiles son entornos independientes de A2Assistant: configuración, skills y SOUL.md separados.',
     nameLabel: 'Nombre',
     cloneFrom: 'Clonar desde',
     cloneFromNone: 'Ninguno (vacío)',
@@ -3390,7 +3390,7 @@ export const esOverrides = {
     failedRename: 'No se pudo renombrar el perfil'
   },
   modelAssignment: {
-    saveFailed: 'A2Intelligence no guardó ese cambio de modelo.',
+    saveFailed: 'A2Assistant no guardó ese cambio de modelo.',
     confirmTitle: 'Aviso sobre la selección de modelo',
     confirmDetail: 'Confirma solo si aceptas esta contrapartida.',
     confirmAction: 'Confirmar',
@@ -3459,7 +3459,7 @@ export const esOverrides = {
     everyHourAt: minute => `Cada hora en :${minute}`,
     newCron: 'Nueva tarea cron',
     emptyDescNew:
-      'Programa un prompt para ejecutarlo con una expresión cron. A2Intelligence lo ejecutará y entregará los resultados al destino que elijas.',
+      'Programa un prompt para ejecutarlo con una expresión cron. A2Assistant lo ejecutará y entregará los resultados al destino que elijas.',
     emptyDescSearch: 'Prueba una búsqueda más amplia.',
     emptyTitleNew: 'Aún no hay tareas programadas',
     emptyTitleSearch: 'Sin coincidencias',
@@ -3674,9 +3674,9 @@ export const esOverrides = {
     storageCorrupt: {
       title: 'La base de datos de sesiones está dañada',
       body: (profiles: string) =>
-        `A2Intelligence no puede leer todo el historial de sesiones de ${profiles}. Los chats que faltan en esta lista no se eliminaron; el archivo donde se guardan está dañado.`,
+        `A2Assistant no puede leer todo el historial de sesiones de ${profiles}. Los chats que faltan en esta lista no se eliminaron; el archivo donde se guardan está dañado.`,
       action:
-        'Sal de A2Intelligence en este perfil y luego inspecciona el archivo sin modificarlo, o restaura una instantánea:',
+        'Sal de A2Assistant en este perfil y luego inspecciona el archivo sin modificarlo, o restaura una instantánea:',
       guide: 'Guía de recuperación'
     },
     noFilterMatches: 'Ninguna sesión coincide con estos filtros',
@@ -3748,12 +3748,12 @@ export const esOverrides = {
   composer: {
     message: 'Mensaje',
     wakingProfile: profile => `Despertando ${profile}…`,
-    placeholderStarting: 'Iniciando A2Intelligence...',
-    placeholderReconnecting: 'Reconectando con A2Intelligence…',
+    placeholderStarting: 'Iniciando A2Assistant...',
+    placeholderReconnecting: 'Reconectando con A2Assistant…',
     placeholderFollowUp: 'Enviar seguimiento',
     newSessionPlaceholders: [
       '¿Qué vamos a construir?',
-      'Dale una tarea a A2Intelligence',
+      'Dale una tarea a A2Assistant',
       '¿Qué tienes en mente?',
       'Describe lo que necesitas',
       '¿Qué abordamos?',
@@ -3791,8 +3791,8 @@ export const esOverrides = {
     transcribingDictation: 'Transcribiendo dictado',
     voiceControls: 'Voz',
     voiceEngine: 'Motor del chat de voz',
-    voiceEngineChained: 'Voz a texto + voz de A2Intelligence',
-    voiceEngineLive: 'GPT-Live (full-duplex, delega en A2Intelligence)',
+    voiceEngineChained: 'Voz a texto + voz de A2Assistant',
+    voiceEngineLive: 'GPT-Live (full-duplex, delega en A2Assistant)',
     voiceEngineLiveNeedsKey: 'Requiere una clave API de OpenAI',
     voiceEngineChangeFailed: 'No se pudo cambiar el motor del chat de voz',
     voiceEngineChainedShort: 'voz a texto',
@@ -3843,7 +3843,7 @@ export const esOverrides = {
       '/queue':
         'Poner un prompt en cola para el siguiente turno, o listar/editar/quitar/mover/vaciar los prompts en cola',
       '/steer': 'Insertar un mensaje tras la siguiente llamada a herramienta sin interrumpir',
-      '/goal': 'Fijar un objetivo permanente en el que A2Intelligence trabaja durante varios turnos hasta cumplirlo',
+      '/goal': 'Fijar un objetivo permanente en el que A2Assistant trabaja durante varios turnos hasta cumplirlo',
       '/heartbeat': 'Configurar un prompt recurrente que vuelve a esta sesión cuando está inactiva',
       '/refine': 'Revisar esta conversación ahora y guardar lo aprendido en memoria/skills',
       '/review':
@@ -3857,7 +3857,7 @@ export const esOverrides = {
       '/context':
         'Mostrar la vista detallada de la ventana de contexto con indicador de uso, desglose por categoría, estadísticas de compresión y rendimiento',
       '/whoami': 'Mostrar tu acceso a los comandos de barra (admin / usuario)',
-      '/profile': 'Cambiar el perfil activo de A2Intelligence',
+      '/profile': 'Cambiar el perfil activo de A2Assistant',
       '/codex-runtime': 'Activar o desactivar el runtime codex app-server para modelos OpenAI/Codex',
       '/personality': 'Establecer una personalidad predefinida',
       '/battery': 'Mostrar u ocultar un indicador de batería por colores en la barra de estado',
@@ -3885,7 +3885,7 @@ export const esOverrides = {
       '/subscription': 'Ver tu plan de Nous y cambiarlo en el navegador',
       '/topup': 'Mostrar tu saldo de Nous y gestionar la facturación en el portal',
       '/platform': 'Pausar, reanudar o listar una plataforma del gateway que falla',
-      '/version': 'Mostrar la versión de A2Intelligence',
+      '/version': 'Mostrar la versión de A2Assistant',
       '/debug': 'Subir un informe de depuración (información del sistema + registros) y obtener enlaces para compartir',
       '/model': 'Cambiar el modelo de esta sesión'
     },
@@ -3900,7 +3900,7 @@ export const esOverrides = {
       'composer.history': 'recorrer el menú emergente o el historial'
     },
     attachUrlTitle: 'Adjuntar una URL',
-    attachUrlDesc: 'A2Intelligence obtendrá la página y la incluirá como contexto para este turno.',
+    attachUrlDesc: 'A2Assistant obtendrá la página y la incluirá como contexto para este turno.',
     urlPlaceholder: 'https://example.com/post',
     urlHintPre: 'Incluye la URL completa, p. ej. ',
     attach: 'Adjuntar',
@@ -4122,7 +4122,7 @@ export const esOverrides = {
       createPr: 'Crear PR',
       openPr: 'Abrir PR',
       ghMissing: 'Instala GitHub CLI (gh) e inicia sesión para abrir PR',
-      agentShip: 'Pedir a A2Intelligence que abra un PR',
+      agentShip: 'Pedir a A2Assistant que abra un PR',
       agentShipUnavailable: 'El chat al que pertenecen estos cambios no está en pantalla.',
       agentShipPrompt:
         'Revisa los cambios actuales, haz un commit con un mensaje convencional claro, envía la rama y abre un pull request.',
@@ -4134,23 +4134,23 @@ export const esOverrides = {
     }
   },
   updates: {
-    discontinuedTitle: 'Esta versión de A2Intelligence ya no tiene soporte',
+    discontinuedTitle: 'Esta versión de A2Assistant ya no tiene soporte',
     discontinuedBody:
-      'Esta versión de A2Intelligence ya no tiene soporte y podría dejar de funcionar; desinstálala. Tus datos permanecen en el disco.',
+      'Esta versión de A2Assistant ya no tiene soporte y podría dejar de funcionar; desinstálala. Tus datos permanecen en el disco.',
     channels: { stable: 'Estable', canary: 'Canary' },
-    appName: 'A2Intelligence',
+    appName: 'A2Assistant',
     availableBodyRelease: tag => `La versión ${tag} está lista para instalarse.`,
     releaseAvailable: tag => `La versión ${tag} está disponible.`,
     checkingShort: 'Comprobando…',
     availableBodyAppInstaller:
-      'Hay una nueva versión de A2Intelligence. A2Intelligence se cerrará, Windows terminará la actualización y A2Intelligence volverá a abrirse automáticamente.',
+      'Hay una nueva versión de A2Assistant. A2Assistant se cerrará, Windows terminará la actualización y A2Assistant volverá a abrirse automáticamente.',
     applyingBodyAppInstaller:
-      'A2Intelligence se cerrará y Windows terminará la actualización. A2Intelligence volverá a abrirse al finalizar; no tienes que hacer nada.',
+      'A2Assistant se cerrará y Windows terminará la actualización. A2Assistant volverá a abrirse al finalizar; no tienes que hacer nada.',
     applyingCloseAppInstaller:
-      'Esta ventana se cerrará; Windows terminará la actualización y A2Intelligence volverá a abrirse automáticamente.',
+      'Esta ventana se cerrará; Windows terminará la actualización y A2Assistant volverá a abrirse automáticamente.',
     checkUnknownTitleAppInstaller: 'No se pudieron buscar actualizaciones',
     checkUnknownBodyAppInstaller:
-      'Windows no pudo buscar actualizaciones ahora. También se instalan automáticamente al reiniciar A2Intelligence.',
+      'Windows no pudo buscar actualizaciones ahora. También se instalan automáticamente al reiniciar A2Assistant.',
     versionDetailsTitle: 'Detalles de la versión',
     versionDetailsBody:
       'Esta instalación se administra fuera de la app. Actualízala de la misma forma en que la instalaste.',
@@ -4177,12 +4177,12 @@ export const esOverrides = {
     versionUnavailable: 'Versión no disponible',
     bundleOutOfSync: 'La compilación de la app está desactualizada',
     bundleOutOfSyncDesc:
-      'El entorno de ejecución de A2Intelligence se actualizó, pero la app de escritorio sigue siendo una compilación anterior: faltarán funciones nuevas de la interfaz (como el modo Bot) hasta que se actualice. Ejecuta la actualización de abajo para recompilar la app. Si eso no elimina este aviso, reinstala desde el instalador de escritorio más reciente.',
+      'El entorno de ejecución de A2Assistant se actualizó, pero la app de escritorio sigue siendo una compilación anterior: faltarán funciones nuevas de la interfaz (como el modo Bot) hasta que se actualice. Ejecuta la actualización de abajo para recompilar la app. Si eso no elimina este aviso, reinstala desde el instalador de escritorio más reciente.',
     bundleOutOfSyncAction: 'Obtener el instalador',
     bundleSwapPending: 'Reinicia para terminar la actualización',
     bundleSwapPendingDesc:
-      'La app actualizada ya está instalada; A2Intelligence solo necesita reiniciarse para cargarla. Los chats y los ajustes no se tocan.',
-    bundleSwapPendingAction: 'Reiniciar A2Intelligence',
+      'La app actualizada ya está instalada; A2Assistant solo necesita reiniciarse para cargarla. Los chats y los ajustes no se tocan.',
+    bundleSwapPendingAction: 'Reiniciar A2Assistant',
     checkNow: 'Comprobar ahora',
     seeWhatsNew: 'Ver novedades',
     releaseNotes: 'Notas de la versión',
@@ -4206,9 +4206,9 @@ export const esOverrides = {
       fetch: 'Descargando…',
       pull: 'Casi listo…',
       pydeps: 'Terminando…',
-      update: 'Actualizando A2Intelligence…',
+      update: 'Actualizando A2Assistant…',
       rebuild: 'Reconstruyendo la aplicación de escritorio…',
-      restart: 'Reiniciando A2Intelligence…',
+      restart: 'Reiniciando A2Assistant…',
       done: 'Actualización completada',
       manual: 'Actualizar desde la terminal',
       guiSkew: 'Actualiza la aplicación de escritorio',
@@ -4218,20 +4218,20 @@ export const esOverrides = {
     checkFailedTitle: 'No se pudieron buscar actualizaciones',
     tryAgain: 'Intentar de nuevo',
     notAvailableTitle: 'Actualización no disponible',
-    unsupportedMessage: 'Esta versión de A2Intelligence no puede actualizarse desde la app.',
+    unsupportedMessage: 'Esta versión de A2Assistant no puede actualizarse desde la app.',
     connectionRetry:
-      'A2Intelligence no pudo llegar al servidor de actualizaciones. Comprueba tu conexión a internet y vuelve a intentarlo. Si usas un A2Intelligence remoto, asegúrate de que esté en línea.',
-    gitUnusable: 'A2Intelligence no pudo ejecutar Git en este equipo, así que no pudo buscar actualizaciones.',
+      'A2Assistant no pudo llegar al servidor de actualizaciones. Comprueba tu conexión a internet y vuelve a intentarlo. Si usas un A2Assistant remoto, asegúrate de que esté en línea.',
+    gitUnusable: 'A2Assistant no pudo ejecutar Git en este equipo, así que no pudo buscar actualizaciones.',
     connectionSettings: 'Configuración de conexión',
     openDownloadPage: 'Abrir la página de descarga',
     latestBody: 'Estás usando la versión más reciente.',
     latestBodyBackend: 'El backend está ejecutando la versión más reciente.',
     allSetTitle: 'Todo listo',
     availableTitle: 'Nueva actualización disponible',
-    availableBody: 'Hay una nueva versión de A2Intelligence lista para instalar.',
+    availableBody: 'Hay una nueva versión de A2Assistant lista para instalar.',
     availableTitleBackend: 'Actualización del backend disponible',
     availableBodyBackend:
-      'Hay una versión más reciente del backend de A2Intelligence al que estás conectado lista para instalar.',
+      'Hay una versión más reciente del backend de A2Assistant al que estás conectado lista para instalar.',
     availableBodyNoChangelog:
       'Hay una versión más reciente lista. Las notas de la versión no están disponibles para este tipo de instalación.',
     updateNow: 'Actualizar ahora',
@@ -4241,31 +4241,31 @@ export const esOverrides = {
     manualTitle: 'Actualizar desde la terminal',
     manualUnavailableTitle: 'No se puede actualizar desde aquí',
     manualBody:
-      'Instalaste A2Intelligence desde la línea de comandos, así que las actualizaciones también se ejecutan ahí. Pega esto en tu terminal:',
-    manualPickedUp: 'A2Intelligence usará la nueva versión la próxima vez que lo abras.',
-    manualBodyBackend: 'El backend de A2Intelligence se gestiona fuera de esta app. Ejecuta esto en el servidor que lo aloja:',
+      'Instalaste A2Assistant desde la línea de comandos, así que las actualizaciones también se ejecutan ahí. Pega esto en tu terminal:',
+    manualPickedUp: 'A2Assistant usará la nueva versión la próxima vez que lo abras.',
+    manualBodyBackend: 'El backend de A2Assistant se gestiona fuera de esta app. Ejecuta esto en el servidor que lo aloja:',
     manualPickedUpBackend: 'El backend cargará la nueva versión cuando termine la actualización.',
     guiSkewTitle: 'Actualiza la aplicación de escritorio',
     guiSkewBody:
-      'El backend se actualizó, pero el paquete de esta aplicación de escritorio no cambió. Actualiza o reinstala la aplicación de escritorio de A2Intelligence (tu AppImage / .deb / .rpm) para que coincidan.',
+      'El backend se actualizó, pero el paquete de esta aplicación de escritorio no cambió. Actualiza o reinstala la aplicación de escritorio de A2Assistant (tu AppImage / .deb / .rpm) para que coincidan.',
     copy: 'Copiar',
     copied: 'Copiado',
     done: 'Listo',
     applyingBody:
-      'El actualizador de A2Intelligence tomará el control en su propia ventana y volverá a abrir A2Intelligence al terminar.',
+      'El actualizador de A2Assistant tomará el control en su propia ventana y volverá a abrir A2Assistant al terminar.',
     applyingBodyBackend:
-      'El backend remoto está aplicando la actualización y se reiniciará. A2Intelligence se reconectará automáticamente cuando vuelva a estar disponible.',
-    applyingClose: 'A2Intelligence se cerrará para aplicar la actualización.',
+      'El backend remoto está aplicando la actualización y se reiniciará. A2Assistant se reconectará automáticamente cuando vuelva a estar disponible.',
+    applyingClose: 'A2Assistant se cerrará para aplicar la actualización.',
     errorTitle: 'La actualización no terminó',
     errorBody: 'No pasa nada: no se perdió nada. Puedes intentarlo de nuevo ahora.',
-    blockerTitle: '¿Cerrar las vistas previas locales para actualizar A2Intelligence?',
+    blockerTitle: '¿Cerrar las vistas previas locales para actualizar A2Assistant?',
     blockerBody:
-      'A2Intelligence necesita detener estas vistas previas locales antes de actualizar. Esto no modifica ni elimina tus archivos.',
-    foreignBlockerTitle: 'Cierra otros procesos para actualizar A2Intelligence',
+      'A2Assistant necesita detener estas vistas previas locales antes de actualizar. Esto no modifica ni elimina tus archivos.',
+    foreignBlockerTitle: 'Cierra otros procesos para actualizar A2Assistant',
     foreignBlockerBody:
-      'A2Intelligence no puede cerrar estos procesos automáticamente de forma segura. Cierra la app, el terminal o el servicio al que pertenece cada uno y vuelve a intentar la actualización.',
+      'A2Assistant no puede cerrar estos procesos automáticamente de forma segura. Cierra la app, el terminal o el servicio al que pertenece cada uno y vuelve a intentar la actualización.',
     mixedBlockerBody:
-      'A2Intelligence puede cerrar las vistas previas locales que se indican abajo. Los demás procesos deben cerrarse manualmente antes de continuar con la actualización.',
+      'A2Assistant puede cerrar las vistas previas locales que se indican abajo. Los demás procesos deben cerrarse manualmente antes de continuar con la actualización.',
     closePreviewsAndUpdate: 'Cerrar vistas previas y actualizar',
     closePreviewsAndCheckAgain: 'Cerrar vistas previas y volver a comprobar',
     localPreview: 'Vista previa local',
@@ -4306,7 +4306,7 @@ export const esOverrides = {
       skipped: 'Omitido',
       failed: 'Falló'
     },
-    oneTimeTitle: 'A2Intelligence necesita una instalación única',
+    oneTimeTitle: 'A2Assistant necesita una instalación única',
     unsupportedDesc: platform =>
       `La instalación automática del primer inicio aún no está disponible en ${platform}. Abre Terminal y ejecuta el comando de abajo; luego vuelve a abrir la app. Los siguientes inicios omitirán este paso.`,
     installCommand: 'Comando de instalación',
@@ -4314,25 +4314,25 @@ export const esOverrides = {
     viewDocs: 'Ver docs de instalación',
     installTo: 'Se instalará en',
     retryAfterRun: 'Ya lo ejecuté -- reintentar',
-    setupChoiceTitle: 'Configurar A2Intelligence Desktop',
+    setupChoiceTitle: 'Configurar A2Assistant Desktop',
     setupChoiceDesc:
-      'Conecta esta app con un gateway de A2Intelligence que ya esté en ejecución o instala A2Intelligence localmente en este equipo.',
-    connectExistingTitle: 'Conectar con un A2Intelligence existente',
+      'Conecta esta app con un gateway de A2Assistant que ya esté en ejecución o instala A2Assistant localmente en este equipo.',
+    connectExistingTitle: 'Conectar con un A2Assistant existente',
     connectExistingShort: 'Conectar existente',
     connectExistingDesc:
       'Usa un backend remoto con un token de sesión o inicio de sesión en el navegador. No se iniciará ninguna instalación local.',
-    installLocalTitle: 'Instalar A2Intelligence localmente',
-    installLocalDesc: 'Descarga A2Intelligence, crea su entorno de Python y ejecuta el backend en este equipo.',
-    localStartUnavailable: 'No se pudo iniciar la instalación local. Reinicia A2Intelligence Desktop e inténtalo de nuevo.',
-    remoteSetupTitle: 'Conectar con un A2Intelligence existente',
+    installLocalTitle: 'Instalar A2Assistant localmente',
+    installLocalDesc: 'Descarga A2Assistant, crea su entorno de Python y ejecuta el backend en este equipo.',
+    localStartUnavailable: 'No se pudo iniciar la instalación local. Reinicia A2Assistant Desktop e inténtalo de nuevo.',
+    remoteSetupTitle: 'Conectar con un A2Assistant existente',
     remoteSetupDesc:
-      'Introduce la URL de tu gateway. A2Intelligence Desktop detectará si necesita un token o iniciar sesión en el navegador.',
+      'Introduce la URL de tu gateway. A2Assistant Desktop detectará si necesita un token o iniciar sesión en el navegador.',
     remoteUrlTitle: 'URL del gateway',
-    remoteUrlDesc: 'Usa la URL base del gateway de A2Intelligence e incluye https:// si es remoto.',
+    remoteUrlDesc: 'Usa la URL base del gateway de A2Assistant e incluye https:// si es remoto.',
     remoteUrlPlaceholder: 'https://gateway.example.com/hermes',
     probing: 'Detectando la autenticación del gateway…',
     probeError:
-      'A2Intelligence no puede llegar a esa dirección. Comprueba la URL y que el otro equipo esté ejecutando A2Intelligence; las opciones de inicio de sesión aparecen cuando responde.',
+      'A2Assistant no puede llegar a esa dirección. Comprueba la URL y que el otro equipo esté ejecutando A2Assistant; las opciones de inicio de sesión aparecen cuando responde.',
     probeErrorDetails: 'Detalles',
     identityProvider: 'tu proveedor de identidad',
     authTitle: 'Autenticación',
@@ -4353,12 +4353,12 @@ export const esOverrides = {
     applyRemote: 'Aplicar y reconectar',
     backToSetup: 'Atrás',
     failedTitle: 'Falló la instalación',
-    settingUpTitle: 'Configurando A2Intelligence',
+    settingUpTitle: 'Configurando A2Assistant',
     finishingTitle: 'Terminando',
     failedDesc:
-      'Uno de los pasos de configuración no terminó. Puede ocurrir si hay otra copia de A2Intelligence en ejecución, se cortó la conexión a internet o un antivirus bloqueó el instalador. Cierra las demás ventanas de A2Intelligence y elige Recargar y reintentar. Si vuelve a fallar, abre los registros y envíalos al soporte.',
+      'Uno de los pasos de configuración no terminó. Puede ocurrir si hay otra copia de A2Assistant en ejecución, se cortó la conexión a internet o un antivirus bloqueó el instalador. Cierra las demás ventanas de A2Assistant y elige Recargar y reintentar. Si vuelve a fallar, abre los registros y envíalos al soporte.',
     activeDesc:
-      'Esta configuración se realiza una sola vez. El instalador de A2Intelligence está descargando dependencias y configurando tu máquina. Los siguientes inicios omitirán este paso.',
+      'Esta configuración se realiza una sola vez. El instalador de A2Assistant está descargando dependencias y configurando tu máquina. Los siguientes inicios omitirán este paso.',
     progress: (completed, total) => `${completed} de ${total} pasos completados`,
     currentStage: stage => ` -- ahora: ${stage}`,
     fetchingManifest: 'Obteniendo manifiesto del instalador...',
@@ -4379,7 +4379,7 @@ export const esOverrides = {
   freeTier: {
     providerRowTitle: 'Nous · plan gratuito',
     providerRowPitch: 'Inicia sesión con una cuenta de Nous para desbloquear más modelos y herramientas.',
-    readyTitle: 'A2Intelligence está listo.',
+    readyTitle: 'A2Assistant está listo.',
     readyCaption: 'Gratis · conectores incluidos',
     begin: 'Empezar',
     signInInstead: 'Iniciar sesión con una cuenta de Nous',
@@ -4415,26 +4415,26 @@ export const esOverrides = {
     errorBody: 'No se completó el inicio de sesión. Vuelve a intentarlo cuando quieras.',
     busyHeading: 'Ya casi está',
     busyBody: (wait: string) =>
-      `A2Intelligence no pudo terminar de iniciar tu sesión porque el servicio de Nous está ocupado. Vuelve a intentarlo en ${wait}. Mientras tanto, tu sesión sigue aquí.`,
+      `A2Assistant no pudo terminar de iniciar tu sesión porque el servicio de Nous está ocupado. Vuelve a intentarlo en ${wait}. Mientras tanto, tu sesión sigue aquí.`,
     unreachableBody:
-      'A2Intelligence no pudo llegar al servicio de Nous para terminar de iniciar tu sesión. Comprueba tu conexión a internet y vuelve a intentarlo. Tu sesión sigue aquí.',
+      'A2Assistant no pudo llegar al servicio de Nous para terminar de iniciar tu sesión. Comprueba tu conexión a internet y vuelve a intentarlo. Tu sesión sigue aquí.',
     alreadySignedInHeading: 'Ya has iniciado sesión.',
-    alreadySignedInBody: 'Este A2Intelligence ya tiene la sesión iniciada en una cuenta de Nous.',
+    alreadySignedInBody: 'Este A2Assistant ya tiene la sesión iniciada en una cuenta de Nous.',
     offer: {
-      heading: 'Sigue adelante con A2Intelligence',
-      body: 'Estás usando el uso gratuito. Si sigues usando A2Intelligence, empezarás a encontrarte con límites. Inicia sesión con una cuenta gratuita de Nous para tener un uso mayor.',
+      heading: 'Sigue adelante con A2Assistant',
+      body: 'Estás usando el uso gratuito. Si sigues usando A2Assistant, empezarás a encontrarte con límites. Inicia sesión con una cuenta gratuita de Nous para tener un uso mayor.',
       signIn: 'Iniciar sesión',
       notNow: 'Ahora no'
     },
     setupFailed: {
       gateClosed:
-        'Esta versión de A2Intelligence no puede iniciarse sin una cuenta de Nous. Inicia sesión o crea una: es gratis y solo lleva un minuto.',
+        'Esta versión de A2Assistant no puede iniciarse sin una cuenta de Nous. Inicia sesión o crea una: es gratis y solo lleva un minuto.',
       paused:
-        'El uso de A2Intelligence sin iniciar sesión está en pausa por un momento. A2Intelligence seguirá comprobándolo. Iniciar sesión es gratis y te permite empezar ahora mismo.',
+        'El uso de A2Assistant sin iniciar sesión está en pausa por un momento. A2Assistant seguirá comprobándolo. Iniciar sesión es gratis y te permite empezar ahora mismo.',
       rateLimited: (wait: string) =>
-        `Mucha gente está empezando ahora mismo, así que A2Intelligence volverá a intentarlo en ${wait}. Iniciar sesión es gratis y te ahorra la espera.`,
+        `Mucha gente está empezando ahora mismo, así que A2Assistant volverá a intentarlo en ${wait}. Iniciar sesión es gratis y te ahorra la espera.`,
       unreachable:
-        'A2Intelligence no pudo llegar al servicio de Nous. Comprueba tu conexión a internet y pulsa Reintentar. O conecta otro proveedor por ahora.',
+        'A2Assistant no pudo llegar al servicio de Nous. Comprueba tu conexión a internet y pulsa Reintentar. O conecta otro proveedor por ahora.',
       serverError:
         'El servicio de Nous tuvo un fallo. Pulsa Reintentar en un momento o conecta otro proveedor por ahora.',
       powRequired:
@@ -4442,7 +4442,7 @@ export const esOverrides = {
       locked:
         'Esta sesión no puede continuar sin iniciar sesión. Inicia sesión o crea una cuenta gratuita de Nous para seguir.',
       generic:
-        'A2Intelligence no pudo configurar el acceso gratuito sin iniciar sesión. Iniciar sesión es gratis; también puedes conectar otro proveedor.',
+        'A2Assistant no pudo configurar el acceso gratuito sin iniciar sesión. Iniciar sesión es gratis; también puedes conectar otro proveedor.',
       signInBelow: 'Iniciar sesión es gratis. Elige Nous abajo.',
       tryAgain: 'Reintentar',
       retrying: 'Reintentando…'
@@ -4561,7 +4561,7 @@ export const esOverrides = {
       update: 'actualizar',
       updateInProgress: 'Actualización en curso',
       commitsBehind: (count, branch) => `${count} ${count === 1 ? 'commit' : 'commits'} detrás de ${branch}`,
-      desktopVersion: version => `A2Intelligence Desktop v${version}`,
+      desktopVersion: version => `A2Assistant Desktop v${version}`,
       backendVersion: version => `backend v${version}`,
       clientLabel: version => `cliente v${version}`,
       connectionSsh: host => `SSH: ${host}`,
@@ -4742,7 +4742,7 @@ export const esOverrides = {
     binaryTitle: 'Esto parece un archivo binario',
     binaryBody: label => `Previsualizar ${label} puede mostrar texto ilegible.`,
     largeTitle: 'Este archivo es grande',
-    largeBody: (label, size) => `${label} pesa ${size}. A2Intelligence solo mostrará los primeros 512 KB.`,
+    largeBody: (label, size) => `${label} pesa ${size}. A2Assistant solo mostrará los primeros 512 KB.`,
     previewAnyway: 'Previsualizar de todos modos',
     truncated: 'Mostrando los primeros 512 KB.',
     noInlineTitle: 'Sin vista previa inline',
@@ -4782,12 +4782,12 @@ export const esOverrides = {
   },
   interfaceMode: {
     title: 'Modo de interfaz',
-    hint: 'Cambia lo que se muestra, no lo que A2Intelligence puede hacer.',
+    hint: 'Cambia lo que se muestra, no lo que A2Assistant puede hacer.',
     sessionNote:
       'Definido por el modo Simple. Un cambio aquí dura esta sesión; cambia a Avanzado para que sea permanente.',
     simple: {
       label: 'Simple',
-      description: 'Para hablar con A2Intelligence. Barra lateral y chat; sin paneles de terminal, archivos ni diferencias.'
+      description: 'Para hablar con A2Assistant. Barra lateral y chat; sin paneles de terminal, archivos ni diferencias.'
     },
     advanced: {
       label: 'Avanzado',
@@ -4874,7 +4874,7 @@ export const esOverrides = {
     thread: {
       loadingSession: 'Cargando sesión',
       showEarlier: 'Mostrar mensajes anteriores',
-      loadingResponse: 'A2Intelligence está cargando una respuesta',
+      loadingResponse: 'A2Assistant está cargando una respuesta',
       loadingLocalModel: (model: string) => `Cargando ${model} en memoria`,
       processingPrompt: 'Procesando el prompt',
       resumeWhenBackgroundDone: count =>
@@ -4932,11 +4932,11 @@ export const esOverrides = {
         timeout: {
           title: (provider: string) => `Sin conexión con ${provider}`,
           body: (provider: string) =>
-            `A2Intelligence no pudo conectar con ${provider}. Revisa tu conexión y vuelve a intentarlo.`
+            `A2Assistant no pudo conectar con ${provider}. Revisa tu conexión y vuelve a intentarlo.`
         },
         no_reply: {
           title: 'La respuesta no llegó',
-          body: 'A2Intelligence terminó este turno, pero no llegó ninguna respuesta a esta ventana. Reinténtalo para enviarla de nuevo.'
+          body: 'A2Assistant terminó este turno, pero no llegó ninguna respuesta a esta ventana. Reinténtalo para enviarla de nuevo.'
         },
         stream_drop: {
           title: 'La respuesta se cortó',
@@ -4997,21 +4997,21 @@ export const esOverrides = {
           body: (provider: string) => `${provider} no devolvió nada para este mensaje. Reinténtalo en un momento.`
         },
         loop_error: {
-          title: 'A2Intelligence no pudo terminar este paso',
+          title: 'A2Assistant no pudo terminar este paso',
           body: 'Algo salió mal al procesar la respuesta. Reinténtalo; si vuelve a ocurrir, envía un diagnóstico desde los detalles.'
         },
         agent_init_failed: {
           title: 'No se pudo iniciar este chat',
           body: (provider: string) =>
-            `A2Intelligence no pudo conectar con ${provider} para este chat. Reinténtalo; si sigue fallando, revisa el proveedor en Configuración.`
+            `A2Assistant no pudo conectar con ${provider} para este chat. Reinténtalo; si sigue fallando, revisa el proveedor en Configuración.`
         },
         SESSION_NOT_OWNED: {
           title: 'Chat abierto en otro sitio',
-          body: 'Este chat está abierto en otra ventana de A2Intelligence o en un terminal. Empieza un chat nuevo aquí o ciérralo allí primero.'
+          body: 'Este chat está abierto en otra ventana de A2Assistant o en un terminal. Empieza un chat nuevo aquí o ciérralo allí primero.'
         },
         disk_full: {
           title: 'Tu disco está lleno',
-          body: 'A2Intelligence no pudo guardar esta conversación. Libera espacio y reinténtalo.'
+          body: 'A2Assistant no pudo guardar esta conversación. Libera espacio y reinténtalo.'
         },
         free_tier_disabled: {
           title: 'Inicia sesión para seguir chateando',
@@ -5027,7 +5027,7 @@ export const esOverrides = {
         },
         free_tier_model_not_free: {
           title: 'Este modelo requiere iniciar sesión',
-          body: 'Por ahora A2Intelligence usa el modelo gratuito. Inicia sesión con una cuenta de Nous para tener más modelos; es gratis.'
+          body: 'Por ahora A2Assistant usa el modelo gratuito. Inicia sesión con una cuenta de Nous para tener más modelos; es gratis.'
         },
         free_tier_route: {
           title: 'Sin acceso al modelo gratuito',
@@ -5070,7 +5070,7 @@ export const esOverrides = {
       errorRateLimitResetBody: (provider: string, time: string) =>
         `Alcanzaste el límite de solicitudes de ${provider}. Se restablece a las ${time}.`,
       errorGenericProvider: 'El servicio de IA',
-      errorToastTitle: 'A2Intelligence no pudo terminar la respuesta',
+      errorToastTitle: 'A2Assistant no pudo terminar la respuesta',
       errorRetry: 'Reintentar',
       errorSwitchToModel: (model, note) => (note ? `Cambiar a ${model} (${note})` : `Cambiar a ${model}`),
       errorSwitchModelFailed: 'No se pudo cambiar de modelo',
@@ -5085,8 +5085,8 @@ export const esOverrides = {
       errorChooseModel: 'Elegir un modelo',
       errorCompressConversation: 'Comprimir conversación',
       errorCompressFailed: 'No se pudo comprimir la conversación',
-      errorOpenHermesFolder: 'Abrir la carpeta de A2Intelligence',
-      errorOpenHermesFolderFailed: 'No se pudo abrir la carpeta de A2Intelligence',
+      errorOpenHermesFolder: 'Abrir la carpeta de A2Assistant',
+      errorOpenHermesFolderFailed: 'No se pudo abrir la carpeta de A2Assistant',
       errorUpdateApiKey: 'Actualizar clave API',
       errorSignInAgain: (provider: string) => `Volver a iniciar sesión en ${provider}`,
       errorSignInFreeTier: 'Iniciar sesión con una cuenta de Nous',
@@ -5123,11 +5123,11 @@ export const esOverrides = {
     },
     approval: {
       gatewayDisconnected:
-        'A2Intelligence está sin conexión ahora mismo. El comando sigue esperando tu respuesta (hasta que se agote el tiempo de aprobación). Reconéctate y vuelve a enviarla.',
+        'A2Assistant está sin conexión ahora mismo. El comando sigue esperando tu respuesta (hasta que se agote el tiempo de aprobación). Reconéctate y vuelve a enviarla.',
       sendFailed: 'No se pudo enviar tu respuesta',
       reconnect: 'Reconectar',
       timedOutSystemLine:
-        'Se agotó el tiempo de aprobación: el comando no se ejecutó. Pide a A2Intelligence que lo intente de nuevo o sube el límite en Configuración → Seguridad → Tiempo de aprobación.',
+        'Se agotó el tiempo de aprobación: el comando no se ejecutó. Pide a A2Assistant que lo intente de nuevo o sube el límite en Configuración → Seguridad → Tiempo de aprobación.',
       openSafetySettings: 'Abrir configuración de seguridad',
       run: 'Ejecutar',
       command: 'Comando',
@@ -5138,7 +5138,7 @@ export const esOverrides = {
       reject: 'Rechazar',
       alwaysTitle: '¿Permitir siempre este comando?',
       alwaysDescription: pattern =>
-        `Esto añade el patrón “${pattern}” a tu allowlist permanente (~/.hermes/config.yaml). A2Intelligence no volverá a preguntar por comandos como este, ni en esta sesión ni en futuras.`,
+        `Esto añade el patrón “${pattern}” a tu allowlist permanente (~/.hermes/config.yaml). A2Assistant no volverá a preguntar por comandos como este, ni en esta sesión ni en futuras.`,
       alwaysAllow: 'Permitir siempre'
     },
     clarify: esClarify,
@@ -5192,7 +5192,7 @@ export const esOverrides = {
       envRequired: 'Rellena primero las credenciales obligatorias',
       sendFailed: 'No se pudo enviar la respuesta de configuración MCP',
       reloadFailed: 'Servidor guardado, pero falló la recarga de herramientas MCP — se cargarán en la próxima sesión',
-      gatewayDisconnected: 'A2Intelligence está sin conexión ahora mismo. Reconéctate y vuelve a enviarlo.'
+      gatewayDisconnected: 'A2Assistant está sin conexión ahora mismo. Reconéctate y vuelve a enviarlo.'
     },
     tool: {
       copyCode: 'Copiar código',
@@ -5378,7 +5378,7 @@ export const esOverrides = {
     }
   },
   prompts: {
-    gatewayDisconnected: 'A2Intelligence está sin conexión ahora mismo. Reconéctate y vuelve a enviarlo.',
+    gatewayDisconnected: 'A2Assistant está sin conexión ahora mismo. Reconéctate y vuelve a enviarlo.',
     reconnect: 'Reconectar',
     sudoSendFailed: 'No se pudo enviar la contraseña sudo',
     secretSendFailed: 'No se pudo enviar el secreto',
@@ -5387,10 +5387,10 @@ export const esOverrides = {
       'Revisa el comando antes de introducir tu contraseña de sudo. La contraseña se envía al agente que lo ejecuta y se guarda en caché durante esta sesión.',
     sudoCommandUnavailable: 'Este agente no indicó el comando. Cancela si no puedes verificarlo en la conversación.',
     sudoInstallDesc:
-      'A2Intelligence necesita tu contraseña de sudo para instalar los paquetes de Bot Screen (TigerVNC + Xfce) en el host del gateway. Solo se envía a ese host.',
+      'A2Assistant necesita tu contraseña de sudo para instalar los paquetes de Bot Screen (TigerVNC + Xfce) en el host del gateway. Solo se envía a ese host.',
     sudoPlaceholder: 'contraseña sudo',
     secretTitle: 'Se requiere un secreto',
-    secretDesc: 'A2Intelligence necesita una credencial para continuar.',
+    secretDesc: 'A2Assistant necesita una credencial para continuar.',
     secretPlaceholder: 'valor secreto',
     vaultUnlockSendFailed: 'No se pudo enviar la contraseña maestra',
     vaultUnlockTitle: (name: string) => `Desbloquear ${name}`,
@@ -5402,7 +5402,7 @@ export const esOverrides = {
     vaultSaveSendFailed: 'No se pudo guardar el acceso',
     vaultSaveTitle: (site: string) => `¿Guardar tu acceso a ${site}?`,
     vaultSaveDesc: (origin: string) =>
-      `A2Intelligence llegó a una página de inicio de sesión en ${origin} y no tiene un acceso para ella. Introdúcelo una vez aquí; se cifra en este equipo y se rellena en la página sin que el modelo vea nunca la contraseña.`,
+      `A2Assistant llegó a una página de inicio de sesión en ${origin} y no tiene un acceso para ella. Introdúcelo una vez aquí; se cifra en este equipo y se rellena en la página sin que el modelo vea nunca la contraseña.`,
     vaultSaveIdentifierLabel: 'Correo electrónico o nombre de usuario',
     vaultSaveIdentifierPlaceholder: 'tu@ejemplo.com',
     vaultSavePasswordPlaceholder: 'Contraseña',
@@ -5412,10 +5412,10 @@ export const esOverrides = {
     vaultCodeSendFailed: 'No se pudo enviar el código',
     vaultCodeTitle: (site: string) => `Código de verificación de ${site}`,
     vaultCodeDesc: (site: string) =>
-      `${site} pide un código de un solo uso (SMS, correo o app de autenticación). Introdúcelo aquí y A2Intelligence lo escribe en la página; el modelo nunca lo ve.`,
+      `${site} pide un código de un solo uso (SMS, correo o app de autenticación). Introdúcelo aquí y A2Assistant lo escribe en la página; el modelo nunca lo ve.`,
     vaultCodeLabel: 'Código',
     vaultCodeFootnote:
-      'Consejo: guarda la clave del autenticador con este acceso en Configuración → Contraseñas e inicios de sesión y A2Intelligence introducirá los códigos por ti.',
+      'Consejo: guarda la clave del autenticador con este acceso en Configuración → Contraseñas e inicios de sesión y A2Assistant introducirá los códigos por ti.',
     vaultCodeSkip: 'Omitir',
     vaultCodeConfirm: 'Introducir código'
   },
@@ -5485,8 +5485,8 @@ export const esOverrides = {
     sessionExportFailed: 'No se pudo exportar la sesión',
     imageSaved: 'Imagen guardada',
     downloadStarted: 'Descarga iniciada',
-    restartToUseSaveImage: 'Reinicia A2Intelligence Desktop para usar Guardar imagen.',
-    restartToSaveImages: 'Reinicia A2Intelligence Desktop para guardar imágenes',
+    restartToUseSaveImage: 'Reinicia A2Assistant Desktop para usar Guardar imagen.',
+    restartToSaveImages: 'Reinicia A2Assistant Desktop para guardar imágenes',
     imageDownloadFailed: 'Falló la descarga de imagen',
     openImage: 'Abrir imagen',
     downloadImage: 'Descargar imagen',
@@ -5510,7 +5510,7 @@ export const esOverrides = {
       systemNote: platform => `↻ Transferido a ${platform}; puedes reanudar aquí cuando quieras.`,
       failed: error => `La transferencia falló: ${error}`,
       timedOut:
-        'A2Intelligence no pudo llegar a tu conexión de mensajería. Iníciala desde Configuración → Mensajería y vuelve a intentar el traspaso.',
+        'A2Assistant no pudo llegar a tu conexión de mensajería. Iníciala desde Configuración → Mensajería y vuelve a intentar el traspaso.',
       startMessaging: 'Iniciar mensajería'
     }
   },
@@ -5523,14 +5523,14 @@ export const esOverrides = {
       },
       skills: {
         title: 'Enséñale una vez',
-        text: 'Las skills son carpetas de instrucciones que A2Intelligence carga cuando el trabajo las necesita.'
+        text: 'Las skills son carpetas de instrucciones que A2Assistant carga cuando el trabajo las necesita.'
       },
       messaging: {
-        title: 'A2Intelligence lejos de tu escritorio',
+        title: 'A2Assistant lejos de tu escritorio',
         text: 'Conecta Telegram, Discord, Slack y más: el mismo agente, la misma memoria.'
       },
       artifacts: {
-        title: 'Todo lo que ha creado A2Intelligence',
+        title: 'Todo lo que ha creado A2Assistant',
         text: 'Imágenes, archivos y enlaces de cada sesión, indexados en un solo lugar.'
       },
       cron: {
@@ -5543,7 +5543,7 @@ export const esOverrides = {
       },
       profiles: {
         title: 'Los perfiles son independientes',
-        text: 'Cada uno es su propio A2Intelligence: sus propias claves, su propia memoria, sus propias sesiones.'
+        text: 'Cada uno es su propio A2Assistant: sus propias claves, su propia memoria, sus propias sesiones.'
       },
       'composer-mentions': {
         title: 'Adjunta y ordena',

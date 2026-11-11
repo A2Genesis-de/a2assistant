@@ -3,10 +3,10 @@ import type { GatewayHostTranslations } from './types_gateway_host'
 // Settings → Gateways copy where the connection cannot change, spread into en.ts.
 export const enGatewayHost: GatewayHostTranslations = {
   unavailableTitle: 'Gateway settings unavailable',
-  unavailableDesc: 'Connection settings can only be changed from the A2Intelligence Desktop app on the computer running it.',
-  webappHostTitle: 'A2Intelligence host',
+  unavailableDesc: 'Connection settings can only be changed from the A2Assistant Desktop app on the computer running it.',
+  webappHostTitle: 'A2Assistant host',
   webappHostDesc:
-    'The Webapp always runs on the A2Intelligence host that serves it. The saved connections below are this machine\'s list, shared with the A2Intelligence Desktop app; other gateways are reached through this host.',
+    'The Webapp always runs on the A2Assistant host that serves it. The saved connections below are this machine\'s list, shared with the A2Assistant Desktop app; other gateways are reached through this host.',
   webappOauthPaste: {
     title: 'Finish signing in',
     description: 'If the sign-in tab ended on an address that would not load (this browser is not on the gateway\'s machine), paste that address here.',
@@ -16,7 +16,7 @@ export const enGatewayHost: GatewayHostTranslations = {
   },
   webAccess: {
     title: 'Web access',
-    intro: 'Open A2Intelligence on this computer from your phone or another computer, signed in with your Nous account. Whoever signs in can run commands on this computer.',
+    intro: 'Open A2Assistant on this computer from your phone or another computer, signed in with your Nous account. Whoever signs in can run commands on this computer.',
     failed: "Couldn't change web access",
     running: 'Running',
     stopped: 'Stopped',
@@ -24,7 +24,7 @@ export const enGatewayHost: GatewayHostTranslations = {
     stopping: 'Stopping',
     restartNeeded: 'Restart needed',
     unavailable: 'Unavailable',
-    notRunningDetail: 'Start it to open A2Intelligence from another device.',
+    notRunningDetail: 'Start it to open A2Assistant from another device.',
     needsNous: 'Sign in to your Nous account under Providers first.',
     runningLan: 'Open this address on a device on the same network.',
     runningPublic: 'Served through your URL.',

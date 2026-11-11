@@ -4,7 +4,7 @@ export const frNotifications = {
   intro: "Notifications système (pas les toasts de l'application). Par appareil.",
   enableAll: 'Activer les notifications',
   enableAllDesc: 'Désactivé coupe toutes les notifications ci-dessous.',
-  focusedHint: 'Les alertes de fin ne se déclenchent que quand A2Intelligence est en arrière-plan.',
+  focusedHint: 'Les alertes de fin ne se déclenchent que quand A2Assistant est en arrière-plan.',
   kinds: {
     approval: {
       label: 'Approbation requise',
@@ -12,11 +12,11 @@ export const frNotifications = {
     },
     input: {
       label: 'Saisie requise',
-      description: "A2Intelligence a posé une question ou a besoin d'un mot de passe ou d'un secret."
+      description: "A2Assistant a posé une question ou a besoin d'un mot de passe ou d'un secret."
     },
     turnDone: {
       label: 'Réponse prête',
-      description: "Un tour s'est terminé pendant que A2Intelligence était en arrière-plan."
+      description: "Un tour s'est terminé pendant que A2Assistant était en arrière-plan."
     },
     turnError: {
       label: 'Échec du tour',
@@ -32,7 +32,7 @@ export const frNotifications = {
     },
     plugin: {
       label: 'Notifications des plugins',
-      description: 'Un plugin desktop a envoyé une notification pendant que A2Intelligence était en arrière-plan.'
+      description: 'Un plugin desktop a envoyé une notification pendant que A2Assistant était en arrière-plan.'
     }
   },
   browserPermission: {
@@ -49,7 +49,7 @@ export const frNotifications = {
     }
   },
   test: 'Envoyer une notification de test',
-  testTitle: 'A2Intelligence',
+  testTitle: 'A2Assistant',
   testBody: 'Les notifications fonctionnent.',
   testSent:
     "Test envoyé. Si rien n'apparaît, vérifiez les autorisations de notification de votre système et le mode Ne pas déranger.",

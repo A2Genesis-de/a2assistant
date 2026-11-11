@@ -1,7 +1,7 @@
 import re
 import sys
 
-BRAND = "A2Intelligence"
+BRAND = "A2Assistant"
 WORD = re.compile(r"\bHermes Agent\b|\bHermes\b(?!\.app|-Setup)")
 
 

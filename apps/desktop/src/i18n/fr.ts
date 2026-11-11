@@ -63,7 +63,7 @@ export const frOverrides = {
       kindCatalog: 'MCP · Catalogue',
       kindCustom: 'MCP · Personnalisé',
       kindPlugin: (plugin: string) => `MCP · Plugin ${plugin}`,
-      inCatalog: 'Dans le catalogue A2Intelligence',
+      inCatalog: 'Dans le catalogue A2Assistant',
       hostedTwin: 'Version gérée disponible',
       alsoLocal: 'Fonctionne aussi sur cet appareil',
       open: (name: string) => `Ouvrir ${name}`,
@@ -112,7 +112,7 @@ export const frOverrides = {
       loading: 'Lecture du catalogue et des serveurs de cet ordinateur',
       emptyTitle: 'Aucune application pour le moment. Ajoutez un serveur sur cet ordinateur pour commencer.',
       noMatchTitle: 'Aucune application correspondante',
-      noMatchBody: 'Aucun résultat. Indiquez à A2Intelligence votre propre serveur MCP pour l’ajouter.',
+      noMatchBody: 'Aucun résultat. Indiquez à A2Assistant votre propre serveur MCP pour l’ajouter.',
       clearSearch: 'Effacer la recherche',
       hostedFailedTitle: 'Impossible de joindre les applications hébergées.',
       hostedFailedBody:
@@ -128,7 +128,7 @@ export const frOverrides = {
       managedUnavailable: 'Les applications gérées ne sont pas encore disponibles pour ce compte.',
       writeFailed: 'Cette modification n’a pas été enregistrée.',
       refreshFailed: 'La liste des outils n’a pas été actualisée.',
-      disconnectNoAccount: 'A2Intelligence n’a aucun compte à déconnecter ici. Actualisez la page et réessayez.',
+      disconnectNoAccount: 'A2Assistant n’a aucun compte à déconnecter ici. Actualisez la page et réessayez.',
       disconnectRefused:
         'Nous ne peut pas supprimer cette connexion pour le moment. Désactivez plutôt l’application avec l’interrupteur, ou réessayez plus tard.'
     },
@@ -168,23 +168,23 @@ export const frOverrides = {
     dialog: {
       disconnect: 'Déconnecter',
       disconnectTitle: (name: string) => `Déconnecter ${name} ?`,
-      disconnectBody: "A2Intelligence cesse d'agir avec ce compte. Vous pouvez vous reconnecter à tout moment.",
+      disconnectBody: "A2Assistant cesse d'agir avec ce compte. Vous pouvez vous reconnecter à tout moment.",
       menuRefreshTools: 'Actualiser les outils',
       moreActions: "Plus d'actions",
       removeServerTitle: (name: string) => `Supprimer ${name} ?`,
       removeServerBody: "L'entrée est retirée de mcp.json sur cet ordinateur. Rien d'autre n'est supprimé.",
-      appSwitch: (name: string) => `A2Intelligence peut utiliser ${name}`,
+      appSwitch: (name: string) => `A2Assistant peut utiliser ${name}`,
       waysTitle: (name: string) => `Où ${name} s'exécute`,
       wayNotConnected: (name: string) => `Pas encore connecté. Connectez-vous à ${name} dans votre navigateur.`,
       wayHosted: 'Géré',
-      bothOn: (name: string) => `Les deux sont activés : A2Intelligence voit donc chaque outil ${name} en double.`,
+      bothOn: (name: string) => `Les deux sont activés : A2Assistant voit donc chaque outil ${name} en double.`,
       turnOffLocal: 'Désactiver le serveur local',
       providedByPlugin: (plugin: string) => `Fourni par le plugin ${plugin}`,
       openPlugins: "Ouvrir l'onglet Plugins",
       nousLine: 'Les applications Nous suivent votre compte, pas le profil.',
       rulesReadOnly: 'Les règles ne peuvent pas être modifiées pour le moment.',
       rulesAppOff: (name: string) => `Activez ${name} pour modifier ses outils.`,
-      rulesSignIn: 'Connectez-vous pour modifier ce que A2Intelligence peut faire ici.',
+      rulesSignIn: 'Connectez-vous pour modifier ce que A2Assistant peut faire ici.',
       orgNote: (count: number) => `Votre organisation a désactivé ${count} outil${count > 1 ? 's' : ''}.`,
       orgLink: "Ouvrir l'administration des connecteurs",
       connectEnded: "La connexion n'a pas abouti.",
@@ -200,8 +200,8 @@ export const frOverrides = {
     tools: {
       title: 'Outils',
       notInstalledBody: "Installez-le sur cet appareil pour voir les outils qu'il apporte.",
-      summaryTitle: (name: string) => `Ce que A2Intelligence peut faire avec ${name}`,
-      summaryPreviewTitle: (name: string) => `Ce que A2Intelligence pourra faire avec ${name} une fois connecté`,
+      summaryTitle: (name: string) => `Ce que A2Assistant peut faire avec ${name}`,
+      summaryPreviewTitle: (name: string) => `Ce que A2Assistant pourra faire avec ${name} une fois connecté`,
       summaryCount: (count: number) => `${count} outil${count > 1 ? 's' : ''}`,
       summaryAllTools: 'Tous les outils',
       summaryOther: 'Autres',
@@ -234,7 +234,7 @@ export const frOverrides = {
       needsAuthBody: 'La connexion reste sur cet ordinateur. Rien ne le quitte.',
       retry: 'Réessayer',
       goneTitle: (name: string) => `${name} a quitté le catalogue.`,
-      goneBody: "A2Intelligence ne peut plus l'appeler. La ligne reste jusqu'à ce que vous la supprimiez : rien ne disparaît.",
+      goneBody: "A2Assistant ne peut plus l'appeler. La ligne reste jusqu'à ce que vous la supprimiez : rien ne disparaît.",
       remove: 'Supprimer',
       offTitle: (name: string) => `${name} est désactivé.`,
       offBody: "Activez-le avec l'interrupteur ci-dessus pour lire les outils qu'il apporte.",
@@ -311,7 +311,7 @@ export const frOverrides = {
   },
   sessionImport: {
     title: 'Reprendre depuis une autre application',
-    subtitle: 'Importez une conversation dans A2Intelligence et reprenez là où vous en étiez.',
+    subtitle: 'Importez une conversation dans A2Assistant et reprenez là où vous en étiez.',
     action: 'Importer une session',
     readingFrom: 'Lecture depuis',
     connectedComputer: "l'ordinateur connecté",
@@ -329,18 +329,18 @@ export const frOverrides = {
     more: 'Charger davantage de sessions',
     messages: 'messages',
     choose: 'Une conversation à poursuivre',
-    chooseHelp: "Choisissez une session pour lire son historique avant de l'importer dans A2Intelligence.",
+    chooseHelp: "Choisissez une session pour lire son historique avant de l'importer dans A2Assistant.",
     previewLoading: "Ouverture de l'aperçu",
     previewError: 'Aperçu indisponible',
     previewHelp: 'La source a peut-être été déplacée ou modifiée. Actualisez la liste et réessayez.',
     previewLimit: 'Aperçu abrégé pour faciliter la lecture. La conversation est importée dans son intégralité.',
     you: 'Vous',
-    snapshot: 'Cette conversation est déjà dans A2Intelligence. Ouvrez votre copie existante pour continuer.',
+    snapshot: 'Cette conversation est déjà dans A2Assistant. Ouvrez votre copie existante pour continuer.',
     copyNotice:
       'Copie le texte de la conversation sans modifier les fichiers sources. Les résultats des outils et le raisonnement ne sont pas transférés.',
     importing: 'Importation…',
-    open: 'Ouvrir dans A2Intelligence',
-    continue: 'Continuer dans A2Intelligence',
+    open: 'Ouvrir dans A2Assistant',
+    continue: 'Continuer dans A2Assistant',
     importError: "Impossible d'importer cette conversation."
   },
   common: {
@@ -419,13 +419,13 @@ export const frOverrides = {
     copyDetailFailed: 'Impossible de copier le détail de la notification',
     backendOutOfDateTitle: 'Backend obsolète',
     backendOutOfDateMessage:
-      'Votre backend A2Intelligence est plus ancien que cette version du desktop et peut ne pas fonctionner correctement. Mettez-le à jour pour les aligner.',
-    desktopOutOfDateTitle: 'Application A2Intelligence obsolète',
+      'Votre backend A2Assistant est plus ancien que cette version du desktop et peut ne pas fonctionner correctement. Mettez-le à jour pour les aligner.',
+    desktopOutOfDateTitle: 'Application A2Assistant obsolète',
     desktopOutOfDateMessage:
-      "Cette application A2Intelligence est plus ancienne que le backend auquel elle est connectée et peut ne pas fonctionner correctement. Effectuez la mise à jour de l'application pour les aligner.",
+      "Cette application A2Assistant est plus ancienne que le backend auquel elle est connectée et peut ne pas fonctionner correctement. Effectuez la mise à jour de l'application pour les aligner.",
     updateDesktopApp: "Mettre à jour l'application",
     installMethodUnsupportedTitle: "Méthode d'installation non prise en charge",
-    updateHermes: 'Mettre à jour A2Intelligence',
+    updateHermes: 'Mettre à jour A2Assistant',
     updateReadyTitle: 'Mise à jour prête',
     updateReadyMessage: count =>
       `${count} ${count === 1 ? 'nouvelle modification disponible' : 'nouvelles modifications disponibles'}.`,
@@ -447,20 +447,20 @@ export const frOverrides = {
       elevenLabsRejectedKey: 'ElevenLabs a rejeté la clé API (401).',
       diskFull: "Le disque est plein. Libérez de l'espace disque, puis réessayez.",
       storageFailure:
-        "A2Intelligence n'a pas pu enregistrer dans son dossier de données. Ouvrez Maintenance pour le vérifier et le réparer.",
+        "A2Assistant n'a pas pu enregistrer dans son dossier de données. Ouvrez Maintenance pour le vérifier et le réparer.",
       gatewayAuthFailed: "Échec de l'authentification du gateway — vérifiez API_SERVER_KEY.",
       methodNotAllowed:
-        'Le backend du desktop a rejeté cette requête (405 Method Not Allowed). Essayez de redémarrer A2Intelligence Desktop.',
+        'Le backend du desktop a rejeté cette requête (405 Method Not Allowed). Essayez de redémarrer A2Assistant Desktop.',
       microphonePermission: "L'autorisation du microphone a été refusée.",
       openaiRejectedApiKey: 'OpenAI a rejeté la clé API.',
       openaiTtsNeedsKey: 'TTS OpenAI nécessite VOICE_TOOLS_OPENAI_KEY ou OPENAI_API_KEY.',
       codeSkewRestartRequired:
         "Ce backend exécute encore l'ancien code après une mise à jour. Redémarrez-le pour charger le nouveau code.",
       rpcOutOfSync: "L'application et le backend ne sont pas sur la même version. Mettez-les tous les deux à jour.",
-      restartHermesFailed: 'Impossible de redémarrer A2Intelligence'
+      restartHermesFailed: 'Impossible de redémarrer A2Assistant'
     },
     actions: {
-      restartHermes: 'Redémarrer A2Intelligence',
+      restartHermes: 'Redémarrer A2Assistant',
       openKeys: 'Ouvrir les clés',
       openGateways: 'Ouvrir les gateways',
       openMaintenance: 'Ouvrir Maintenance'
@@ -490,7 +490,7 @@ export const frOverrides = {
       liveEndedConnectionLost: 'La session vocale en direct a perdu sa connexion.',
       liveEndedClosed: 'La session vocale en direct a été fermée par le service.',
       liveError: 'Voix en direct',
-      liveDelegationFailed: 'Impossible de transmettre la demande à A2Intelligence',
+      liveDelegationFailed: 'Impossible de transmettre la demande à A2Assistant',
       liveUnavailable: reason =>
         `Le chat vocal GPT-Live n'est pas disponible : ${reason}. Utilisation de la reconnaissance vocale à la place.`
     },
@@ -501,8 +501,8 @@ export const frOverrides = {
       rejectAction: 'Rejeter',
       inputTitle: 'Saisie requise',
       inputTitleNamed: session => `Saisie requise — ${session}`,
-      inputBody: 'A2Intelligence attend votre réponse.',
-      turnDoneTitle: 'A2Intelligence a terminé',
+      inputBody: 'A2Assistant attend votre réponse.',
+      turnDoneTitle: 'A2Assistant a terminé',
       turnDoneBody: '',
       turnErrorTitle: 'Échec du tour',
       backgroundDoneTitle: 'Tâche en arrière-plan terminée',
@@ -748,7 +748,7 @@ export const frOverrides = {
     exportConfig: 'Exporter la configuration',
     importConfig: 'Importer la configuration',
     resetToDefaults: 'Réinitialiser aux valeurs par défaut',
-    resetConfirm: 'Réinitialiser tous les paramètres aux valeurs par défaut de A2Intelligence ?',
+    resetConfirm: 'Réinitialiser tous les paramètres aux valeurs par défaut de A2Assistant ?',
     exportFailed: "Échec de l'export",
     resetFailed: 'Échec de la réinitialisation',
     pluginPages: {
@@ -839,7 +839,7 @@ export const frOverrides = {
         desktopSuccess: name => `Plugin Desktop ${name} installé`,
         agentFailed: "Échec de l'installation du plugin de l'agent",
         installUncertain:
-          "A2Intelligence n'attend plus le résultat de l'installation, mais le plugin est peut-être encore en cours d'installation. Fermez cette fenêtre et actualisez la liste des plugins avant de relancer l'installation.",
+          "A2Assistant n'attend plus le résultat de l'installation, mais le plugin est peut-être encore en cours d'installation. Fermez cette fenêtre et actualisez la liste des plugins avant de relancer l'installation.",
         desktopFailed: "Échec de l'installation du plugin Desktop",
         missingEnv: (name, vars) =>
           `${name} est installé, mais a besoin d'une clé pour fonctionner : ${vars}. Ajoutez-la maintenant, sinon les outils du plugin échoueront.`,
@@ -921,7 +921,7 @@ export const frOverrides = {
       otpField: "Clé d'authentificateur",
       otpPlaceholder: 'Secret Base32 ou lien otpauth://',
       otpHint:
-        "La « clé d'installation » que le site affiche lorsque vous activez 2FA. Avec elle enregistrée, A2Intelligence génère lui-même les codes.",
+        "La « clé d'installation » que le site affiche lorsque vous activez 2FA. Avec elle enregistrée, A2Assistant génère lui-même les codes.",
       twoFactorBadge: '2FA auto',
       deleteTitle: 'Supprimer cet élément ?',
       deleteDescription: label => `« ${label} » sera supprimé définitivement.`,
@@ -932,12 +932,12 @@ export const frOverrides = {
           "Les gestionnaires de mots de passe installés sont repérés automatiquement. L'agent vous demande de déverrouiller l'un la première fois qu'il en a besoin (une fois par session) ; seul un jeton de session reste en mémoire, et l'agent ne voit jamais votre mot de passe principal ou aucun identifiant.",
         toggleFailed: 'Impossible de mettre à jour le gestionnaire de mots de passe',
         notInstalled: name =>
-          `Non détecté. Installez l’outil en ligne de commande ${name} et connectez-vous ; A2Intelligence le repère automatiquement.`,
-        disabledDesc: 'Détecté mais désactivé pour A2Intelligence.',
+          `Non détecté. Installez l’outil en ligne de commande ${name} et connectez-vous ; A2Assistant le repère automatiquement.`,
+        disabledDesc: 'Détecté mais désactivé pour A2Assistant.',
         lockedDesc:
           "Détecté. L'agent vous demandera de le déverrouiller lorsqu'il en a besoin, ou déverrouillez maintenant.",
         unlockedDesc:
-          "Déverrouillé pour cette session. Se verrouille automatiquement après 30 minutes d'inactivité ou lorsque A2Intelligence se ferme.",
+          "Déverrouillé pour cette session. Se verrouille automatiquement après 30 minutes d'inactivité ou lorsque A2Assistant se ferme.",
         statusLocked: 'Verrouillé',
         statusNotDetected: 'Non détecté',
         statusOff: 'Désactivé',
@@ -964,7 +964,7 @@ export const frOverrides = {
       advanced: 'Avancé'
     },
     searchPlaceholder: {
-      about: 'À propos de A2Intelligence Desktop',
+      about: 'À propos de A2Assistant Desktop',
       config: 'Rechercher dans les paramètres...',
       gateway: 'Connexion au gateway...',
       keys: 'Rechercher des clés API...',
@@ -993,7 +993,7 @@ export const frOverrides = {
       intro:
         'Exclusif au desktop. Le mode contrôle la luminosité ; le thème contrôle la palette et le chrome de la conversation.',
       colorMode: 'Mode couleur',
-      colorModeDesc: 'Choisissez un mode fixe ou laissez A2Intelligence suivre le paramètre système.',
+      colorModeDesc: 'Choisissez un mode fixe ou laissez A2Assistant suivre le paramètre système.',
       toolViewTitle: "Affichage des appels d'outil",
       toolViewDesc:
         'Le mode Produit masque les charges utiles brutes ; le mode Technique affiche les entrées/sorties complètes.',
@@ -1072,15 +1072,15 @@ export const frOverrides = {
       modelPricingDesc:
         "Affiche les prix d'entrée, de sortie et de lecture du cache par million de jetons dans le sélecteur de modèle.",
       reactionsTitle: 'Réactions aux messages',
-      reactionsDesc: 'Réactions emoji façon iMessage — réagissez aux messages, et A2Intelligence peut réagir aux vôtres.',
+      reactionsDesc: 'Réactions emoji façon iMessage — réagissez aux messages, et A2Assistant peut réagir aux vôtres.',
       tipsTitle: "Astuces dans l'application",
       tipsDesc:
-        "Une petite bulle désigne occasionnellement une partie de l'application lorsque vous êtes inactif ou lorsque A2Intelligence peut vous aider. Fermer une astuce la masque définitivement.",
+        "Une petite bulle désigne occasionnellement une partie de l'application lorsque vous êtes inactif ou lorsque A2Assistant peut vous aider. Fermer une astuce la masque définitivement.",
       tipsReset: (count: number) =>
         `Réafficher ${count} astuce${count === 1 ? '' : 's'} fermée${count === 1 ? '' : 's'}`,
       toursTitle: 'Visites guidées',
       toursDesc:
-        "Laissez A2Intelligence vous guider dans l'application en assombrissant l'écran et en mettant chaque étape en évidence.",
+        "Laissez A2Assistant vous guider dans l'application en assombrissant l'écran et en mettant chaque étape en évidence.",
       composerPopoutTitle: 'Détacher la zone de saisie',
       composerPopoutDesc:
         'Permet de faire glisser la zone de saisie hors de son emplacement. Désactivé, elle reste ancrée en bas.',
@@ -1122,9 +1122,9 @@ export const frOverrides = {
       pet: {
         title: 'Animal de compagnie',
         intro:
-          "Adoptez une mascotte petdex animée qui flotte au-dessus de l'application et réagit aux actions de A2Intelligence — court pendant l'exécution des outils, fête les réussites, boude les erreurs.",
+          "Adoptez une mascotte petdex animée qui flotte au-dessus de l'application et réagit aux actions de A2Assistant — court pendant l'exécution des outils, fête les réussites, boude les erreurs.",
         restartHint:
-          "Les animaux de compagnie nécessitent un redémarrage rapide — l'application en cours a démarré avant l'ajout de cette fonctionnalité. Fermez et rouvrez A2Intelligence, puis revenez ici.",
+          "Les animaux de compagnie nécessitent un redémarrage rapide — l'application en cours a démarré avant l'ajout de cette fonctionnalité. Fermez et rouvrez A2Assistant, puis revenez ici.",
         scaleTitle: 'Taille',
         scaleDesc: "Redimensionnez la mascotte flottante. S'applique partout instantanément.",
         roamTitle: 'Errer',
@@ -1350,11 +1350,11 @@ export const frOverrides = {
       timezone: 'Identifiant de fuseau horaire IANA. Si vide, utilise le fuseau horaire du système.',
       browser: {
         useRealProfile:
-          'La navigation locale utilise vos vraies connexions. A2Intelligence copie le profil de votre navigateur par défaut (cookies, connexions, préférences) dans un instantané géré et le pilote avec son Chromium intégré — votre profil actif n’est jamais ouvert directement, et la copie est actualisée à chaque exécution. Permet aussi à l’agent d’ouvrir sur demande une session locale avec votre vrai profil, même si un backend de navigateur cloud est configuré. Seuls les navigateurs Chromium (Chrome, Edge, Brave, Brave Origin, Chromium) sont pris en charge ; un navigateur par défaut non Chromium échoue avec un message clair. Désactivé par défaut.'
+          'La navigation locale utilise vos vraies connexions. A2Assistant copie le profil de votre navigateur par défaut (cookies, connexions, préférences) dans un instantané géré et le pilote avec son Chromium intégré — votre profil actif n’est jamais ouvert directement, et la copie est actualisée à chaque exécution. Permet aussi à l’agent d’ouvrir sur demande une session locale avec votre vrai profil, même si un backend de navigateur cloud est configuré. Seuls les navigateurs Chromium (Chrome, Edge, Brave, Brave Origin, Chromium) sont pris en charge ; un navigateur par défaut non Chromium échoue avec un message clair. Désactivé par défaut.'
       },
       agent: {
         imageInputMode: 'Contrôle la façon dont les pièces jointes image sont envoyées au modèle.',
-        maxTurns: "Limite supérieure de tours d'appel d'outils avant que A2Intelligence n'arrête une exécution."
+        maxTurns: "Limite supérieure de tours d'appel d'outils avant que A2Assistant n'arrête une exécution."
       },
       terminal: {
         cwd: 'Dossier de projet par défaut pour les outils et le terminal.',
@@ -1368,9 +1368,9 @@ export const frOverrides = {
       codeExecution: {
         mode: "Degré de restriction de l'exécution du code au projet actuel."
       },
-      fileReadMaxChars: 'Nombre maximal de caractères que A2Intelligence peut lire dans une demande de fichier.',
+      fileReadMaxChars: 'Nombre maximal de caractères que A2Assistant peut lire dans une demande de fichier.',
       approvals: {
-        mode: 'Comment A2Intelligence gère les commandes nécessitant une approbation explicite.',
+        mode: 'Comment A2Assistant gère les commandes nécessitant une approbation explicite.',
         timeout: "Durée d'attente des invites d'approbation avant expiration."
       },
       security: {
@@ -1399,11 +1399,11 @@ export const frOverrides = {
       voice: {
         autoTts: "Lit automatiquement les réponses de l'assistant à voix haute.",
         voiceChatMode:
-          'chained : reconnaissance vocale → A2Intelligence → synthèse vocale avec les fournisseurs ci-dessous. gpt-live : un modèle vocal OpenAI full-duplex (gpt-live-1) écoute et parle, et confie chaque vraie demande à A2Intelligence — le modèle que vous avez sélectionné répond avec l’ensemble des outils. Nécessite une clé API OpenAI ; la couche vocale est facturée 0,05 $ par minute.',
+          'chained : reconnaissance vocale → A2Assistant → synthèse vocale avec les fournisseurs ci-dessous. gpt-live : un modèle vocal OpenAI full-duplex (gpt-live-1) écoute et parle, et confie chaque vraie demande à A2Assistant — le modèle que vous avez sélectionné répond avec l’ensemble des outils. Nécessite une clé API OpenAI ; la couche vocale est facturée 0,05 $ par minute.',
         gptLive: {
           voice: 'Voix du mode GPT-Live. Les identifiants de voix personnalisés sont acceptés.',
           instructions:
-            'Phrases supplémentaires pour la personnalité vocale en direct (ton, rythme, langue). A2Intelligence conserve son propre prompt système.'
+            'Phrases supplémentaires pour la personnalité vocale en direct (ton, rythme, langue). A2Assistant conserve son propre prompt système.'
         }
       },
       tts: {
@@ -1431,13 +1431,13 @@ export const frOverrides = {
       },
       updates: {
         nonInteractiveLocalChanges:
-          "Quand A2Intelligence se met à jour depuis l'application (sans invite de terminal), conserve les modifications locales (stash) ou les abandonne (discard). Les mises à jour via le terminal demandent toujours confirmation."
+          "Quand A2Assistant se met à jour depuis l'application (sans invite de terminal), conserve les modifications locales (stash) ou les abandonne (discard). Les mises à jour via le terminal demandent toujours confirmation."
       }
     }),
     uninstallSection: {
       dangerZone: 'Zone dangereuse',
       checkingInstalled: 'Vérification des éléments installés…',
-      uninstallHermes: 'Désinstaller A2Intelligence',
+      uninstallHermes: 'Désinstaller A2Assistant',
       chooseHowMuch:
         'Choisissez ce que vous souhaitez supprimer. L’application se ferme pour terminer ; rouvrez le programme d’installation à tout moment pour revenir.',
       confirmUninstall: 'Confirmer la désinstallation',
@@ -1450,22 +1450,22 @@ export const frOverrides = {
         gui: {
           title: 'Désinstaller uniquement l’interface de chat',
           description:
-            'Supprime cette application de bureau. L’agent A2Intelligence, votre configuration et vos conversations sont conservés.',
+            'Supprime cette application de bureau. L’agent A2Assistant, votre configuration et vos conversations sont conservés.',
           consequence: 'l’interface de chat de bureau (cette application et ses données)'
         },
         lite: {
           title: 'Désinstaller l’interface et l’agent, conserver mes données',
           description:
-            'Supprime l’application et l’agent A2Intelligence, mais conserve la configuration, les conversations et les secrets pour une future réinstallation.',
+            'Supprime l’application et l’agent A2Assistant, mais conserve la configuration, les conversations et les secrets pour une future réinstallation.',
           consequence:
-            'l’interface de chat et l’agent A2Intelligence (la configuration, les conversations et les secrets sont conservés)'
+            'l’interface de chat et l’agent A2Assistant (la configuration, les conversations et les secrets sont conservés)'
         },
         full: {
           title: 'Tout désinstaller',
           description:
             'Supprime l’application, l’agent et toutes les données utilisateur : configuration, conversations, tâches planifiées, secrets, journaux.',
           consequence:
-            'TOUT — l’interface de chat, l’agent A2Intelligence et l’ensemble de votre configuration, de vos conversations, secrets et journaux'
+            'TOUT — l’interface de chat, l’agent A2Assistant et l’ensemble de votre configuration, de vos conversations, secrets et journaux'
         }
       }
     },
@@ -1520,7 +1520,7 @@ export const frOverrides = {
     config: {
       minimizeToTrayTitle: 'Réduire dans la barre d’état',
       minimizeToTrayDesc:
-        'Réduire les fenêtres ou fermer la fenêtre principale les masque dans la zone de notification (barre des menus sur macOS) et A2Intelligence continue de s’exécuter. Utilisez Quitter A2Intelligence dans le menu de la zone de notification ou Cmd+Q pour quitter. Désactivé par défaut ; s’applique uniquement à cet appareil.',
+        'Réduire les fenêtres ou fermer la fenêtre principale les masque dans la zone de notification (barre des menus sur macOS) et A2Assistant continue de s’exécuter. Utilisez Quitter A2Assistant dans le menu de la zone de notification ou Cmd+Q pour quitter. Désactivé par défaut ; s’applique uniquement à cet appareil.',
       minimizeToTrayUnavailable:
         'La zone de notification est indisponible. Les fenêtres seront réduites et fermées normalement. Désactivez puis réactivez cette option pour réessayer.',
       none: 'Aucun',
@@ -1531,7 +1531,7 @@ export const frOverrides = {
       searchPlaceholder: 'Rechercher…',
       noResults: 'Aucun résultat trouvé',
       systemDefault: 'Par défaut du système',
-      loading: 'Chargement de la configuration A2Intelligence...',
+      loading: 'Chargement de la configuration A2Assistant...',
       emptyTitle: 'Rien à configurer',
       emptyDesc: 'Cette section ne contient aucun paramètre ajustable.',
       failedLoad: 'Échec du chargement des paramètres',
@@ -1561,27 +1561,27 @@ export const frOverrides = {
       description:
         'Appuyez puis relâchez ⌘ + Option sur Mac, ou Ctrl + Alt sous Windows/Linux, pour afficher le HUD depuis n’importe quelle application. Désactivé par défaut ; s’applique uniquement à cet appareil.',
       permission:
-        'Autorisez A2Intelligence dans Réglages Système → Confidentialité et sécurité → Surveillance de l’entrée, puis réessayez. Ce geste n’enregistre pas les frappes et ne capture pas votre écran.',
+        'Autorisez A2Assistant dans Réglages Système → Confidentialité et sécurité → Surveillance de l’entrée, puis réessayez. Ce geste n’enregistre pas les frappes et ne capture pas votre écran.',
       unavailable:
-        'L’assistant du geste HUD n’a pas pu démarrer ou s’est arrêté de manière inattendue. Réessayez ou redémarrez A2Intelligence. Le raccourci HUD existant fonctionne toujours dans A2Intelligence.',
+        'L’assistant du geste HUD n’a pas pu démarrer ou s’est arrêté de manière inattendue. Réessayez ou redémarrez A2Assistant. Le raccourci HUD existant fonctionne toujours dans A2Assistant.',
       missingHelper:
-        'Il manque l’assistant du geste HUD dans cette installation de A2Intelligence. Mettez à jour ou réinstallez A2Intelligence, puis réessayez.',
+        'Il manque l’assistant du geste HUD dans cette installation de A2Assistant. Mettez à jour ou réinstallez A2Assistant, puis réessayez.',
       unsupportedSession:
         'Cette session de bureau ne prend pas en charge les appuis globaux sur les touches de modification. Linux nécessite X11 ; Wayland n’est pas pris en charge.'
     },
     screenshot: {
       enabledTitle: "Raccourci de capture d'écran",
       enabledDesc:
-        "Appuyez simultanément sur les deux touches Commande depuis n'importe quelle application pour capturer sa fenêtre au premier plan et la joindre au brouillon A2Intelligence actuel. Rien n'est envoyé automatiquement. Désactivé par défaut et limité à ce Mac. Le contenu peut être sensible : vérifiez la pièce jointe avant l'envoi.",
+        "Appuyez simultanément sur les deux touches Commande depuis n'importe quelle application pour capturer sa fenêtre au premier plan et la joindre au brouillon A2Assistant actuel. Rien n'est envoyé automatiquement. Désactivé par défaut et limité à ce Mac. Le contenu peut être sensible : vérifiez la pièce jointe avant l'envoi.",
       statusTitle: "État du raccourci de capture d'écran",
       checking: "Vérification du raccourci de capture d'écran…",
       disabled: "Le raccourci de capture d'écran est désactivé.",
       starting: "Démarrage de l'écouteur du raccourci ; il n'est pas encore prêt.",
       ready: "Le raccourci est prêt. Les captures d'écran sont jointes au brouillon actuel sans être envoyées.",
       inputPermission:
-        "L'autorisation Surveillance de l'entrée permet à A2Intelligence de détecter les deux touches Commande lorsqu'une autre application est active. Autorisez A2Intelligence dans Réglages Système → Confidentialité et sécurité → Surveillance de l'entrée, puis réessayez.",
+        "L'autorisation Surveillance de l'entrée permet à A2Assistant de détecter les deux touches Commande lorsqu'une autre application est active. Autorisez A2Assistant dans Réglages Système → Confidentialité et sécurité → Surveillance de l'entrée, puis réessayez.",
       screenPermission:
-        "L'autorisation Enregistrement de l'écran permet à A2Intelligence de capturer la fenêtre au premier plan. Autorisez A2Intelligence dans Réglages Système → Confidentialité et sécurité → Enregistrement de l'écran, puis réessayez. Redémarrez A2Intelligence si macOS le demande.",
+        "L'autorisation Enregistrement de l'écran permet à A2Assistant de capturer la fenêtre au premier plan. Autorisez A2Assistant dans Réglages Système → Confidentialité et sécurité → Enregistrement de l'écran, puis réessayez. Redémarrez A2Assistant si macOS le demande.",
       openSettings: 'Ouvrir les Réglages Système',
       retry: 'Réessayer',
       unavailable: "Le raccourci de capture d'écran est indisponible. Réessayez ou désactivez-le.",
@@ -1596,7 +1596,7 @@ export const frOverrides = {
     quickEntry: {
       enabledTitle: 'Saisie rapide',
       enabledDesc:
-        "Faites apparaître un petit compositeur depuis n'importe où avec un raccourci global et envoyez une invite sans ouvrir A2Intelligence.",
+        "Faites apparaître un petit compositeur depuis n'importe où avec un raccourci global et envoyez une invite sans ouvrir A2Assistant.",
       shortcutTitle: 'Raccourci de saisie rapide',
       shortcutDesc: 'Nécessite au moins un modificateur, par ex. CommandOrControl+Shift+Espace.',
       active: 'Le raccourci est actif.',
@@ -1658,10 +1658,10 @@ export const frOverrides = {
       kindRemote: 'Gateway distante',
       kindCloud: 'Hermes Cloud',
       kindSsh: 'SSH',
-      kindLocalDesc: "L'environnement A2Intelligence géré par cette application.",
-      kindRemoteDesc: 'Une gateway A2Intelligence accessible en HTTP(S), par le LAN, Tailscale ou Internet.',
+      kindLocalDesc: "L'environnement A2Assistant géré par cette application.",
+      kindRemoteDesc: 'Une gateway A2Assistant accessible en HTTP(S), par le LAN, Tailscale ou Internet.',
       kindCloudDesc: 'Une instance hébergée découverte via votre compte Hermes Cloud.',
-      kindSshDesc: 'Une installation A2Intelligence accessible en SSH.',
+      kindSshDesc: 'Une installation A2Assistant accessible en SSH.',
       labelTitle: 'Nom',
       labelDesc:
         'Obligatoire. Affiché partout où cette instance apparaît et nécessairement unique (par exemple « Homelab » ou « PC professionnel »).',
@@ -1670,7 +1670,7 @@ export const frOverrides = {
       sshHostTitle: 'Hôte SSH',
       headersTitle: 'En-têtes supplémentaires du gateway',
       headersDesc:
-        "Envoyés avec chaque requête HTTP et WebSocket vers ce gateway, notamment pour les proxys d'accès comme Cloudflare Access (CF-Access-Client-Id / CF-Access-Client-Secret). Les valeurs sont stockées chiffrées. Les en-têtes gérés par A2Intelligence (Authorization, Cookie, Host…) sont ignorés.",
+        "Envoyés avec chaque requête HTTP et WebSocket vers ce gateway, notamment pour les proxys d'accès comme Cloudflare Access (CF-Access-Client-Id / CF-Access-Client-Secret). Les valeurs sont stockées chiffrées. Les en-têtes gérés par A2Assistant (Authorization, Cookie, Host…) sont ignorés.",
       headerValuePlaceholder: 'Valeur',
       headerValueSaved: 'Enregistrée — laissez vide pour la conserver',
       headerAdd: 'Ajouter un en-tête',
@@ -1712,16 +1712,16 @@ export const frOverrides = {
       title: 'Connexion au gateway',
       envOverride: "remplacement par variable d'environnement",
       intro:
-        'Local par défaut. Utilisez distant quand cette application doit piloter un backend A2Intelligence ailleurs. Remplacements par profil ci-dessous.',
+        'Local par défaut. Utilisez distant quand cette application doit piloter un backend A2Assistant ailleurs. Remplacements par profil ci-dessous.',
       envOverrideTitle: "Des variables d'environnement contrôlent cette session desktop.",
       envOverrideDesc:
         'Supprimez les variables HERMES_DESKTOP_REMOTE_URL et HERMES_DESKTOP_REMOTE_TOKEN pour utiliser le paramètre enregistré ci-dessous.',
       modeTitle: 'Mode de connexion',
       localTitle: 'Gateway local',
       localDesc:
-        "Démarrer un backend A2Intelligence privé sur localhost. C'est la valeur par défaut et cela fonctionne hors ligne.",
+        "Démarrer un backend A2Assistant privé sur localhost. C'est la valeur par défaut et cela fonctionne hors ligne.",
       remoteTitle: 'Gateway distant',
-      remoteDesc: 'Connecter ce shell desktop à un backend A2Intelligence distant.',
+      remoteDesc: 'Connecter ce shell desktop à un backend A2Assistant distant.',
       remoteAuthHint:
         "Les gateways hébergés utilisent OAuth ou un nom d'utilisateur et un mot de passe ; les auto-hébergés peuvent utiliser un jeton de session.",
       cloudTitle: 'Hermes Cloud',
@@ -1812,9 +1812,9 @@ export const frOverrides = {
       enterUrlFirst: "Saisissez d'abord une URL distante.",
       restartingTitle: 'Reconnexion du gateway',
       savedTitle: 'Paramètres du gateway enregistrés',
-      restartingMessage: 'A2Intelligence Desktop va se reconnecter avec les paramètres enregistrés — le shell reste ouvert.',
+      restartingMessage: 'A2Assistant Desktop va se reconnecter avec les paramètres enregistrés — le shell reste ouvert.',
       savedMessage: 'Enregistré pour le prochain redémarrage.',
-      connectedTo: (baseUrl, version) => `Connecté à ${baseUrl}${version ? ` · A2Intelligence ${version}` : ''}`,
+      connectedTo: (baseUrl, version) => `Connecté à ${baseUrl}${version ? ` · A2Assistant ${version}` : ''}`,
       reachableTitle: 'Gateway distant accessible',
       signedOutTitle: 'Déconnecté',
       signedOutMessage: 'Session du gateway distant effacée.',
@@ -1826,7 +1826,7 @@ export const frOverrides = {
       saveFailed: "Impossible d'enregistrer les paramètres du gateway",
       sshTitle: 'Se connecter via SSH',
       sshDesc:
-        "A2Intelligence est lancé sur la machine distante via SSH et acheminé vers cette application — rien à démarrer ou exposer soi-même. Nécessite un accès SSH par clé fonctionnel vers l'hôte.",
+        "A2Assistant est lancé sur la machine distante via SSH et acheminé vers cette application — rien à démarrer ou exposer soi-même. Nécessite un accès SSH par clé fonctionnel vers l'hôte.",
       sshTrustHint:
         "La première clé d'hôte présentée est approuvée et fixée ; les changements ultérieurs échouent en mode fermé.",
       sshHostTitle: 'Hôte',
@@ -1842,27 +1842,27 @@ export const frOverrides = {
       sshPortDesc: 'Vide = 22 ou le port de ~/.ssh/config.',
       sshKeyTitle: "Fichier d'identité",
       sshKeyDesc: 'Chemin de la clé privée. Vide = ssh-agent ou ~/.ssh/config.',
-      sshHermesPathTitle: 'Chemin A2Intelligence (facultatif)',
+      sshHermesPathTitle: 'Chemin A2Assistant (facultatif)',
       sshHermesPathDesc: 'Chemin complet vers le binaire hermes distant. Vide = détection automatique.',
       sshHermesPathPlaceholder: 'détection automatique',
       sshTestConnection: 'Tester SSH',
       sshConnect: 'Se connecter',
       sshButtonsHint: "Enregistrer s'applique au prochain lancement. Connecter se reconnecte immédiatement.",
-      sshReachable: (host, platform) => `Accessible : ${host} (${platform}) — A2Intelligence trouvé`,
+      sshReachable: (host, platform) => `Accessible : ${host} (${platform}) — A2Assistant trouvé`,
       sshIncompleteHost: 'Saisissez un hôte SSH avant de vous connecter.',
       sshErrUnreachable: "Impossible d'atteindre cet hôte via SSH. Vérifiez l'hôte, le port et votre réseau.",
       sshErrAuth:
-        "Échec de l'authentification SSH. Chargez votre clé dans ssh-agent (ssh-add) ou définissez un IdentityFile dans ~/.ssh/config — A2Intelligence exécute ssh de manière non interactive.",
+        "Échec de l'authentification SSH. Chargez votre clé dans ssh-agent (ssh-add) ou définissez un IdentityFile dans ~/.ssh/config — A2Assistant exécute ssh de manière non interactive.",
       sshErrHostKey:
         "La clé de l'hôte a changé depuis votre dernière connexion. Vérifiez que ce changement est attendu, puis exécutez ssh-keygen -R <host> et reconnectez-vous.",
       sshErrNotInstalled:
-        "A2Intelligence n'est pas installé sur l'hôte distant. Installez-le là-bas (curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh) ou définissez le chemin A2Intelligence.",
+        "A2Assistant n'est pas installé sur l'hôte distant. Installez-le là-bas (curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh) ou définissez le chemin A2Assistant.",
       sshErrPlatform:
-        'Plateforme distante non prise en charge. Le mode SSH de A2Intelligence Desktop supporte les hôtes distants Linux, macOS et Windows.',
+        'Plateforme distante non prise en charge. Le mode SSH de A2Assistant Desktop supporte les hôtes distants Linux, macOS et Windows.',
       sshErrTimeout: "Expiration de la connexion SSH. L'hôte peut être inaccessible ou en veille.",
-      sshErrUpdateRequired: "Mettez à jour A2Intelligence sur l'hôte distant avant de vous connecter avec Desktop SSH.",
+      sshErrUpdateRequired: "Mettez à jour A2Assistant sur l'hôte distant avant de vous connecter avec Desktop SSH.",
       sshErrInteractiveAuth:
-        'Tailscale SSH exige une vérification interactive dans le navigateur. Exécutez `ssh <host> true` dans le terminal, terminez la vérification, puis réessayez — A2Intelligence exécute SSH de façon non interactive.',
+        'Tailscale SSH exige une vérification interactive dans le navigateur. Exécutez `ssh <host> true` dans le terminal, terminez la vérification, puis réessayez — A2Assistant exécute SSH de façon non interactive.',
       sshErrUnknown: 'Échec de la connexion SSH.'
     },
     keys: {
@@ -1909,7 +1909,7 @@ export const frOverrides = {
       noOutput: 'Aucune sortie pour le moment.',
       deepLinkTitle: 'Ajouter un serveur MCP ?',
       deepLinkDescription:
-        "Un lien demande d'ajouter ce serveur MCP à A2Intelligence. Vérifiez attentivement la configuration ci-dessous : elle provient du lien, pas de A2Intelligence.",
+        "Un lien demande d'ajouter ce serveur MCP à A2Assistant. Vérifiez attentivement la configuration ci-dessous : elle provient du lien, pas de A2Assistant.",
       deepLinkStdioWarning:
         'Ce serveur exécute sur votre machine un processus local avec la commande affichée ci-dessous. Continuez uniquement si vous faites confiance à sa source.',
       deepLinkConfirm: 'Ajouter le serveur',
@@ -2028,7 +2028,7 @@ export const frOverrides = {
       keepGoingOnCredits: {
         title: 'Continuer avec les crédits',
         description:
-          'Utilise vos crédits quand l’usage inclus est épuisé. Désactivé : A2Intelligence attend la réinitialisation.',
+          'Utilise vos crédits quand l’usage inclus est épuisé. Désactivé : A2Assistant attend la réinitialisation.',
         approveInBrowser:
           "Approuvez Remote Spending dans votre navigateur pour modifier ce réglage. Il s'applique dès votre approbation.",
         openAgain: 'Rouvrir',
@@ -2168,7 +2168,7 @@ export const frOverrides = {
         cliBillingDisabled: {
           title: 'Les dépenses à distance sont désactivées',
           message:
-            'Les dépenses à distance sont désactivées pour ce compte — un administrateur de facturation peut les activer depuis la page A2Intelligence du portail.'
+            'Les dépenses à distance sont désactivées pour ce compte — un administrateur de facturation peut les activer depuis la page A2Assistant du portail.'
         },
         roleRequired: {
           title: 'Rôle administrateur requis',
@@ -2236,7 +2236,7 @@ export const frOverrides = {
       connectAccount: 'Connecter un compte',
       haveApiKey: 'Vous avez une clé API ?',
       intro:
-        "Connectez-vous avec un abonnement — pas de clé API à copier. A2Intelligence lance la connexion navigateur pour vous, directement dans l'application.",
+        "Connectez-vous avec un abonnement — pas de clé API à copier. A2Assistant lance la connexion navigateur pour vous, directement dans l'application.",
       connected: 'Connecté',
       collapse: 'Réduire',
       connectAnother: 'Connecter un autre fournisseur',
@@ -2258,7 +2258,7 @@ export const frOverrides = {
       localEndpoint: {
         title: 'Point de terminaison local / personnalisé',
         description:
-          "Pointez A2Intelligence vers n'importe quel point de terminaison compatible OpenAI (Zyphra, vLLM, llama.cpp, Ollama, etc)."
+          "Pointez A2Assistant vers n'importe quel point de terminaison compatible OpenAI (Zyphra, vLLM, llama.cpp, Ollama, etc)."
       },
       loading: 'Chargement des fournisseurs...'
     },
@@ -2388,7 +2388,7 @@ export const frOverrides = {
         needsSetupConfirmAction: 'Sélectionner quand même',
         unavailableTitle: 'Commandes de terminal indisponibles',
         unavailableMessage: backend =>
-          `A2Intelligence ne peut pas exécuter de commandes shell pour le moment : ${backend} n'est pas prêt. Passez en Local ou terminez la configuration de ${backend}, puis réessayez.`,
+          `A2Assistant ne peut pas exécuter de commandes shell pour le moment : ${backend} n'est pas prêt. Passez en Local ou terminez la configuration de ${backend}, puis réessayez.`,
         openBackendSettings: 'Ouvrir les paramètres du terminal',
         useLocal: 'Utiliser Local',
         switchedToLocal:
@@ -2411,7 +2411,7 @@ export const frOverrides = {
         signinsFailed: 'Impossible d\'importer les connexions dans le navigateur intégré',
         prompt: {
           title: 'Restez connecté à vos sites',
-          body: 'Autorisez A2Intelligence à naviguer avec un instantané de votre profil de navigateur par défaut afin que les sites s\'ouvrent avec vos sessions déjà connectées, pour l\'agent et dans le navigateur intégré.',
+          body: 'Autorisez A2Assistant à naviguer avec un instantané de votre profil de navigateur par défaut afin que les sites s\'ouvrent avec vos sessions déjà connectées, pour l\'agent et dans le navigateur intégré.',
           bulletSnapshot: 'Les cookies et identifiants de connexion sont copiés dans un instantané géré.',
           bulletLiveProfile: "Votre profil de navigateur actif n'est jamais ouvert directement.",
           bulletLocal: 'Rien ne quitte cet ordinateur.',
@@ -2494,7 +2494,7 @@ export const frOverrides = {
       halfDesktopHint: 'cette application, identique pour tous les profils',
       halfAgent: 'Agent',
       halfAgentIn: profile => `Agent dans ${profile}`,
-      defaultProfile: 'A2Intelligence (par défaut)',
+      defaultProfile: 'A2Assistant (par défaut)',
       kindAgent: 'Agent',
       kindDesktop: 'Desktop',
       kindBoth: 'Agent + Desktop',
@@ -2518,7 +2518,7 @@ export const frOverrides = {
       toolsetOff: (name: string, profile: string) => `Outils agent de ${name} désactivés pour ${profile}`,
       toolsetToggleFailed: (name: string) =>
         `Impossible de modifier les outils agent de ${name} ; le panneau Desktop reste inchangé`,
-      legacyBackend: 'Ce backend est trop ancien pour gérer les plugins depuis cet écran ; mettez A2Intelligence à jour.',
+      legacyBackend: 'Ce backend est trop ancien pour gérer les plugins depuis cet écran ; mettez A2Assistant à jour.',
       portableBadge: 'portable',
       serverStates: {
         connected: 'connecté',
@@ -2533,7 +2533,7 @@ export const frOverrides = {
       },
       alreadyInstalled: (name: string) => `${name} est déjà installé dans ce profil.`,
       catalogProvenance: (sha: string) =>
-        `Installé depuis le catalogue A2Intelligence${sha ? ` au commit épinglé ${sha}` : ''}.`,
+        `Installé depuis le catalogue A2Assistant${sha ? ` au commit épinglé ${sha}` : ''}.`,
       pinnedProvenance: (sha: string) =>
         `Épinglé au commit ${sha}. Les mises à jour sont refusées tant qu’il n’est pas réinstallé avec un nouvel épinglage.`,
       pinnedBadge: (sha: string) => `épinglé @ ${sha}`,
@@ -2554,9 +2554,9 @@ export const frOverrides = {
       deepLinkErrorTitle: 'Lien d’installation de plugin refusé',
       deepLinkCatalogInvalidName: 'Le nom de catalogue du lien est manquant ou invalide.',
       deepLinkCatalogUnknown: (name: string) =>
-        `\u00AB\u00A0${name}\u00A0\u00BB ne figure pas dans le catalogue de plugins A2Intelligence. Rien n’a été installé.`,
+        `\u00AB\u00A0${name}\u00A0\u00BB ne figure pas dans le catalogue de plugins A2Assistant. Rien n’a été installé.`,
       deepLinkCatalogUnavailable:
-        'Impossible de charger le catalogue de plugins A2Intelligence. Vérifiez votre connexion et rouvrez le lien.',
+        'Impossible de charger le catalogue de plugins A2Assistant. Vérifiez votre connexion et rouvrez le lien.',
       settingsToggle: (name: string) => `Paramètres : ${name}`,
       settingsForm: {
         save: 'Enregistrer les paramètres',
@@ -2644,7 +2644,7 @@ export const frOverrides = {
     loading: 'Chargement…',
     emptyTitle: "Rien d'appris pour le moment",
     emptyDesc:
-      'Au fur et à mesure que A2Intelligence construit des skills et des mémoires pour votre travail, ils apparaissent ici.',
+      'Au fur et à mesure que A2Assistant construit des skills et des mémoires pour votre travail, ils apparaissent ici.',
     share: 'Partager la carte',
     shareHint:
       'Copiez le code pour partager cette carte, ou collez-en un pour le charger. Il inclut uniquement la disposition, pas votre texte de mémoire ou de skill.',
@@ -2724,7 +2724,7 @@ export const frOverrides = {
       placeholder: 'Rechercher des animaux…',
       loading: 'Chargement de la galerie petdex…',
       error: "Impossible d'atteindre la galerie petdex…",
-      staleBackend: 'Redémarrez A2Intelligence pour utiliser les animaux — le backend précède cette fonctionnalité.',
+      staleBackend: 'Redémarrez A2Assistant pour utiliser les animaux — le backend précède cette fonctionnalité.',
       empty: 'Aucun animal correspondant.',
       turnOff: 'Éteindre',
       turnOn: 'Allumer',
@@ -2751,8 +2751,8 @@ export const frOverrides = {
       hatchComposing: 'Assemblage…',
       hatchSaving: 'Presque terminé…',
       namePlaceholder: 'Nommez votre animal',
-      staleBackend: 'Mettez à jour A2Intelligence pour générer des animaux…',
-      backgroundHint: "Vous pouvez fermer — A2Intelligence vous notifiera quand c'est terminé.",
+      staleBackend: 'Mettez à jour A2Assistant pour générer des animaux…',
+      backgroundHint: "Vous pouvez fermer — A2Assistant vous notifiera quand c'est terminé.",
       slowProviderHint: 'Cela peut prendre plusieurs minutes',
       remix: 'Remixer',
       remixConfirmTitle: 'Remixer cette apparence ?',
@@ -2792,7 +2792,7 @@ export const frOverrides = {
       },
       settings: {
         title: 'Paramètres',
-        detail: 'Configurer A2Intelligence Desktop'
+        detail: 'Configurer A2Assistant Desktop'
       },
       capabilities: {
         title: 'Capacités',
@@ -2833,7 +2833,7 @@ export const frOverrides = {
     noSessions: 'Aucune session pour le moment.',
     gatewayRunning: 'Gateway de messagerie en cours',
     gatewayStopped: 'Gateway de messagerie arrêté',
-    hermesActiveSessions: (version, count) => `A2Intelligence ${version} · Sessions actives ${count}`,
+    hermesActiveSessions: (version, count) => `A2Assistant ${version} · Sessions actives ${count}`,
     restartGateway: 'Redémarrer le gateway',
     openBrowser: 'Basculer le navigateur',
     toggleBrowser: 'Basculer le navigateur',
@@ -2842,7 +2842,7 @@ export const frOverrides = {
     sharedGatewayRestartDescription: bots => `Tous les bots de cet appareil se reconnecteront : ${bots}`,
     sharedGatewayRestartConfirm: 'Tout redémarrer',
     sharedGatewayRestarted: count => `Gateway partagé redémarré (${count} ${count === 1 ? 'bot' : 'bots'})`,
-    updateHermes: 'Mettre à jour A2Intelligence',
+    updateHermes: 'Mettre à jour A2Assistant',
     reloadWindow: 'Recharger la fenêtre',
     actionRunning: 'en cours',
     actionDone: 'terminé',
@@ -3007,7 +3007,7 @@ export const frOverrides = {
     relayLink: {
       title: 'Team Gateway',
       badge: 'Aucun jeton de bot requis',
-      intro: (platform: string) => `${platform} atteint cet agent via le bot A2Intelligence partagé. Associez votre compte ${platform} et écrivez au bot pour parler à votre agent.`,
+      intro: (platform: string) => `${platform} atteint cet agent via le bot A2Assistant partagé. Associez votre compte ${platform} et écrivez au bot pour parler à votre agent.`,
       link: (platform: string) => `Associer ${platform}`,
       linkAnother: (platform: string) => `Associer un autre compte ${platform}`,
       linkedAccounts: 'Comptes associés',
@@ -3033,11 +3033,11 @@ export const frOverrides = {
     telegramQr: {
       title: 'Choisissez comment connecter votre bot Telegram',
       subtitle:
-        "Les deux méthodes connectent un bot que vous contrôlez et enregistrent ses identifiants uniquement dans cette installation d'A2Intelligence.",
+        "Les deux méthodes connectent un bot que vous contrôlez et enregistrent ses identifiants uniquement dans cette installation d'A2Assistant.",
       quickSetup: 'Configuration rapide',
       recommended: 'Recommandé',
       quickHelp:
-        "Scannez un code QR et confirmez dans Telegram. A2Intelligence crée le bot et détecte automatiquement votre identifiant d'utilisateur Telegram.",
+        "Scannez un code QR et confirmez dans Telegram. A2Assistant crée le bot et détecte automatiquement votre identifiant d'utilisateur Telegram.",
       createWithQr: 'Créer avec un code QR',
       starting: 'Démarrage…',
       replaceWarning:
@@ -3267,7 +3267,7 @@ export const frOverrides = {
     failedImport: "Échec de l'importation du profil",
     failedExport: "Échec de l'exportation du profil",
     exportNeedsHost: name =>
-      `Le navigateur ne peut pas enregistrer une archive de profil. Sur l'hôte A2Intelligence, exécutez : hermes profile export ${name}`,
+      `Le navigateur ne peut pas enregistrer une archive de profil. Sur l'hôte A2Assistant, exécutez : hermes profile export ${name}`,
     allProfiles: 'Tous les profils',
     showAllProfiles: 'Afficher tous les profils',
     notServedHere: 'Non proposé ici',
@@ -3275,7 +3275,7 @@ export const frOverrides = {
     switchToConnection: name => `Basculer vers ${name}`,
     switchConnectionFailed: name => `Impossible de se connecter à ${name}`,
     manageProfiles: 'Gérer les profils…',
-    connectGateway: 'Connecter un autre gateway A2Intelligence…',
+    connectGateway: 'Connecter un autre gateway A2Assistant…',
     fleet: {
       allOnGateway: 'Tous les profils de cette gateway',
       gateway: gateway => `Profils sur ${gateway}`,
@@ -3283,10 +3283,10 @@ export const frOverrides = {
       onGateway: (name, gateway) => `${name} · ${gateway}`,
       switchTo: (name, gateway) => `Ouvrir ${name} sur ${gateway}`,
       deleteOn: gateway => ` sur ${gateway}`,
-      localDevice: 'Cet appareil (backend local — installe A2Intelligence s’il manque, sinon ouvre une nouvelle session)',
-      installDeviceTitle: 'Installer A2Intelligence sur cet appareil ?',
+      localDevice: 'Cet appareil (backend local — installe A2Assistant s’il manque, sinon ouvre une nouvelle session)',
+      installDeviceTitle: 'Installer A2Assistant sur cet appareil ?',
       installDeviceDesc:
-        'A2Intelligence sera installé localement, puis une nouvelle session s’ouvrira sur cet ordinateur. Rien n’est installé tant que vous ne confirmez pas.',
+        'A2Assistant sera installé localement, puis une nouvelle session s’ouvrira sur cet ordinateur. Rien n’est installé tant que vous ne confirmez pas.',
       installDeviceConfirm: 'Installer localement',
       connectExistingInstead: 'Connecter un existant à la place'
     },
@@ -3301,7 +3301,7 @@ export const frOverrides = {
       badge: (host: string) => `S'exécute sur ${host}`,
       title: (profile: string) => `Connecter ${profile} à un hôte distant`,
       description:
-        "Les sessions de ce profil s'exécuteront sur le système A2Intelligence distant indiqué, plutôt que sur cet ordinateur.",
+        "Les sessions de ce profil s'exécuteront sur le système A2Assistant distant indiqué, plutôt que sur cet ordinateur.",
       urlLabel: 'Adresse distante',
       urlPlaceholder: 'https://hermes.exemple.fr',
       urlInvalid: 'Saisissez une adresse complète commençant par http:// ou https://',
@@ -3337,7 +3337,7 @@ export const frOverrides = {
     defaultProfile: 'Profil par défaut',
     defaultSet: name => `${name} est maintenant le profil par défaut`,
     defaultDescription:
-      "Utilisé à l'ouverture de A2Intelligence et pour les nouvelles conversations. Les sessions existantes restent dans leur profil.",
+      "Utilisé à l'ouverture de A2Assistant et pour les nouvelles conversations. Les sessions existantes restent dans leur profil.",
     failedSetDefault: 'Impossible de définir le profil par défaut',
     setColor: color => `Définir la couleur ${color}`,
     autoColor: 'Auto',
@@ -3374,7 +3374,7 @@ export const frOverrides = {
     deleteDescMid: ' et supprimera son ',
     deleteDescSuffix: ' répertoire. Cela ne peut pas être annulé.',
     deleting: 'Suppression...',
-    createDesc: 'Les profils sont des environnements A2Intelligence indépendants : configuration, skills et SOUL.md séparés.',
+    createDesc: 'Les profils sont des environnements A2Assistant indépendants : configuration, skills et SOUL.md séparés.',
     nameLabel: 'Nom',
     cloneFrom: 'Cloner depuis',
     cloneFromNone: 'Aucun (vide)',
@@ -3408,7 +3408,7 @@ export const frOverrides = {
     failedRename: 'Échec du renommage du profil'
   },
   modelAssignment: {
-    saveFailed: 'A2Intelligence n’a pas enregistré ce changement de modèle.',
+    saveFailed: 'A2Assistant n’a pas enregistré ce changement de modèle.',
     confirmTitle: 'Avertissement sur le choix du modèle',
     confirmDetail: 'Confirmez uniquement si vous acceptez ce compromis.',
     confirmAction: 'Confirmer',
@@ -3478,7 +3478,7 @@ export const frOverrides = {
     everyHourAt: minute => `Toutes les heures à :${minute}`,
     newCron: 'Nouveau cron',
     emptyDescNew:
-      "Planifiez une invite à exécuter selon une expression cron. A2Intelligence l'exécutera et livrera les résultats vers la destination de votre choix.",
+      "Planifiez une invite à exécuter selon une expression cron. A2Assistant l'exécutera et livrera les résultats vers la destination de votre choix.",
     emptyDescSearch: 'Essayez une requête de recherche plus large.',
     emptyTitleNew: 'Aucune tâche planifiée pour le moment',
     emptyTitleSearch: 'Aucune correspondance',
@@ -3694,8 +3694,8 @@ export const frOverrides = {
     storageCorrupt: {
       title: 'La base de données des sessions est endommagée',
       body: (profiles: string) =>
-        `A2Intelligence ne peut pas lire tout l’historique des sessions de ${profiles}. Les conversations absentes de cette liste n’ont pas été supprimées ; le fichier qui les contient est endommagé.`,
-      action: 'Quittez A2Intelligence sur ce profil, puis inspectez le fichier sans le modifier, ou restaurez un instantané :',
+        `A2Assistant ne peut pas lire tout l’historique des sessions de ${profiles}. Les conversations absentes de cette liste n’ont pas été supprimées ; le fichier qui les contient est endommagé.`,
+      action: 'Quittez A2Assistant sur ce profil, puis inspectez le fichier sans le modifier, ou restaurez un instantané :',
       guide: 'Guide de récupération'
     },
     noFilterMatches: 'Aucune session ne correspond à ces filtres',
@@ -3767,12 +3767,12 @@ export const frOverrides = {
   composer: {
     message: 'Message',
     wakingProfile: profile => `Réveil de ${profile}…`,
-    placeholderStarting: 'Démarrage de A2Intelligence…',
-    placeholderReconnecting: 'Reconnexion à A2Intelligence…',
+    placeholderStarting: 'Démarrage de A2Assistant…',
+    placeholderReconnecting: 'Reconnexion à A2Assistant…',
     placeholderFollowUp: 'Envoyer un suivi',
     newSessionPlaceholders: [
       'Sur quoi travaillons-nous ?',
-      'Donnez une tâche à A2Intelligence',
+      'Donnez une tâche à A2Assistant',
       "Qu'avez-vous en tête ?",
       'Décrivez ce dont vous avez besoin',
       "Qu'est-ce qu'on attaque ?",
@@ -3810,8 +3810,8 @@ export const frOverrides = {
     transcribingDictation: 'Transcription de la dictée',
     voiceControls: 'Voix',
     voiceEngine: 'Moteur de conversation vocale',
-    voiceEngineChained: 'Reconnaissance vocale + voix A2Intelligence',
-    voiceEngineLive: 'GPT-Live (duplex intégral, délègue à A2Intelligence)',
+    voiceEngineChained: 'Reconnaissance vocale + voix A2Assistant',
+    voiceEngineLive: 'GPT-Live (duplex intégral, délègue à A2Assistant)',
     voiceEngineLiveNeedsKey: 'Nécessite une clé API OpenAI',
     voiceEngineChangeFailed: 'Impossible de changer le moteur de conversation vocale',
     voiceEngineChainedShort: 'reconnaissance vocale',
@@ -3836,7 +3836,7 @@ export const frOverrides = {
       '/resume': 'Reprendre une session enregistrée',
       '/details': 'contrôler le niveau de détail de la transcription',
       '/copy': "copier la sélection ou le dernier message de l'assistant",
-      '/quit': 'quitter A2Intelligence',
+      '/quit': 'quitter A2Assistant',
       '/start': 'Accuser réception des pings de démarrage de la plateforme sans répondre',
       '/new': 'Démarrer une nouvelle conversation',
       '/topic': 'Activer ou inspecter les sessions par sujet des MP Telegram',
@@ -3863,7 +3863,7 @@ export const frOverrides = {
         'Mettre un prompt en file pour le prochain tour, ou lister/modifier/supprimer/déplacer/vider les prompts en file',
       '/steer': 'Injecter un message après le prochain appel d’outil sans interrompre',
       '/goal':
-        'Définir un objectif permanent sur lequel A2Intelligence travaille au fil des tours jusqu’à ce qu’il soit atteint',
+        'Définir un objectif permanent sur lequel A2Assistant travaille au fil des tours jusqu’à ce qu’il soit atteint',
       '/heartbeat': 'Définir un prompt récurrent qui revient dans cette session lorsqu’elle est inactive',
       '/refine': 'Passer en revue cette conversation maintenant et enregistrer les leçons en mémoire/skills',
       '/review': 'Lancer un sous-agent indépendant pour relire le travail qui vient d’être discuté (PR, code, docs)',
@@ -3876,7 +3876,7 @@ export const frOverrides = {
       '/context':
         'Afficher la vue détaillée de la fenêtre de contexte avec jauge d’utilisation, répartition par catégorie, statistiques de compression et débit',
       '/whoami': 'Afficher votre accès aux commandes slash (admin / utilisateur)',
-      '/profile': 'Changer de profil A2Intelligence actif',
+      '/profile': 'Changer de profil A2Assistant actif',
       '/codex-runtime': 'Activer/désactiver le runtime codex app-server pour les modèles OpenAI/Codex',
       '/personality': 'Définir une personnalité prédéfinie',
       '/battery': 'Afficher/masquer un indicateur de batterie coloré dans la barre d’état',
@@ -3905,7 +3905,7 @@ export const frOverrides = {
       '/subscription': 'Voir votre forfait Nous et le modifier dans le navigateur',
       '/topup': 'Afficher votre solde Nous et gérer la facturation sur le portail',
       '/platform': 'Suspendre, reprendre ou lister une plateforme de gateway en échec',
-      '/version': 'Afficher la version de A2Intelligence',
+      '/version': 'Afficher la version de A2Assistant',
       '/debug': 'Téléverser un rapport de débogage (infos système + journaux) et obtenir des liens partageables',
       '/model': 'Changer le modèle de cette session'
     },
@@ -3920,7 +3920,7 @@ export const frOverrides = {
       'composer.history': 'parcourir le popover / historique'
     },
     attachUrlTitle: 'Attacher une URL',
-    attachUrlDesc: "A2Intelligence récupérera la page et l'inclura comme contexte pour ce tour.",
+    attachUrlDesc: "A2Assistant récupérera la page et l'inclura comme contexte pour ce tour.",
     urlPlaceholder: 'https://example.com/post',
     urlHintPre: "Incluez l'URL complète, par ex. ",
     attach: 'Attacher',
@@ -4144,7 +4144,7 @@ export const frOverrides = {
       createPr: 'Créer une PR',
       openPr: 'Ouvrir une PR',
       ghMissing: 'Installez la CLI GitHub (gh) et connectez-vous pour ouvrir des PR',
-      agentShip: "Demander à A2Intelligence d'ouvrir une PR",
+      agentShip: "Demander à A2Assistant d'ouvrir une PR",
       agentShipUnavailable: "La conversation à l'origine de ces modifications n'est pas affichée.",
       agentShipPrompt:
         'Passez en revue les modifications actuelles, validez-les avec un message de validation conventionnel clair, poussez la branche, puis ouvrez une pull request.',
@@ -4156,23 +4156,23 @@ export const frOverrides = {
     }
   },
   updates: {
-    discontinuedTitle: "Cette version de A2Intelligence n'est plus prise en charge",
+    discontinuedTitle: "Cette version de A2Assistant n'est plus prise en charge",
     discontinuedBody:
-      "Cette version de A2Intelligence n'est plus prise en charge et risque de ne plus fonctionner — désinstallez-la. Vos données restent sur le disque.",
+      "Cette version de A2Assistant n'est plus prise en charge et risque de ne plus fonctionner — désinstallez-la. Vos données restent sur le disque.",
     channels: { stable: 'Stable', canary: 'Canary' },
-    appName: 'A2Intelligence',
+    appName: 'A2Assistant',
     availableBodyRelease: tag => `La version ${tag} est prête à être installée.`,
     releaseAvailable: tag => `La version ${tag} est disponible.`,
     checkingShort: 'Vérification…',
     availableBodyAppInstaller:
-      'Une nouvelle version de A2Intelligence est prête. A2Intelligence va se fermer, Windows terminera la mise à jour, puis A2Intelligence rouvrira automatiquement.',
+      'Une nouvelle version de A2Assistant est prête. A2Assistant va se fermer, Windows terminera la mise à jour, puis A2Assistant rouvrira automatiquement.',
     applyingBodyAppInstaller:
-      "A2Intelligence va se fermer et Windows terminera la mise à jour. A2Intelligence rouvrira ensuite automatiquement — vous n'avez rien à faire.",
+      "A2Assistant va se fermer et Windows terminera la mise à jour. A2Assistant rouvrira ensuite automatiquement — vous n'avez rien à faire.",
     applyingCloseAppInstaller:
-      'Cette fenêtre va se fermer, Windows terminera la mise à jour et A2Intelligence rouvrira automatiquement.',
+      'Cette fenêtre va se fermer, Windows terminera la mise à jour et A2Assistant rouvrira automatiquement.',
     checkUnknownTitleAppInstaller: 'Impossible de vérifier les mises à jour',
     checkUnknownBodyAppInstaller:
-      "Windows n'a pas pu rechercher les mises à jour. Elles s'installent également automatiquement au redémarrage de A2Intelligence.",
+      "Windows n'a pas pu rechercher les mises à jour. Elles s'installent également automatiquement au redémarrage de A2Assistant.",
     versionDetailsTitle: 'Détails de la version',
     versionDetailsBody:
       "Cette installation est gérée hors de l'application. Mettez-la à jour de la même manière que vous l'avez installée.",
@@ -4199,12 +4199,12 @@ export const frOverrides = {
     versionUnavailable: 'Version indisponible',
     bundleOutOfSync: "Version de l'application obsolète",
     bundleOutOfSyncDesc:
-      "Le runtime A2Intelligence a été mis à jour, mais l'application Desktop utilise encore une ancienne version. Les nouvelles fonctions de l'interface, comme le mode Bot, resteront absentes jusqu'à sa mise à jour. Lancez la mise à jour ci-dessous pour reconstruire l'application. Si cet avertissement persiste, réinstallez-la avec le dernier installateur Desktop.",
+      "Le runtime A2Assistant a été mis à jour, mais l'application Desktop utilise encore une ancienne version. Les nouvelles fonctions de l'interface, comme le mode Bot, resteront absentes jusqu'à sa mise à jour. Lancez la mise à jour ci-dessous pour reconstruire l'application. Si cet avertissement persiste, réinstallez-la avec le dernier installateur Desktop.",
     bundleOutOfSyncAction: "Obtenir l'installateur",
     bundleSwapPending: 'Redémarrez pour terminer la mise à jour',
     bundleSwapPendingDesc:
-      "L'application mise à jour est déjà installée — A2Intelligence doit seulement redémarrer pour la charger. Vos conversations et paramètres sont préservés.",
-    bundleSwapPendingAction: 'Redémarrer A2Intelligence',
+      "L'application mise à jour est déjà installée — A2Assistant doit seulement redémarrer pour la charger. Vos conversations et paramètres sont préservés.",
+    bundleSwapPendingAction: 'Redémarrer A2Assistant',
     checkNow: 'Vérifier maintenant',
     seeWhatsNew: 'Voir les nouveautés',
     releaseNotes: 'Notes de version',
@@ -4227,9 +4227,9 @@ export const frOverrides = {
       fetch: 'Téléchargement…',
       pull: 'Presque prêt…',
       pydeps: 'Finalisation…',
-      update: 'Mise à jour de A2Intelligence…',
+      update: 'Mise à jour de A2Assistant…',
       rebuild: "Reconstruction de l'application de bureau…",
-      restart: 'Redémarrage de A2Intelligence…',
+      restart: 'Redémarrage de A2Assistant…',
       done: 'Mise à jour terminée',
       manual: 'Mise à jour depuis votre terminal',
       guiSkew: "Mettre à jour l'application de bureau",
@@ -4239,18 +4239,18 @@ export const frOverrides = {
     checkFailedTitle: 'Impossible de vérifier les mises à jour',
     tryAgain: 'Réessayer',
     notAvailableTitle: 'Mise à jour indisponible',
-    unsupportedMessage: "Cette version de A2Intelligence ne peut pas se mettre à jour depuis l'application.",
+    unsupportedMessage: "Cette version de A2Assistant ne peut pas se mettre à jour depuis l'application.",
     connectionRetry: 'Vérifiez votre connexion et réessayez.',
-    gitUnusable: 'A2Intelligence n’a pas pu exécuter Git sur cet ordinateur et n’a donc pas pu rechercher de mises à jour.',
+    gitUnusable: 'A2Assistant n’a pas pu exécuter Git sur cet ordinateur et n’a donc pas pu rechercher de mises à jour.',
     connectionSettings: 'Paramètres de connexion',
     openDownloadPage: 'Ouvrir la page de téléchargement',
     latestBody: 'Vous utilisez la dernière version.',
     latestBodyBackend: 'Le backend utilise la dernière version.',
     allSetTitle: 'Tout est prêt',
     availableTitle: 'Nouvelle mise à jour disponible',
-    availableBody: 'Une nouvelle version de A2Intelligence est prête à être installée.',
+    availableBody: 'Une nouvelle version de A2Assistant est prête à être installée.',
     availableTitleBackend: 'Mise à jour du backend disponible',
-    availableBodyBackend: 'Une version plus récente du backend A2Intelligence connecté est prête à être installée.',
+    availableBodyBackend: 'Une version plus récente du backend A2Assistant connecté est prête à être installée.',
     availableBodyNoChangelog:
       "Une version plus récente est prête. Les notes de version ne sont pas disponibles pour ce type d'installation.",
     updateNow: 'Mettre à jour maintenant',
@@ -4261,32 +4261,32 @@ export const frOverrides = {
     manualTitle: 'Mise à jour depuis votre terminal',
     manualUnavailableTitle: 'Mise à jour impossible ici',
     manualBody:
-      "Vous avez installé A2Intelligence depuis la ligne de commande, les mises à jour s'y effectuent donc aussi. Collez ceci dans votre terminal :",
-    manualPickedUp: 'A2Intelligence prendra en compte la nouvelle version au prochain lancement.',
+      "Vous avez installé A2Assistant depuis la ligne de commande, les mises à jour s'y effectuent donc aussi. Collez ceci dans votre terminal :",
+    manualPickedUp: 'A2Assistant prendra en compte la nouvelle version au prochain lancement.',
     manualBodyBackend:
-      'Le backend A2Intelligence est géré en dehors de cette app. Exécutez ceci sur le serveur qui l’héberge :',
+      'Le backend A2Assistant est géré en dehors de cette app. Exécutez ceci sur le serveur qui l’héberge :',
     manualPickedUpBackend: 'Le backend chargera la nouvelle version une fois la mise à jour terminée.',
     guiSkewTitle: "Mettre à jour l'application de bureau",
     guiSkewBody:
-      "Le backend a été mis à jour, mais ce package d'application de bureau ne l'a pas été. Mettez à jour ou réinstallez l'application de bureau A2Intelligence (votre AppImage / .deb / .rpm) pour qu'elle corresponde.",
+      "Le backend a été mis à jour, mais ce package d'application de bureau ne l'a pas été. Mettez à jour ou réinstallez l'application de bureau A2Assistant (votre AppImage / .deb / .rpm) pour qu'elle corresponde.",
     copy: 'Copier',
     copied: 'Copié',
     done: 'Terminé',
     applyingBody:
-      'Le programme de mise à jour de A2Intelligence prend le relais dans sa propre fenêtre et rouvre A2Intelligence automatiquement une fois terminé. Ne rouvrez pas A2Intelligence vous-même pendant la mise à jour.',
+      'Le programme de mise à jour de A2Assistant prend le relais dans sa propre fenêtre et rouvre A2Assistant automatiquement une fois terminé. Ne rouvrez pas A2Assistant vous-même pendant la mise à jour.',
     applyingBodyBackend:
-      'Le backend distant applique la mise à jour et va redémarrer. A2Intelligence se reconnecte automatiquement à son retour.',
-    applyingClose: 'Cette fenêtre se fermera pendant la mise à jour, puis A2Intelligence se rouvre seul.',
+      'Le backend distant applique la mise à jour et va redémarrer. A2Assistant se reconnecte automatiquement à son retour.',
+    applyingClose: 'Cette fenêtre se fermera pendant la mise à jour, puis A2Assistant se rouvre seul.',
     errorTitle: 'Mise à jour non terminée',
     errorBody: "Pas de souci — rien n'a été perdu. Vous pouvez réessayer maintenant.",
-    blockerTitle: 'Fermer les aperçus locaux pour mettre à jour A2Intelligence ?',
+    blockerTitle: 'Fermer les aperçus locaux pour mettre à jour A2Assistant ?',
     blockerBody:
-      'A2Intelligence doit arrêter ces aperçus locaux avant la mise à jour. Aucun de vos fichiers ne sera modifié ni supprimé.',
-    foreignBlockerTitle: 'Fermez les autres processus pour mettre à jour A2Intelligence',
+      'A2Assistant doit arrêter ces aperçus locaux avant la mise à jour. Aucun de vos fichiers ne sera modifié ni supprimé.',
+    foreignBlockerTitle: 'Fermez les autres processus pour mettre à jour A2Assistant',
     foreignBlockerBody:
-      "A2Intelligence ne peut pas fermer automatiquement ces processus en toute sécurité. Fermez l'application, le terminal ou le service qui possède chacun d'eux, puis relancez la mise à jour.",
+      "A2Assistant ne peut pas fermer automatiquement ces processus en toute sécurité. Fermez l'application, le terminal ou le service qui possède chacun d'eux, puis relancez la mise à jour.",
     mixedBlockerBody:
-      'A2Intelligence peut fermer les aperçus locaux ci-dessous. Les autres processus doivent être fermés manuellement avant de poursuivre la mise à jour.',
+      'A2Assistant peut fermer les aperçus locaux ci-dessous. Les autres processus doivent être fermés manuellement avant de poursuivre la mise à jour.',
     closePreviewsAndUpdate: 'Fermer les aperçus et mettre à jour',
     closePreviewsAndCheckAgain: 'Fermer les aperçus et revérifier',
     localPreview: 'Aperçu local',
@@ -4327,7 +4327,7 @@ export const frOverrides = {
       skipped: 'Ignoré',
       failed: 'Échoué'
     },
-    oneTimeTitle: 'A2Intelligence nécessite une installation unique',
+    oneTimeTitle: 'A2Assistant nécessite une installation unique',
     unsupportedDesc: platform =>
       `L'installation automatisée au premier lancement n'est pas encore disponible sur ${platform}. Ouvrez le Terminal et exécutez la commande ci-dessous, puis relancez cette application. Les lancements suivants ignoreront cette étape.`,
     installCommand: "Commande d'installation",
@@ -4335,24 +4335,24 @@ export const frOverrides = {
     viewDocs: "Voir la documentation d'installation",
     installTo: 'Sera installé dans',
     retryAfterRun: "Je l'ai exécuté — réessayer",
-    setupChoiceTitle: 'Configurer A2Intelligence Desktop',
+    setupChoiceTitle: 'Configurer A2Assistant Desktop',
     setupChoiceDesc:
-      'Connectez cette application à un gateway A2Intelligence que vous exécutez déjà, ou installez A2Intelligence localement sur cet ordinateur.',
-    connectExistingTitle: 'Se connecter à un A2Intelligence existant',
+      'Connectez cette application à un gateway A2Assistant que vous exécutez déjà, ou installez A2Assistant localement sur cet ordinateur.',
+    connectExistingTitle: 'Se connecter à un A2Assistant existant',
     connectExistingShort: 'Connecter un existant',
     connectExistingDesc:
       'Utilisez un backend distant avec un jeton de session ou une connexion par navigateur. Aucune installation locale ne démarrera.',
-    installLocalTitle: 'Installer A2Intelligence localement',
-    installLocalDesc: 'Téléchargez A2Intelligence, créez son environnement Python et exécutez le backend sur cet ordinateur.',
-    localStartUnavailable: "L'installation locale n'a pas pu démarrer. Redémarrez A2Intelligence Desktop et réessayez.",
-    remoteSetupTitle: 'Se connecter à un A2Intelligence existant',
+    installLocalTitle: 'Installer A2Assistant localement',
+    installLocalDesc: 'Téléchargez A2Assistant, créez son environnement Python et exécutez le backend sur cet ordinateur.',
+    localStartUnavailable: "L'installation locale n'a pas pu démarrer. Redémarrez A2Assistant Desktop et réessayez.",
+    remoteSetupTitle: 'Se connecter à un A2Assistant existant',
     remoteSetupDesc:
-      "Entrez l'URL du gateway. A2Intelligence Desktop détectera s'il a besoin d'un jeton ou d'une connexion par navigateur.",
+      "Entrez l'URL du gateway. A2Assistant Desktop détectera s'il a besoin d'un jeton ou d'une connexion par navigateur.",
     remoteUrlTitle: 'URL du gateway',
-    remoteUrlDesc: "Utilisez l'URL de base du gateway A2Intelligence, y compris https:// pour les connexions distantes.",
+    remoteUrlDesc: "Utilisez l'URL de base du gateway A2Assistant, y compris https:// pour les connexions distantes.",
     remoteUrlPlaceholder: 'https://gateway.example.com/hermes',
     probing: "Détection de l'authentification du gateway...",
-    probeError: "Impossible d'atteindre ce gateway A2Intelligence.",
+    probeError: "Impossible d'atteindre ce gateway A2Assistant.",
     probeErrorDetails: 'Détails',
     identityProvider: "votre fournisseur d'identité",
     authTitle: 'Authentification',
@@ -4373,12 +4373,12 @@ export const frOverrides = {
     applyRemote: 'Appliquer et se reconnecter',
     backToSetup: 'Retour',
     failedTitle: "Échec de l'installation",
-    settingUpTitle: 'Configuration de A2Intelligence',
+    settingUpTitle: 'Configuration de A2Assistant',
     finishingTitle: 'Finalisation',
     failedDesc:
-      "L'une des étapes d'installation a échoué. Sous Windows, cela peut arriver si une autre instance A2Intelligence CLI ou desktop est en cours d'exécution. Arrêtez toutes les instances A2Intelligence en cours, puis réessayez. Consultez les détails ci-dessous ou le journal du bureau pour la transcription complète.",
+      "L'une des étapes d'installation a échoué. Sous Windows, cela peut arriver si une autre instance A2Assistant CLI ou desktop est en cours d'exécution. Arrêtez toutes les instances A2Assistant en cours, puis réessayez. Consultez les détails ci-dessous ou le journal du bureau pour la transcription complète.",
     activeDesc:
-      "Il s'agit d'une configuration unique. Le programme d'installation de A2Intelligence télécharge les dépendances et configure votre machine. Les lancements suivants ignoreront cette étape.",
+      "Il s'agit d'une configuration unique. Le programme d'installation de A2Assistant télécharge les dépendances et configure votre machine. Les lancements suivants ignoreront cette étape.",
     progress: (completed, total) => `${completed} sur ${total} étapes terminées`,
     currentStage: stage => ` -- actuellement : ${stage}`,
     fetchingManifest: "Récupération du manifeste d'installation...",
@@ -4399,7 +4399,7 @@ export const frOverrides = {
   freeTier: {
     providerRowTitle: 'Nous · offre gratuite',
     providerRowPitch: 'Connectez-vous avec un compte Nous pour débloquer davantage de modèles et outils.',
-    readyTitle: 'A2Intelligence est prêt.',
+    readyTitle: 'A2Assistant est prêt.',
     readyCaption: 'Gratuit · connecteurs inclus',
     begin: 'Commencer',
     signInInstead: 'Se connecter plutôt avec un compte Nous',
@@ -4435,26 +4435,26 @@ export const frOverrides = {
     errorBody: "La connexion n'a pas abouti ; relancez-la.",
     busyHeading: 'Presque terminé',
     busyBody: wait =>
-      `A2Intelligence n'a pas pu terminer votre connexion car le service Nous est occupé. Réessayez dans ${wait}. Votre session reste disponible entre-temps.`,
+      `A2Assistant n'a pas pu terminer votre connexion car le service Nous est occupé. Réessayez dans ${wait}. Votre session reste disponible entre-temps.`,
     unreachableBody:
-      "A2Intelligence n'a pas pu joindre le service Nous pour terminer votre connexion. Vérifiez votre connexion Internet et réessayez. Votre session reste disponible.",
+      "A2Assistant n'a pas pu joindre le service Nous pour terminer votre connexion. Vérifiez votre connexion Internet et réessayez. Votre session reste disponible.",
     alreadySignedInHeading: 'Déjà connecté.',
-    alreadySignedInBody: 'Cette installation A2Intelligence est déjà connectée à un compte Nous.',
+    alreadySignedInBody: 'Cette installation A2Assistant est déjà connectée à un compte Nous.',
     offer: {
-      heading: 'Continuez avec A2Intelligence',
-      body: 'Vous utilisez le quota gratuit. Si vous continuez à utiliser A2Intelligence, vous allez commencer à atteindre des limites. Connectez-vous avec un compte Nous gratuit pour obtenir un quota plus important.',
+      heading: 'Continuez avec A2Assistant',
+      body: 'Vous utilisez le quota gratuit. Si vous continuez à utiliser A2Assistant, vous allez commencer à atteindre des limites. Connectez-vous avec un compte Nous gratuit pour obtenir un quota plus important.',
       signIn: 'Se connecter',
       notNow: 'Pas maintenant'
     },
     setupFailed: {
       gateClosed:
-        'Cette version de A2Intelligence ne peut pas démarrer sans compte Nous. Connectez-vous ou créez-en un gratuitement en une minute.',
+        'Cette version de A2Assistant ne peut pas démarrer sans compte Nous. Connectez-vous ou créez-en un gratuitement en une minute.',
       paused:
-        "L'utilisation de A2Intelligence sans connexion est momentanément suspendue. A2Intelligence continuera à vérifier. La connexion est gratuite et vous permet de continuer immédiatement.",
+        "L'utilisation de A2Assistant sans connexion est momentanément suspendue. A2Assistant continuera à vérifier. La connexion est gratuite et vous permet de continuer immédiatement.",
       rateLimited: wait =>
-        `Beaucoup de personnes démarrent en ce moment ; A2Intelligence réessaiera dans ${wait}. La connexion est gratuite et évite l'attente.`,
+        `Beaucoup de personnes démarrent en ce moment ; A2Assistant réessaiera dans ${wait}. La connexion est gratuite et évite l'attente.`,
       unreachable:
-        "A2Intelligence n'a pas pu joindre le service Nous. Vérifiez votre connexion Internet, puis appuyez sur Réessayer. Vous pouvez aussi connecter un autre fournisseur.",
+        "A2Assistant n'a pas pu joindre le service Nous. Vérifiez votre connexion Internet, puis appuyez sur Réessayer. Vous pouvez aussi connecter un autre fournisseur.",
       serverError:
         'Le service Nous a rencontré un problème. Réessayez dans un instant ou connectez un autre fournisseur.',
       powRequired:
@@ -4462,7 +4462,7 @@ export const frOverrides = {
       locked:
         'Cette session ne peut pas continuer sans connexion. Connectez-vous ou créez un compte Nous gratuit pour poursuivre.',
       generic:
-        "A2Intelligence n'a pas pu configurer l'accès gratuit sans connexion. Connectez-vous gratuitement ou choisissez un autre fournisseur.",
+        "A2Assistant n'a pas pu configurer l'accès gratuit sans connexion. Connectez-vous gratuitement ou choisissez un autre fournisseur.",
       signInBelow: 'La connexion est gratuite. Choisissez Nous ci-dessous.',
       tryAgain: 'Réessayer',
       retrying: 'Nouvelle tentative…'
@@ -4586,7 +4586,7 @@ export const frOverrides = {
       update: 'mise à jour',
       updateInProgress: 'Mise à jour en cours',
       commitsBehind: (count, branch) => `${count} commit${count === 1 ? '' : 's'} en retard sur ${branch}`,
-      desktopVersion: version => `A2Intelligence Desktop v${version}`,
+      desktopVersion: version => `A2Assistant Desktop v${version}`,
       backendVersion: version => `Backend v${version}`,
       clientLabel: version => `client v${version}`,
       connectionSsh: host => `SSH : ${host}`,
@@ -4768,7 +4768,7 @@ export const frOverrides = {
     binaryTitle: 'Cela ressemble à un fichier binaire',
     binaryBody: label => `L'aperçu de ${label} peut afficher du texte illisible.`,
     largeTitle: 'Ce fichier est volumineux',
-    largeBody: (label, size) => `${label} fait ${size}. A2Intelligence n'affichera que les 512 Ko premiers.`,
+    largeBody: (label, size) => `${label} fait ${size}. A2Assistant n'affichera que les 512 Ko premiers.`,
     previewAnyway: 'Aperçu quand même',
     truncated: 'Affichage des 512 Ko premiers.',
     noInlineTitle: 'Aucun aperçu en ligne',
@@ -4807,13 +4807,13 @@ export const frOverrides = {
   },
   interfaceMode: {
     title: 'Mode d’interface',
-    hint: 'Modifie ce qui est affiché, pas ce que A2Intelligence peut faire.',
+    hint: 'Modifie ce qui est affiché, pas ce que A2Assistant peut faire.',
     sessionNote:
       'Défini par le mode Simple. Une modification ici dure le temps de cette session ; passez en mode Avancé pour la conserver.',
     simple: {
       label: 'Simple',
       description:
-        'Pour discuter avec A2Intelligence. Barre latérale et conversation ; pas de panneaux terminal, fichiers ou diff.'
+        'Pour discuter avec A2Assistant. Barre latérale et conversation ; pas de panneaux terminal, fichiers ou diff.'
     },
     advanced: {
       label: 'Avancé',
@@ -4900,7 +4900,7 @@ export const frOverrides = {
     thread: {
       loadingSession: 'Chargement de la session',
       showEarlier: 'Afficher les messages précédents',
-      loadingResponse: 'A2Intelligence charge une réponse',
+      loadingResponse: 'A2Assistant charge une réponse',
       loadingLocalModel: model => `Chargement de ${model} en mémoire`,
       processingPrompt: "Traitement de l'invite",
       resumeWhenBackgroundDone: count =>
@@ -4958,11 +4958,11 @@ export const frOverrides = {
         },
         timeout: {
           title: provider => `Impossible de joindre ${provider}`,
-          body: provider => `A2Intelligence n'a pas pu joindre ${provider}. Vérifiez votre connexion, puis réessayez.`
+          body: provider => `A2Assistant n'a pas pu joindre ${provider}. Vérifiez votre connexion, puis réessayez.`
         },
         no_reply: {
           title: "La réponse n'est pas arrivée",
-          body: "A2Intelligence a terminé ce tour, mais aucune réponse n'est parvenue à cette fenêtre. Réessayez pour la renvoyer."
+          body: "A2Assistant a terminé ce tour, mais aucune réponse n'est parvenue à cette fenêtre. Réessayez pour la renvoyer."
         },
         stream_drop: {
           title: 'La réponse a été interrompue',
@@ -5027,15 +5027,15 @@ export const frOverrides = {
         agent_init_failed: {
           title: 'Impossible de démarrer cette conversation',
           body: provider =>
-            `A2Intelligence n'a pas pu se connecter à ${provider} pour cette conversation. Réessayez ; si l'échec persiste, vérifiez le fournisseur dans Paramètres.`
+            `A2Assistant n'a pas pu se connecter à ${provider} pour cette conversation. Réessayez ; si l'échec persiste, vérifiez le fournisseur dans Paramètres.`
         },
         SESSION_NOT_OWNED: {
           title: 'Conversation ouverte ailleurs',
-          body: "Cette conversation est ouverte dans une autre fenêtre A2Intelligence ou un terminal. Démarrez-en une nouvelle ici, ou fermez-la d'abord là-bas."
+          body: "Cette conversation est ouverte dans une autre fenêtre A2Assistant ou un terminal. Démarrez-en une nouvelle ici, ou fermez-la d'abord là-bas."
         },
         disk_full: {
           title: 'Votre disque est plein',
-          body: "A2Intelligence n'a pas pu enregistrer cette conversation. Libérez de l'espace, puis réessayez."
+          body: "A2Assistant n'a pas pu enregistrer cette conversation. Libérez de l'espace, puis réessayez."
         },
         free_tier_disabled: {
           title: 'Connectez-vous pour continuer',
@@ -5051,7 +5051,7 @@ export const frOverrides = {
         },
         free_tier_model_not_free: {
           title: 'Ce modèle nécessite une connexion',
-          body: 'A2Intelligence utilise le modèle gratuit pour le moment. Connectez-vous avec un compte Nous gratuit pour accéder à plus de modèles.'
+          body: 'A2Assistant utilise le modèle gratuit pour le moment. Connectez-vous avec un compte Nous gratuit pour accéder à plus de modèles.'
         },
         free_tier_route: {
           title: 'Modèle gratuit injoignable',
@@ -5095,7 +5095,7 @@ export const frOverrides = {
       errorRateLimitResetBody: (provider, time) =>
         `Vous avez atteint la limite de requêtes de ${provider}. Elle se réinitialise à ${time}.`,
       errorGenericProvider: "Le service d'IA",
-      errorToastTitle: "A2Intelligence n'a pas pu terminer la réponse",
+      errorToastTitle: "A2Assistant n'a pas pu terminer la réponse",
       errorRetry: 'Réessayer',
       errorSwitchToModel: (model, note) => (note ? `Passer à ${model} (${note})` : `Passer à ${model}`),
       errorSwitchModelFailed: 'Impossible de changer de modèle',
@@ -5110,8 +5110,8 @@ export const frOverrides = {
       errorChooseModel: 'Choisir un modèle',
       errorCompressConversation: 'Compresser la conversation',
       errorCompressFailed: 'Impossible de compresser la conversation',
-      errorOpenHermesFolder: 'Ouvrir le dossier A2Intelligence',
-      errorOpenHermesFolderFailed: "Impossible d'ouvrir le dossier A2Intelligence",
+      errorOpenHermesFolder: 'Ouvrir le dossier A2Assistant',
+      errorOpenHermesFolderFailed: "Impossible d'ouvrir le dossier A2Assistant",
       errorUpdateApiKey: 'Mettre à jour la clé API',
       errorSignInAgain: provider => `Se reconnecter à ${provider}`,
       errorSignInFreeTier: 'Se connecter avec un compte Nous',
@@ -5147,11 +5147,11 @@ export const frOverrides = {
       attachingFile: 'Ajout en cours…'
     },
     approval: {
-      gatewayDisconnected: "La Gateway A2Intelligence n'est pas connectée",
+      gatewayDisconnected: "La Gateway A2Assistant n'est pas connectée",
       sendFailed: "Impossible d'envoyer la réponse d'approbation",
       reconnect: 'Se reconnecter',
       timedOutSystemLine:
-        "Le délai d'approbation a expiré — la commande n'a pas été exécutée. Demandez à A2Intelligence de réessayer ou augmentez la limite dans Paramètres → Sécurité → Délai d'approbation.",
+        "Le délai d'approbation a expiré — la commande n'a pas été exécutée. Demandez à A2Assistant de réessayer ou augmentez la limite dans Paramètres → Sécurité → Délai d'approbation.",
       openSafetySettings: 'Ouvrir les paramètres de sécurité',
       run: 'Exécuter',
       command: 'Commande',
@@ -5162,7 +5162,7 @@ export const frOverrides = {
       reject: 'Rejeter',
       alwaysTitle: 'Toujours autoriser cette commande ?',
       alwaysDescription: pattern =>
-        `Cela ajoute le motif « ${pattern} » à votre liste d'autorisation permanente (~/.hermes/config.yaml). A2Intelligence ne redemandera plus pour ce type de commande — que ce soit dans cette session ou dans une session future.`,
+        `Cela ajoute le motif « ${pattern} » à votre liste d'autorisation permanente (~/.hermes/config.yaml). A2Assistant ne redemandera plus pour ce type de commande — que ce soit dans cette session ou dans une session future.`,
       alwaysAllow: 'Toujours autoriser'
     },
     clarify: frClarify,
@@ -5217,7 +5217,7 @@ export const frOverrides = {
       sendFailed: "Impossible d'envoyer la réponse de configuration MCP",
       reloadFailed:
         'Serveur enregistré, mais le rechargement des outils MCP a échoué — ils seront chargés à la prochaine session',
-      gatewayDisconnected: "La Gateway A2Intelligence n'est pas connectée"
+      gatewayDisconnected: "La Gateway A2Assistant n'est pas connectée"
     },
     tool: {
       copyCode: 'Copier le code',
@@ -5402,20 +5402,20 @@ export const frOverrides = {
     }
   },
   prompts: {
-    gatewayDisconnected: "La Gateway A2Intelligence n'est pas connectée",
+    gatewayDisconnected: "La Gateway A2Assistant n'est pas connectée",
     reconnect: 'Se reconnecter',
     sudoSendFailed: "Impossible d'envoyer le mot de passe sudo",
     secretSendFailed: "Impossible d'envoyer le secret",
     sudoTitle: 'Mot de passe administrateur',
     sudoDesc:
-      "A2Intelligence a besoin de votre mot de passe sudo pour exécuter une commande privilégiée. Il n'est envoyé qu'à votre agent local.",
+      "A2Assistant a besoin de votre mot de passe sudo pour exécuter une commande privilégiée. Il n'est envoyé qu'à votre agent local.",
     sudoCommandUnavailable:
       "Cet agent n'a pas fourni la commande. Annulez si vous ne pouvez pas la vérifier dans la conversation.",
     sudoInstallDesc:
-      'A2Intelligence a besoin de votre mot de passe sudo pour installer les paquets de Bot Screen (TigerVNC + Xfce) sur l’hôte du gateway. Il n’est envoyé qu’à cet hôte.',
+      'A2Assistant a besoin de votre mot de passe sudo pour installer les paquets de Bot Screen (TigerVNC + Xfce) sur l’hôte du gateway. Il n’est envoyé qu’à cet hôte.',
     sudoPlaceholder: 'mot de passe sudo',
     secretTitle: 'Secret requis',
-    secretDesc: "A2Intelligence a besoin d'un identifiant pour continuer.",
+    secretDesc: "A2Assistant a besoin d'un identifiant pour continuer.",
     secretPlaceholder: 'valeur du secret',
     vaultUnlockSendFailed: "Impossible d'envoyer le mot de passe principal",
     vaultUnlockTitle: name => `Déverrouiller ${name}`,
@@ -5427,7 +5427,7 @@ export const frOverrides = {
     vaultSaveSendFailed: "Impossible d'enregistrer l'identifiant",
     vaultSaveTitle: site => `Enregistrer votre identifiant ${site} ?`,
     vaultSaveDesc: origin =>
-      `A2Intelligence a atteint une page de connexion sur ${origin} et ne possède aucun identifiant pour celle-ci. Saisissez-le une fois ici : il sera chiffré sur cet ordinateur et rempli dans la page sans que le modèle voie le mot de passe.`,
+      `A2Assistant a atteint une page de connexion sur ${origin} et ne possède aucun identifiant pour celle-ci. Saisissez-le une fois ici : il sera chiffré sur cet ordinateur et rempli dans la page sans que le modèle voie le mot de passe.`,
     vaultSaveIdentifierLabel: "Adresse e-mail ou nom d'utilisateur",
     vaultSaveIdentifierPlaceholder: 'vous@exemple.fr',
     vaultSavePasswordPlaceholder: 'Mot de passe',
@@ -5437,10 +5437,10 @@ export const frOverrides = {
     vaultCodeSendFailed: "Impossible d'envoyer le code",
     vaultCodeTitle: site => `Code de vérification pour ${site}`,
     vaultCodeDesc: site =>
-      `${site} demande un code à usage unique reçu par SMS, e-mail ou application d'authentification. Saisissez-le ici : A2Intelligence le remplira dans la page sans que le modèle le voie.`,
+      `${site} demande un code à usage unique reçu par SMS, e-mail ou application d'authentification. Saisissez-le ici : A2Assistant le remplira dans la page sans que le modèle le voie.`,
     vaultCodeLabel: 'Code',
     vaultCodeFootnote:
-      "Astuce : enregistrez la clé d'authentification avec cet identifiant dans Paramètres → Mots de passe et identifiants ; A2Intelligence saisira alors les codes pour vous.",
+      "Astuce : enregistrez la clé d'authentification avec cet identifiant dans Paramètres → Mots de passe et identifiants ; A2Assistant saisira alors les codes pour vous.",
     vaultCodeSkip: 'Ignorer',
     vaultCodeConfirm: 'Saisir le code'
   },
@@ -5511,8 +5511,8 @@ export const frOverrides = {
     sessionExportFailed: "Impossible d'exporter la session",
     imageSaved: 'Image enregistrée',
     downloadStarted: 'Téléchargement démarré',
-    restartToUseSaveImage: "Redémarrez A2Intelligence Desktop pour utiliser Enregistrer l'image.",
-    restartToSaveImages: 'Redémarrez A2Intelligence Desktop pour enregistrer les images',
+    restartToUseSaveImage: "Redémarrez A2Assistant Desktop pour utiliser Enregistrer l'image.",
+    restartToSaveImages: 'Redémarrez A2Assistant Desktop pour enregistrer les images',
     imageDownloadFailed: "Échec du téléchargement de l'image",
     openImage: "Ouvrir l'image",
     downloadImage: "Télécharger l'image",
@@ -5548,14 +5548,14 @@ export const frOverrides = {
       },
       skills: {
         title: 'Apprenez-lui une seule fois',
-        text: "Les compétences sont des dossiers d'instructions que A2Intelligence charge lorsque le travail le nécessite."
+        text: "Les compétences sont des dossiers d'instructions que A2Assistant charge lorsque le travail le nécessite."
       },
       messaging: {
-        title: 'A2Intelligence loin de votre bureau',
+        title: 'A2Assistant loin de votre bureau',
         text: 'Connectez Telegram, Discord, Slack et plus encore : même agent, même mémoire.'
       },
       artifacts: {
-        title: 'Tout ce que A2Intelligence a créé',
+        title: 'Tout ce que A2Assistant a créé',
         text: 'Images, fichiers et liens de chaque session, indexés au même endroit.'
       },
       cron: {
@@ -5568,7 +5568,7 @@ export const frOverrides = {
       },
       profiles: {
         title: 'Les profils sont séparés',
-        text: 'Chacun possède son propre A2Intelligence, avec ses clés, sa mémoire et ses sessions.'
+        text: 'Chacun possède son propre A2Assistant, avec ses clés, sa mémoire et ses sessions.'
       },
       'composer-mentions': {
         title: 'Joindre et commander',

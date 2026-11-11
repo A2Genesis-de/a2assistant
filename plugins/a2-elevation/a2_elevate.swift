@@ -48,7 +48,7 @@ func passwordIsValid(_ password: String) -> Bool {
 
 func makeAlert(for request: Request, notice: String?) -> (NSAlert, NSSecureTextField) {
     let alert = NSAlert()
-    alert.messageText = "A2Intelligence bittet um Freigabe"
+    alert.messageText = "A2Assistant bittet um Freigabe"
     let details = "\(request.reason)\n\nBereich: \(request.scopeLabel)\nGilt 10 Minuten und läuft dann automatisch ab."
     alert.informativeText = notice.map { "\($0)\n\n\(details)" } ?? details
     alert.addButton(withTitle: "Freigeben")

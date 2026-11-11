@@ -38,7 +38,7 @@ export const jaFirstRun: FirstRunCopy = {
     notNow: '今はしない'
   },
   intro: {
-    greeting: 'こんにちは、A2Intelligence です。',
+    greeting: 'こんにちは、A2Assistant です。',
     plan: 'まずはあなたに合わせて設定しましょう。そのあと、何かすごいものを作りましょう。'
   },
   rerun: {

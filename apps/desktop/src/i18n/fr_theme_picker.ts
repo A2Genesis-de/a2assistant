@@ -7,7 +7,7 @@ export const frThemePicker: ThemePickerCopy = {
   customColor: 'Couleur personnalisée',
   themeAccent: 'Par défaut du thème',
   basic: 'Basique',
-  basicDetail: 'Pour discuter avec A2Intelligence.',
+  basicDetail: 'Pour discuter avec A2Assistant.',
   elite: 'Élite',
   eliteDetail: 'Pour les développeurs : terminal, fichiers, diffs.',
   noPick: 'Aucun choix'

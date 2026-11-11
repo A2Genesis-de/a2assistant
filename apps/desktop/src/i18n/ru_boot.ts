@@ -3,19 +3,19 @@ import type { TranslationOverrides } from './define-locale'
 // The boot screen's copy, composed by ru.ts.
 export const ruBoot = {
   boot: {
-    ready: 'A2Intelligence Desktop готов',
+    ready: 'A2Assistant Desktop готов',
     desktopBootFailedWithMessage: message => `Не удалось запустить приложение: ${message}`,
     steps: {
       connectingGateway: 'Подключение к шлюзу',
-      loadingSettings: 'Загрузка настроек A2Intelligence',
+      loadingSettings: 'Загрузка настроек A2Assistant',
       loadingSessions: 'Загрузка последних сеансов',
-      retryingRemoteBackend: 'Переподключение к удалённому бэкенду A2Intelligence…',
+      retryingRemoteBackend: 'Переподключение к удалённому бэкенду A2Assistant…',
       startingDesktopConnection: 'Запуск подключения приложения',
-      startingHermesDesktop: 'Запуск A2Intelligence Desktop…'
+      startingHermesDesktop: 'Запуск A2Assistant Desktop…'
     },
     errors: {
-      backgroundExited: 'Фоновый процесс A2Intelligence завершён.',
-      backgroundExitedDuringStartup: 'Фоновый процесс A2Intelligence завершился при запуске.',
+      backgroundExited: 'Фоновый процесс A2Assistant завершён.',
+      backgroundExitedDuringStartup: 'Фоновый процесс A2Assistant завершился при запуске.',
       backendStopped: 'Бэкенд остановлен',
       desktopBootFailed: 'Не удалось запустить приложение',
       gatewayConnectionLost: 'Соединение с шлюзом потеряно',
@@ -23,7 +23,7 @@ export const ruBoot = {
       ipcBridgeUnavailable: 'IPC-мост приложения недоступен.'
     },
     failure: {
-      title: 'A2Intelligence не удалось запустить',
+      title: 'A2Assistant не удалось запустить',
       description:
         'Фоновый шлюз не запустился. Попробуйте один из шагов восстановления ниже. Ничто из этого не удаляет ваши чаты и настройки.',
       remoteTitle: 'Требуется вход в удалённый шлюз',

@@ -11,7 +11,7 @@ export const enNotices = {
   butterbar: {
     goTo: (index, total) => `Show notice ${index} of ${total}`,
     legal: {
-      before: 'Use of A2Intelligence is subject to our ',
+      before: 'Use of A2Assistant is subject to our ',
       terms: 'Terms of Service',
       between: ' and ',
       privacy: 'Privacy Policy',
@@ -33,9 +33,9 @@ export const enNotices = {
     desktopCommands: enDesktopCommands
   },
   keepAwakeOffer: {
-    title: 'Your computer slept while A2Intelligence was working',
+    title: 'Your computer slept while A2Assistant was working',
     message:
-      'A2Intelligence can keep your computer awake while a task runs. The screen still turns off, and on battery your computer may still sleep.',
+      'A2Assistant can keep your computer awake while a task runs. The screen still turns off, and on battery your computer may still sleep.',
     action: 'Keep awake while working'
   },
   connectorOffer: {

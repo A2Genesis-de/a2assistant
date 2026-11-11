@@ -62,7 +62,7 @@ _HERMES_BRANDING: dict[str, str] = _branding(
 
 _BUILTIN_SKINS: dict[str, dict[str, Any]] = {
     "a2": {
-        "name": "a2", "description": "A2Intelligence — A2Genesis monochrome",
+        "name": "a2", "description": "A2Assistant — A2Genesis monochrome",
         "colors": {
             "banner_border": "#3f3f46", "banner_title": "#fafafa", "banner_accent": "#d4d4d8",
             "banner_dim": "#6b6b73", "banner_text": "#d4d4d8", "ui_accent": "#fafafa",
@@ -89,11 +89,11 @@ _BUILTIN_SKINS: dict[str, dict[str, Any]] = {
             "shell_dollar": "#3f3f46", "voice_status_bg": "#f4f4f4"},
         "spinner": {},
         "branding": {
-            "agent_name": "A2Intelligence",
-            "welcome": "Willkommen bei A2Intelligence! Nachricht eingeben oder /help für Befehle.",
-            "goodbye": "Bis bald! ▲", "response_label": " ▲ A2Intelligence ", "prompt_symbol": "❯",
+            "agent_name": "A2Assistant",
+            "welcome": "Willkommen bei A2Assistant! Nachricht eingeben oder /help für Befehle.",
+            "goodbye": "Bis bald! ▲", "response_label": " ▲ A2Assistant ", "prompt_symbol": "❯",
             "help_header": "(▲) Befehle"},
-        "banner_logo": "[bold]▲ A2Intelligence[/bold]\n[dim]A2Genesis GmbH · Bochum[/dim]",
+        "banner_logo": "[bold]▲ A2Assistant[/bold]\n[dim]A2Genesis GmbH · mit A2Intelligence[/dim]",
         "tool_prefix": "┊"},
     "default": {
         "name": "default", "description": "Classic Hermes — gold and kawaii",

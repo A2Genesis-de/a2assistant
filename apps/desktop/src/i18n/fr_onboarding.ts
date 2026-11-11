@@ -1,13 +1,13 @@
 import type { TranslationOverrides } from './define-locale'
 
 export const frOnboarding: TranslationOverrides['onboarding'] = {
-  headerTitle: 'Configurons A2Intelligence pour vous',
+  headerTitle: 'Configurons A2Assistant pour vous',
   headerDesc:
     'Connectez un fournisseur de modèles pour commencer à discuter. La plupart des options nécessitent un clic.',
-  preparingInstall: "A2Intelligence finalise l'installation. Cela prend généralement moins d'une minute au premier lancement.",
-  starting: 'Démarrage de A2Intelligence…',
+  preparingInstall: "A2Assistant finalise l'installation. Cela prend généralement moins d'une minute au premier lancement.",
+  starting: 'Démarrage de A2Assistant…',
   setupSlowTitle: 'La configuration prend plus de temps que d’habitude.',
-  setupSlowBody: 'A2Intelligence est toujours en cours de démarrage en arrière-plan.',
+  setupSlowBody: 'A2Assistant est toujours en cours de démarrage en arrière-plan.',
   continueWithoutSetup: 'Continuer sans configuration',
   lookingUpProviders: 'Recherche des fournisseurs...',
   collapse: 'Réduire',
@@ -16,7 +16,7 @@ export const frOnboarding: TranslationOverrides['onboarding'] = {
   chooseLater: 'Je choisirai un fournisseur plus tard',
   recommended: 'Recommandé',
   connected: 'Connecté',
-  featuredPitch: 'Un abonnement, 300+ modèles de pointe — la méthode recommandée pour exécuter A2Intelligence',
+  featuredPitch: 'Un abonnement, 300+ modèles de pointe — la méthode recommandée pour exécuter A2Assistant',
   fireworksPitch: 'API de modèles directe — modèles de pointe hébergés par Fireworks',
   localModelsTitle: 'Exécuter des modèles en local',
   localModelsPitch: 'Aucun compte requis — téléchargez un modèle et exécutez-le sur cette machine',
@@ -46,7 +46,7 @@ export const frOnboarding: TranslationOverrides['onboarding'] = {
     local: {
       short: 'auto-hébergé',
       description:
-        'Pointez A2Intelligence vers un point de terminaison local ou auto-hébergé compatible OpenAI (vLLM, llama.cpp, Ollama, etc).'
+        'Pointez A2Assistant vers un point de terminaison local ou auto-hébergé compatible OpenAI (vLLM, llama.cpp, Ollama, etc).'
     }
   },
   backToSignIn: 'Retour à la connexion',
@@ -60,7 +60,7 @@ export const frOnboarding: TranslationOverrides['onboarding'] = {
   update: 'Mettre à jour',
   flowSubtitles: {
     pkce: 'Ouvre votre navigateur pour vous connecter, puis continue ici',
-    device_code: 'Ouvre une page de vérification dans votre navigateur — A2Intelligence se connecte automatiquement',
+    device_code: 'Ouvre une page de vérification dans votre navigateur — A2Assistant se connecte automatiquement',
     external: 'Connectez-vous une fois dans votre terminal, puis revenez discuter'
   },
   startingSignIn: provider => `Démarrage de la connexion pour ${provider}...`,
@@ -78,7 +78,7 @@ export const frOnboarding: TranslationOverrides['onboarding'] = {
   pickDifferentProvider: 'Choisissez un autre fournisseur',
   signInWith: provider => `Se connecter avec ${provider}`,
   openedBrowser: provider => `Nous avons ouvert ${provider} dans votre navigateur.`,
-  authorizeThere: 'Autorisez A2Intelligence là-bas.',
+  authorizeThere: 'Autorisez A2Assistant là-bas.',
   copyAuthCode: "Copiez le code d'autorisation et collez-le ci-dessous.",
   pasteAuthCode: "Coller le code d'autorisation",
   reopenAuthPage: "Rouvrir la page d'autorisation",

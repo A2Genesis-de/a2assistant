@@ -10,22 +10,22 @@ export const enErrorLayers: Pick<ThreadCopy, 'errorLayerBodies' | 'errorLayers'>
     disk: 'Disk full',
     endpoint: "Can't reach your model server",
     gateway: "Couldn't send your message",
-    generic: "A2Intelligence couldn't finish this reply",
+    generic: "A2Assistant couldn't finish this reply",
     provider: 'The AI service returned an error',
-    runtime: 'A2Intelligence hit a problem',
+    runtime: 'A2Assistant hit a problem',
     streaming: 'The reply was cut off'
   },
   errorLayerBodies: {
     auth: 'The AI service rejected your sign-in. Check the credentials for this provider, then send your message again.',
     billing: 'Your account has no credits left for this provider. Top up or switch provider, then send again.',
-    disk: 'Your disk is full, so A2Intelligence could not save this conversation. Free some space, then retry.',
-    endpoint: "A2Intelligence can't reach your custom model server. Check that it is running, then send your message again.",
+    disk: 'Your disk is full, so A2Assistant could not save this conversation. Free some space, then retry.',
+    endpoint: "A2Assistant can't reach your custom model server. Check that it is running, then send your message again.",
     gateway:
-      'A2Intelligence hit an internal problem starting this reply. Send your message again; if it keeps happening, send diagnostics.',
-    generic: 'Something went wrong while A2Intelligence was replying. Retry, or copy the details if it keeps happening.',
+      'A2Assistant hit an internal problem starting this reply. Send your message again; if it keeps happening, send diagnostics.',
+    generic: 'Something went wrong while A2Assistant was replying. Retry, or copy the details if it keeps happening.',
     provider: 'The AI service could not complete this request. Retry in a moment or switch provider.',
     runtime:
-      'A2Intelligence hit an internal problem starting this reply. Send your message again; if it keeps happening, send diagnostics.',
+      'A2Assistant hit an internal problem starting this reply. Send your message again; if it keeps happening, send diagnostics.',
     streaming: 'The connection dropped before the reply finished. Retry to send it again.'
   }
 }
