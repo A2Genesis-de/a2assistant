@@ -9,8 +9,9 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 
-git fetch upstream --tags --prune
-latest_tag="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)"
+# Releases are semver tags (v0.23.1); date tags (v2026.9.24) are a legacy scheme and must be ignored.
+git fetch upstream '+refs/heads/main:refs/remotes/upstream/main' --tags
+latest_tag="$(git tag --list --sort=-v:refname | grep -E '^v[0-9]{1,3}\.[0-9]+\.[0-9]+$' | head -n1)"
 
 if git merge-base --is-ancestor "$latest_tag" main; then
   echo "main already contains $latest_tag."
