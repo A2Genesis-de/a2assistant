@@ -11,12 +11,12 @@
 const variants = {
   '': { display: 'A2Assistant', kebab: 'hermes', pascal: 'Hermes' },
   light: {
-    display: 'Hermes Light',
+    display: 'A2Assistant Light',
     kebab: 'hermes-light',
     pascal: 'HermesLight'
   },
   bundled: {
-    display: 'Hermes Agent',
+    display: 'A2Assistant Agent',
     kebab: 'hermes-bundled',
     pascal: 'HermesBundled'
   }

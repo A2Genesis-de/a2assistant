@@ -185,7 +185,7 @@ _corrupt_store_warned_at: dict[str, float] = {}  # {db path: monotonic}
 
 CORRUPT_STORE_DETAIL = {
     "error": "state_db_corrupt",
-    "message": "state.db corrupt — run `hermes doctor` (then `hermes doctor --fix` or `hermes sessions repair`).",
+    "message": "state.db corrupt — run `a2assistant doctor` (then `a2assistant doctor --fix` or `a2assistant sessions repair`).",
 }
 # One payload per persistence-cause bucket (``classify_persistence_error``); ``error`` codes
 # all follow the ``state_db_*`` scheme of the pre-existing ``state_db_corrupt``.
@@ -193,14 +193,14 @@ CORRUPT_STORE_DETAIL = {
 # lives would repair the wrong generation in place, so it is deliberately NOT suggested here.
 DELETED_WAL_DETAIL = {
     "error": "state_db_deleted_wal",
-    "message": "another Hermes process still holds an old copy of the session database's write-ahead log — "
-               "quit every Hermes process on this profile, run `hermes doctor` (it names the holders), "
-               "then start Hermes again. Do not run `hermes doctor --fix` while they run.",
+    "message": "another A2Assistant process still holds an old copy of the session database's write-ahead log — "
+               "quit every A2Assistant process on this profile, run `a2assistant doctor` (it names the holders), "
+               "then start A2Assistant again. Do not run `a2assistant doctor --fix` while they run.",
 }
 STATE_DB_REPLACED_DETAIL = {
     "error": "state_db_replaced",
-    "message": "state.db was replaced while Hermes was running — stop Hermes, run `hermes doctor`, "
-               "then start it again. Do not run `hermes doctor --fix`, which would repair the wrong file in place.",
+    "message": "state.db was replaced while A2Assistant was running — stop A2Assistant, run `a2assistant doctor`, "
+               "then start it again. Do not run `a2assistant doctor --fix`, which would repair the wrong file in place.",
 }
 # Every other bucket a malformed image can classify as ("corrupt", "fts_index") is the corrupt payload.
 _STORE_STATUS_DETAIL_BY_CAUSE = {"deleted_wal": DELETED_WAL_DETAIL, "replaced": STATE_DB_REPLACED_DETAIL}

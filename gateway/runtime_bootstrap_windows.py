@@ -433,7 +433,7 @@ def refused_owner_remedy(reason: str, pid: int, owner_session: int | None) -> st
     if reason == GATEWAY_ELEVATED:
         return (f"The running gateway (PID {pid}) was started as administrator, so this non-elevated "
                 "app cannot reach it. Stop it from an administrator prompt (hermes gateway stop), then "
-                "start Hermes without elevation")
+                "start A2Assistant without elevation")
     where = f"session {owner_session}" if owner_session is not None else "another session"
     return (f"The running gateway (PID {pid}) runs in another Windows logon session ({where}, e.g. a "
             "boot-time scheduled task), so this app cannot reach it. Stop it (hermes gateway stop from an "

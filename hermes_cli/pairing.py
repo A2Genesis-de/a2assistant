@@ -14,7 +14,7 @@ def pairing_command(args):
     handler = handlers.get(getattr(args, "pairing_action", None))
     if handler is None:
         print("Usage: hermes pairing {list|approve|revoke|clear-pending}")
-        print("Run 'hermes pairing --help' for details.")
+        print("Run 'a2assistant pairing --help' for details.")
     else:
         handler()
 
@@ -78,7 +78,7 @@ def _cmd_approve(store, platform: str, code: str):
         print(f"  To reset sooner, delete the '_lockout:{platform}' entry from ~/.hermes/platforms/pairing/_rate_limits.json\n")
     else:
         print(f"\n  Pairing request or code '{code}' not found or expired for platform '{platform}'.")
-        print("  Run 'hermes pairing list' to see pending requests.\n")
+        print("  Run 'a2assistant pairing list' to see pending requests.\n")
 
 
 def _cmd_revoke(store, platform: str, user_id: str):

@@ -729,7 +729,7 @@ class MemoryManager:
         """
         if not self._owner_allows("on_pre_compress"):
             if require_checkpoint:  # the caller keeps the uncompressed transcript
-                raise RuntimeError("Memory pre-compress checkpoint refused; see `hermes logs errors`")
+                raise RuntimeError("Memory pre-compress checkpoint refused; see `a2assistant logs errors`")
             return ""
         parts = []
         checkpoint_succeeded = False
@@ -942,7 +942,7 @@ class MemoryManager:
         for provider in (p for p in before if not any(p is kept for kept in self._providers)):
             message = (f"⚠ Memory provider {provider.name!r} is disabled for this profile: it handed out the "
                        "provider instance another profile already uses. Built-in memory still works; the "
-                       "operator can see why with `hermes logs errors`.")
+                       "operator can see why with `a2assistant logs errors`.")
             (say or logger.warning)(message)
         return self._has_external
 

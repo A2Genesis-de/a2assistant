@@ -513,7 +513,7 @@ def _fail_whatsapp_pairing(pairing_id: str, error: str, *, proc=None, unless=_WH
 # Readable text for bridge pairing error codes the dashboard displays; other codes show as the bridge sent them.
 _WHATSAPP_PAIRING_ERROR_TEXT = {
     "passkey_required": "This WhatsApp account requires passkey verification, which dashboard setup cannot do. "
-                        "In a local terminal, run hermes whatsapp --passkey-browser followed by the path to your "
+                        "In a local terminal, run a2assistant whatsapp --passkey-browser followed by the path to your "
                         "Chrome or Edge executable.",
 }
 
@@ -874,7 +874,7 @@ async def _telegram_onboarding_request(method: str, path: str, *, body=None, bea
 
 @router.post("/api/messaging/telegram/onboarding/start")
 async def start_telegram_onboarding(body: TelegramOnboardingStart):
-    bot_name = (body.bot_name or "Hermes Agent").strip() or "Hermes Agent"
+    bot_name = (body.bot_name or "A2Assistant").strip() or "A2Assistant"
     payload = await _telegram_onboarding_request("POST", "/v1/telegram/pairings", body={"bot_name": bot_name})
 
     def field(key: str) -> str:

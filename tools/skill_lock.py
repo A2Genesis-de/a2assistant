@@ -96,12 +96,12 @@ def skill_refusal(name: str) -> str:
     return (f"Skill '{name}' is locked by the user, so the agent cannot change it: skill_manage, "
             f"write_file, patch and terminal all refuse. Don't retry or work around it (no copying it "
             f"under another name); tell the user what you would change. They can unlock it with "
-            f"`hermes curator unlock {name}` or the lock switch in Desktop.")
+            f"`a2assistant curator unlock {name}` or the lock switch in Desktop.")
 
 
 RECORD_REFUSAL = ("skills/.usage.json holds the user's skill locks, so the agent cannot change it "
                   "while any skill is locked.")
-UNLOCK_REFUSAL = ("Only the user can unlock a skill. Ask them to run `hermes curator unlock <skill>` "
+UNLOCK_REFUSAL = ("Only the user can unlock a skill. Ask them to run `a2assistant curator unlock <skill>` "
                   "themselves or use the lock switch in Desktop.")
 
 

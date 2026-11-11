@@ -65,7 +65,7 @@ def export_signins() -> dict[str, Any]:
 def run_export_signins(args) -> int:
     """CLI entry. Refuses an interactive stdout: the output is cookie values, meant for Desktop's pipe."""
     if not getattr(args, "json", False) or sys.stdout.isatty():
-        print("✗ export-signins is used by Hermes Desktop; it prints cookie values and needs --json "
+        print("✗ export-signins is used by A2Assistant Desktop; it prints cookie values and needs --json "
               "with stdout redirected to a pipe.", file=sys.stderr)
         return 2
     result = export_signins()

@@ -112,9 +112,9 @@ def _unreadable_store(exc: sqlite3.Error, store: str) -> str:
     if is_sqlite_lock_error(exc):
         return f'Error: {store} is locked by another program. Close that program, then run this command again.'
     if _schema_not_built(exc):
-        return (f'Error: {store} is from an older Hermes and has not been upgraded ({exc}). Run '
-                '`hermes sessions repair` to upgrade it (it makes a backup first), then run this command again.')
-    return f'Error: could not read {store} ({exc}). Run `hermes sessions repair` to check it.'
+        return (f'Error: {store} is from an older A2Assistant and has not been upgraded ({exc}). Run '
+                '`a2assistant sessions repair` to upgrade it (it makes a backup first), then run this command again.')
+    return f'Error: could not read {store} ({exc}). Run `a2assistant sessions repair` to check it.'
 
 
 def cmd_adopt(args) -> int:

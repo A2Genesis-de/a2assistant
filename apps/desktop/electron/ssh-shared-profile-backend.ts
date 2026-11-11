@@ -90,7 +90,7 @@ function profileNames(body: unknown): string[] {
 // Same shape remote-lifecycle gives a remote `--profile X serve` that refuses a missing profile.
 function remoteProfileMissing(profile: string): Error & { kind: string; profile: string } {
   return Object.assign(
-    new Error(`The remote Hermes profile '${profile}' does not exist. Select an existing remote profile.`),
+    new Error(`The remote A2Assistant profile '${profile}' does not exist. Select an existing remote profile.`),
     { kind: 'remote-profile-missing', profile }
   )
 }

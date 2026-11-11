@@ -659,7 +659,7 @@ def multiplexed_profile_refusal(profile: Optional[str], verb: str) -> Optional[s
         return None  # a --force-installed fleet member is not NEW; its own service is started normally
     return (f"Profile '{requested}' does not get a gateway of its own: one host gateway serves every "
             f"profile. Install or start it from the default profile (hermes gateway install), or fold an "
-            f"existing per-profile fleet with `hermes gateway migrate --multiplex`; "
+            f"existing per-profile fleet with `a2assistant gateway migrate --multiplex`; "
             f"`hermes -p {requested} gateway install --force` starts a separate one anyway.")
 
 

@@ -183,14 +183,14 @@ def _ensure_tui_workspace(tui_dir: Path) -> None:
         return
 
     print(
-        "Error: the TUI workspace is missing from this Hermes checkout.\n"
+        "Error: the TUI workspace is missing from this A2Assistant checkout.\n"
         f"Expected directory: {tui_dir}\n"
-        "This usually means `hermes update` left tracked ui-tui files deleted.\n"
+        "This usually means `a2assistant update` left tracked ui-tui files deleted.\n"
         "Recovery:\n"
-        "  1. From the Hermes checkout, run `git restore -- ui-tui`\n"
+        "  1. From the A2Assistant checkout, run `git restore -- ui-tui`\n"
         "  2. Run `pnpm install --frozen-lockfile`\n"
         "  3. Retry `hermes --tui`\n"
-        "If the checkout is still inconsistent, run `hermes update --force`.",
+        "If the checkout is still inconsistent, run `a2assistant update --force`.",
         file=sys.stderr)
     sys.exit(1)
 
@@ -206,7 +206,7 @@ def _tui_node_bin(bin: str) -> str:
     if not path:
         print(
             f"Node.js is required for the TUI but `{bin}` was not found. Install it from "
-            "https://nodejs.org (run `hermes doctor` for the install hint for your OS), then "
+            "https://nodejs.org (run `a2assistant doctor` for the install hint for your OS), then "
             "retry `hermes --tui`. To keep working now, run `hermes --cli`."
         )
         sys.exit(1)
@@ -269,7 +269,7 @@ def _make_tui_argv(tui_dir: Path, tui_dev: bool, notices: Optional[list] = None)
         # trees and bundle. Nothing pins a TUI build to its backend: like a TUI left open across
         # an update, it negotiates with the gateway (runtime.describe), so it usually still works.
         notice = ("⚠ Could not prepare the TUI's Node dependencies, so the previous TUI build was started.\n"
-                  "  It predates the current code and may not support all of it. Run `hermes update` again\n"
+                  "  It predates the current code and may not support all of it. Run `a2assistant update` again\n"
                   "  once the package registry is reachable, or use `hermes --cli`.")
         # A failed command printed its own output; a refusal before it (PM acquiring pnpm) did not.
         cause = "(The error is above.)" if isinstance(exc, subprocess.CalledProcessError) else f"({exc})"

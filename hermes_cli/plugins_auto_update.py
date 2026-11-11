@@ -47,7 +47,7 @@ def plugin_update_lock(target: Path) -> Iterator[None]:
         stack.enter_context(_file_lock(lock, _holder(str(lock)), _LOCK_WAIT_SECONDS, "plugin update busy"))
     except TimeoutError as exc:
         raise _pc().PluginOperationError(
-            f"Plugin '{target.name}' is already being updated by another Hermes process; "
+            f"Plugin '{target.name}' is already being updated by another A2Assistant process; "
             "nothing was changed. Try again when that update finishes.") from exc
     with stack:
         yield
@@ -55,7 +55,7 @@ def plugin_update_lock(target: Path) -> Iterator[None]:
 
 # ── installs the user held ────────────────────────────────────────────────────────────────────
 
-HELD_WITH_REF = "held with --ref (installed off the catalog pin); `hermes plugins update {name}` moves it"
+HELD_WITH_REF = "held with --ref (installed off the catalog pin); `a2assistant plugins update {name}` moves it"
 
 
 class HeldWithRef(Exception):
@@ -121,7 +121,7 @@ def set_auto_update(enabled: bool) -> dict[str, Any]:
 
     if is_managed():
         raise _pc().PluginOperationError(
-            "This Hermes install's configuration is managed by a package manager; set plugins.auto_apply there.")
+            "This A2Assistant install's configuration is managed by a package manager; set plugins.auto_apply there.")
     write_config_key(get_config_path(), "plugins.auto_apply", bool(enabled))
     if enabled:
         _clear_check_marker(get_hermes_home())
@@ -191,7 +191,7 @@ def summary_lines(outcome: dict[str, Any]) -> list[str]:
     if not outcome["results"]:
         lines.append("  No plugin updates to apply.")
     if any(r["status"] == "needs_review" for r in outcome["results"]):
-        lines.append("  Review those with `hermes plugins update <name>` in a terminal.")
+        lines.append("  Review those with `a2assistant plugins update <name>` in a terminal.")
     if any(r["status"] == "updated" for r in outcome["results"]):
         lines.append("  Updated plugins were reloaded: MCP servers and skills are live now, Python tools load in new sessions.")
     return lines
@@ -204,7 +204,7 @@ def plugins_slash_action(parts: list[str]) -> list[str]:
     if parts[0] == "update":
         if len(parts) > 1:  # not `hermes plugins update <name>`: this form updates every plugin
             return ["Usage: /plugins update (updates every plugin that has an update; "
-                    "update one with `hermes plugins update <name>` in a terminal)"]
+                    "update one with `a2assistant plugins update <name>` in a terminal)"]
         return ["Plugin updates:", *summary_lines(update_all_unattended())]
     arg = parts[1].lower() if len(parts) > 1 else ""
     if arg not in ("", "on", "off"):

@@ -141,9 +141,9 @@ class UnscopedSecretError(RuntimeError):
             secret_name, developer_detail = "", secret_name
         what = f"this profile's {secret_name}" if secret_name else "this profile's API key"
         super().__init__(
-            f"Hermes could not read {what} (an internal profile-scoping bug on the multiplexed "
-            "gateway, not your configuration). Run `hermes gateway restart`; if it keeps happening, "
-            "report it with `hermes debug share`."
+            f"A2Assistant could not read {what} (an internal profile-scoping bug on the multiplexed "
+            "gateway, not your configuration). Run `a2assistant gateway restart`; if it keeps happening, "
+            "report it with `a2assistant debug share`."
         )
         self.secret_name = secret_name
         self.developer_detail = developer_detail

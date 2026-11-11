@@ -68,7 +68,7 @@ def add_discard_parser(sessions_subparsers) -> None:
     parser = sessions_subparsers.add_parser(
         "discard", help="Acknowledge turns lost in a gateway crash (unknown admissions) so the session runs again",
         description="After a gateway crash mid-turn, the lost turn is fenced 'unknown' and blocks the "
-            "session: `hermes chat --resume <id> -q` exits 3 until it is acknowledged. This is the "
+            "session: `a2assistant chat --resume <id> -q` exits 3 until it is acknowledged. This is the "
             "non-interactive form of `/discard <admission>`. The lost input is not replayed.")
     parser.add_argument("session", help="Session ID or title")
     parser.add_argument("--admission", action="append", metavar="ID",

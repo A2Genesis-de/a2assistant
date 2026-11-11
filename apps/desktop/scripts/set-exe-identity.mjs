@@ -86,10 +86,10 @@ async function stampExeIdentity(
   const options = {
     icon,
     'version-string': {
-      ProductName: 'Hermes',
-      FileDescription: 'Hermes',
-      CompanyName: 'Nous Research',
-      LegalCopyright: 'Copyright (c) 2026 Nous Research'
+      ProductName: 'A2Assistant',
+      FileDescription: 'A2Assistant',
+      CompanyName: 'A2Genesis GmbH',
+      LegalCopyright: 'Copyright (c) 2026 A2Genesis GmbH'
     }
   }
 

@@ -70,7 +70,7 @@ def _cmd_status(args) -> int:
     if provider == "nous":
         print(f"  Model:   {color('✓ using Nous as inference provider', Colors.GREEN)}")
     elif provider:
-        print(f"  Model:   currently {provider} (switch with `hermes model`)")
+        print(f"  Model:   currently {provider} (switch with `a2assistant model`)")
 
     _heading("Tool Gateway")
     try:
@@ -115,7 +115,7 @@ def _cmd_tools(args) -> int:
 
     _heading("Tool Gateway catalog")
     if not features.nous_auth_present:
-        print(color("  Not logged into Nous Portal — sign in with `hermes portal`.", Colors.YELLOW))
+        print(color("  Not logged into Nous Portal — sign in with `a2assistant portal`.", Colors.YELLOW))
         print()
 
     label_width = max(len(label) for _, label, _ in _CATALOG)
@@ -169,7 +169,7 @@ def portal_command(args) -> int:
     if handler is not None:
         return handler(args)
     print(f"Unknown portal subcommand: {sub}", file=sys.stderr)
-    print("Run `hermes portal -h` for usage.", file=sys.stderr)
+    print("Run `a2assistant portal -h` for usage.", file=sys.stderr)
     return 1
 
 
@@ -179,10 +179,10 @@ def add_parser(subparsers) -> None:
         "portal",
         help="Set up Nous Portal (login, model pick, Tool Gateway); see also `portal info`",
         description=(
-            "Run `hermes portal` with no subcommand to log in to Nous Portal "
+            "Run `a2assistant portal` with no subcommand to log in to Nous Portal "
             "and set it up — pick a model, set Nous as your provider, and offer "
-            "the Tool Gateway (the human-readable alias for `hermes auth add "
-            "nous --type oauth`, identical to `hermes setup --portal`). "
+            "the Tool Gateway (the human-readable alias for `a2assistant auth add "
+            "nous --type oauth`, identical to `a2assistant setup --portal`). "
             "Subcommands: login (default), info, open, tools."
         ),
     )

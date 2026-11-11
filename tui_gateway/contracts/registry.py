@@ -71,7 +71,7 @@ CANONICAL_NAMESPACES: dict[str, NamespaceContract] = {}
 def unknown_method_message(method: str) -> str:
     """The ``-32601`` text both routes send. A JSON-RPC client sends no version, so a missing
     method says only what the backend knows: this backend does not serve it."""
-    return f"unknown method: {method} — not available on this Hermes backend"
+    return f"unknown method: {method} — not available on this A2Assistant backend"
 
 
 def _declare(table: dict, entry) -> None:
@@ -146,7 +146,7 @@ def validate_params(contract: MethodContract | ServerRequestContract, params: di
             if err.get("type") == "extra_forbidden":
                 loc = ".".join(str(p) for p in err.get("loc", ())) or "params"
                 return None, (f"invalid params for {contract.name}: {loc}: {err.get('msg')} — the client and "
-                              "the Hermes backend are out of sync (different versions); run `hermes update` "
+                              "the A2Assistant backend are out of sync (different versions); run `a2assistant update` "
                               "and restart both")
     return params, None
 
