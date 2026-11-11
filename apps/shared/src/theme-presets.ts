@@ -64,6 +64,62 @@ const nousAltTint = (pct: number) => `color-mix(in srgb, ${NOUS_ALT_BLUE} ${pct}
 const nousAltTintTransparent = (pct: number) => `color-mix(in srgb, ${NOUS_ALT_BLUE} ${pct}%, transparent)`
 
 export const THEME_PRESET_PALETTES = {
+  a2: {
+    colors: {
+      background: '#ffffff',
+      foreground: '#0a0a0a',
+      card: '#ffffff',
+      cardForeground: '#0a0a0a',
+      muted: '#f4f4f4',
+      mutedForeground: '#6b6b73',
+      popover: '#ffffff',
+      popoverForeground: '#0a0a0a',
+      primary: '#0a0a0a',
+      primaryForeground: '#ffffff',
+      secondary: '#ebebeb',
+      secondaryForeground: '#0a0a0a',
+      accent: '#f4f4f4',
+      accentForeground: '#0a0a0a',
+      border: '#f0f0f0',
+      input: '#f4f4f4',
+      ring: '#e4e4e7',
+      midground: '#0a0a0a',
+      composerRing: '#f4f4f4',
+      destructive: '#b91c1c',
+      destructiveForeground: '#ffffff',
+      sidebarBackground: '#f7f7f7',
+      sidebarBorder: '#f7f7f7',
+      userBubble: '#f4f4f4',
+      userBubbleBorder: '#f4f4f4'
+    },
+    darkColors: {
+      background: '#0a0a0a',
+      foreground: '#fafafa',
+      card: '#111111',
+      cardForeground: '#fafafa',
+      muted: '#171717',
+      mutedForeground: '#a1a1aa',
+      popover: '#171717',
+      popoverForeground: '#fafafa',
+      primary: '#fafafa',
+      primaryForeground: '#0a0a0a',
+      secondary: '#1f1f1f',
+      secondaryForeground: '#fafafa',
+      accent: '#1a1a1a',
+      accentForeground: '#fafafa',
+      border: '#1a1a1a',
+      input: '#171717',
+      ring: '#2a2a2a',
+      midground: '#fafafa',
+      composerRing: '#171717',
+      destructive: '#dc2626',
+      destructiveForeground: '#ffffff',
+      sidebarBackground: '#111111',
+      sidebarBorder: '#111111',
+      userBubble: '#171717',
+      userBubbleBorder: '#171717'
+    }
+  },
   github: {
     colors: {
       background: '#ffffff',

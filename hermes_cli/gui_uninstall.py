@@ -9,6 +9,7 @@ from pathlib import Path
 from hermes_constants import get_hermes_home
 
 from hermes_cli.colors import Colors, color
+from hermes_cli.desktop_bundle import MACOS_APP_BUNDLE
 
 
 def _logger(mark: str, col: str):
@@ -58,7 +59,7 @@ def packaged_gui_app_paths() -> list[Path]:
     electron-builder output locations for the "Hermes" product."""
     home = Path.home()
     if sys.platform == "darwin":
-        return [Path("/Applications/Hermes.app"), home / "Applications" / "Hermes.app"]
+        return [Path("/Applications") / MACOS_APP_BUNDLE, home / "Applications" / MACOS_APP_BUNDLE]
     if sys.platform == "win32":
         local_base = _env_dir("LOCALAPPDATA", home / "AppData" / "Local")
         # NSIS per-user install (perMachine=false), an older/alternate layout, NSIS per-machine (needs admin).

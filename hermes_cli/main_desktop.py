@@ -21,6 +21,7 @@ import time as _time_mod
 
 from pathlib import Path
 from typing import Callable, Optional
+from hermes_cli.desktop_bundle import MACOS_APP_BUNDLE, MACOS_APP_EXECUTABLE
 from hermes_cli.desktop_console import desktop_console_output, desktop_launch_notice
 from hermes_platform.host import facts
 
@@ -163,7 +164,7 @@ def _desktop_packaged_executable_in(release_dir: Path) -> Optional[Path]:
     stage-and-swap staging dir (#86443).
     """
     if sys.platform == "darwin":
-        candidates = list(release_dir.glob("mac*/Hermes.app/Contents/MacOS/Hermes"))
+        candidates = list(release_dir.glob(f"mac*/{MACOS_APP_BUNDLE}/Contents/MacOS/{MACOS_APP_EXECUTABLE}"))
     elif sys.platform == "win32":
         candidates = [
             release_dir / d / "Hermes.exe" for d in ("win-unpacked", "win-ia32-unpacked", "win-arm64-unpacked")
@@ -1104,7 +1105,7 @@ def _installed_desktop_launch_target(desktop_dir: Path, packaged_executable: Pat
     rebuilt_hash = _app_asar_hash(packaged_executable.parents[2])
     for app in _installed_desktop_apps():
         if rebuilt_hash is not None and _app_asar_hash(app) == rebuilt_hash:
-            return app / "Contents" / "MacOS" / "Hermes"
+            return app / "Contents" / "MacOS" / MACOS_APP_EXECUTABLE
     return packaged_executable
 
 
@@ -1663,7 +1664,7 @@ def _launch_installed_macos_desktop_app() -> bool:
     """
     if sys.platform != "darwin":
         return False
-    executable = Path("/Applications/Hermes.app/Contents/MacOS/Hermes")
+    executable = Path("/Applications") / MACOS_APP_BUNDLE / "Contents" / "MacOS" / MACOS_APP_EXECUTABLE
     if not executable.is_file():
         return False
     from hermes_cli.bundled_app import launch_detached

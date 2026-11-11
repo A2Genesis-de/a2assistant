@@ -441,7 +441,41 @@ export const slateTheme: DesktopTheme = {
   }
 }
 
+const A2_SHAPE_CSS = `
+:root {
+  --radius-scalar: 1;
+  --stroke-nous: transparent;
+}
+[data-slot='button'] {
+  border-radius: 9999px;
+}
+:focus-visible {
+  outline: none !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  background-image: linear-gradient(
+    color-mix(in srgb, currentColor 9%, transparent),
+    color-mix(in srgb, currentColor 9%, transparent)
+  );
+}
+`
+
+export const a2Theme: DesktopTheme = {
+  name: 'a2',
+  label: 'A2Intelligence',
+  description: 'A2Genesis design language: monochrome, Geist, soft surfaces',
+  ...THEME_PRESET_PALETTES.a2,
+  typography: {
+    fontSans: `"Geist", ${SYSTEM_SANS}`,
+    fontMono: SYSTEM_MONO
+  },
+  terminal: nousTheme.terminal,
+  darkTerminal: nousTheme.darkTerminal,
+  customCSS: A2_SHAPE_CSS
+}
+
 export const BUILTIN_THEMES: Record<string, DesktopTheme> = {
+  a2: a2Theme,
   nous: nousTheme,
   github: githubTheme,
   catppuccin: catppuccinTheme,
@@ -459,7 +493,7 @@ export const BUILTIN_THEMES: Record<string, DesktopTheme> = {
 export const BUILTIN_THEME_LIST = Object.values(BUILTIN_THEMES)
 
 /** Skin used when nothing is persisted or the persisted name is retired. */
-export const DEFAULT_SKIN_NAME = 'nous'
+export const DEFAULT_SKIN_NAME = 'a2'
 
 /** Names that no longer resolve to a skin of their own. A stored pick of one
  *  falls back to DEFAULT_SKIN_NAME, and a cached backend theme under one is

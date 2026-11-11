@@ -1,12 +1,12 @@
 import type { TranslationOverrides } from './define-locale'
 
 export const ruOnboarding: TranslationOverrides['onboarding'] = {
-  headerTitle: 'Настроим для вас Hermes Agent',
+  headerTitle: 'Настроим для вас A2Intelligence',
   headerDesc: 'Подключите провайдера модели, чтобы начать общение. Большинство вариантов — в один клик.',
-  preparingInstall: 'Hermes завершает установку. Обычно это занимает меньше минуты при первом запуске.',
-  starting: 'Запускаем Hermes…',
+  preparingInstall: 'A2Intelligence завершает установку. Обычно это занимает меньше минуты при первом запуске.',
+  starting: 'Запускаем A2Intelligence…',
   setupSlowTitle: 'Настройка занимает больше времени, чем обычно.',
-  setupSlowBody: 'Hermes всё ещё запускается в фоновом режиме.',
+  setupSlowBody: 'A2Intelligence всё ещё запускается в фоновом режиме.',
   continueWithoutSetup: 'Продолжить без настройки',
   lookingUpProviders: 'Ищем провайдеров...',
   collapse: 'Свернуть',
@@ -15,7 +15,7 @@ export const ruOnboarding: TranslationOverrides['onboarding'] = {
   chooseLater: 'Выберу провайдера позже',
   recommended: 'Рекомендуется',
   connected: 'Подключено',
-  featuredPitch: 'Одна подписка, 300+ передовых моделей — рекомендуемый способ запускать Hermes',
+  featuredPitch: 'Одна подписка, 300+ передовых моделей — рекомендуемый способ запускать A2Intelligence',
   fireworksPitch: 'Прямой API моделей — передовые модели на хостинге Fireworks',
   openRouterPitch: 'Один ключ, сотни моделей — надёжный вариант по умолчанию',
   apiKeyOptions: {
@@ -33,7 +33,7 @@ export const ruOnboarding: TranslationOverrides['onboarding'] = {
     local: {
       short: 'self-hosted',
       description:
-        'Укажите Hermes локальный или self-hosted OpenAI-совместимый endpoint (vLLM, llama.cpp, Ollama и т.д.).'
+        'Укажите A2Intelligence локальный или self-hosted OpenAI-совместимый endpoint (vLLM, llama.cpp, Ollama и т.д.).'
     }
   },
   backToSignIn: 'Назад ко входу',
@@ -46,7 +46,7 @@ export const ruOnboarding: TranslationOverrides['onboarding'] = {
   update: 'Обновить',
   flowSubtitles: {
     pkce: 'Откроет браузер для входа, затем продолжит здесь',
-    device_code: 'Откроет страницу подтверждения в браузере — Hermes подключится автоматически',
+    device_code: 'Откроет страницу подтверждения в браузере — A2Intelligence подключится автоматически',
     external: 'Войдите один раз в терминале, затем вернитесь в чат'
   },
   startingSignIn: provider => `Начинаем вход для ${provider}...`,
@@ -57,7 +57,7 @@ export const ruOnboarding: TranslationOverrides['onboarding'] = {
   pickDifferentProvider: 'Выбрать другого провайдера',
   signInWith: provider => `Войти через ${provider}`,
   openedBrowser: provider => `Мы открыли ${provider} в вашем браузере.`,
-  authorizeThere: 'Авторизуйте Hermes там.',
+  authorizeThere: 'Авторизуйте A2Intelligence там.',
   copyAuthCode: 'Скопируйте код авторизации и вставьте его ниже.',
   pasteAuthCode: 'Вставьте код авторизации',
   reopenAuthPage: 'Открыть страницу авторизации снова',
