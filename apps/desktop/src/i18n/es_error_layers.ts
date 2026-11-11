@@ -10,23 +10,23 @@ export const esErrorLayers: Pick<ThreadCopy, 'errorLayerBodies' | 'errorLayers'>
     disk: 'Disco lleno',
     endpoint: 'No se puede conectar con tu servidor de modelos',
     gateway: 'No se pudo enviar tu mensaje',
-    generic: 'A2Intelligence no pudo terminar esta respuesta',
+    generic: 'A2Assistant no pudo terminar esta respuesta',
     provider: 'El servicio de IA devolvió un error',
-    runtime: 'A2Intelligence tuvo un problema',
+    runtime: 'A2Assistant tuvo un problema',
     streaming: 'La respuesta se cortó'
   },
   errorLayerBodies: {
     auth: 'El servicio de IA rechazó tu inicio de sesión. Revisa las credenciales de este proveedor y vuelve a enviar el mensaje.',
     billing: 'Tu cuenta no tiene créditos para este proveedor. Recarga o cambia de proveedor y vuelve a enviarlo.',
-    disk: 'Tu disco está lleno, así que A2Intelligence no pudo guardar esta conversación. Libera espacio y reinténtalo.',
+    disk: 'Tu disco está lleno, así que A2Assistant no pudo guardar esta conversación. Libera espacio y reinténtalo.',
     endpoint:
-      'A2Intelligence no puede conectar con tu servidor de modelos personalizado. Comprueba que esté en ejecución y vuelve a enviar el mensaje.',
+      'A2Assistant no puede conectar con tu servidor de modelos personalizado. Comprueba que esté en ejecución y vuelve a enviar el mensaje.',
     gateway:
-      'A2Intelligence tuvo un problema interno al iniciar esta respuesta. Vuelve a enviar el mensaje; si sigue ocurriendo, envía un diagnóstico.',
-    generic: 'Algo salió mal mientras A2Intelligence respondía. Reinténtalo o copia los detalles si sigue ocurriendo.',
+      'A2Assistant tuvo un problema interno al iniciar esta respuesta. Vuelve a enviar el mensaje; si sigue ocurriendo, envía un diagnóstico.',
+    generic: 'Algo salió mal mientras A2Assistant respondía. Reinténtalo o copia los detalles si sigue ocurriendo.',
     provider: 'El servicio de IA no pudo completar esta solicitud. Reinténtalo en un momento o cambia de proveedor.',
     runtime:
-      'A2Intelligence tuvo un problema interno al iniciar esta respuesta. Vuelve a enviar el mensaje; si sigue ocurriendo, envía un diagnóstico.',
+      'A2Assistant tuvo un problema interno al iniciar esta respuesta. Vuelve a enviar el mensaje; si sigue ocurriendo, envía un diagnóstico.',
     streaming: 'La conexión se cortó antes de que terminara la respuesta. Reinténtalo para enviarla de nuevo.'
   }
 }

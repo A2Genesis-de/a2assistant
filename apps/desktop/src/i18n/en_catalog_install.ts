@@ -21,7 +21,7 @@ export const enCatalogInstall: CatalogInstallTranslations = {
   securityHeading: 'Security',
   scan: { passed: 'Scan passed', warnings: 'Scan found warnings', failed: 'Scan failed' },
   requirementsLabel: 'Requires',
-  requiresHermes: range => `A2Intelligence ${range}`,
+  requiresHermes: range => `A2Assistant ${range}`,
   envVar: name => `${name} environment variable`,
   credentialsHeading: 'Credentials',
   phase: {

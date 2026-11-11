@@ -6,7 +6,7 @@ export const enAppTour: Translations['appTour'] = {
   newSession: { title: 'Start fresh', text: 'A new session gets its own context. Use one per job.' },
   model: { title: 'Model picker', text: 'Chooses which model answers you.' },
   modelLocal: 'This computer can run one locally: Settings > Providers > Local Models.',
-  capabilities: { title: 'Capabilities', text: 'Skills, tools and plugins A2Intelligence can use. Add more here.' },
-  messaging: { title: 'Messaging', text: 'Reach A2Intelligence from Telegram, Slack, Discord and more.' },
+  capabilities: { title: 'Capabilities', text: 'Skills, tools and plugins A2Assistant can use. Add more here.' },
+  messaging: { title: 'Messaging', text: 'Reach A2Assistant from Telegram, Slack, Discord and more.' },
   rightPane: { title: 'The working pane', text: 'Opens files, terminal, review and the in-app browser on the right.' }
 }

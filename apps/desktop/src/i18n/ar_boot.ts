@@ -4,19 +4,19 @@ import type { TranslationOverrides } from './define-locale'
 
 export const arBoot = {
   boot: {
-    ready: 'A2Intelligence Desktop جاهز',
+    ready: 'A2Assistant Desktop جاهز',
     desktopBootFailedWithMessage: message => `فشل تشغيل سطح المكتب: ${message}`,
     steps: {
       connectingGateway: 'جار الاتصال ببوابة سطح المكتب',
-      loadingSettings: 'جار تحميل إعدادات A2Intelligence',
+      loadingSettings: 'جار تحميل إعدادات A2Assistant',
       loadingSessions: 'جار تحميل الجلسات الأخيرة',
-      retryingRemoteBackend: 'جارٍ إعادة الاتصال بخادم A2Intelligence البعيد…',
+      retryingRemoteBackend: 'جارٍ إعادة الاتصال بخادم A2Assistant البعيد…',
       startingDesktopConnection: 'جار بدء اتصال سطح المكتب',
-      startingHermesDesktop: 'جار تشغيل A2Intelligence Desktop...'
+      startingHermesDesktop: 'جار تشغيل A2Assistant Desktop...'
     },
     errors: {
-      backgroundExited: 'خرجت عملية A2Intelligence الخلفية.',
-      backgroundExitedDuringStartup: 'خرجت عملية A2Intelligence الخلفية أثناء بدء التشغيل.',
+      backgroundExited: 'خرجت عملية A2Assistant الخلفية.',
+      backgroundExitedDuringStartup: 'خرجت عملية A2Assistant الخلفية أثناء بدء التشغيل.',
       backendStopped: 'توقف الخلفية',
       desktopBootFailed: 'فشل تشغيل سطح المكتب',
       gatewayConnectionLost: 'انقطع الاتصال بالبوابة',
@@ -26,7 +26,7 @@ export const arBoot = {
       ipcBridgeUnavailable: 'جسر IPC لسطح المكتب غير متاح.'
     },
     failure: {
-      title: 'تعذر تشغيل A2Intelligence',
+      title: 'تعذر تشغيل A2Assistant',
       description: 'لم تعمل البوابة الخلفية. جرب إحدى خطوات الاسترداد أدناه. لن يحذف ذلك محادثاتك أو إعداداتك.',
       remoteTitle: 'تسجيل الدخول للبوابة البعيدة مطلوب',
       remoteDescription: 'انتهت جلسة البوابة البعيدة. سجل الدخول مرة أخرى لإعادة الاتصال.',
@@ -57,9 +57,9 @@ export const arBoot = {
     }
   },
   keepAwakeOffer: {
-    title: 'دخل جهاز الكمبيوتر في وضع السكون أثناء عمل A2Intelligence',
+    title: 'دخل جهاز الكمبيوتر في وضع السكون أثناء عمل A2Assistant',
     message:
-      'يمكن لـ A2Intelligence إبقاء جهازك مستيقظًا أثناء تشغيل مهمة. ستنطفئ الشاشة كالمعتاد، وقد يدخل الجهاز في وضع السكون عند العمل بالبطارية.',
+      'يمكن لـ A2Assistant إبقاء جهازك مستيقظًا أثناء تشغيل مهمة. ستنطفئ الشاشة كالمعتاد، وقد يدخل الجهاز في وضع السكون عند العمل بالبطارية.',
     action: 'إبقاء الجهاز مستيقظًا أثناء العمل'
   },
   remoteDisplayBanner: {
@@ -68,7 +68,7 @@ export const arBoot = {
   butterbar: {
     goTo: (index, total) => `عرض الإشعار ${index} من ${total}`,
     legal: {
-      before: 'يخضع استخدام A2Intelligence لـ',
+      before: 'يخضع استخدام A2Assistant لـ',
       terms: 'شروط الخدمة',
       between: ' و',
       privacy: 'سياسة الخصوصية',
@@ -88,22 +88,22 @@ export const arBoot = {
     desktopCommands: arDesktopCommands
   },
   updates: {
-    discontinuedTitle: 'لم يعد إصدار A2Intelligence هذا مدعومًا',
-    discontinuedBody: 'لم يعد إصدار A2Intelligence هذا مدعومًا وقد يتوقف عن العمل — ألغِ تثبيته. ستبقى بياناتك على القرص.',
+    discontinuedTitle: 'لم يعد إصدار A2Assistant هذا مدعومًا',
+    discontinuedBody: 'لم يعد إصدار A2Assistant هذا مدعومًا وقد يتوقف عن العمل — ألغِ تثبيته. ستبقى بياناتك على القرص.',
     channels: { stable: 'مستقر', canary: 'تجريبي' },
     bundleSwapPending: 'أعد التشغيل لإكمال التحديث',
     bundleSwapPendingDesc:
-      'تم تثبيت التطبيق المحدَّث بالفعل — يكفي إعادة تشغيل A2Intelligence لتحميله. لن تتأثر المحادثات أو الإعدادات.',
-    bundleSwapPendingAction: 'إعادة تشغيل A2Intelligence',
+      'تم تثبيت التطبيق المحدَّث بالفعل — يكفي إعادة تشغيل A2Assistant لتحميله. لن تتأثر المحادثات أو الإعدادات.',
+    bundleSwapPendingAction: 'إعادة تشغيل A2Assistant',
     stages: {
       idle: 'جار التحضير...',
       prepare: 'جار التحضير...',
       fetch: 'جار التنزيل...',
       pull: 'أوشكنا على الانتهاء...',
       pydeps: 'جار الإنهاء...',
-      update: 'جار تحديث A2Intelligence...',
+      update: 'جار تحديث A2Assistant...',
       rebuild: 'جار إعادة بناء تطبيق سطح المكتب...',
-      restart: 'جار إعادة تشغيل A2Intelligence...',
+      restart: 'جار إعادة تشغيل A2Assistant...',
       done: 'اكتمل التحديث',
       manual: 'التحديث من الطرفية',
       guiSkew: 'تحديث تطبيق سطح المكتب',
@@ -113,13 +113,13 @@ export const arBoot = {
     checkFailedTitle: 'تعذّر التحقق من التحديثات',
     tryAgain: 'إعادة المحاولة',
     notAvailableTitle: 'التحديث غير متاح',
-    unsupportedMessage: 'لا يمكن لهذا الإصدار من A2Intelligence تحديث نفسه من داخل التطبيق.',
-    appName: 'A2Intelligence Desktop',
+    unsupportedMessage: 'لا يمكن لهذا الإصدار من A2Assistant تحديث نفسه من داخل التطبيق.',
+    appName: 'A2Assistant Desktop',
     version: value => `الإصدار ${value}`,
     versionUnavailable: 'الإصدار غير متاح',
     bundleOutOfSync: 'إصدار التطبيق قديم',
     bundleOutOfSyncDesc:
-      'تم تحديث وقت تشغيل A2Intelligence، لكن تطبيق سطح المكتب نفسه لا يزال إصدارًا قديمًا — لن تظهر ميزات الواجهة الجديدة (مثل Bot Mode) حتى يتم تحديث التطبيق. شغّل التحديث أدناه لإعادة بناء التطبيق. إذا لم يختفِ هذا التحذير، فأعد التثبيت من أحدث مثبّت لسطح المكتب.',
+      'تم تحديث وقت تشغيل A2Assistant، لكن تطبيق سطح المكتب نفسه لا يزال إصدارًا قديمًا — لن تظهر ميزات الواجهة الجديدة (مثل Bot Mode) حتى يتم تحديث التطبيق. شغّل التحديث أدناه لإعادة بناء التطبيق. إذا لم يختفِ هذا التحذير، فأعد التثبيت من أحدث مثبّت لسطح المكتب.',
     bundleOutOfSyncAction: 'الحصول على المثبّت',
     checkNow: 'التحقق الآن',
     checkingShort: 'جار التحقق...',
@@ -160,46 +160,46 @@ export const arBoot = {
     versionDetailsInstallId: 'معرّف التثبيت',
     versionDetailsUncommittedChanges: '(+ تغييرات غير ملتزمة)',
     connectionRetry: 'تحقق من اتصالك وأعد المحاولة.',
-    gitUnusable: 'لم يتمكن A2Intelligence من تشغيل Git على هذا الجهاز، لذا لم يتمكن من التحقق من التحديثات.',
+    gitUnusable: 'لم يتمكن A2Assistant من تشغيل Git على هذا الجهاز، لذا لم يتمكن من التحقق من التحديثات.',
     latestBody: 'أنت تستخدم أحدث إصدار.',
     latestBodyBackend: 'الواجهة الخلفية تعمل بأحدث إصدار.',
     allSetTitle: 'كل شيء جاهز',
     availableTitle: 'يتوفر تحديث جديد',
-    availableBody: 'إصدار جديد من A2Intelligence جاهز للتثبيت.',
+    availableBody: 'إصدار جديد من A2Assistant جاهز للتثبيت.',
     availableTitleBackend: 'يتوفر تحديث للواجهة الخلفية',
-    availableBodyBackend: 'إصدار أحدث من واجهة A2Intelligence الخلفية المتصلة جاهز للتثبيت.',
+    availableBodyBackend: 'إصدار أحدث من واجهة A2Assistant الخلفية المتصلة جاهز للتثبيت.',
     availableBodyNoChangelog: 'إصدار أحدث جاهز. ملاحظات الإصدار غير متاحة لنوع التثبيت هذا.',
-    availableBodyRelease: (tag: string) => `A2Intelligence ${tag} جاهز للتثبيت.`,
+    availableBodyRelease: (tag: string) => `A2Assistant ${tag} جاهز للتثبيت.`,
     updateNow: 'التحديث الآن',
     maybeLater: 'ربما لاحقا',
     moreChanges: count => `+ ${count} تغيير${count === 1 ? '' : 'ات'} إضافي مُضمَّن.`,
     copyFullLog: 'نسخ سجل التغييرات الكامل',
     manualTitle: 'التحديث من الطرفية',
     manualUnavailableTitle: 'لا يمكن التحديث من هنا',
-    manualBody: 'لقد ثبّتت A2Intelligence من سطر الأوامر، لذا تُجرى التحديثات من هناك أيضا. الصق هذا في طرفيتك:',
-    manualBodyBackend: 'تتم إدارة خادم A2Intelligence خارج هذا التطبيق. نفّذ هذا الأمر على الخادم الذي يستضيفه:',
-    manualPickedUp: 'سيلتقط A2Intelligence الإصدار الجديد في المرة التالية التي تشغّله فيها.',
+    manualBody: 'لقد ثبّتت A2Assistant من سطر الأوامر، لذا تُجرى التحديثات من هناك أيضا. الصق هذا في طرفيتك:',
+    manualBodyBackend: 'تتم إدارة خادم A2Assistant خارج هذا التطبيق. نفّذ هذا الأمر على الخادم الذي يستضيفه:',
+    manualPickedUp: 'سيلتقط A2Assistant الإصدار الجديد في المرة التالية التي تشغّله فيها.',
     manualPickedUpBackend: 'سيحمّل الخادم الإصدار الجديد بعد اكتمال التحديث.',
     guiSkewTitle: 'تحديث تطبيق سطح المكتب',
     guiSkewBody:
-      'تم تحديث الواجهة الخلفية، لكن حزمة تطبيق سطح المكتب هذه لم تتغير. حدّث أو أعد تثبيت تطبيق A2Intelligence لسطح المكتب (ملف AppImage / ‎.deb / ‎.rpm) لمطابقته.',
+      'تم تحديث الواجهة الخلفية، لكن حزمة تطبيق سطح المكتب هذه لم تتغير. حدّث أو أعد تثبيت تطبيق A2Assistant لسطح المكتب (ملف AppImage / ‎.deb / ‎.rpm) لمطابقته.',
     copy: 'نسخ',
     copied: 'تم النسخ',
     done: 'تم',
     applyingBody:
-      'يتولّى مُحدِّث A2Intelligence المهمة في نافذته الخاصة ويعيد فتح A2Intelligence تلقائيا عند الانتهاء. الرجاء عدم إعادة فتح A2Intelligence بنفسك أثناء التحديث.',
+      'يتولّى مُحدِّث A2Assistant المهمة في نافذته الخاصة ويعيد فتح A2Assistant تلقائيا عند الانتهاء. الرجاء عدم إعادة فتح A2Assistant بنفسك أثناء التحديث.',
     applyingBodyBackend:
-      'تطبّق الواجهة الخلفية البعيدة التحديث وستعيد التشغيل. يعيد A2Intelligence الاتصال تلقائيا عند عودتها.',
-    applyingClose: 'ستُغلق هذه النافذة أثناء تشغيل التحديث، ثم يعيد A2Intelligence فتح نفسه تلقائيا.',
+      'تطبّق الواجهة الخلفية البعيدة التحديث وستعيد التشغيل. يعيد A2Assistant الاتصال تلقائيا عند عودتها.',
+    applyingClose: 'ستُغلق هذه النافذة أثناء تشغيل التحديث، ثم يعيد A2Assistant فتح نفسه تلقائيا.',
     errorTitle: 'لم يكتمل التحديث',
     errorBody: 'لا داعي للقلق — لم يُفقد شيء. يمكنك إعادة المحاولة الآن.',
-    blockerTitle: 'إغلاق المعاينات المحلية لتحديث A2Intelligence؟',
-    blockerBody: 'يحتاج A2Intelligence إلى إيقاف هذه المعاينات المحلية قبل التحديث. لن يؤدي ذلك إلى تعديل ملفاتك أو حذفها.',
-    foreignBlockerTitle: 'أغلق العمليات الأخرى لتحديث A2Intelligence',
+    blockerTitle: 'إغلاق المعاينات المحلية لتحديث A2Assistant؟',
+    blockerBody: 'يحتاج A2Assistant إلى إيقاف هذه المعاينات المحلية قبل التحديث. لن يؤدي ذلك إلى تعديل ملفاتك أو حذفها.',
+    foreignBlockerTitle: 'أغلق العمليات الأخرى لتحديث A2Assistant',
     foreignBlockerBody:
-      'لا يمكن لـ A2Intelligence إغلاق هذه العمليات تلقائيًا بأمان. أغلق التطبيق أو الطرفية أو الخدمة التي تشغّل كل عملية، ثم حاول التحديث مرة أخرى.',
+      'لا يمكن لـ A2Assistant إغلاق هذه العمليات تلقائيًا بأمان. أغلق التطبيق أو الطرفية أو الخدمة التي تشغّل كل عملية، ثم حاول التحديث مرة أخرى.',
     mixedBlockerBody:
-      'يمكن لـ A2Intelligence إغلاق المعاينات المحلية المدرجة أدناه. يجب إغلاق العمليات الأخرى يدويًا قبل متابعة التحديث.',
+      'يمكن لـ A2Assistant إغلاق المعاينات المحلية المدرجة أدناه. يجب إغلاق العمليات الأخرى يدويًا قبل متابعة التحديث.',
     closePreviewsAndUpdate: 'إغلاق المعاينات والتحديث',
     closePreviewsAndCheckAgain: 'إغلاق المعاينات والتحقق مجددًا',
     localPreview: 'معاينة محلية',
@@ -239,7 +239,7 @@ export const arBoot = {
       skipped: 'تم التخطي',
       failed: 'فشل'
     },
-    oneTimeTitle: 'يحتاج A2Intelligence إلى تثبيت لمرة واحدة',
+    oneTimeTitle: 'يحتاج A2Assistant إلى تثبيت لمرة واحدة',
     unsupportedDesc: platform =>
       `التثبيت التلقائي عند أول تشغيل غير متاح على ${platform} بعد. افتح الطرفية وشغّل الأمر أدناه، ثم أعد تشغيل هذا التطبيق. ستتخطى عمليات التشغيل اللاحقة هذه الخطوة.`,
     installCommand: 'أمر التثبيت',
@@ -248,12 +248,12 @@ export const arBoot = {
     installTo: 'سيتم التثبيت في',
     retryAfterRun: 'لقد شغّلته -- إعادة المحاولة',
     failedTitle: 'فشل التثبيت',
-    settingUpTitle: 'جار إعداد وكيل A2Intelligence',
+    settingUpTitle: 'جار إعداد وكيل A2Assistant',
     finishingTitle: 'جار الإنهاء',
     failedDesc:
-      'فشلت إحدى خطوات التثبيت. على Windows، قد يحدث هذا إذا كان هناك نسخة أخرى من A2Intelligence CLI أو تطبيق سطح المكتب قيد التشغيل. أوقف أي نسخ A2Intelligence قيد التشغيل، ثم أعد المحاولة. تحقق من التفاصيل أدناه أو من سجل سطح المكتب للحصول على النص الكامل.',
+      'فشلت إحدى خطوات التثبيت. على Windows، قد يحدث هذا إذا كان هناك نسخة أخرى من A2Assistant CLI أو تطبيق سطح المكتب قيد التشغيل. أوقف أي نسخ A2Assistant قيد التشغيل، ثم أعد المحاولة. تحقق من التفاصيل أدناه أو من سجل سطح المكتب للحصول على النص الكامل.',
     activeDesc:
-      'هذا إعداد لمرة واحدة. يقوم مثبّت A2Intelligence بتنزيل التبعيات وتهيئة جهازك. ستتخطى عمليات التشغيل اللاحقة هذه الخطوة.',
+      'هذا إعداد لمرة واحدة. يقوم مثبّت A2Assistant بتنزيل التبعيات وتهيئة جهازك. ستتخطى عمليات التشغيل اللاحقة هذه الخطوة.',
     progress: (completed, total) => `اكتملت ${completed} من ${total} خطوة`,
     currentStage: stage => ` -- الآن: ${stage}`,
     fetchingManifest: 'جار جلب بيان المثبّت...',
@@ -270,12 +270,12 @@ export const arBoot = {
     reloadRetry: 'إعادة التحميل وإعادة المحاولة'
   },
   onboarding: {
-    headerTitle: 'لنُعِدّ لك A2Intelligence',
+    headerTitle: 'لنُعِدّ لك A2Assistant',
     headerDesc: 'اربط مزوّد نماذج لبدء المحادثة. معظم الخيارات تتطلب نقرة واحدة.',
-    preparingInstall: 'يُكمل A2Intelligence التثبيت. عادة ما يستغرق ذلك أقل من دقيقة في أول تشغيل.',
-    starting: 'جار بدء A2Intelligence...',
+    preparingInstall: 'يُكمل A2Assistant التثبيت. عادة ما يستغرق ذلك أقل من دقيقة في أول تشغيل.',
+    starting: 'جار بدء A2Assistant...',
     setupSlowTitle: 'يستغرق الإعداد وقتا أطول من المعتاد.',
-    setupSlowBody: 'لا يزال A2Intelligence قيد البدء في الخلفية.',
+    setupSlowBody: 'لا يزال A2Assistant قيد البدء في الخلفية.',
     continueWithoutSetup: 'المتابعة دون إعداد',
     lookingUpProviders: 'جار البحث عن المزوّدين...',
     collapse: 'طي',
@@ -284,7 +284,7 @@ export const arBoot = {
     chooseLater: 'سأختار مزوّدا لاحقا',
     recommended: 'موصى به',
     connected: 'متصل',
-    featuredPitch: 'اشتراك واحد، أكثر من 300 نموذج متقدم — الطريقة الموصى بها لتشغيل A2Intelligence',
+    featuredPitch: 'اشتراك واحد، أكثر من 300 نموذج متقدم — الطريقة الموصى بها لتشغيل A2Assistant',
     fireworksPitch: 'نماذج مفتوحة سريعة مع استضافة Fireworks.',
     openRouterPitch: 'مفتاح واحد لمئات النماذج — خيار افتراضي جيد',
     apiKeyOptions: {
@@ -307,7 +307,7 @@ export const arBoot = {
       local: {
         short: 'مستضاف ذاتيا',
         description:
-          'وجّه A2Intelligence إلى نقطة نهاية محلية أو مستضافة ذاتيا متوافقة مع OpenAI (vLLM، llama.cpp، Ollama، إلخ).'
+          'وجّه A2Assistant إلى نقطة نهاية محلية أو مستضافة ذاتيا متوافقة مع OpenAI (vLLM، llama.cpp، Ollama، إلخ).'
       }
     },
     backToSignIn: 'العودة إلى تسجيل الدخول',
@@ -320,7 +320,7 @@ export const arBoot = {
     update: 'تحديث',
     flowSubtitles: {
       pkce: 'يفتح المتصفح لتسجيل الدخول ثم يتابع هنا',
-      device_code: 'يفتح صفحة تحقق في المتصفح — يتصل A2Intelligence تلقائياً',
+      device_code: 'يفتح صفحة تحقق في المتصفح — يتصل A2Assistant تلقائياً',
       external: 'سجل الدخول مرة واحدة في الطرفية ثم عد إلى المحادثة'
     },
     startingSignIn: provider => `جار بدء تسجيل الدخول لـ ${provider}...`,
@@ -333,7 +333,7 @@ export const arBoot = {
     pickDifferentProvider: 'اختر مزوداً آخر',
     signInWith: provider => `تسجيل الدخول عبر ${provider}`,
     openedBrowser: provider => `فتحنا ${provider} في المتصفح.`,
-    authorizeThere: 'صرّح لـ A2Intelligence هناك.',
+    authorizeThere: 'صرّح لـ A2Assistant هناك.',
     copyAuthCode: 'انسخ رمز التفويض وألصقه أدناه.',
     pasteAuthCode: 'ألصق رمز التفويض',
     reopenAuthPage: 'إعادة فتح صفحة التفويض',

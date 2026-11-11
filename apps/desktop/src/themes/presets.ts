@@ -508,7 +508,7 @@ const A2_SHAPE_CSS = `
 
 export const a2Theme: DesktopTheme = {
   name: 'a2',
-  label: 'A2Intelligence',
+  label: 'A2Genesis',
   description: 'A2Genesis design language: monochrome, Geist, soft surfaces',
   ...THEME_PRESET_PALETTES.a2,
   typography: {

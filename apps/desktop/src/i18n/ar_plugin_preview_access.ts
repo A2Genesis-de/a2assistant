@@ -14,5 +14,5 @@ export const arPluginPreviewAccess: PluginPreviewAccessTranslations = {
   previewScriptRevoke: (origin: string) => `إلغاء الوصول إلى ${origin}`,
   previewScriptRevoked: (plugin: string, origin: string) => `لم يعد بإمكان ${plugin} تشغيل نصوص برمجية على ${origin}.`,
   previewScriptRevokeUnsaved: (plugin: string, origin: string) =>
-    `تعذّر حفظ هذا التغيير، لذا يسري فقط حتى إعادة تشغيل A2Intelligence. ${plugin} محظور على ${origin} في الوقت الحالي.`
+    `تعذّر حفظ هذا التغيير، لذا يسري فقط حتى إعادة تشغيل A2Assistant. ${plugin} محظور على ${origin} في الوقت الحالي.`
 }

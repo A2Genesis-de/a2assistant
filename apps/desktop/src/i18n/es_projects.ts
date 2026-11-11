@@ -44,9 +44,9 @@ export const esProjects: NonNullable<TranslationOverrides['sidebar']>['projects'
   undoHide: 'Deshacer',
   createFailed: 'No se pudo crear el proyecto',
   staleBackend:
-    'Actualiza el backend de A2Intelligence para crear proyectos: tu backend es más antiguo que esta aplicación de escritorio (Configuración → Actualizaciones → Backend).',
+    'Actualiza el backend de A2Assistant para crear proyectos: tu backend es más antiguo que esta aplicación de escritorio (Configuración → Actualizaciones → Backend).',
   deleteConfirm:
-    'Esto elimina el proyecto guardado de A2Intelligence. Los archivos, los repositorios de git y los árboles de trabajo permanecen intactos.',
+    'Esto elimina el proyecto guardado de A2Assistant. Los archivos, los repositorios de git y los árboles de trabajo permanecen intactos.',
   startWork: 'Nuevo worktree',
   newWorktreeTitle: 'Nuevo worktree',
   newWorktreeDesc: 'Asigna un nombre a la rama de este worktree.',
@@ -56,7 +56,7 @@ export const esProjects: NonNullable<TranslationOverrides['sidebar']>['projects'
   baseBranchNone: 'No se encontraron ramas',
   startWorkFailed: 'No se pudo crear el worktree',
   worktreeStaleBackend:
-    'Actualiza el backend de A2Intelligence para crear worktrees por esta conexión remota: es anterior a la API de git worktree.',
+    'Actualiza el backend de A2Assistant para crear worktrees por esta conexión remota: es anterior a la API de git worktree.',
   worktreeProjectLabel: 'Proyecto',
   worktreeProjectPlaceholder: 'Buscar proyectos…',
   worktreeProjectNone: 'Ningún proyecto con carpeta',

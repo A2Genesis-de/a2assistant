@@ -19,7 +19,7 @@ export const ruDelegationRouting: DelegationRoutingTranslations = {
   plugin: 'Плагин',
   pluginMissing: 'Маршруты моделей и маршруты профилей предоставляет плагин Advanced Delegation.',
   pluginDisabled: 'Advanced Delegation установлен, но отключён для этого профиля.',
-  pluginNotLoaded: 'Advanced Delegation включён, но A2Intelligence ещё не загрузил его. Перезапустите A2Intelligence, чтобы завершить.',
+  pluginNotLoaded: 'Advanced Delegation включён, но A2Assistant ещё не загрузил его. Перезапустите A2Assistant, чтобы завершить.',
   installPlugin: 'Установить плагин',
   installUnavailable:
     'Advanced Delegation пока нет в каталоге плагинов. Установите его в разделе Возможности › Плагины.',
@@ -29,11 +29,11 @@ export const ruDelegationRouting: DelegationRoutingTranslations = {
   loadFailed: 'Не удалось загрузить маршрутизацию субагентов',
   blockedPill: 'Не работает',
   blockedDetail:
-    'Этот режим сохранён, поэтому A2Intelligence отклоняет каждого субагента, а не переходит молча на «По умолчанию».',
+    'Этот режим сохранён, поэтому A2Assistant отклоняет каждого субагента, а не переходит молча на «По умолчанию».',
   blockedMissing: 'Субагенты не запустятся, пока не установлен Advanced Delegation.',
   blockedDisabled: 'Субагенты не запустятся, пока Advanced Delegation не включён для этого профиля.',
   blockedNotLoaded:
-    'Субагенты не запустятся, пока A2Intelligence не загрузит Advanced Delegation. Перезапустите A2Intelligence, чтобы завершить.',
+    'Субагенты не запустятся, пока A2Assistant не загрузит Advanced Delegation. Перезапустите A2Assistant, чтобы завершить.',
   blockedUnavailable: label =>
     `Субагенты не запустятся, пока ${label} не сможет работать здесь. Его плагин сообщает, что не может.`,
   blockedUnregistered: name =>

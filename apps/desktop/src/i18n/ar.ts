@@ -74,7 +74,7 @@ export const arOverrides = {
     retry: 'حاول مرة أخرى',
     more: 'عرض المزيد',
     pinned: 'التزام تمت مراجعته',
-    snapshotHint: 'من كتالوج A2Intelligence. لا يتصل التصفح بمستودعات المصدر مطلقًا.',
+    snapshotHint: 'من كتالوج A2Assistant. لا يتصل التصفح بمستودعات المصدر مطلقًا.',
     installHint: 'راجع المصدر قبل التثبيت. تسري التغييرات على الجلسات الجديدة.',
     results: (count: number) => `النتائج: ${count.toLocaleString('ar')}`,
     back: 'العودة إلى النتائج'
@@ -147,8 +147,8 @@ export const arOverrides = {
   ui: arCommon.ui,
   freeTier: {
     offer: {
-      heading: 'واصل مع A2Intelligence',
-      body: 'أنت تستخدم الحصة المجانية. إذا واصلت استخدام A2Intelligence فستبدأ بمواجهة حدود الاستخدام. سجّل الدخول بحساب Nous مجاني للحصول على حصة أكبر.',
+      heading: 'واصل مع A2Assistant',
+      body: 'أنت تستخدم الحصة المجانية. إذا واصلت استخدام A2Assistant فستبدأ بمواجهة حدود الاستخدام. سجّل الدخول بحساب Nous مجاني للحصول على حصة أكبر.',
       signIn: 'تسجيل الدخول',
       notNow: 'ليس الآن'
     }

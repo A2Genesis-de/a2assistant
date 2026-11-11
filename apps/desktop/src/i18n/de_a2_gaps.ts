@@ -4,7 +4,7 @@ export const deA2Gaps = {
   appTour: {
     capabilities: {
       title: 'Werkzeuge',
-      text: 'Skills, Werkzeuge und Plugins, die A2Intelligence nutzen kann. Hier fügen Sie weitere hinzu.'
+      text: 'Skills, Werkzeuge und Plugins, die A2Assistant nutzen kann. Hier fügen Sie weitere hinzu.'
     },
     composer: {
       title: 'Hier fragen',
@@ -12,7 +12,7 @@ export const deA2Gaps = {
     },
     messaging: {
       title: 'Messenger',
-      text: 'Erreichen Sie A2Intelligence über Telegram, Slack, Discord und weitere Dienste.'
+      text: 'Erreichen Sie A2Assistant über Telegram, Slack, Discord und weitere Dienste.'
     },
     model: {
       title: 'Modellauswahl',
@@ -46,13 +46,13 @@ export const deA2Gaps = {
         loading_tools: 'Werkzeuge werden geladen…',
         python_packages: 'Python-Pakete werden installiert…'
       },
-      requiresHermes: range => `A2Intelligence ${range}`,
+      requiresHermes: range => `A2Assistant ${range}`,
       serverNotConnected: (server, reason) => `MCP-Server ${server} nicht verbunden${reason ? `: ${reason}` : ''}`
     },
     thread: {
       errorCodes: {
         SESSION_OWNER_BUSY: {
-          title: 'A2Intelligence ist in diesem Chat beschäftigt',
+          title: 'A2Assistant ist in diesem Chat beschäftigt',
           body: 'Hier läuft gerade eine andere Antwort, und Ihre Nachricht konnte nicht in die Warteschlange aufgenommen werden. Es wurde nichts gesendet. Versuchen Sie es erneut, sobald diese Antwort fertig ist.'
         },
         SESSION_OWNER_UNCONFIRMED: {
@@ -68,7 +68,7 @@ export const deA2Gaps = {
         'Diese mitgelieferte Installation kann sich nicht innerhalb der App reparieren – installieren Sie die App neu, um ihr Backend wiederherzustellen.',
       reinstallApp: 'App neu installieren',
       webappDescription: 'Führen Sie hermes webapp auf diesem Computer aus, um diesen Browser anzumelden.',
-      webappTitle: 'Bei A2Intelligence anmelden'
+      webappTitle: 'Bei A2Assistant anmelden'
     }
   },
   catalog: {
@@ -93,7 +93,7 @@ export const deA2Gaps = {
       pitch: 'Sie haben ein Werkzeug, einen Konnektor, ein Plugin oder einen Mod gebaut?',
       pitchFollowUp: 'Sie möchten, wissen aber nicht wie?',
       submit: 'Mod einreichen',
-      title: 'Für A2Intelligence entwickeln'
+      title: 'Für A2Assistant entwickeln'
     },
     discover: 'Entdecken',
     discoverKind: kind => `${kind} entdecken`,
@@ -138,7 +138,7 @@ export const deA2Gaps = {
     seeAll: 'Alle anzeigen',
     skillsFor: category => `Skills für ${category}.`,
     slideOf: (index, count) => `${index} von ${count}`,
-    snapshotHint: 'Aus dem A2Intelligence-Katalog. Beim Stöbern werden keine Quell-Repositories kontaktiert.',
+    snapshotHint: 'Aus dem A2Assistant-Katalog. Beim Stöbern werden keine Quell-Repositories kontaktiert.',
     sortBy: 'Sortieren nach',
     source: 'Quelle',
     tags: 'Tags',
@@ -163,9 +163,9 @@ export const deA2Gaps = {
     toolsets: {
       callCount: (count, calls) => `${count} ${calls === 1 ? 'Aufruf' : 'Aufrufe'}`,
       essentials: 'Grundausstattung',
-      essentialsBlurb: 'Worauf die meiste Arbeit von A2Intelligence aufbaut.',
+      essentialsBlurb: 'Worauf die meiste Arbeit von A2Assistant aufbaut.',
       mostUsed: 'Am häufigsten genutzt',
-      mostUsedBlurb: 'Die Werkzeugsätze, die A2Intelligence in diesem Profil am häufigsten nutzt.',
+      mostUsedBlurb: 'Die Werkzeugsätze, die A2Assistant in diesem Profil am häufigsten nutzt.',
       themes: {
         connect: {
           label: 'Verbinden und kommunizieren',
@@ -181,7 +181,7 @@ export const deA2Gaps = {
         },
         recall: {
           label: 'Gedächtnis und Wissen',
-          blurb: 'Was A2Intelligence sich merkt, und die Skills und der Verlauf, die es durchsuchen kann.'
+          blurb: 'Was A2Assistant sich merkt, und die Skills und der Verlauf, die es durchsuchen kann.'
         },
         work: {
           label: 'Browsen, arbeiten und automatisieren',
@@ -226,12 +226,12 @@ export const deA2Gaps = {
   },
   install: {
     bundledLocalDesc:
-      'Die mit dieser App gelieferte A2Intelligence-Laufzeit verwenden – das mitgelieferte Backend ist die lokale Installation.',
+      'Die mit dieser App gelieferte A2Assistant-Laufzeit verwenden – das mitgelieferte Backend ist die lokale Installation.',
     setupChoiceDescLocal:
-      'Installieren Sie A2Intelligence auf diesem Computer oder verbinden Sie sich mit einem bereits laufenden A2Intelligence-Gateway.',
+      'Installieren Sie A2Assistant auf diesem Computer oder verbinden Sie sich mit einem bereits laufenden A2Assistant-Gateway.',
     useLocalDesc:
-      'Hier ist bereits eine A2Intelligence-Laufzeit installiert – starten Sie sie mit einem Klick. Es wird nichts heruntergeladen.',
-    useLocalTitle: 'A2Intelligence auf diesem Computer verwenden'
+      'Hier ist bereits eine A2Assistant-Laufzeit installiert – starten Sie sie mit einem Klick. Es wird nichts heruntergeladen.',
+    useLocalTitle: 'A2Assistant auf diesem Computer verwenden'
   },
   keybinds: {
     actions: {
@@ -244,9 +244,9 @@ export const deA2Gaps = {
   notifications: {
     compressDeferredDone: 'Kontextkomprimierung abgeschlossen',
     sharedProfileWarning:
-      'Eine andere A2Intelligence-Installation verwendet dieses Profil. Beide Installationen teilen sich Einstellungen und Daten, daher können Änderungen kollidieren. Sie können fortfahren oder die andere Installation vor Änderungen schließen.',
+      'Eine andere A2Assistant-Installation verwendet dieses Profil. Beide Installationen teilen sich Einstellungen und Daten, daher können Änderungen kollidieren. Sie können fortfahren oder die andere Installation vor Änderungen schließen.',
     updateReadyMessageAppInstaller:
-      'Eine neue Version von A2Intelligence ist bereit. Aktualisieren Sie jetzt, Windows schließt den Vorgang für Sie ab.'
+      'Eine neue Version von A2Assistant ist bereit. Aktualisieren Sie jetzt, Windows schließt den Vorgang für Sie ab.'
   },
   preview: {
     missingBody: label =>
@@ -309,7 +309,7 @@ export const deA2Gaps = {
       dataKept: path =>
         `Ihre Konfiguration, Chats und Geheimnisse liegen in ${path}. Beim Entfernen der App werden sie nicht gelöscht.`,
       managedBody:
-        'Diese Installation wird von Ihrem System verwaltet, daher kann A2Intelligence sich nicht selbst entfernen.',
+        'Diese Installation wird von Ihrem System verwaltet, daher kann A2Assistant sich nicht selbst entfernen.',
       openAppsSettings: 'App-Einstellungen öffnen'
     }
   },

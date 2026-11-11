@@ -3,7 +3,7 @@ import type { TranslationOverrides } from './define-locale'
 export const arConnectors = {
   sessionImport: {
     title: 'المتابعة من تطبيق آخر',
-    subtitle: 'انقل محادثة إلى A2Intelligence وتابع من حيث توقفت.',
+    subtitle: 'انقل محادثة إلى A2Assistant وتابع من حيث توقفت.',
     action: 'استيراد جلسة',
     readingFrom: 'القراءة من',
     connectedComputer: 'الكمبيوتر المتصل',
@@ -21,17 +21,17 @@ export const arConnectors = {
     more: 'تحميل المزيد من الجلسات',
     messages: 'رسائل',
     choose: 'محادثة تستحق المتابعة',
-    chooseHelp: 'اختر جلسة لقراءة سجلها قبل نقلها إلى A2Intelligence.',
+    chooseHelp: 'اختر جلسة لقراءة سجلها قبل نقلها إلى A2Assistant.',
     previewLoading: 'جارٍ فتح المعاينة',
     previewError: 'المعاينة غير متاحة',
     previewHelp: 'ربما تم نقل الملف الأصلي أو تغييره. حدّث القائمة وحاول مرة أخرى.',
     previewLimit: 'تم اختصار المعاينة لتسهيل القراءة. يتم استيراد المحادثة كاملة.',
     you: 'أنت',
-    snapshot: 'هذه المحادثة موجودة بالفعل في A2Intelligence. افتح نسختك الحالية للمتابعة.',
+    snapshot: 'هذه المحادثة موجودة بالفعل في A2Assistant. افتح نسختك الحالية للمتابعة.',
     copyNotice: 'ينسخ نص المحادثة دون تغيير الملفات الأصلية. لا يشمل مخرجات الأدوات أو الاستدلال.',
     importing: 'جارٍ الاستيراد…',
-    open: 'فتح في A2Intelligence',
-    continue: 'المتابعة في A2Intelligence',
+    open: 'فتح في A2Assistant',
+    continue: 'المتابعة في A2Assistant',
     importError: 'تعذر استيراد هذه المحادثة.'
   }
 } satisfies Pick<TranslationOverrides, 'sessionImport'>

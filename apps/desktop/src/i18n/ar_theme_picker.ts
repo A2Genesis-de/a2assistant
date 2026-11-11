@@ -7,7 +7,7 @@ export const arThemePicker: ThemePickerCopy = {
   customColor: 'لون مخصص',
   themeAccent: 'افتراضي السمة',
   basic: 'أساسي',
-  basicDetail: 'للتحدث مع A2Intelligence.',
+  basicDetail: 'للتحدث مع A2Assistant.',
   elite: 'متقدم',
   eliteDetail: 'للمطورين: الطرفية والملفات والفروقات.',
   noPick: 'لا اختيار'

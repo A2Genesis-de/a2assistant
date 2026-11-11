@@ -1,12 +1,12 @@
 import type { TranslationOverrides } from './define-locale'
 
 export const jaOnboarding: TranslationOverrides['onboarding'] = {
-  headerTitle: 'A2Intelligence のセットアップをしましょう',
+  headerTitle: 'A2Assistant のセットアップをしましょう',
   headerDesc: 'チャットを始めるにはモデルプロバイダーを接続してください。ほとんどのオプションはワンクリックです。',
-  preparingInstall: 'A2Intelligence はインストールを完了中です。初回実行では通常 1 分以内に完了します。',
-  starting: 'A2Intelligence を起動中…',
+  preparingInstall: 'A2Assistant はインストールを完了中です。初回実行では通常 1 分以内に完了します。',
+  starting: 'A2Assistant を起動中…',
   setupSlowTitle: 'セットアップにいつもより時間がかかっています。',
-  setupSlowBody: 'A2Intelligence はバックグラウンドで起動を続けています。',
+  setupSlowBody: 'A2Assistant はバックグラウンドで起動を続けています。',
   continueWithoutSetup: 'セットアップせずに続行',
   lookingUpProviders: 'プロバイダーを検索中...',
   collapse: '折りたたむ',
@@ -15,7 +15,7 @@ export const jaOnboarding: TranslationOverrides['onboarding'] = {
   chooseLater: '後でプロバイダーを選択します',
   recommended: '推奨',
   connected: '接続済み',
-  featuredPitch: '1 つのサブスクリプションで 300 以上の最先端モデル — A2Intelligence を実行するための推奨方法',
+  featuredPitch: '1 つのサブスクリプションで 300 以上の最先端モデル — A2Assistant を実行するための推奨方法',
   fireworksPitch: '直接モデル API — Fireworks がホストする最先端モデル',
   localModelsTitle: 'モデルをローカルで実行',
   localModelsPitch: 'アカウント不要——モデルをダウンロードしてこのマシンで実行',
@@ -35,7 +35,7 @@ export const jaOnboarding: TranslationOverrides['onboarding'] = {
     local: {
       short: 'セルフホスト',
       description:
-        'ローカルまたはセルフホストの OpenAI 互換エンドポイント（vLLM、llama.cpp、Ollama など）に A2Intelligence を接続。'
+        'ローカルまたはセルフホストの OpenAI 互換エンドポイント（vLLM、llama.cpp、Ollama など）に A2Assistant を接続。'
     }
   },
   backToSignIn: 'サインインに戻る',
@@ -47,7 +47,7 @@ export const jaOnboarding: TranslationOverrides['onboarding'] = {
   update: '更新',
   flowSubtitles: {
     pkce: 'ブラウザーを開いてサインインし、ここに戻ります',
-    device_code: 'ブラウザーで確認ページを開きます — A2Intelligence が自動接続します',
+    device_code: 'ブラウザーで確認ページを開きます — A2Assistant が自動接続します',
     external: 'ターミナルで一度サインインして、チャットに戻ります'
   },
   startingSignIn: provider => `${provider} のサインインを開始中...`,
@@ -60,7 +60,7 @@ export const jaOnboarding: TranslationOverrides['onboarding'] = {
   pickDifferentProvider: '別のプロバイダーを選択',
   signInWith: provider => `${provider} でサインイン`,
   openedBrowser: provider => `${provider} をブラウザーで開きました。`,
-  authorizeThere: 'そこで A2Intelligence を承認してください。',
+  authorizeThere: 'そこで A2Assistant を承認してください。',
   copyAuthCode: '認証コードをコピーして以下に貼り付けてください。',
   pasteAuthCode: '認証コードを貼り付け',
   reopenAuthPage: '認証ページを再度開く',

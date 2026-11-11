@@ -4,9 +4,9 @@ import type { GatewayHostTranslations } from './types_gateway_host'
 export const ruGatewayHost: GatewayHostTranslations = {
   unavailableTitle: 'Настройки шлюза недоступны',
   unavailableDesc: 'IPC-мост приложения не предоставляет настройки шлюза.',
-  webappHostTitle: 'Хост A2Intelligence',
+  webappHostTitle: 'Хост A2Assistant',
   webappHostDesc:
-    'Webapp всегда работает на хосте A2Intelligence, который её обслуживает. Сохранённые подключения ниже — список этого компьютера, общий с приложением A2Intelligence Desktop; другие шлюзы доступны через этот хост.',
+    'Webapp всегда работает на хосте A2Assistant, который её обслуживает. Сохранённые подключения ниже — список этого компьютера, общий с приложением A2Assistant Desktop; другие шлюзы доступны через этот хост.',
   webappOauthPaste: {
     title: 'Завершить вход',
     description: 'Если вкладка входа остановилась на адресе, который не открывается (этот браузер не на компьютере шлюза), вставьте этот адрес сюда.',
@@ -16,7 +16,7 @@ export const ruGatewayHost: GatewayHostTranslations = {
   },
   webAccess: {
     title: 'Веб-доступ',
-    intro: 'Откройте A2Intelligence этого компьютера с телефона или другого компьютера, войдя через аккаунт Nous. Вошедший может запускать команды на этом компьютере.',
+    intro: 'Откройте A2Assistant этого компьютера с телефона или другого компьютера, войдя через аккаунт Nous. Вошедший может запускать команды на этом компьютере.',
     failed: 'Не удалось изменить веб-доступ',
     running: 'Работает',
     stopped: 'Остановлен',
@@ -24,7 +24,7 @@ export const ruGatewayHost: GatewayHostTranslations = {
     stopping: 'Останавливается',
     restartNeeded: 'Нужен перезапуск',
     unavailable: 'Недоступен',
-    notRunningDetail: 'Запустите его, чтобы открыть A2Intelligence с другого устройства.',
+    notRunningDetail: 'Запустите его, чтобы открыть A2Assistant с другого устройства.',
     needsNous: 'Сначала войдите в аккаунт Nous в разделе «Провайдеры».',
     runningLan: 'Откройте этот адрес на устройстве в той же сети.',
     runningPublic: 'Доступен через ваш URL.',

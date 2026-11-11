@@ -4,7 +4,7 @@ export const enNotifications = {
   intro: 'OS notifications (not in-app toasts). Per device.',
   enableAll: 'Enable notifications',
   enableAllDesc: 'Off silences every notification below.',
-  focusedHint: 'Completion alerts only fire while A2Intelligence is in the background.',
+  focusedHint: 'Completion alerts only fire while A2Assistant is in the background.',
   kinds: {
     approval: {
       label: 'Approval needed',
@@ -12,11 +12,11 @@ export const enNotifications = {
     },
     input: {
       label: 'Input needed',
-      description: 'A2Intelligence asked a question or needs a password or secret.'
+      description: 'A2Assistant asked a question or needs a password or secret.'
     },
     turnDone: {
       label: 'Response ready',
-      description: 'A turn finished while A2Intelligence was in the background.'
+      description: 'A turn finished while A2Assistant was in the background.'
     },
     turnError: {
       label: 'Turn failed',
@@ -32,7 +32,7 @@ export const enNotifications = {
     },
     plugin: {
       label: 'Plugin notifications',
-      description: 'A desktop plugin sent a notification while A2Intelligence was in the background.'
+      description: 'A desktop plugin sent a notification while A2Assistant was in the background.'
     }
   },
   browserPermission: {
@@ -48,7 +48,7 @@ export const enNotifications = {
     }
   },
   test: 'Send test notification',
-  testTitle: 'A2Intelligence',
+  testTitle: 'A2Assistant',
   testBody: 'Notifications are working.',
   testSent: 'Test sent. If nothing appears, check your OS notification permissions and Focus/Do Not Disturb.',
   testUnsupported: 'This system does not support native notifications.',

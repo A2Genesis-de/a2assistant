@@ -6,7 +6,7 @@ from pathlib import Path
 from hermes_constants import get_hermes_home
 
 SOURCE = Path(__file__).with_name("a2_elevate.swift")
-APP_ICON = "/Applications/A2Intelligence.app/Contents/Resources/icon.icns"
+APP_ICON = "/Applications/A2Assistant.app/Contents/Resources/icon.icns"
 DIALOG_TIMEOUT_SECONDS = 120
 
 
