@@ -10,6 +10,8 @@ import difflib
 import re
 from functools import lru_cache
 
+from hermes_cli.branding import CLI_COMMAND
+
 # `--profile` / `-p` is consumed by ``main._apply_profile_override`` before argparse runs
 # (it sets ``HERMES_HOME`` and strips itself from ``sys.argv``), so it isn't on the parser.
 # Listed here so all "carry over on relaunch" metadata lives in one file.
@@ -388,7 +390,7 @@ def build_top_level_parser():
     ``subparsers.add_parser(...)``.
     """
     parser = HermesArgumentParser(
-        prog="hermes", description="A2Assistant - AI assistant with tool-calling capabilities",
+        prog=CLI_COMMAND, description="A2Assistant - AI assistant with tool-calling capabilities",
         formatter_class=argparse.RawDescriptionHelpFormatter, epilog=_EPILOGUE)
     _add_top_level_flags(parser)
     # metavar keeps the usage line to ``hermes [...] <command>`` instead of the brace list of
