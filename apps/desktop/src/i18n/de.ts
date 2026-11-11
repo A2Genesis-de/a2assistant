@@ -63,7 +63,7 @@ export const deOverrides = {
       kindCatalog: 'MCP · Katalog',
       kindCustom: 'MCP · Benutzerdefiniert',
       kindPlugin: (plugin: string) => `MCP · Plugin ${plugin}`,
-      inCatalog: 'Im Hermes-Katalog',
+      inCatalog: 'Im A2Intelligence-Katalog',
       hostedTwin: 'Verwaltete Version verfügbar',
       alsoLocal: 'Läuft auch auf diesem Gerät',
       open: (name: string) => `${name} öffnen`,
@@ -112,7 +112,7 @@ export const deOverrides = {
       loading: 'Katalog und Server auf diesem Computer werden gelesen',
       emptyTitle: 'Noch keine Apps. Fügen Sie einen Server auf diesem Computer hinzu, um loszulegen.',
       noMatchTitle: 'Keine passenden Apps',
-      noMatchBody: 'Keine Treffer. Verweisen Sie Hermes auf Ihren eigenen MCP-Server, um ihn hinzuzufügen.',
+      noMatchBody: 'Keine Treffer. Verweisen Sie A2Intelligence auf Ihren eigenen MCP-Server, um ihn hinzuzufügen.',
       clearSearch: 'Suche löschen',
       hostedFailedTitle: 'Die gehosteten Apps sind nicht erreichbar.',
       hostedFailedBody:
@@ -128,7 +128,7 @@ export const deOverrides = {
       writeFailed: 'Diese Änderung wurde nicht gespeichert.',
       refreshFailed: 'Die Tool-Liste wurde nicht aktualisiert.',
       disconnectNoAccount:
-        'Hermes hat hier kein Konto zum Trennen. Aktualisieren Sie die Seite und versuchen Sie es erneut.',
+        'A2Intelligence hat hier kein Konto zum Trennen. Aktualisieren Sie die Seite und versuchen Sie es erneut.',
       disconnectRefused:
         'Nous kann diese Anmeldung gerade nicht entfernen. Schalten Sie die App stattdessen mit dem Schalter aus oder versuchen Sie es später erneut.'
     },
@@ -168,23 +168,23 @@ export const deOverrides = {
     dialog: {
       disconnect: 'Trennen',
       disconnectTitle: (name: string) => `${name} trennen?`,
-      disconnectBody: 'Hermes handelt nicht mehr über dieses Konto. Sie können sich jederzeit wieder verbinden.',
+      disconnectBody: 'A2Intelligence handelt nicht mehr über dieses Konto. Sie können sich jederzeit wieder verbinden.',
       menuRefreshTools: 'Tools aktualisieren',
       moreActions: 'Weitere Aktionen',
       removeServerTitle: (name: string) => `${name} entfernen?`,
       removeServerBody: 'Der Eintrag wird aus mcp.json auf diesem Computer entfernt. Sonst wird nichts gelöscht.',
-      appSwitch: (name: string) => `Hermes darf ${name} verwenden`,
+      appSwitch: (name: string) => `A2Intelligence darf ${name} verwenden`,
       waysTitle: (name: string) => `Wo ${name} läuft`,
       wayNotConnected: (name: string) => `Noch nicht verbunden. Melden Sie sich im Browser bei ${name} an.`,
       wayHosted: 'Verwaltet',
-      bothOn: (name: string) => `Beide sind an, daher sieht Hermes jedes ${name}-Tool doppelt.`,
+      bothOn: (name: string) => `Beide sind an, daher sieht A2Intelligence jedes ${name}-Tool doppelt.`,
       turnOffLocal: 'Lokalen Server ausschalten',
       providedByPlugin: (plugin: string) => `Bereitgestellt vom Plugin ${plugin}`,
       openPlugins: 'Tab „Plugins“ öffnen',
       nousLine: 'Nous-Apps folgen Ihrem Konto, nicht dem Profil.',
       rulesReadOnly: 'Die Regeln können gerade nicht geändert werden.',
       rulesAppOff: (name: string) => `Schalten Sie ${name} ein, um die Tools zu ändern.`,
-      rulesSignIn: 'Melden Sie sich an, um festzulegen, was Hermes hier darf.',
+      rulesSignIn: 'Melden Sie sich an, um festzulegen, was A2Intelligence hier darf.',
       orgNote: (count: number) => `Ihre Organisation hat ${count} Tool${count === 1 ? '' : 's'} deaktiviert.`,
       orgLink: 'Konnektor-Verwaltung öffnen',
       connectEnded: 'Die Anmeldung wurde nicht abgeschlossen.',
@@ -200,8 +200,8 @@ export const deOverrides = {
     tools: {
       title: 'Tools',
       notInstalledBody: 'Installieren Sie ihn auf diesem Gerät, um seine Tools zu sehen.',
-      summaryTitle: (name: string) => `Was Hermes mit ${name} tun darf`,
-      summaryPreviewTitle: (name: string) => `Was Hermes mit ${name} tun könnte, sobald Sie verbunden sind`,
+      summaryTitle: (name: string) => `Was A2Intelligence mit ${name} tun darf`,
+      summaryPreviewTitle: (name: string) => `Was A2Intelligence mit ${name} tun könnte, sobald Sie verbunden sind`,
       summaryCount: (count: number) => `${count} Tool${count === 1 ? '' : 's'}`,
       summaryAllTools: 'Alle Tools',
       summaryOther: 'Sonstige',
@@ -235,7 +235,7 @@ export const deOverrides = {
       retry: 'Erneut versuchen',
       goneTitle: (name: string) => `${name} ist nicht mehr im Katalog.`,
       goneBody:
-        'Hermes kann ihn nicht mehr aufrufen. Die Zeile bleibt, bis Sie sie entfernen, damit nichts verschwindet.',
+        'A2Intelligence kann ihn nicht mehr aufrufen. Die Zeile bleibt, bis Sie sie entfernen, damit nichts verschwindet.',
       remove: 'Entfernen',
       offTitle: (name: string) => `${name} ist aus.`,
       offBody: 'Schalten Sie ihn mit dem Schalter oben ein, um seine Tools zu laden.',
@@ -308,7 +308,7 @@ export const deOverrides = {
   },
   sessionImport: {
     title: 'Von einer anderen App fortfahren',
-    subtitle: 'Holen Sie eine Konversation in Hermes und machen Sie dort weiter, wo Sie aufgehört haben.',
+    subtitle: 'Holen Sie eine Konversation in A2Intelligence und machen Sie dort weiter, wo Sie aufgehört haben.',
     action: 'Session importieren',
     readingFrom: 'Lesen von',
     connectedComputer: 'dem verbundenen Computer',
@@ -327,19 +327,19 @@ export const deOverrides = {
     more: 'Weitere Sessions laden',
     messages: 'Nachrichten',
     choose: 'Eine Konversation, die sich lohnt',
-    chooseHelp: 'Wählen Sie eine Session, um ihren Verlauf zu lesen, bevor Sie sie in Hermes übernehmen.',
+    chooseHelp: 'Wählen Sie eine Session, um ihren Verlauf zu lesen, bevor Sie sie in A2Intelligence übernehmen.',
     previewLoading: 'Vorschau wird geöffnet',
     previewError: 'Vorschau nicht verfügbar',
     previewHelp:
       'Die Quelle wurde möglicherweise verschoben oder geändert. Aktualisieren Sie die Liste und versuchen Sie es erneut.',
     previewLimit: 'Vorschau für bessere Lesbarkeit gekürzt. Die vollständige Konversation wird importiert.',
     you: 'Sie',
-    snapshot: 'Diese Konversation ist bereits in Hermes. Öffnen Sie Ihre vorhandene Kopie, um weiterzumachen.',
+    snapshot: 'Diese Konversation ist bereits in A2Intelligence. Öffnen Sie Ihre vorhandene Kopie, um weiterzumachen.',
     copyNotice:
       'Kopiert den Konversationstext. Quelldateien bleiben unverändert. Tool-Ausgaben und Überlegungen werden nicht übernommen.',
     importing: 'Importieren…',
-    open: 'In Hermes öffnen',
-    continue: 'In Hermes fortfahren',
+    open: 'In A2Intelligence öffnen',
+    continue: 'In A2Intelligence fortfahren',
     importError: 'Diese Konversation konnte nicht importiert werden.'
   },
   common: {
@@ -418,13 +418,13 @@ export const deOverrides = {
     copyDetailFailed: 'Notification-Detail konnte nicht kopiert werden',
     backendOutOfDateTitle: 'Backend veraltet',
     backendOutOfDateMessage:
-      'Ihr Hermes-Backend ist älter als dieser Desktop-Build und funktioniert möglicherweise nicht richtig. Aktualisieren Sie, um beide abzugleichen.',
-    desktopOutOfDateTitle: 'Hermes-App veraltet',
+      'Ihr A2Intelligence-Backend ist älter als dieser Desktop-Build und funktioniert möglicherweise nicht richtig. Aktualisieren Sie, um beide abzugleichen.',
+    desktopOutOfDateTitle: 'A2Intelligence-App veraltet',
     desktopOutOfDateMessage:
-      'Diese Hermes-App ist älter als das verbundene Backend und funktioniert möglicherweise nicht richtig. Aktualisieren Sie die App, um beide abzugleichen.',
+      'Diese A2Intelligence-App ist älter als das verbundene Backend und funktioniert möglicherweise nicht richtig. Aktualisieren Sie die App, um beide abzugleichen.',
     updateDesktopApp: 'App aktualisieren',
     installMethodUnsupportedTitle: 'Nicht unterstützte Installationsmethode',
-    updateHermes: 'Hermes aktualisieren',
+    updateHermes: 'A2Intelligence aktualisieren',
     updateReadyTitle: 'Update bereit',
     updateReadyMessage: count => `${count} neue Änderung${count === 1 ? '' : 'en'} verfügbar.`,
     updateReadyMessageUnknown: 'Ein neues Update ist verfügbar.',
@@ -446,10 +446,10 @@ export const deOverrides = {
       elevenLabsRejectedKey: 'ElevenLabs hat den API-Key abgelehnt (401).',
       diskFull: 'Festplatte voll – geben Sie Speicherplatz frei und versuchen Sie es dann erneut.',
       storageFailure:
-        'Hermes konnte nicht in seinen Datenordner speichern. Öffnen Sie die Wartung, um das Problem zu prüfen und zu beheben.',
+        'A2Intelligence konnte nicht in seinen Datenordner speichern. Öffnen Sie die Wartung, um das Problem zu prüfen und zu beheben.',
       gatewayAuthFailed: 'Gateway-Authentifizierung fehlgeschlagen – überprüfen Sie Ihren API_SERVER_KEY.',
       methodNotAllowed:
-        'Das Desktop-Backend hat diese Anfrage abgelehnt (405 Method Not Allowed). Starten Sie Hermes Desktop neu.',
+        'Das Desktop-Backend hat diese Anfrage abgelehnt (405 Method Not Allowed). Starten Sie A2Intelligence Desktop neu.',
       microphonePermission: 'Die Mikrofonberechtigung wurde verweigert.',
       openaiRejectedApiKey:
         'OpenAI hat Ihren API-Key abgelehnt. Aktualisieren Sie ihn unter Einstellungen → Schlüssel und versuchen Sie es erneut.',
@@ -457,10 +457,10 @@ export const deOverrides = {
       codeSkewRestartRequired:
         'Dieses Backend läuft nach einem Update mit altem Code. Starten Sie es neu, um den neuen Code zu laden.',
       rpcOutOfSync: 'App und Backend laufen in unterschiedlichen Versionen. Aktualisieren Sie beide.',
-      restartHermesFailed: 'Hermes konnte nicht neu gestartet werden'
+      restartHermesFailed: 'A2Intelligence konnte nicht neu gestartet werden'
     },
     actions: {
-      restartHermes: 'Hermes neu starten',
+      restartHermes: 'A2Intelligence neu starten',
       openKeys: 'Schlüssel öffnen',
       openGateways: 'Gateways öffnen',
       openMaintenance: 'Wartung öffnen'
@@ -490,7 +490,7 @@ export const deOverrides = {
       liveEndedConnectionLost: 'Die Live-Sprach-Session hat die Verbindung verloren.',
       liveEndedClosed: 'Die Live-Sprach-Session wurde vom Dienst geschlossen.',
       liveError: 'Live-Sprache',
-      liveDelegationFailed: 'Anfrage konnte nicht an Hermes übergeben werden',
+      liveDelegationFailed: 'Anfrage konnte nicht an A2Intelligence übergeben werden',
       liveUnavailable: reason =>
         `GPT-Live-Sprachchat ist nicht verfügbar: ${reason}. Stattdessen wird Sprache-zu-Text verwendet.`
     },
@@ -501,8 +501,8 @@ export const deOverrides = {
       rejectAction: 'Ablehnen',
       inputTitle: 'Eingabe erforderlich',
       inputTitleNamed: session => `Eingabe erforderlich — ${session}`,
-      inputBody: 'Hermes wartet auf Ihre Antwort.',
-      turnDoneTitle: 'Hermes fertig',
+      inputBody: 'A2Intelligence wartet auf Ihre Antwort.',
+      turnDoneTitle: 'A2Intelligence fertig',
       turnDoneBody: '',
       turnErrorTitle: 'Turn fehlgeschlagen',
       backgroundDoneTitle: 'Hintergrundaufgabe abgeschlossen',
@@ -748,7 +748,7 @@ export const deOverrides = {
     exportConfig: 'Konfiguration exportieren',
     importConfig: 'Konfiguration importieren',
     resetToDefaults: 'Auf Standard zurücksetzen',
-    resetConfirm: 'Alle Einstellungen auf Hermes-Standard zurücksetzen?',
+    resetConfirm: 'Alle Einstellungen auf A2Intelligence-Standard zurücksetzen?',
     exportFailed: 'Export fehlgeschlagen',
     resetFailed: 'Zurücksetzen fehlgeschlagen',
     pluginPages: {
@@ -837,7 +837,7 @@ export const deOverrides = {
         desktopSuccess: name => `Desktop-Plugin ${name} installiert`,
         agentFailed: 'Installation des Agent-Plugins fehlgeschlagen',
         installUncertain:
-          'Hermes wartet nicht mehr auf das Installationsergebnis, aber das Plugin wird möglicherweise noch installiert. Schließe dieses Fenster und aktualisiere die Pluginliste, bevor du die Installation erneut startest.',
+          'A2Intelligence wartet nicht mehr auf das Installationsergebnis, aber das Plugin wird möglicherweise noch installiert. Schließe dieses Fenster und aktualisiere die Pluginliste, bevor du die Installation erneut startest.',
         desktopFailed: 'Installation des Desktop-Plugins fehlgeschlagen',
         missingEnv: (name, vars) =>
           `${name} ist installiert, benötigt aber einen Schlüssel, um zu funktionieren: ${vars}. Fügen Sie ihn jetzt hinzu, sonst schlagen die Tools des Plugins fehl.`,
@@ -919,7 +919,7 @@ export const deOverrides = {
       otpField: 'Authentifizierungsschlüssel',
       otpPlaceholder: 'Base32-Geheimnis oder otpauth://-Link',
       otpHint:
-        'Der „Einrichtungsschlüssel", den die Seite beim Aktivieren von 2FA anzeigt. Ist er gespeichert, erzeugt Hermes die Codes selbst.',
+        'Der „Einrichtungsschlüssel", den die Seite beim Aktivieren von 2FA anzeigt. Ist er gespeichert, erzeugt A2Intelligence die Codes selbst.',
       twoFactorBadge: '2FA automatisch',
       deleteTitle: 'Diesen Eintrag löschen?',
       deleteDescription: label => `„${label}" wird entfernt. Das kann nicht rückgängig gemacht werden.`,
@@ -930,12 +930,12 @@ export const deOverrides = {
           'Installierte Passwortmanager werden automatisch erkannt. Der Agent bittet Sie, einen zu entsperren, wenn er zum ersten Mal einen Login daraus braucht (einmal pro Session); nur ein Session-Token bleibt im Speicher, und der Agent sieht weder Ihr Master-Passwort noch einen Login.',
         toggleFailed: 'Passwortmanager konnte nicht geändert werden',
         notInstalled: name =>
-          `Nicht erkannt. Installieren Sie das ${name}-Kommandozeilenwerkzeug und melden Sie sich dort an; Hermes erkennt es automatisch.`,
-        disabledDesc: 'Erkannt, aber für Hermes ausgeschaltet.',
+          `Nicht erkannt. Installieren Sie das ${name}-Kommandozeilenwerkzeug und melden Sie sich dort an; A2Intelligence erkennt es automatisch.`,
+        disabledDesc: 'Erkannt, aber für A2Intelligence ausgeschaltet.',
         lockedDesc:
           'Erkannt. Der Agent bittet Sie, ihn zu entsperren, wenn er einen Login braucht – oder entsperren Sie ihn jetzt.',
         unlockedDesc:
-          'Für diese Session entsperrt. Sperrt automatisch nach 30 Minuten Inaktivität oder wenn Hermes geschlossen wird.',
+          'Für diese Session entsperrt. Sperrt automatisch nach 30 Minuten Inaktivität oder wenn A2Intelligence geschlossen wird.',
         statusLocked: 'Gesperrt',
         statusNotDetected: 'Nicht erkannt',
         statusOff: 'Aus',
@@ -962,7 +962,7 @@ export const deOverrides = {
       advanced: 'Erweitert'
     },
     searchPlaceholder: {
-      about: 'Über Hermes Desktop',
+      about: 'Über A2Intelligence Desktop',
       config: 'Einstellungen durchsuchen…',
       gateway: 'Gateway-Verbindung…',
       keys: 'API-Schlüssel durchsuchen…',
@@ -990,7 +990,7 @@ export const deOverrides = {
       title: 'Darstellung',
       intro: 'Nur für Desktop. Modus ist die Helligkeit; Theme ist Farbpalette und Chat-Design.',
       colorMode: 'Farbmodus',
-      colorModeDesc: 'Wählen Sie einen festen Modus oder lassen Sie Hermes Ihrer Systemeinstellung folgen.',
+      colorModeDesc: 'Wählen Sie einen festen Modus oder lassen Sie A2Intelligence Ihrer Systemeinstellung folgen.',
       toolViewTitle: 'Tool-Aufruf-Anzeige',
       toolViewDesc: 'Produkt versteckt rohe Tool-Payloads; Technisch zeigt vollständige Ein-/Ausgabe.',
       hideCodeDiffsTitle: 'Code-Diffs ausblenden',
@@ -1068,14 +1068,14 @@ export const deOverrides = {
       modelPricingDesc: 'Eingabe-, Ausgabe- und Cache-Lesepreise pro Million Tokens in der Modellauswahl anzeigen.',
       reactionsTitle: 'Nachrichten-Reaktionen',
       reactionsDesc:
-        'Emoji-Tapbacks im iMessage-Stil – reagieren Sie auf Nachrichten, und Hermes kann auf Ihre reagieren.',
+        'Emoji-Tapbacks im iMessage-Stil – reagieren Sie auf Nachrichten, und A2Intelligence kann auf Ihre reagieren.',
       tipsTitle: 'In-App-Tipps',
       tipsDesc:
-        'Eine kleine Blase, die auf einen Teil der App zeigt und gelegentlich im Leerlauf sowie von Hermes erscheint, wenn es hilft. Beim Schließen wird sie für immer ausgeblendet.',
+        'Eine kleine Blase, die auf einen Teil der App zeigt und gelegentlich im Leerlauf sowie von A2Intelligence erscheint, wenn es hilft. Beim Schließen wird sie für immer ausgeblendet.',
       tipsReset: (count: number) => `${count} geschlossene ${count === 1 ? 'Blase' : 'Blasen'} zurückholen`,
       toursTitle: 'Geführte Touren',
       toursDesc:
-        'Lassen Sie sich von Hermes durch die App führen – der Bildschirm wird abgedunkelt und jeder Schritt hervorgehoben.',
+        'Lassen Sie sich von A2Intelligence durch die App führen – der Bildschirm wird abgedunkelt und jeder Schritt hervorgehoben.',
       composerPopoutTitle: 'Schwebender Composer',
       composerPopoutDesc:
         'Erlaubt, den Composer aus seiner Ablage herauszuziehen. Wenn aus, bleibt er unten angedockt.',
@@ -1116,9 +1116,9 @@ export const deOverrides = {
       pet: {
         title: 'Haustier',
         intro:
-          'Adoptieren Sie ein animiertes Petdex-Maskottchen, das über der App schwebt und darauf reagiert, was Hermes gerade tut – es rennt, während Tools laufen, feiert bei Erfolg und schmollt bei Fehlern.',
+          'Adoptieren Sie ein animiertes Petdex-Maskottchen, das über der App schwebt und darauf reagiert, was A2Intelligence gerade tut – es rennt, während Tools laufen, feiert bei Erfolg und schmollt bei Fehlern.',
         restartHint:
-          'Haustiere erfordern einen kurzen Neustart – die laufende App wurde gestartet, bevor diese Funktion hinzugefügt wurde. Schließen Sie Hermes, öffnen Sie es erneut und kehren Sie dann hierher zurück.',
+          'Haustiere erfordern einen kurzen Neustart – die laufende App wurde gestartet, bevor diese Funktion hinzugefügt wurde. Schließen Sie A2Intelligence, öffnen Sie es erneut und kehren Sie dann hierher zurück.',
         scaleTitle: 'Größe',
         scaleDesc: 'Ändert die Größe des schwebenden Maskottchens. Wirkt überall sofort.',
         roamTitle: 'Herumstreifen',
@@ -1344,11 +1344,11 @@ export const deOverrides = {
       timezone: 'IANA-Zeitzonenkennung. Leer verwendet die Systemzeitzone.',
       browser: {
         useRealProfile:
-          'Lokales Browsen nutzt Ihre echten Anmeldungen. Hermes kopiert das Profil Ihres Standardbrowsers (Cookies, Anmeldungen, Einstellungen) in einen verwalteten Schnappschuss und steuert ihn mit seinem gebündelten Chromium – Ihr Live-Profil wird nie direkt geöffnet, und die Kopie wird bei jedem Lauf daraus aktualisiert. Erlaubt dem Agenten außerdem, auf Anfrage eine lokale Session mit echtem Profil zu öffnen, selbst wenn ein Cloud-Browser-Backend konfiguriert ist. Nur Chromium-Browser (Chrome, Edge, Brave, Brave Origin, Chromium) werden unterstützt; ein Nicht-Chromium-Standard schlägt mit einer klaren Meldung fehl. Standardmäßig aus.'
+          'Lokales Browsen nutzt Ihre echten Anmeldungen. A2Intelligence kopiert das Profil Ihres Standardbrowsers (Cookies, Anmeldungen, Einstellungen) in einen verwalteten Schnappschuss und steuert ihn mit seinem gebündelten Chromium – Ihr Live-Profil wird nie direkt geöffnet, und die Kopie wird bei jedem Lauf daraus aktualisiert. Erlaubt dem Agenten außerdem, auf Anfrage eine lokale Session mit echtem Profil zu öffnen, selbst wenn ein Cloud-Browser-Backend konfiguriert ist. Nur Chromium-Browser (Chrome, Edge, Brave, Brave Origin, Chromium) werden unterstützt; ein Nicht-Chromium-Standard schlägt mit einer klaren Meldung fehl. Standardmäßig aus.'
       },
       agent: {
         imageInputMode: 'Steuert, wie Bildanhänge an das Modell gesendet werden.',
-        maxTurns: 'Obergrenze für Tool-Aufruf-Runden, bevor Hermes einen Lauf stoppt.'
+        maxTurns: 'Obergrenze für Tool-Aufruf-Runden, bevor A2Intelligence einen Lauf stoppt.'
       },
       terminal: {
         cwd: 'Standard-Projektordner für Tool- und Terminal-Arbeit.',
@@ -1362,9 +1362,9 @@ export const deOverrides = {
       codeExecution: {
         mode: 'Wie streng die Code-Ausführung auf das aktuelle Projekt begrenzt ist.'
       },
-      fileReadMaxChars: 'Maximale Zeichenzahl, die Hermes aus einer Dateianfrage lesen kann.',
+      fileReadMaxChars: 'Maximale Zeichenzahl, die A2Intelligence aus einer Dateianfrage lesen kann.',
       approvals: {
-        mode: 'Wie Hermes Befehle behandelt, die eine explizite Genehmigung benötigen.',
+        mode: 'Wie A2Intelligence Befehle behandelt, die eine explizite Genehmigung benötigen.',
         timeout: 'Wie lange Genehmigungsaufforderungen warten, bevor sie ablaufen.'
       },
       security: {
@@ -1393,11 +1393,11 @@ export const deOverrides = {
       voice: {
         autoTts: 'Assistentenantworten automatisch vorlesen.',
         voiceChatMode:
-          'chained: Sprache zu Text → Hermes → Text zu Sprache mit den Anbietern unten. gpt-live: Ein Vollduplex-Sprachmodell von OpenAI (gpt-live-1) hört zu und spricht und übergibt jede echte Anfrage an Hermes – das von Ihnen gewählte Modell antwortet mit allen Tools. Erfordert einen OpenAI-API-Schlüssel; die Sprachschicht kostet 0,05 $ pro Minute.',
+          'chained: Sprache zu Text → A2Intelligence → Text zu Sprache mit den Anbietern unten. gpt-live: Ein Vollduplex-Sprachmodell von OpenAI (gpt-live-1) hört zu und spricht und übergibt jede echte Anfrage an A2Intelligence – das von Ihnen gewählte Modell antwortet mit allen Tools. Erfordert einen OpenAI-API-Schlüssel; die Sprachschicht kostet 0,05 $ pro Minute.',
         gptLive: {
           voice: 'Stimme für den GPT-Live-Modus. Eigene Stimm-IDs werden akzeptiert.',
           instructions:
-            'Zusätzliche Sätze für die Live-Sprachpersona (Ton, Tempo, Sprache). Hermes behält seinen eigenen System-Prompt.'
+            'Zusätzliche Sätze für die Live-Sprachpersona (Ton, Tempo, Sprache). A2Intelligence behält seinen eigenen System-Prompt.'
         }
       },
       tts: {
@@ -1424,13 +1424,13 @@ export const deOverrides = {
       },
       updates: {
         nonInteractiveLocalChanges:
-          'Wenn Hermes sich aus der App selbst aktualisiert (ohne Terminal-Aufforderung), lokale Quellcode-Änderungen behalten (stash) oder verwerfen (discard). Terminal-Updates fragen immer nach.'
+          'Wenn A2Intelligence sich aus der App selbst aktualisiert (ohne Terminal-Aufforderung), lokale Quellcode-Änderungen behalten (stash) oder verwerfen (discard). Terminal-Updates fragen immer nach.'
       }
     }),
     uninstallSection: {
       dangerZone: 'Gefahrenzone',
       checkingInstalled: 'Installierte Komponenten werden geprüft…',
-      uninstallHermes: 'Hermes deinstallieren',
+      uninstallHermes: 'A2Intelligence deinstallieren',
       chooseHowMuch:
         'Wählen Sie, wie viel entfernt werden soll. Die App wird zum Abschluss geschlossen; Sie können das Installationsprogramm jederzeit erneut öffnen, um zurückzukehren.',
       confirmUninstall: 'Deinstallation bestätigen',
@@ -1443,22 +1443,22 @@ export const deOverrides = {
         gui: {
           title: 'Nur die Chat-Oberfläche deinstallieren',
           description:
-            'Entfernt diese Desktop-App. Der Hermes-Agent, Ihre Konfiguration und Ihre Chats bleiben erhalten.',
+            'Entfernt diese Desktop-App. Der A2Intelligence-Agent, Ihre Konfiguration und Ihre Chats bleiben erhalten.',
           consequence: 'die Desktop-Chat-Oberfläche (diese App und ihre Daten)'
         },
         lite: {
           title: 'Oberfläche + Agent deinstallieren, Daten behalten',
           description:
-            'Entfernt die App und den Hermes-Agent, behält aber Konfiguration, Chats und Geheimnisse für eine spätere Neuinstallation.',
+            'Entfernt die App und den A2Intelligence-Agent, behält aber Konfiguration, Chats und Geheimnisse für eine spätere Neuinstallation.',
           consequence:
-            'die Chat-Oberfläche und den Hermes-Agent (Konfiguration, Chats und Geheimnisse bleiben erhalten)'
+            'die Chat-Oberfläche und den A2Intelligence-Agent (Konfiguration, Chats und Geheimnisse bleiben erhalten)'
         },
         full: {
           title: 'Alles deinstallieren',
           description:
             'Entfernt die App, den Agent und alle Benutzerdaten – Konfiguration, Chats, geplante Jobs, Geheimnisse, Logs.',
           consequence:
-            'ALLES – die Chat-Oberfläche, den Hermes-Agent sowie Ihre gesamte Konfiguration, Chats, Geheimnisse und Logs'
+            'ALLES – die Chat-Oberfläche, den A2Intelligence-Agent sowie Ihre gesamte Konfiguration, Chats, Geheimnisse und Logs'
         }
       }
     },
@@ -1512,7 +1512,7 @@ export const deOverrides = {
     config: {
       minimizeToTrayTitle: 'In den Infobereich minimieren',
       minimizeToTrayDesc:
-        'Beim Minimieren von Fenstern oder Schließen des Hauptfensters werden diese im Infobereich (Menüleiste unter macOS) ausgeblendet und Hermes läuft weiter. Beenden Sie über „Hermes beenden“ im Infobereich-Menü oder mit Cmd+Q. Standardmäßig aus; gilt nur für dieses Gerät.',
+        'Beim Minimieren von Fenstern oder Schließen des Hauptfensters werden diese im Infobereich (Menüleiste unter macOS) ausgeblendet und A2Intelligence läuft weiter. Beenden Sie über „A2Intelligence beenden“ im Infobereich-Menü oder mit Cmd+Q. Standardmäßig aus; gilt nur für dieses Gerät.',
       minimizeToTrayUnavailable:
         'Der Infobereich ist nicht verfügbar. Fenster werden normal minimiert und geschlossen. Schalten Sie die Option aus und wieder ein, um es erneut zu versuchen.',
       none: 'Keine',
@@ -1523,7 +1523,7 @@ export const deOverrides = {
       searchPlaceholder: 'Suchen…',
       noResults: 'Keine Ergebnisse gefunden',
       systemDefault: 'Systemstandard',
-      loading: 'Hermes-Konfiguration wird geladen...',
+      loading: 'A2Intelligence-Konfiguration wird geladen...',
       emptyTitle: 'Nichts zu konfigurieren',
       emptyDesc: 'Dieser Bereich hat keine einstellbaren Optionen.',
       failedLoad: 'Einstellungen konnten nicht geladen werden',
@@ -1553,18 +1553,18 @@ export const deOverrides = {
       description:
         'Tippen Sie kurz auf ⌘ + Option (Mac) bzw. Strg + Alt (Windows/Linux), um das HUD aus jeder App nach vorn zu holen. Standardmäßig aus; gilt nur für dieses Gerät.',
       permission:
-        'Erlauben Sie Hermes unter Systemeinstellungen → Datenschutz & Sicherheit → Eingabeüberwachung und versuchen Sie es erneut. Diese Geste zeichnet keine Tastenanschläge auf und nimmt Ihren Bildschirm nicht auf.',
+        'Erlauben Sie A2Intelligence unter Systemeinstellungen → Datenschutz & Sicherheit → Eingabeüberwachung und versuchen Sie es erneut. Diese Geste zeichnet keine Tastenanschläge auf und nimmt Ihren Bildschirm nicht auf.',
       unavailable:
-        'Das Hilfsprogramm für die HUD-Geste konnte nicht starten oder wurde unerwartet beendet. Versuchen Sie es erneut oder starten Sie Hermes neu. Das bestehende HUD-Tastenkürzel funktioniert innerhalb von Hermes weiterhin.',
+        'Das Hilfsprogramm für die HUD-Geste konnte nicht starten oder wurde unerwartet beendet. Versuchen Sie es erneut oder starten Sie A2Intelligence neu. Das bestehende HUD-Tastenkürzel funktioniert innerhalb von A2Intelligence weiterhin.',
       missingHelper:
-        'In dieser Hermes-Installation fehlt das Hilfsprogramm für die HUD-Geste. Aktualisieren oder installieren Sie Hermes neu und versuchen Sie es erneut.',
+        'In dieser A2Intelligence-Installation fehlt das Hilfsprogramm für die HUD-Geste. Aktualisieren oder installieren Sie A2Intelligence neu und versuchen Sie es erneut.',
       unsupportedSession:
         'Diese Desktop-Session unterstützt keine globalen Modifikator-Taps. Linux erfordert X11; Wayland wird nicht unterstützt.'
     },
     screenshot: {
       enabledTitle: 'Screenshot-Kurzbefehl',
       enabledDesc:
-        'Drücken Sie in einer beliebigen App beide Befehlstasten gleichzeitig, um deren vorderstes Fenster aufzunehmen und an Ihren aktuellen Hermes-Entwurf anzuhängen. Es wird nie automatisch gesendet. Standardmäßig aus; gilt nur für diesen Mac. Fensterinhalte können vertraulich sein – prüfen Sie den Anhang vor dem Senden.',
+        'Drücken Sie in einer beliebigen App beide Befehlstasten gleichzeitig, um deren vorderstes Fenster aufzunehmen und an Ihren aktuellen A2Intelligence-Entwurf anzuhängen. Es wird nie automatisch gesendet. Standardmäßig aus; gilt nur für diesen Mac. Fensterinhalte können vertraulich sein – prüfen Sie den Anhang vor dem Senden.',
       statusTitle: 'Status des Screenshot-Kurzbefehls',
       checking: 'Screenshot-Kurzbefehl wird geprüft…',
       disabled: 'Der Screenshot-Kurzbefehl ist aus.',
@@ -1572,9 +1572,9 @@ export const deOverrides = {
       ready:
         'Der Kurzbefehl ist bereit. Screenshots werden an Ihren aktuellen Entwurf angehängt, ohne gesendet zu werden.',
       inputPermission:
-        'Mit der Berechtigung „Eingabeüberwachung“ kann Hermes beide Befehlstasten erkennen, während eine andere App aktiv ist. Erlauben Sie Hermes unter Systemeinstellungen → Datenschutz & Sicherheit → Eingabeüberwachung, kehren Sie dann hierher zurück und versuchen Sie es erneut.',
+        'Mit der Berechtigung „Eingabeüberwachung“ kann A2Intelligence beide Befehlstasten erkennen, während eine andere App aktiv ist. Erlauben Sie A2Intelligence unter Systemeinstellungen → Datenschutz & Sicherheit → Eingabeüberwachung, kehren Sie dann hierher zurück und versuchen Sie es erneut.',
       screenPermission:
-        'Mit der Berechtigung „Bildschirmaufnahme“ kann Hermes das vorderste App-Fenster aufnehmen, wenn Sie diesen Kurzbefehl verwenden. Erlauben Sie Hermes unter Systemeinstellungen → Datenschutz & Sicherheit → Bildschirmaufnahme, kehren Sie dann hierher zurück und versuchen Sie es erneut. Starten Sie Hermes neu, wenn macOS dazu auffordert.',
+        'Mit der Berechtigung „Bildschirmaufnahme“ kann A2Intelligence das vorderste App-Fenster aufnehmen, wenn Sie diesen Kurzbefehl verwenden. Erlauben Sie A2Intelligence unter Systemeinstellungen → Datenschutz & Sicherheit → Bildschirmaufnahme, kehren Sie dann hierher zurück und versuchen Sie es erneut. Starten Sie A2Intelligence neu, wenn macOS dazu auffordert.',
       openSettings: 'Systemeinstellungen öffnen',
       retry: 'Erneut versuchen',
       unavailable: 'Der Screenshot-Kurzbefehl ist nicht verfügbar. Versuchen Sie es erneut oder schalten Sie ihn aus.',
@@ -1592,7 +1592,7 @@ export const deOverrides = {
     quickEntry: {
       enabledTitle: 'Schnelleingabe',
       enabledDesc:
-        'Öffnen Sie mit einem globalen Tastaturkürzel von überall einen kleinen Eingabebereich und senden Sie einen Prompt, ohne Hermes zu öffnen.',
+        'Öffnen Sie mit einem globalen Tastaturkürzel von überall einen kleinen Eingabebereich und senden Sie einen Prompt, ohne A2Intelligence zu öffnen.',
       shortcutTitle: 'Tastaturkürzel der Schnelleingabe',
       shortcutDesc: 'Benötigt mindestens eine Zusatztaste, z. B. CommandOrControl+Shift+Leertaste.',
       active: 'Das Tastaturkürzel ist aktiv.',
@@ -1622,7 +1622,7 @@ export const deOverrides = {
     connections: {
       title: 'Registrierte Gateways',
       intro:
-        'Verwalten Sie dieses Gerät und jedes Hermes Gateway, das es über Remote-, SSH- oder Cloud-Verbindungen erreichen kann.',
+        'Verwalten Sie dieses Gerät und jedes A2Intelligence Gateway, das es über Remote-, SSH- oder Cloud-Verbindungen erreichen kann.',
       stagedNote:
         'Jedes Gateway bleibt verbunden. Profile, Chats, Nachrichten und Cron-Jobs bleiben bei ihrem Gateway, und Sessions kann alle gleichzeitig anzeigen.',
       launchModeTitle: 'Beim Start zu Sessions auf dem zuletzt verwendeten Gateway zurückkehren',
@@ -1654,10 +1654,10 @@ export const deOverrides = {
       kindRemote: 'Remote-Gateway',
       kindCloud: 'Hermes Cloud',
       kindSsh: 'SSH',
-      kindLocalDesc: 'Die Hermes-Laufzeitumgebung, die von dieser App verwaltet wird.',
-      kindRemoteDesc: 'Ein Hermes Gateway, das über HTTP(S) erreichbar ist – LAN, Tailscale oder das Internet.',
-      kindCloudDesc: 'Eine gehostete Instanz, die über Ihr Hermes-Cloud-Konto gefunden wurde.',
-      kindSshDesc: 'Eine Hermes-Installation, die über SSH erreicht wird.',
+      kindLocalDesc: 'Die A2Intelligence-Laufzeitumgebung, die von dieser App verwaltet wird.',
+      kindRemoteDesc: 'Ein A2Intelligence Gateway, das über HTTP(S) erreichbar ist – LAN, Tailscale oder das Internet.',
+      kindCloudDesc: 'Eine gehostete Instanz, die über Ihr A2Intelligence-Cloud-Konto gefunden wurde.',
+      kindSshDesc: 'Eine A2Intelligence-Installation, die über SSH erreicht wird.',
       labelTitle: 'Name',
       labelDesc:
         'Pflichtfeld. Wird überall angezeigt, wo diese Instanz erscheint; muss eindeutig sein (z. B. „Homelab“, „Arbeitslaptop“).',
@@ -1666,7 +1666,7 @@ export const deOverrides = {
       sshHostTitle: 'SSH-Host',
       headersTitle: 'Zusätzliche Gateway-Header',
       headersDesc:
-        'Wird mit jeder HTTP- und WebSocket-Anfrage an dieses Gateway gesendet – für Zugriffs-Proxys wie Cloudflare Access (CF-Access-Client-Id / CF-Access-Client-Secret). Werte werden verschlüsselt gespeichert. Header, die Hermes verwaltet (Authorization, Cookie, Host…), werden ignoriert.',
+        'Wird mit jeder HTTP- und WebSocket-Anfrage an dieses Gateway gesendet – für Zugriffs-Proxys wie Cloudflare Access (CF-Access-Client-Id / CF-Access-Client-Secret). Werte werden verschlüsselt gespeichert. Header, die A2Intelligence verwaltet (Authorization, Cookie, Host…), werden ignoriert.',
       headerValuePlaceholder: 'Wert',
       headerValueSaved: 'Gespeichert – leer lassen, um zu behalten',
       headerAdd: 'Header hinzufügen',
@@ -1708,15 +1708,15 @@ export const deOverrides = {
       title: 'Gateway-Verbindung',
       envOverride: 'ENV-Überschreibung',
       intro:
-        'Standardmäßig lokal. Verwenden Sie Remote, wenn diese App ein Hermes-Backend an einem anderen Ort steuern soll. Gateway-Verbindungen gelten pro Gerät; Profile werden von den Gateways ermittelt, mit denen Sie sich verbinden.',
+        'Standardmäßig lokal. Verwenden Sie Remote, wenn diese App ein A2Intelligence-Backend an einem anderen Ort steuern soll. Gateway-Verbindungen gelten pro Gerät; Profile werden von den Gateways ermittelt, mit denen Sie sich verbinden.',
       envOverrideTitle: 'Umgebungsvariablen steuern diese Desktop-Session.',
       envOverrideDesc:
         'Entfernen Sie HERMES_DESKTOP_REMOTE_URL und HERMES_DESKTOP_REMOTE_TOKEN, um die unten gespeicherte Einstellung zu verwenden.',
       modeTitle: 'Verbindungsmodus',
       localTitle: 'Lokales Gateway',
-      localDesc: 'Startet ein privates Hermes-Backend auf localhost. Das ist der Standard und funktioniert offline.',
+      localDesc: 'Startet ein privates A2Intelligence-Backend auf localhost. Das ist der Standard und funktioniert offline.',
       remoteTitle: 'Remote-Gateway',
-      remoteDesc: 'Verbindet diese Desktop-Shell mit einem entfernten Hermes-Backend.',
+      remoteDesc: 'Verbindet diese Desktop-Shell mit einem entfernten A2Intelligence-Backend.',
       remoteAuthHint:
         'Gehostete Gateways verwenden OAuth oder Benutzername und Passwort; selbst gehostete können ein Session-Token verwenden.',
       cloudTitle: 'Hermes Cloud',
@@ -1747,11 +1747,11 @@ export const deOverrides = {
       cloudUseSaved: 'Gateway verwenden',
       cloudActive: 'In diesem Fenster aktiv',
       cloudConnecting: 'Verbindung wird hergestellt…',
-      cloudDiscoverFailed: 'Ihre Hermes-Cloud-Agents konnten nicht geladen werden',
+      cloudDiscoverFailed: 'Ihre A2Intelligence-Cloud-Agents konnten nicht geladen werden',
       cloudConnectFailed: 'Keine Verbindung zu diesem Agent möglich',
       cloudSignInFailed: 'Anmeldung bei Hermes Cloud fehlgeschlagen',
       cloudSignedOutTitle: 'Von Hermes Cloud abgemeldet',
-      cloudSignedOutMessage: 'Die Hermes-Cloud-Session wurde geleert.',
+      cloudSignedOutMessage: 'Die A2Intelligence-Cloud-Session wurde geleert.',
       cloudConnectedTitle: 'Verbunden',
       cloudConnectedPill: 'Verbunden',
       cloudConnectedTo: name => `Mit ${name} verbunden.`,
@@ -1807,9 +1807,9 @@ export const deOverrides = {
       restartingTitle: 'Gateway-Verbindung wird neu gestartet',
       savedTitle: 'Gateway-Einstellungen gespeichert',
       restartingMessage:
-        'Hermes Desktop stellt mit den gespeicherten Einstellungen die Verbindung wieder her — die Shell bleibt offen.',
+        'A2Intelligence Desktop stellt mit den gespeicherten Einstellungen die Verbindung wieder her — die Shell bleibt offen.',
       savedMessage: 'Für den nächsten Neustart gespeichert.',
-      connectedTo: (baseUrl, version) => `Verbunden mit ${baseUrl}${version ? ` · Hermes ${version}` : ''}`,
+      connectedTo: (baseUrl, version) => `Verbunden mit ${baseUrl}${version ? ` · A2Intelligence ${version}` : ''}`,
       reachableTitle: 'Remote-Gateway erreichbar',
       signedOutTitle: 'Abgemeldet',
       signedOutMessage: 'Die Remote-Gateway-Session wurde geleert.',
@@ -1821,7 +1821,7 @@ export const deOverrides = {
       saveFailed: 'Gateway-Einstellungen konnten nicht gespeichert werden',
       sshTitle: 'Über SSH verbinden',
       sshDesc:
-        'Hermes wird per SSH auf dem Remote-Gerät gestartet und in diese App getunnelt – Sie müssen nichts selbst starten oder freigeben. Erfordert funktionierenden, schlüsselbasierten SSH-Zugriff auf den Host.',
+        'A2Intelligence wird per SSH auf dem Remote-Gerät gestartet und in diese App getunnelt – Sie müssen nichts selbst starten oder freigeben. Erfordert funktionierenden, schlüsselbasierten SSH-Zugriff auf den Host.',
       sshTrustHint: 'Der erste präsentierte Host-Key wird vertraut und gepinnt; spätere Änderungen schlagen fehl.',
       sshHostTitle: 'Host',
       sshHostDesc: 'user@host oder ein Host-Alias aus ~/.ssh/config.',
@@ -1836,27 +1836,27 @@ export const deOverrides = {
       sshPortDesc: 'Leer = 22 oder der Port aus ~/.ssh/config.',
       sshKeyTitle: 'Identitätsdatei',
       sshKeyDesc: 'Pfad zum privaten Schlüssel. Leer = ssh-agent oder ~/.ssh/config.',
-      sshHermesPathTitle: 'Hermes-Pfad (optional)',
-      sshHermesPathDesc: 'Vollständiger Pfad zum Remote-Hermes-Binary. Leer = automatisch erkennen.',
+      sshHermesPathTitle: 'A2Intelligence-Pfad (optional)',
+      sshHermesPathDesc: 'Vollständiger Pfad zum Remote-A2Intelligence-Binary. Leer = automatisch erkennen.',
       sshHermesPathPlaceholder: 'automatisch erkennen',
       sshTestConnection: 'SSH testen',
       sshConnect: 'Verbinden',
       sshButtonsHint: 'Speichern wird beim nächsten Start angewendet. Verbinden verbindet sofort neu.',
-      sshReachable: (host, platform) => `Erreichbar: ${host} (${platform}) — Hermes gefunden`,
+      sshReachable: (host, platform) => `Erreichbar: ${host} (${platform}) — A2Intelligence gefunden`,
       sshIncompleteHost: 'Geben Sie einen SSH-Host ein, bevor Sie sich verbinden.',
       sshErrUnreachable: 'Dieser Host ist über SSH nicht erreichbar. Prüfen Sie Host, Port und Ihr Netzwerk.',
       sshErrAuth:
-        'SSH-Authentifizierung fehlgeschlagen. Laden Sie Ihren Schlüssel in den ssh-agent (ssh-add) oder setzen Sie eine IdentityFile in ~/.ssh/config – Hermes führt ssh nicht interaktiv aus.',
+        'SSH-Authentifizierung fehlgeschlagen. Laden Sie Ihren Schlüssel in den ssh-agent (ssh-add) oder setzen Sie eine IdentityFile in ~/.ssh/config – A2Intelligence führt ssh nicht interaktiv aus.',
       sshErrHostKey:
         'Der Host-Key hat sich seit Ihrer letzten Verbindung GEÄNDERT. Prüfen Sie, ob das erwartet ist, führen Sie dann ssh-keygen -R <host> aus und verbinden Sie sich erneut.',
       sshErrNotInstalled:
-        'Hermes ist auf dem Remote-Host nicht installiert. Installieren Sie es dort (curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh) oder legen Sie den Hermes-Pfad fest.',
+        'A2Intelligence ist auf dem Remote-Host nicht installiert. Installieren Sie es dort (curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh) oder legen Sie den A2Intelligence-Pfad fest.',
       sshErrPlatform:
-        'Nicht unterstützte Remote-Plattform. Der Desktop-SSH-Modus von Hermes unterstützt Linux-, macOS- und Windows-Remote-Hosts.',
+        'Nicht unterstützte Remote-Plattform. Der Desktop-SSH-Modus von A2Intelligence unterstützt Linux-, macOS- und Windows-Remote-Hosts.',
       sshErrTimeout: 'SSH-Verbindung ist ausgelaufen. Der Host ist möglicherweise nicht erreichbar oder schläft.',
-      sshErrUpdateRequired: 'Aktualisieren Sie Hermes auf dem Remote-Host, bevor Sie sich mit Desktop-SSH verbinden.',
+      sshErrUpdateRequired: 'Aktualisieren Sie A2Intelligence auf dem Remote-Host, bevor Sie sich mit Desktop-SSH verbinden.',
       sshErrInteractiveAuth:
-        'Tailscale SSH erfordert eine interaktive Browser-Prüfung. Führen Sie im Terminal `ssh <host> true` aus, schließen Sie die Prüfung ab und versuchen Sie es erneut – Hermes führt SSH nicht interaktiv aus.',
+        'Tailscale SSH erfordert eine interaktive Browser-Prüfung. Führen Sie im Terminal `ssh <host> true` aus, schließen Sie die Prüfung ab und versuchen Sie es erneut – A2Intelligence führt SSH nicht interaktiv aus.',
       sshErrUnknown: 'SSH-Verbindung fehlgeschlagen.'
     },
     keys: {
@@ -1903,7 +1903,7 @@ export const deOverrides = {
       noOutput: 'Noch keine Ausgabe.',
       deepLinkTitle: 'MCP-Server hinzufügen?',
       deepLinkDescription:
-        'Ein Link möchte diesen MCP-Server zu Hermes hinzufügen. Prüfen Sie die genaue Konfiguration unten – sie stammt vom Link, nicht von Hermes.',
+        'Ein Link möchte diesen MCP-Server zu A2Intelligence hinzufügen. Prüfen Sie die genaue Konfiguration unten – sie stammt vom Link, nicht von A2Intelligence.',
       deepLinkStdioWarning:
         'Dieser Server führt mit dem unten angezeigten Befehl einen lokalen Prozess auf Ihrem Rechner aus. Fahren Sie nur fort, wenn Sie seiner Quelle vertrauen.',
       deepLinkConfirm: 'Server hinzufügen',
@@ -2024,7 +2024,7 @@ export const deOverrides = {
       keepGoingOnCredits: {
         title: 'Mit Credits weitermachen',
         description:
-          'Nutzt Ihre Credits, wenn die enthaltene Nutzung aufgebraucht ist. Aus: Hermes wartet auf das Zurücksetzen.',
+          'Nutzt Ihre Credits, wenn die enthaltene Nutzung aufgebraucht ist. Aus: A2Intelligence wartet auf das Zurücksetzen.',
         approveInBrowser:
           'Bestätige Remote Spending im Browser, um das zu ändern. Es wird übernommen, sobald du bestätigst.',
         openAgain: 'Erneut öffnen',
@@ -2163,7 +2163,7 @@ export const deOverrides = {
         cliBillingDisabled: {
           title: 'Remote-Ausgaben sind deaktiviert',
           message:
-            'Remote-Ausgaben sind für dieses Konto deaktiviert – ein Abrechnungsadministrator kann sie auf der Hermes-Agent-Seite des Portals aktivieren.'
+            'Remote-Ausgaben sind für dieses Konto deaktiviert – ein Abrechnungsadministrator kann sie auf der A2Intelligence-Agent-Seite des Portals aktivieren.'
         },
         roleRequired: {
           title: 'Administratorrolle erforderlich',
@@ -2232,7 +2232,7 @@ export const deOverrides = {
       connectAccount: 'Ein Konto verbinden',
       haveApiKey: 'Haben Sie stattdessen einen API-Key?',
       intro:
-        'Melden Sie sich mit einem Abo an – kein API-Key zum Kopieren. Hermes übernimmt die Browser-Anmeldung für Sie, direkt hier in der App.',
+        'Melden Sie sich mit einem Abo an – kein API-Key zum Kopieren. A2Intelligence übernimmt die Browser-Anmeldung für Sie, direkt hier in der App.',
       connected: 'Verbunden',
       collapse: 'Einklappen',
       connectAnother: 'Weiteren Provider verbinden',
@@ -2255,7 +2255,7 @@ export const deOverrides = {
       localEndpoint: {
         title: 'Lokaler / eigener Endpoint',
         description:
-          'Verbinden Sie Hermes mit einem beliebigen OpenAI-kompatiblen Endpunkt (Zyphra, vLLM, llama.cpp, Ollama usw.).'
+          'Verbinden Sie A2Intelligence mit einem beliebigen OpenAI-kompatiblen Endpunkt (Zyphra, vLLM, llama.cpp, Ollama usw.).'
       },
       loading: 'Provider werden geladen…'
     },
@@ -2384,7 +2384,7 @@ export const deOverrides = {
         needsSetupConfirmAction: 'Trotzdem auswählen',
         unavailableTitle: 'Terminalbefehle sind nicht verfügbar',
         unavailableMessage: backend =>
-          `Hermes kann gerade keine Shell-Befehle ausführen: ${backend} ist nicht bereit. Wechseln Sie zu Lokal oder schließen Sie die Einrichtung von ${backend} ab und versuchen Sie es erneut.`,
+          `A2Intelligence kann gerade keine Shell-Befehle ausführen: ${backend} ist nicht bereit. Wechseln Sie zu Lokal oder schließen Sie die Einrichtung von ${backend} ab und versuchen Sie es erneut.`,
         openBackendSettings: 'Terminal-Einstellungen öffnen',
         useLocal: 'Lokal verwenden',
         switchedToLocal: 'Terminalbefehle laufen jetzt lokal. Gilt für neue Sessions.'
@@ -2405,7 +2405,7 @@ export const deOverrides = {
         signinsFailed: 'Anmeldungen konnten nicht in den In-App-Browser importiert werden',
         prompt: {
           title: 'Auf Ihren Websites angemeldet bleiben',
-          body: 'Lassen Sie Hermes mit einem Schnappschuss Ihres Standard-Browserprofils browsen, damit Websites bereits angemeldet öffnen, für den Agenten und im In-App-Browser.',
+          body: 'Lassen Sie A2Intelligence mit einem Schnappschuss Ihres Standard-Browserprofils browsen, damit Websites bereits angemeldet öffnen, für den Agenten und im In-App-Browser.',
           bulletSnapshot: 'Cookies und Anmeldungen werden in einen verwalteten Schnappschuss kopiert.',
           bulletLiveProfile: 'Ihr Live-Browserprofil wird nie direkt geöffnet.',
           bulletLocal: 'Nichts verlässt diesen Computer.',
@@ -2486,7 +2486,7 @@ export const deOverrides = {
       halfDesktopHint: 'diese App, gleich für jedes Profil',
       halfAgent: 'Agent',
       halfAgentIn: profile => `Agent in ${profile}`,
-      defaultProfile: 'Hermes (Standard)',
+      defaultProfile: 'A2Intelligence (Standard)',
       kindAgent: 'Agent',
       kindDesktop: 'Desktop',
       kindBoth: 'Agent + Desktop',
@@ -2511,7 +2511,7 @@ export const deOverrides = {
       toolsetToggleFailed: (name: string) =>
         `Die ${name}-Agent-Tools konnten nicht umgeschaltet werden; das Desktop-Panel bleibt unverändert`,
       legacyBackend:
-        'Dieses Backend ist älter als schlüsseladressierte Plugin-Schalter — aktualisieren Sie Hermes, um es hier zu verwalten.',
+        'Dieses Backend ist älter als schlüsseladressierte Plugin-Schalter — aktualisieren Sie A2Intelligence, um es hier zu verwalten.',
       portableBadge: 'tragbar',
       serverStates: {
         connected: 'verbunden',
@@ -2525,7 +2525,7 @@ export const deOverrides = {
         unknown: 'Status unbekannt'
       },
       alreadyInstalled: name => `${name} ist in diesem Profil bereits installiert.`,
-      catalogProvenance: sha => `Aus dem Hermes-Katalog installiert${sha ? ` am Pin ${sha}` : ''}.`,
+      catalogProvenance: sha => `Aus dem A2Intelligence-Katalog installiert${sha ? ` am Pin ${sha}` : ''}.`,
       pinnedProvenance: sha =>
         `An Commit ${sha} gepinnt. Updates werden abgelehnt, bis es mit einem neuen Pin neu installiert wird.`,
       pinnedBadge: sha => `gepinnt @ ${sha}`,
@@ -2546,9 +2546,9 @@ export const deOverrides = {
       deepLinkErrorTitle: 'Plugin-Installationslink abgelehnt',
       deepLinkCatalogInvalidName: 'Der Katalogname im Link fehlt oder ist ungültig.',
       deepLinkCatalogUnknown: (name: string) =>
-        `\u201E${name}\u201C ist nicht im Hermes-Plugin-Katalog. Es wurde nichts installiert.`,
+        `\u201E${name}\u201C ist nicht im A2Intelligence-Plugin-Katalog. Es wurde nichts installiert.`,
       deepLinkCatalogUnavailable:
-        'Der Hermes-Plugin-Katalog konnte nicht geladen werden. Prüfen Sie Ihre Verbindung und öffnen Sie den Link erneut.',
+        'Der A2Intelligence-Plugin-Katalog konnte nicht geladen werden. Prüfen Sie Ihre Verbindung und öffnen Sie den Link erneut.',
       settingsToggle: (name: string) => `Einstellungen: ${name}`,
       settingsForm: {
         save: 'Einstellungen speichern',
@@ -2635,7 +2635,7 @@ export const deOverrides = {
     loadFailed: 'Speichergraph konnte nicht geladen werden',
     loading: 'Wird geladen…',
     emptyTitle: 'Noch nichts gelernt',
-    emptyDesc: 'Sobald Hermes Skills und Erinnerungen zu Ihrer Arbeit aufbaut, erscheinen sie hier.',
+    emptyDesc: 'Sobald A2Intelligence Skills und Erinnerungen zu Ihrer Arbeit aufbaut, erscheinen sie hier.',
     share: 'Map teilen',
     shareHint:
       'Kopieren Sie den Code, um diese Map zu teilen, oder fügen Sie einen ein, um sie zu laden. Er enthält nur das Layout, nicht Ihren Speicher oder Skill-Text.',
@@ -2715,7 +2715,7 @@ export const deOverrides = {
       placeholder: 'Pets suchen…',
       loading: 'Petdex-Galerie wird geladen…',
       error: 'Die Petdex-Galerie konnte nicht erreicht werden.',
-      staleBackend: 'Starten Sie Hermes neu, um Pets zu verwenden – das Backend ist älter als diese Funktion.',
+      staleBackend: 'Starten Sie A2Intelligence neu, um Pets zu verwenden – das Backend ist älter als diese Funktion.',
       empty: 'Keine passenden Pets.',
       turnOff: 'Ausschalten',
       turnOn: 'Einschalten',
@@ -2742,8 +2742,8 @@ export const deOverrides = {
       hatchComposing: 'Es wird zusammengesetzt…',
       hatchSaving: 'Fast geschafft…',
       namePlaceholder: 'Geben Sie Ihrem Pet einen Namen',
-      staleBackend: 'Aktualisieren Sie Hermes, um Pets zu generieren.',
-      backgroundHint: 'Sie können dieses Fenster schließen – Hermes benachrichtigt Sie, wenn es fertig ist.',
+      staleBackend: 'Aktualisieren Sie A2Intelligence, um Pets zu generieren.',
+      backgroundHint: 'Sie können dieses Fenster schließen – A2Intelligence benachrichtigt Sie, wenn es fertig ist.',
       slowProviderHint: 'Das kann mehrere Minuten dauern',
       remix: 'Remixen',
       remixConfirmTitle: 'Dieses Design remixen?',
@@ -2783,7 +2783,7 @@ export const deOverrides = {
       },
       settings: {
         title: 'Einstellungen',
-        detail: 'Hermes Desktop konfigurieren'
+        detail: 'A2Intelligence Desktop konfigurieren'
       },
       capabilities: {
         title: 'Fähigkeiten',
@@ -2824,7 +2824,7 @@ export const deOverrides = {
     noSessions: 'Noch keine Sessions.',
     gatewayRunning: 'Messaging-Gateway läuft',
     gatewayStopped: 'Messaging-Gateway gestoppt',
-    hermesActiveSessions: (version, count) => `Hermes ${version} · Aktive Sessions ${count}`,
+    hermesActiveSessions: (version, count) => `A2Intelligence ${version} · Aktive Sessions ${count}`,
     restartGateway: 'Gateway neu starten',
     openBrowser: 'Browser umschalten',
     toggleBrowser: 'Browser umschalten',
@@ -2833,7 +2833,7 @@ export const deOverrides = {
     sharedGatewayRestartDescription: bots => `Alle Bots auf diesem Gerät verbinden sich neu: ${bots}`,
     sharedGatewayRestartConfirm: 'Alle neu starten',
     sharedGatewayRestarted: count => `Gemeinsames Gateway neu gestartet (${count} ${count === 1 ? 'Bot' : 'Bots'})`,
-    updateHermes: 'Hermes aktualisieren',
+    updateHermes: 'A2Intelligence aktualisieren',
     reloadWindow: 'Fenster neu laden',
     actionRunning: 'läuft',
     actionDone: 'fertig',
@@ -2999,7 +2999,7 @@ export const deOverrides = {
     relayLink: {
       title: 'Team Gateway',
       badge: 'Kein Bot-Token nötig',
-      intro: (platform: string) => `${platform} erreicht diesen Agenten über den gemeinsamen Hermes-Bot. Verknüpfe dein ${platform}-Konto damit und schreib dem Bot, um mit deinem Agenten zu sprechen.`,
+      intro: (platform: string) => `${platform} erreicht diesen Agenten über den gemeinsamen A2Intelligence-Bot. Verknüpfe dein ${platform}-Konto damit und schreib dem Bot, um mit deinem Agenten zu sprechen.`,
       link: (platform: string) => `${platform} verknüpfen`,
       linkAnother: (platform: string) => `Weiteres ${platform}-Konto verknüpfen`,
       linkedAccounts: 'Verknüpfte Konten',
@@ -3025,11 +3025,11 @@ export const deOverrides = {
     telegramQr: {
       title: 'Wählen Sie, wie Sie Ihren Telegram-Bot verbinden',
       subtitle:
-        'Beide Optionen verbinden einen Bot, den Sie kontrollieren, und speichern seine Zugangsdaten nur in dieser Hermes-Installation.',
+        'Beide Optionen verbinden einen Bot, den Sie kontrollieren, und speichern seine Zugangsdaten nur in dieser A2Intelligence-Installation.',
       quickSetup: 'Schnelleinrichtung',
       recommended: 'Empfohlen',
       quickHelp:
-        'Scannen Sie einen QR-Code und bestätigen Sie in Telegram. Hermes legt den Bot an und erkennt Ihre Telegram-Benutzer-ID automatisch.',
+        'Scannen Sie einen QR-Code und bestätigen Sie in Telegram. A2Intelligence legt den Bot an und erkennt Ihre Telegram-Benutzer-ID automatisch.',
       createWithQr: 'Mit QR-Code anlegen',
       starting: 'Wird gestartet…',
       replaceWarning:
@@ -3261,7 +3261,7 @@ export const deOverrides = {
     failedImport: 'Profil konnte nicht importiert werden',
     failedExport: 'Profil konnte nicht exportiert werden',
     exportNeedsHost: name =>
-      `Der Browser kann kein Profilarchiv speichern. Führe auf dem Hermes-Host aus: hermes profile export ${name}`,
+      `Der Browser kann kein Profilarchiv speichern. Führe auf dem A2Intelligence-Host aus: hermes profile export ${name}`,
     allProfiles: 'Alle Profile',
     showAllProfiles: 'Alle Profile anzeigen',
     notServedHere: 'Hier nicht bereitgestellt',
@@ -3278,10 +3278,10 @@ export const deOverrides = {
       switchTo: (name, gateway) => `${name} auf ${gateway} öffnen`,
       deleteOn: gateway => ` auf ${gateway}`,
       localDevice:
-        'Dieses Gerät (lokales Backend — installiert Hermes, falls es fehlt, sonst öffnet es eine neue Sitzung)',
-      installDeviceTitle: 'Hermes auf diesem Gerät installieren?',
+        'Dieses Gerät (lokales Backend — installiert A2Intelligence, falls es fehlt, sonst öffnet es eine neue Sitzung)',
+      installDeviceTitle: 'A2Intelligence auf diesem Gerät installieren?',
       installDeviceDesc:
-        'Hermes wird lokal installiert und danach eine neue Sitzung auf diesem Computer geöffnet. Ohne Bestätigung startet keine Installation.',
+        'A2Intelligence wird lokal installiert und danach eine neue Sitzung auf diesem Computer geöffnet. Ohne Bestätigung startet keine Installation.',
       installDeviceConfirm: 'Lokal installieren',
       connectExistingInstead: 'Stattdessen vorhandenes verbinden'
     },
@@ -3296,7 +3296,7 @@ export const deOverrides = {
       badge: (host: string) => `Läuft auf ${host}`,
       title: (profile: string) => `${profile} mit einem Remote-Host verbinden`,
       description:
-        'Sessions in diesem Profil laufen auf dem von Ihnen festgelegten Remote-Hermes statt auf diesem Computer.',
+        'Sessions in diesem Profil laufen auf dem von Ihnen festgelegten Remote-A2Intelligence statt auf diesem Computer.',
       urlLabel: 'Remote-Adresse',
       urlPlaceholder: 'https://hermes.example.com',
       urlInvalid: 'Geben Sie eine vollständige Adresse ein, die mit http:// oder https:// beginnt',
@@ -3332,7 +3332,7 @@ export const deOverrides = {
     defaultProfile: 'Standardprofil',
     defaultSet: (name: string) => `${name} ist jetzt der Standard`,
     defaultDescription:
-      'Wird beim Öffnen von Hermes und für neue Chats verwendet. Bestehende Sessions bleiben in ihren Profilen.',
+      'Wird beim Öffnen von A2Intelligence und für neue Chats verwendet. Bestehende Sessions bleiben in ihren Profilen.',
     failedSetDefault: 'Das Standardprofil konnte nicht festgelegt werden',
     setColor: color => `Farbe ${color} setzen`,
     autoColor: 'Auto',
@@ -3369,7 +3369,7 @@ export const deOverrides = {
     deleteDescMid: ' und entfernt sein ',
     deleteDescSuffix: ' Verzeichnis. Das kann nicht rückgängig gemacht werden.',
     deleting: 'Wird gelöscht...',
-    createDesc: 'Profile sind unabhängige Hermes-Umgebungen: eigene Config, eigene Skills und eigene SOUL.md.',
+    createDesc: 'Profile sind unabhängige A2Intelligence-Umgebungen: eigene Config, eigene Skills und eigene SOUL.md.',
     nameLabel: 'Name',
     cloneFrom: 'Klonen von',
     cloneFromNone: 'Keine (leer)',
@@ -3403,7 +3403,7 @@ export const deOverrides = {
     failedRename: 'Profil konnte nicht umbenannt werden'
   },
   modelAssignment: {
-    saveFailed: 'Hermes hat diese Modelländerung nicht gespeichert.',
+    saveFailed: 'A2Intelligence hat diese Modelländerung nicht gespeichert.',
     confirmTitle: 'Warnung zur Modellauswahl',
     confirmDetail: 'Bestätigen Sie nur, wenn Sie diesen Kompromiss akzeptieren.',
     confirmAction: 'Bestätigen',
@@ -3472,7 +3472,7 @@ export const deOverrides = {
     everyHourAt: minute => `Jede Stunde um :${minute}`,
     newCron: 'Neuer Cron',
     emptyDescNew:
-      'Planen Sie einen Prompt, der nach einem Cron-Ausdruck ausgeführt wird. Hermes führt ihn aus und liefert die Ergebnisse an das von Ihnen gewählte Ziel.',
+      'Planen Sie einen Prompt, der nach einem Cron-Ausdruck ausgeführt wird. A2Intelligence führt ihn aus und liefert die Ergebnisse an das von Ihnen gewählte Ziel.',
     emptyDescSearch: 'Versuchen Sie eine breitere Suchanfrage.',
     emptyTitleNew: 'Noch keine geplanten Jobs',
     emptyTitleSearch: 'Keine Treffer',
@@ -3686,9 +3686,9 @@ export const deOverrides = {
     storageCorrupt: {
       title: 'Die Session-Datenbank ist beschädigt',
       body: (profiles: string) =>
-        `Hermes kann nicht den gesamten Session-Verlauf für ${profiles} lesen. Chats, die in dieser Liste fehlen, wurden nicht gelöscht; die Datei, in der sie gespeichert sind, ist beschädigt.`,
+        `A2Intelligence kann nicht den gesamten Session-Verlauf für ${profiles} lesen. Chats, die in dieser Liste fehlen, wurden nicht gelöscht; die Datei, in der sie gespeichert sind, ist beschädigt.`,
       action:
-        'Beenden Sie Hermes für dieses Profil und prüfen Sie die Datei dann, ohne sie zu ändern, oder stellen Sie einen Snapshot wieder her:',
+        'Beenden Sie A2Intelligence für dieses Profil und prüfen Sie die Datei dann, ohne sie zu ändern, oder stellen Sie einen Snapshot wieder her:',
       guide: 'Wiederherstellungsanleitung'
     },
     noFilterMatches: 'Keine Sessions passen zu diesen Filtern',
@@ -3760,12 +3760,12 @@ export const deOverrides = {
   composer: {
     message: 'Nachricht',
     wakingProfile: profile => `Wecke ${profile}…`,
-    placeholderStarting: 'Hermes wird gestartet…',
-    placeholderReconnecting: 'Verbindung zu Hermes wird wiederhergestellt…',
+    placeholderStarting: 'A2Intelligence wird gestartet…',
+    placeholderReconnecting: 'Verbindung zu A2Intelligence wird wiederhergestellt…',
     placeholderFollowUp: 'Folge senden',
     newSessionPlaceholders: [
       'Was bauen wir?',
-      'Geben Sie Hermes eine Aufgabe',
+      'Geben Sie A2Intelligence eine Aufgabe',
       'Was ist Ihnen wichtig?',
       'Beschreiben Sie, was Sie brauchen',
       'Was sollen wir angehen?',
@@ -3803,8 +3803,8 @@ export const deOverrides = {
     transcribingDictation: 'Transkribiert Diktat',
     voiceControls: 'Sprache',
     voiceEngine: 'Sprachchat-Engine',
-    voiceEngineChained: 'Sprache-zu-Text + Hermes-Stimme',
-    voiceEngineLive: 'GPT-Live (Vollduplex, delegiert an Hermes)',
+    voiceEngineChained: 'Sprache-zu-Text + A2Intelligence-Stimme',
+    voiceEngineLive: 'GPT-Live (Vollduplex, delegiert an A2Intelligence)',
     voiceEngineLiveNeedsKey: 'Benötigt einen OpenAI-API-Schlüssel',
     voiceEngineChangeFailed: 'Sprachchat-Engine konnte nicht geändert werden',
     voiceEngineChainedShort: 'Sprache-zu-Text',
@@ -3855,7 +3855,7 @@ export const deOverrides = {
       '/queue':
         'Einen Prompt für den nächsten Turn einreihen oder eingereihte Prompts auflisten/bearbeiten/entfernen/verschieben/leeren',
       '/steer': 'Nach dem nächsten Tool-Aufruf eine Nachricht einfügen, ohne zu unterbrechen',
-      '/goal': 'Ein dauerhaftes Ziel festlegen, an dem Hermes über mehrere Turns arbeitet, bis es erreicht ist',
+      '/goal': 'Ein dauerhaftes Ziel festlegen, an dem A2Intelligence über mehrere Turns arbeitet, bis es erreicht ist',
       '/heartbeat': 'Einen wiederkehrenden Prompt festlegen, der bei Leerlauf in diese Session zurückkehrt',
       '/refine': 'Diese Unterhaltung jetzt prüfen und Erkenntnisse in Gedächtnis/Skills speichern',
       '/review': 'Einen unabhängigen Subagent starten, der die gerade besprochene Arbeit prüft (PR, Code, Doku)',
@@ -3868,7 +3868,7 @@ export const deOverrides = {
       '/context':
         'Detaillierte Ansicht des Kontextfensters mit Nutzungsanzeige, Aufschlüsselung nach Kategorie, Komprimierungsstatistik und Durchsatz anzeigen',
       '/whoami': 'Ihren Zugriff auf Slash-Befehle anzeigen (Admin / Benutzer)',
-      '/profile': 'Aktives Hermes-Profil wechseln',
+      '/profile': 'Aktives A2Intelligence-Profil wechseln',
       '/codex-runtime': 'Codex-App-Server-Runtime für OpenAI/Codex-Modelle umschalten',
       '/personality': 'Eine vordefinierte Persönlichkeit festlegen',
       '/battery': 'Farbcodierte Akkuanzeige in der Statusleiste umschalten',
@@ -3896,7 +3896,7 @@ export const deOverrides = {
       '/subscription': 'Ihren Nous-Tarif ansehen und im Browser ändern',
       '/topup': 'Ihr Nous-Guthaben anzeigen und die Abrechnung im Portal verwalten',
       '/platform': 'Eine fehlerhafte Gateway-Plattform pausieren, fortsetzen oder auflisten',
-      '/version': 'Hermes-Agent-Version anzeigen',
+      '/version': 'A2Intelligence-Agent-Version anzeigen',
       '/debug': 'Debug-Bericht (Systeminfos + Logs) hochladen und teilbare Links erhalten',
       '/model': 'Modell für diese Session wechseln'
     },
@@ -3911,7 +3911,7 @@ export const deOverrides = {
       'composer.history': 'Popover / Verlauf durchblättern'
     },
     attachUrlTitle: 'URL anhängen',
-    attachUrlDesc: 'Hermes ruft die Seite ab und fügt sie als Kontext für diesen Turn hinzu.',
+    attachUrlDesc: 'A2Intelligence ruft die Seite ab und fügt sie als Kontext für diesen Turn hinzu.',
     urlPlaceholder: 'https://example.com/post',
     urlHintPre: 'Geben Sie die vollständige URL an, z. B. ',
     attach: 'Anhängen',
@@ -4134,7 +4134,7 @@ export const deOverrides = {
       createPr: 'PR erstellen',
       openPr: 'PR öffnen',
       ghMissing: 'Installieren Sie die GitHub CLI (gh) und melden Sie sich an, um PRs zu öffnen',
-      agentShip: 'Hermes bitten, einen PR zu öffnen',
+      agentShip: 'A2Intelligence bitten, einen PR zu öffnen',
       agentShipUnavailable: 'Der Chat, der diese Änderungen besitzt, ist nicht auf dem Bildschirm.',
       agentShipPrompt:
         'Überprüfe die aktuellen Änderungen, committe sie mit einer klaren Conventional-Commit-Message, pushe den Branch und öffne einen Pull Request.',
@@ -4146,23 +4146,23 @@ export const deOverrides = {
     }
   },
   updates: {
-    discontinuedTitle: 'Dieser Hermes-Build wird nicht mehr unterstützt',
+    discontinuedTitle: 'Dieser A2Intelligence-Build wird nicht mehr unterstützt',
     discontinuedBody:
-      'Dieser Hermes-Build wird nicht mehr unterstützt und funktioniert möglicherweise nicht mehr — deinstallieren Sie ihn. Ihre Daten bleiben auf dem Datenträger.',
+      'Dieser A2Intelligence-Build wird nicht mehr unterstützt und funktioniert möglicherweise nicht mehr — deinstallieren Sie ihn. Ihre Daten bleiben auf dem Datenträger.',
     channels: { stable: 'Stabil', canary: 'Canary' },
-    appName: 'Hermes',
+    appName: 'A2Intelligence',
     availableBodyRelease: tag => `Version ${tag} ist bereit zur Installation.`,
     releaseAvailable: tag => `Version ${tag} ist verfügbar.`,
     checkingShort: 'Wird geprüft…',
     availableBodyAppInstaller:
-      'Eine neue Hermes-Version ist bereit. Hermes wird geschlossen, Windows schließt das Update ab und Hermes startet automatisch neu.',
+      'Eine neue A2Intelligence-Version ist bereit. A2Intelligence wird geschlossen, Windows schließt das Update ab und A2Intelligence startet automatisch neu.',
     applyingBodyAppInstaller:
-      'Hermes wird geschlossen und Windows schließt das Update ab. Danach startet Hermes automatisch neu.',
+      'A2Intelligence wird geschlossen und Windows schließt das Update ab. Danach startet A2Intelligence automatisch neu.',
     applyingCloseAppInstaller:
-      'Dieses Fenster schließt sich, Windows schließt das Update ab und Hermes startet automatisch neu.',
+      'Dieses Fenster schließt sich, Windows schließt das Update ab und A2Intelligence startet automatisch neu.',
     checkUnknownTitleAppInstaller: 'Update-Check fehlgeschlagen',
     checkUnknownBodyAppInstaller:
-      'Windows konnte gerade nicht nach Updates suchen. Updates werden auch beim Neustart von Hermes automatisch installiert.',
+      'Windows konnte gerade nicht nach Updates suchen. Updates werden auch beim Neustart von A2Intelligence automatisch installiert.',
     versionDetailsTitle: 'Versionsdetails',
     versionDetailsBody:
       'Diese Installation wird außerhalb der App verwaltet. Aktualisieren Sie sie auf dieselbe Weise, wie Sie sie installiert haben.',
@@ -4189,12 +4189,12 @@ export const deOverrides = {
     versionUnavailable: 'Version nicht verfügbar',
     bundleOutOfSync: 'App-Build ist veraltet',
     bundleOutOfSyncDesc:
-      'Die Hermes-Laufzeit wurde aktualisiert, die Desktop-App selbst ist aber noch ein älterer Build – neue Oberflächenfunktionen (wie der Bot-Modus) fehlen, bis sie aktualisiert wird. Führen Sie das Update unten aus, um die App neu zu bauen. Falls das die Warnung nicht behebt, installieren Sie den neuesten Desktop-Installer neu.',
+      'Die A2Intelligence-Laufzeit wurde aktualisiert, die Desktop-App selbst ist aber noch ein älterer Build – neue Oberflächenfunktionen (wie der Bot-Modus) fehlen, bis sie aktualisiert wird. Führen Sie das Update unten aus, um die App neu zu bauen. Falls das die Warnung nicht behebt, installieren Sie den neuesten Desktop-Installer neu.',
     bundleOutOfSyncAction: 'Installer herunterladen',
     bundleSwapPending: 'Neustart zum Abschließen des Updates',
     bundleSwapPendingDesc:
-      'Die aktualisierte App ist bereits installiert — Hermes muss nur noch neu gestartet werden, um sie zu laden. Chats und Einstellungen bleiben unberührt.',
-    bundleSwapPendingAction: 'Hermes neu starten',
+      'Die aktualisierte App ist bereits installiert — A2Intelligence muss nur noch neu gestartet werden, um sie zu laden. Chats und Einstellungen bleiben unberührt.',
+    bundleSwapPendingAction: 'A2Intelligence neu starten',
     checkNow: 'Jetzt prüfen',
     seeWhatsNew: 'Neuigkeiten ansehen',
     releaseNotes: 'Versionshinweise',
@@ -4217,9 +4217,9 @@ export const deOverrides = {
       fetch: 'Wird heruntergeladen…',
       pull: 'Fast fertig…',
       pydeps: 'Wird abgeschlossen…',
-      update: 'Aktualisiert Hermes…',
+      update: 'Aktualisiert A2Intelligence…',
       rebuild: 'Baut die Desktop-App neu…',
-      restart: 'Startet Hermes neu…',
+      restart: 'Startet A2Intelligence neu…',
       done: 'Update abgeschlossen',
       manual: 'Über Ihr Terminal aktualisieren',
       guiSkew: 'Desktop-App aktualisieren',
@@ -4229,18 +4229,18 @@ export const deOverrides = {
     checkFailedTitle: 'Update-Check fehlgeschlagen',
     tryAgain: 'Erneut versuchen',
     notAvailableTitle: 'Kein Update verfügbar',
-    unsupportedMessage: 'Diese Hermes-Version kann sich nicht aus der App heraus aktualisieren.',
+    unsupportedMessage: 'Diese A2Intelligence-Version kann sich nicht aus der App heraus aktualisieren.',
     connectionRetry: 'Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.',
-    gitUnusable: 'Hermes konnte Git auf diesem Computer nicht ausführen und daher nicht nach Updates suchen.',
+    gitUnusable: 'A2Intelligence konnte Git auf diesem Computer nicht ausführen und daher nicht nach Updates suchen.',
     connectionSettings: 'Verbindungseinstellungen',
     openDownloadPage: 'Download-Seite öffnen',
     latestBody: 'Sie verwenden die neueste Version.',
     latestBodyBackend: 'Das Backend läuft mit der neuesten Version.',
     allSetTitle: 'Alles bereit',
     availableTitle: 'Neues Update verfügbar',
-    availableBody: 'Eine neue Hermes-Version ist bereit zur Installation.',
+    availableBody: 'Eine neue A2Intelligence-Version ist bereit zur Installation.',
     availableTitleBackend: 'Backend-Update verfügbar',
-    availableBodyBackend: 'Eine neuere Version des verbundenen Hermes-Backends ist bereit zur Installation.',
+    availableBodyBackend: 'Eine neuere Version des verbundenen A2Intelligence-Backends ist bereit zur Installation.',
     availableBodyNoChangelog:
       'Eine neuere Version ist bereit. Release-Notizen sind für diesen Installationstyp nicht verfügbar.',
     updateNow: 'Jetzt aktualisieren',
@@ -4250,32 +4250,32 @@ export const deOverrides = {
     manualTitle: 'Über Ihr Terminal aktualisieren',
     manualUnavailableTitle: 'Aktualisierung hier nicht möglich',
     manualBody:
-      'Sie haben Hermes über die Befehlszeile installiert, daher laufen Updates auch dort. Fügen Sie dies in Ihr Terminal ein:',
-    manualPickedUp: 'Hermes übernimmt die neue Version beim nächsten Start.',
+      'Sie haben A2Intelligence über die Befehlszeile installiert, daher laufen Updates auch dort. Fügen Sie dies in Ihr Terminal ein:',
+    manualPickedUp: 'A2Intelligence übernimmt die neue Version beim nächsten Start.',
     manualBodyBackend:
-      'Das Hermes-Backend wird außerhalb dieser App verwaltet. Führen Sie dies auf dem Server aus, der es hostet:',
+      'Das A2Intelligence-Backend wird außerhalb dieser App verwaltet. Führen Sie dies auf dem Server aus, der es hostet:',
     manualPickedUpBackend: 'Das Backend lädt die neue Version, sobald das Update abgeschlossen ist.',
     guiSkewTitle: 'Desktop-App aktualisieren',
     guiSkewBody:
-      'Das Backend wurde aktualisiert, aber dieses Desktop-App-Paket nicht. Aktualisieren oder installieren Sie die Hermes-Desktop-App neu (Ihr AppImage / .deb / .rpm), um beide abzugleichen.',
+      'Das Backend wurde aktualisiert, aber dieses Desktop-App-Paket nicht. Aktualisieren oder installieren Sie die A2Intelligence-Desktop-App neu (Ihr AppImage / .deb / .rpm), um beide abzugleichen.',
     copy: 'Kopieren',
     copied: 'Kopiert',
     done: 'Fertig',
     applyingBody:
-      'Der Hermes-Updater übernimmt in einem eigenen Fenster und öffnet Hermes automatisch wieder, wenn er fertig ist. Bitte öffnen Sie Hermes während des Updates nicht selbst erneut.',
+      'Der A2Intelligence-Updater übernimmt in einem eigenen Fenster und öffnet A2Intelligence automatisch wieder, wenn er fertig ist. Bitte öffnen Sie A2Intelligence während des Updates nicht selbst erneut.',
     applyingBodyBackend:
-      'Das Remote-Backend wendet das Update an und startet neu. Hermes verbindet sich automatisch wieder, wenn es zurück ist.',
-    applyingClose: 'Dieses Fenster schließt sich während des Updates, dann öffnet sich Hermes von selbst wieder.',
+      'Das Remote-Backend wendet das Update an und startet neu. A2Intelligence verbindet sich automatisch wieder, wenn es zurück ist.',
+    applyingClose: 'Dieses Fenster schließt sich während des Updates, dann öffnet sich A2Intelligence von selbst wieder.',
     errorTitle: 'Update nicht abgeschlossen',
     errorBody: 'Keine Sorge – es ging nichts verloren. Sie können es jetzt erneut versuchen.',
-    blockerTitle: 'Lokale Vorschauen schließen, um Hermes zu aktualisieren?',
+    blockerTitle: 'Lokale Vorschauen schließen, um A2Intelligence zu aktualisieren?',
     blockerBody:
-      'Hermes muss diese lokalen Vorschauen vor dem Update stoppen. Ihre Dateien werden dabei weder geändert noch gelöscht.',
-    foreignBlockerTitle: 'Andere Prozesse schließen, um Hermes zu aktualisieren',
+      'A2Intelligence muss diese lokalen Vorschauen vor dem Update stoppen. Ihre Dateien werden dabei weder geändert noch gelöscht.',
+    foreignBlockerTitle: 'Andere Prozesse schließen, um A2Intelligence zu aktualisieren',
     foreignBlockerBody:
-      'Hermes kann diese Prozesse nicht sicher automatisch beenden. Schließen Sie die App, das Terminal oder den Dienst, zu dem sie gehören, und versuchen Sie das Update erneut.',
+      'A2Intelligence kann diese Prozesse nicht sicher automatisch beenden. Schließen Sie die App, das Terminal oder den Dienst, zu dem sie gehören, und versuchen Sie das Update erneut.',
     mixedBlockerBody:
-      'Hermes kann die unten aufgeführten lokalen Vorschauen schließen. Andere Prozesse müssen manuell geschlossen werden, bevor das Update fortgesetzt werden kann.',
+      'A2Intelligence kann die unten aufgeführten lokalen Vorschauen schließen. Andere Prozesse müssen manuell geschlossen werden, bevor das Update fortgesetzt werden kann.',
     closePreviewsAndUpdate: 'Vorschauen schließen und aktualisieren',
     closePreviewsAndCheckAgain: 'Vorschauen schließen und erneut prüfen',
     localPreview: 'Lokale Vorschau',
@@ -4316,7 +4316,7 @@ export const deOverrides = {
       skipped: 'Übersprungen',
       failed: 'Fehlgeschlagen'
     },
-    oneTimeTitle: 'Hermes braucht eine einmalige Installation',
+    oneTimeTitle: 'A2Intelligence braucht eine einmalige Installation',
     unsupportedDesc: platform =>
       `Die automatische Installation beim ersten Start ist auf ${platform} noch nicht verfügbar. Öffnen Sie ein Terminal, führen Sie den Befehl unten aus und starten Sie die App dann neu. Bei späteren Starts wird dieser Schritt übersprungen.`,
     installCommand: 'Installationsbefehl',
@@ -4324,26 +4324,26 @@ export const deOverrides = {
     viewDocs: 'Installations-Doku ansehen',
     installTo: 'Wird installiert nach',
     retryAfterRun: "Ich hab's ausgeführt – erneut versuchen",
-    setupChoiceTitle: 'Hermes Desktop einrichten',
+    setupChoiceTitle: 'A2Intelligence Desktop einrichten',
     setupChoiceDesc:
-      'Verbinden Sie diese App mit einem Hermes Gateway, das Sie bereits betreiben, oder installieren Sie Hermes lokal auf diesem Computer.',
-    connectExistingTitle: 'Mit bestehendem Hermes verbinden',
+      'Verbinden Sie diese App mit einem A2Intelligence Gateway, das Sie bereits betreiben, oder installieren Sie A2Intelligence lokal auf diesem Computer.',
+    connectExistingTitle: 'Mit bestehendem A2Intelligence verbinden',
     connectExistingShort: 'Bestehendes verbinden',
     connectExistingDesc:
       'Ein Remote-Backend mit Session-Token oder Browser-Anmeldung verwenden. Es wird keine lokale Installation gestartet.',
-    installLocalTitle: 'Hermes lokal installieren',
+    installLocalTitle: 'A2Intelligence lokal installieren',
     installLocalDesc:
-      'Hermes herunterladen, seine Python-Umgebung erstellen und das Backend auf diesem Computer ausführen.',
+      'A2Intelligence herunterladen, seine Python-Umgebung erstellen und das Backend auf diesem Computer ausführen.',
     localStartUnavailable:
-      'Die lokale Installation konnte nicht gestartet werden. Starten Sie Hermes Desktop neu und versuchen Sie es erneut.',
-    remoteSetupTitle: 'Mit bestehendem Hermes verbinden',
+      'Die lokale Installation konnte nicht gestartet werden. Starten Sie A2Intelligence Desktop neu und versuchen Sie es erneut.',
+    remoteSetupTitle: 'Mit bestehendem A2Intelligence verbinden',
     remoteSetupDesc:
-      'Geben Sie die URL Ihres Gateways ein. Hermes Desktop erkennt, ob ein Token oder eine Browser-Anmeldung nötig ist.',
+      'Geben Sie die URL Ihres Gateways ein. A2Intelligence Desktop erkennt, ob ein Token oder eine Browser-Anmeldung nötig ist.',
     remoteUrlTitle: 'Gateway-URL',
-    remoteUrlDesc: 'Verwenden Sie die Basis-URL des Hermes Gateways, bei Remote-Gateways einschließlich https://.',
+    remoteUrlDesc: 'Verwenden Sie die Basis-URL des A2Intelligence Gateways, bei Remote-Gateways einschließlich https://.',
     remoteUrlPlaceholder: 'https://gateway.example.com/hermes',
     probing: 'Gateway-Authentifizierung wird erkannt...',
-    probeError: 'Dieses Hermes Gateway konnte nicht erreicht werden.',
+    probeError: 'Dieses A2Intelligence Gateway konnte nicht erreicht werden.',
     probeErrorDetails: 'Details',
     identityProvider: 'Ihr Identity-Provider',
     authTitle: 'Authentifizierung',
@@ -4364,12 +4364,12 @@ export const deOverrides = {
     applyRemote: 'Übernehmen und neu verbinden',
     backToSetup: 'Zurück',
     failedTitle: 'Installation fehlgeschlagen',
-    settingUpTitle: 'Hermes Agent wird eingerichtet',
+    settingUpTitle: 'A2Intelligence wird eingerichtet',
     finishingTitle: 'Wird abgeschlossen',
     failedDesc:
-      'Einer der Installationsschritte ist fehlgeschlagen. Unter Windows kann das passieren, wenn eine andere Hermes-CLI- oder Desktop-Instanz läuft. Beenden Sie alle laufenden Hermes-Instanzen und versuchen Sie es dann erneut. Das vollständige Protokoll finden Sie in den Details unten oder im Desktop-Log.',
+      'Einer der Installationsschritte ist fehlgeschlagen. Unter Windows kann das passieren, wenn eine andere A2Intelligence-CLI- oder Desktop-Instanz läuft. Beenden Sie alle laufenden A2Intelligence-Instanzen und versuchen Sie es dann erneut. Das vollständige Protokoll finden Sie in den Details unten oder im Desktop-Log.',
     activeDesc:
-      'Das ist eine einmalige Einrichtung. Der Hermes-Installer lädt Abhängigkeiten herunter und konfiguriert Ihren Computer. Bei späteren Starts wird dieser Schritt übersprungen.',
+      'Das ist eine einmalige Einrichtung. Der A2Intelligence-Installer lädt Abhängigkeiten herunter und konfiguriert Ihren Computer. Bei späteren Starts wird dieser Schritt übersprungen.',
     progress: (completed, total) => `${completed} von ${total} Schritten fertig`,
     currentStage: stage => ` – gerade: ${stage}`,
     fetchingManifest: 'Installer-Manifest wird geholt...',
@@ -4390,7 +4390,7 @@ export const deOverrides = {
   freeTier: {
     providerRowTitle: 'Nous · Gratis-Tarif',
     providerRowPitch: 'Melden Sie sich mit einem Nous-Konto an, um mehr Modelle und Tools freizuschalten.',
-    readyTitle: 'Hermes ist bereit.',
+    readyTitle: 'A2Intelligence ist bereit.',
     readyCaption: 'Kostenlos · Verbindungen inklusive',
     begin: 'Loslegen',
     signInInstead: 'Stattdessen mit einem Nous-Konto anmelden',
@@ -4426,26 +4426,26 @@ export const deOverrides = {
     errorBody: 'Die Anmeldung wurde nicht abgeschlossen; starten Sie sie erneut.',
     busyHeading: 'Fast geschafft',
     busyBody: wait =>
-      `Hermes konnte Ihre Anmeldung nicht abschließen, weil der Nous-Dienst ausgelastet ist. Versuchen Sie es in ${wait} erneut. Ihre Session bleibt so lange erhalten.`,
+      `A2Intelligence konnte Ihre Anmeldung nicht abschließen, weil der Nous-Dienst ausgelastet ist. Versuchen Sie es in ${wait} erneut. Ihre Session bleibt so lange erhalten.`,
     unreachableBody:
-      'Hermes konnte den Nous-Dienst nicht erreichen, um Ihre Anmeldung abzuschließen. Prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut. Ihre Session bleibt erhalten.',
+      'A2Intelligence konnte den Nous-Dienst nicht erreichen, um Ihre Anmeldung abzuschließen. Prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut. Ihre Session bleibt erhalten.',
     alreadySignedInHeading: 'Bereits angemeldet.',
-    alreadySignedInBody: 'Dieses Hermes ist bereits mit einem Nous-Konto angemeldet.',
+    alreadySignedInBody: 'Dieses A2Intelligence ist bereits mit einem Nous-Konto angemeldet.',
     offer: {
-      heading: 'Mit Hermes weitermachen',
-      body: 'Sie nutzen das kostenlose Kontingent. Wenn Sie Hermes weiter verwenden, stoßen Sie bald an Grenzen. Melden Sie sich mit einem kostenlosen Nous-Konto an, um ein größeres Kontingent zu erhalten.',
+      heading: 'Mit A2Intelligence weitermachen',
+      body: 'Sie nutzen das kostenlose Kontingent. Wenn Sie A2Intelligence weiter verwenden, stoßen Sie bald an Grenzen. Melden Sie sich mit einem kostenlosen Nous-Konto an, um ein größeres Kontingent zu erhalten.',
       signIn: 'Anmelden',
       notNow: 'Nicht jetzt'
     },
     setupFailed: {
       gateClosed:
-        'Diese Hermes-Version kann ohne Nous-Konto nicht starten. Melden Sie sich an oder legen Sie eines an – kostenlos und in einer Minute erledigt.',
+        'Diese A2Intelligence-Version kann ohne Nous-Konto nicht starten. Melden Sie sich an oder legen Sie eines an – kostenlos und in einer Minute erledigt.',
       paused:
-        'Chatten ohne Anmeldung ist vorübergehend pausiert. Hermes prüft weiter. Die Anmeldung ist kostenlos, und Sie können sofort weitermachen.',
+        'Chatten ohne Anmeldung ist vorübergehend pausiert. A2Intelligence prüft weiter. Die Anmeldung ist kostenlos, und Sie können sofort weitermachen.',
       rateLimited: wait =>
-        `Gerade starten sehr viele Leute, deshalb versucht Hermes es in ${wait} erneut. Die Anmeldung ist kostenlos und überspringt das Warten.`,
+        `Gerade starten sehr viele Leute, deshalb versucht A2Intelligence es in ${wait} erneut. Die Anmeldung ist kostenlos und überspringt das Warten.`,
       unreachable:
-        'Hermes konnte den Nous-Dienst nicht erreichen. Prüfen Sie Ihre Internetverbindung und tippen Sie dann auf „Erneut versuchen“. Oder verbinden Sie vorerst einen anderen Anbieter.',
+        'A2Intelligence konnte den Nous-Dienst nicht erreichen. Prüfen Sie Ihre Internetverbindung und tippen Sie dann auf „Erneut versuchen“. Oder verbinden Sie vorerst einen anderen Anbieter.',
       serverError:
         'Beim Nous-Dienst ist ein Fehler aufgetreten. Tippen Sie gleich auf „Erneut versuchen“ oder verbinden Sie vorerst einen anderen Anbieter.',
       powRequired:
@@ -4453,7 +4453,7 @@ export const deOverrides = {
       locked:
         'Diese Session kann ohne Anmeldung nicht fortgesetzt werden. Melden Sie sich an oder legen Sie ein kostenloses Nous-Konto an, um weiterzumachen.',
       generic:
-        'Hermes konnte den kostenlosen Zugang ohne Anmeldung nicht einrichten. Die Anmeldung ist kostenlos — oder verbinden Sie einen anderen Anbieter.',
+        'A2Intelligence konnte den kostenlosen Zugang ohne Anmeldung nicht einrichten. Die Anmeldung ist kostenlos — oder verbinden Sie einen anderen Anbieter.',
       signInBelow: 'Die Anmeldung ist kostenlos. Wählen Sie unten Nous.',
       tryAgain: 'Erneut versuchen',
       retrying: 'Wird erneut versucht…'
@@ -4577,7 +4577,7 @@ export const deOverrides = {
       update: 'Update',
       updateInProgress: 'Update läuft',
       commitsBehind: (count, branch) => `${count} commit${count === 1 ? '' : 's'} hinter ${branch}`,
-      desktopVersion: version => `Hermes Desktop v${version}`,
+      desktopVersion: version => `A2Intelligence Desktop v${version}`,
       backendVersion: version => `Backend v${version}`,
       clientLabel: version => `Client v${version}`,
       connectionSsh: host => `SSH: ${host}`,
@@ -4758,7 +4758,7 @@ export const deOverrides = {
     binaryTitle: 'Das sieht wie eine Binärdatei aus',
     binaryBody: label => `Die Vorschau von ${label} könnte unlesbaren Text zeigen.`,
     largeTitle: 'Diese Datei ist groß',
-    largeBody: (label, size) => `${label} ist ${size}. Hermes zeigt nur die ersten 512 KB an.`,
+    largeBody: (label, size) => `${label} ist ${size}. A2Intelligence zeigt nur die ersten 512 KB an.`,
     previewAnyway: 'Trotzdem anzeigen',
     truncated: 'Die ersten 512 KB werden angezeigt.',
     noInlineTitle: 'Keine Inline-Vorschau',
@@ -4798,12 +4798,12 @@ export const deOverrides = {
   },
   interfaceMode: {
     title: 'Oberflächenmodus',
-    hint: 'Ändert, was angezeigt wird, nicht was Hermes kann.',
+    hint: 'Ändert, was angezeigt wird, nicht was A2Intelligence kann.',
     sessionNote:
       'Vom einfachen Modus festgelegt. Eine Änderung hier gilt für diese Session; wechseln Sie zu „Erweitert“, um sie dauerhaft zu übernehmen.',
     simple: {
       label: 'Einfach',
-      description: 'Zum Chatten mit Hermes. Seitenleiste und Chat; keine Terminal-, Datei- oder Diff-Bereiche.'
+      description: 'Zum Chatten mit A2Intelligence. Seitenleiste und Chat; keine Terminal-, Datei- oder Diff-Bereiche.'
     },
     advanced: {
       label: 'Erweitert',
@@ -4888,7 +4888,7 @@ export const deOverrides = {
     thread: {
       loadingSession: 'Session wird geladen',
       showEarlier: 'Frühere Nachrichten anzeigen',
-      loadingResponse: 'Hermes lädt eine Antwort',
+      loadingResponse: 'A2Intelligence lädt eine Antwort',
       loadingLocalModel: model => `${model} wird in den Speicher geladen`,
       processingPrompt: 'Verarbeite Prompt',
       resumeWhenBackgroundDone: count =>
@@ -4948,11 +4948,11 @@ export const deOverrides = {
         timeout: {
           title: provider => `${provider} nicht erreichbar`,
           body: provider =>
-            `Hermes konnte ${provider} nicht erreichen. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.`
+            `A2Intelligence konnte ${provider} nicht erreichen. Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.`
         },
         no_reply: {
           title: 'Die Antwort ist nicht angekommen',
-          body: 'Hermes hat diesen Durchlauf beendet, aber keine Antwort hat dieses Fenster erreicht. Versuchen Sie es erneut, um sie noch einmal zu senden.'
+          body: 'A2Intelligence hat diesen Durchlauf beendet, aber keine Antwort hat dieses Fenster erreicht. Versuchen Sie es erneut, um sie noch einmal zu senden.'
         },
         stream_drop: {
           title: 'Die Antwort wurde abgebrochen',
@@ -5019,15 +5019,15 @@ export const deOverrides = {
         agent_init_failed: {
           title: 'Chat konnte nicht starten',
           body: provider =>
-            `Hermes konnte für diesen Chat keine Verbindung zu ${provider} herstellen. Versuchen Sie es erneut; wenn es weiter fehlschlägt, prüfen Sie den Anbieter in den Einstellungen.`
+            `A2Intelligence konnte für diesen Chat keine Verbindung zu ${provider} herstellen. Versuchen Sie es erneut; wenn es weiter fehlschlägt, prüfen Sie den Anbieter in den Einstellungen.`
         },
         SESSION_NOT_OWNED: {
           title: 'Chat ist woanders geöffnet',
-          body: 'Dieser Chat ist in einem anderen Hermes-Fenster oder Terminal geöffnet. Starten Sie hier einen neuen Chat oder schließen Sie ihn zuerst dort.'
+          body: 'Dieser Chat ist in einem anderen A2Intelligence-Fenster oder Terminal geöffnet. Starten Sie hier einen neuen Chat oder schließen Sie ihn zuerst dort.'
         },
         disk_full: {
           title: 'Ihre Festplatte ist voll',
-          body: 'Hermes konnte dieses Gespräch nicht speichern. Geben Sie Speicherplatz frei und versuchen Sie es erneut.'
+          body: 'A2Intelligence konnte dieses Gespräch nicht speichern. Geben Sie Speicherplatz frei und versuchen Sie es erneut.'
         },
         free_tier_disabled: {
           title: 'Anmelden, um weiterzuchatten',
@@ -5043,7 +5043,7 @@ export const deOverrides = {
         },
         free_tier_model_not_free: {
           title: 'Dieses Modell erfordert Anmeldung',
-          body: 'Hermes verwendet vorerst das kostenlose Modell. Melden Sie sich mit einem Nous-Konto an, um mehr Modelle zu nutzen – es ist kostenlos.'
+          body: 'A2Intelligence verwendet vorerst das kostenlose Modell. Melden Sie sich mit einem Nous-Konto an, um mehr Modelle zu nutzen – es ist kostenlos.'
         },
         free_tier_route: {
           title: 'Kostenloses Modell nicht erreichbar',
@@ -5087,7 +5087,7 @@ export const deOverrides = {
       errorRateLimitResetBody: (provider, time) =>
         `Sie haben das Anfragelimit von ${provider} erreicht. Es wird um ${time} zurückgesetzt.`,
       errorGenericProvider: 'Der KI-Dienst',
-      errorToastTitle: 'Hermes konnte die Antwort nicht fertigstellen',
+      errorToastTitle: 'A2Intelligence konnte die Antwort nicht fertigstellen',
       errorRetry: 'Erneut versuchen',
       errorSwitchToModel: (model, note) => (note ? `Zu ${model} wechseln (${note})` : `Zu ${model} wechseln`),
       errorSwitchModelFailed: 'Modell konnte nicht gewechselt werden',
@@ -5102,8 +5102,8 @@ export const deOverrides = {
       errorChooseModel: 'Modell wählen',
       errorCompressConversation: 'Gespräch komprimieren',
       errorCompressFailed: 'Das Gespräch konnte nicht komprimiert werden',
-      errorOpenHermesFolder: 'Hermes-Ordner öffnen',
-      errorOpenHermesFolderFailed: 'Der Hermes-Ordner konnte nicht geöffnet werden',
+      errorOpenHermesFolder: 'A2Intelligence-Ordner öffnen',
+      errorOpenHermesFolderFailed: 'Der A2Intelligence-Ordner konnte nicht geöffnet werden',
       errorUpdateApiKey: 'API-Key aktualisieren',
       errorSignInAgain: provider => `Erneut bei ${provider} anmelden`,
       errorSignInFreeTier: 'Mit einem Nous-Konto anmelden',
@@ -5138,11 +5138,11 @@ export const deOverrides = {
       attachingFile: 'Hängt an…'
     },
     approval: {
-      gatewayDisconnected: 'Hermes-Gateway ist nicht verbunden',
+      gatewayDisconnected: 'A2Intelligence-Gateway ist nicht verbunden',
       sendFailed: 'Genehmigungsantwort konnte nicht gesendet werden',
       reconnect: 'Neu verbinden',
       timedOutSystemLine:
-        'Die Freigabe ist abgelaufen — der Befehl wurde nicht ausgeführt. Bitten Sie Hermes, es erneut zu versuchen, oder erhöhen Sie das Limit unter Einstellungen → Sicherheit → Freigabe-Timeout.',
+        'Die Freigabe ist abgelaufen — der Befehl wurde nicht ausgeführt. Bitten Sie A2Intelligence, es erneut zu versuchen, oder erhöhen Sie das Limit unter Einstellungen → Sicherheit → Freigabe-Timeout.',
       openSafetySettings: 'Sicherheitseinstellungen öffnen',
       run: 'Ausführen',
       command: 'Befehl',
@@ -5153,7 +5153,7 @@ export const deOverrides = {
       reject: 'Ablehnen',
       alwaysTitle: 'Diesen Befehl immer erlauben?',
       alwaysDescription: pattern =>
-        `Dies fügt das Muster „${pattern}“ Ihrer dauerhaften Zulassungsliste hinzu (~/.hermes/config.yaml). Hermes fragt bei solchen Befehlen nicht mehr nach – weder in dieser noch in zukünftigen Sessions.`,
+        `Dies fügt das Muster „${pattern}“ Ihrer dauerhaften Zulassungsliste hinzu (~/.hermes/config.yaml). A2Intelligence fragt bei solchen Befehlen nicht mehr nach – weder in dieser noch in zukünftigen Sessions.`,
       alwaysAllow: 'Immer erlauben'
     },
     clarify: deClarify,
@@ -5208,7 +5208,7 @@ export const deOverrides = {
       sendFailed: 'MCP-Einrichtungsantwort konnte nicht gesendet werden',
       reloadFailed:
         'Server gespeichert, aber das Neuladen der MCP-Tools schlug fehl — sie laden in der nächsten Session',
-      gatewayDisconnected: 'Hermes-Gateway ist nicht verbunden'
+      gatewayDisconnected: 'A2Intelligence-Gateway ist nicht verbunden'
     },
     tool: {
       copyCode: 'Code kopieren',
@@ -5393,20 +5393,20 @@ export const deOverrides = {
     }
   },
   prompts: {
-    gatewayDisconnected: 'Das Hermes-Gateway ist nicht verbunden',
+    gatewayDisconnected: 'Das A2Intelligence-Gateway ist nicht verbunden',
     reconnect: 'Neu verbinden',
     sudoSendFailed: 'Sudo-Passwort konnte nicht gesendet werden',
     secretSendFailed: 'Geheimnis konnte nicht gesendet werden',
     sudoTitle: 'Administrator-Passwort',
     sudoDesc:
-      'Hermes benötigt Ihr Sudo-Passwort, um einen privilegierten Befehl auszuführen. Es wird nur an Ihren lokalen Agenten gesendet.',
+      'A2Intelligence benötigt Ihr Sudo-Passwort, um einen privilegierten Befehl auszuführen. Es wird nur an Ihren lokalen Agenten gesendet.',
     sudoCommandUnavailable:
       'Dieser Agent hat den Befehl nicht mitgeliefert. Brechen Sie ab, wenn Sie ihn im Gespräch nicht überprüfen können.',
     sudoInstallDesc:
-      'Hermes benötigt Ihr sudo-Passwort, um die Bot-Screen-Pakete (TigerVNC + Xfce) auf dem Gateway-Host zu installieren. Es wird nur an diesen Host gesendet.',
+      'A2Intelligence benötigt Ihr sudo-Passwort, um die Bot-Screen-Pakete (TigerVNC + Xfce) auf dem Gateway-Host zu installieren. Es wird nur an diesen Host gesendet.',
     sudoPlaceholder: 'Sudo-Passwort',
     secretTitle: 'Geheimnis erforderlich',
-    secretDesc: 'Hermes benötigt eine Zugangsdaten, um fortzufahren.',
+    secretDesc: 'A2Intelligence benötigt eine Zugangsdaten, um fortzufahren.',
     secretPlaceholder: 'Geheimnis-Wert',
     vaultUnlockSendFailed: 'Master-Passwort konnte nicht gesendet werden',
     vaultUnlockTitle: name => `${name} entsperren`,
@@ -5418,7 +5418,7 @@ export const deOverrides = {
     vaultSaveSendFailed: 'Login konnte nicht gespeichert werden',
     vaultSaveTitle: site => `${site}-Login speichern?`,
     vaultSaveDesc: origin =>
-      `Hermes ist auf eine Anmeldeseite unter ${origin} gestoßen und hat dafür keinen Login. Geben Sie ihn einmal hier ein; er wird auf diesem Rechner verschlüsselt und in die Seite eingetragen, ohne dass das Modell das Passwort je sieht.`,
+      `A2Intelligence ist auf eine Anmeldeseite unter ${origin} gestoßen und hat dafür keinen Login. Geben Sie ihn einmal hier ein; er wird auf diesem Rechner verschlüsselt und in die Seite eingetragen, ohne dass das Modell das Passwort je sieht.`,
     vaultSaveIdentifierLabel: 'E-Mail oder Benutzername',
     vaultSaveIdentifierPlaceholder: 'name@example.com',
     vaultSavePasswordPlaceholder: 'Passwort',
@@ -5428,10 +5428,10 @@ export const deOverrides = {
     vaultCodeSendFailed: 'Code konnte nicht gesendet werden',
     vaultCodeTitle: site => `Bestätigungscode für ${site}`,
     vaultCodeDesc: site =>
-      `${site} verlangt einen Einmalcode (SMS, E-Mail oder Authenticator-App). Geben Sie ihn hier ein, Hermes trägt ihn in die Seite ein; das Modell sieht ihn nie.`,
+      `${site} verlangt einen Einmalcode (SMS, E-Mail oder Authenticator-App). Geben Sie ihn hier ein, A2Intelligence trägt ihn in die Seite ein; das Modell sieht ihn nie.`,
     vaultCodeLabel: 'Code',
     vaultCodeFootnote:
-      'Tipp: Speichern Sie den Authentifizierungsschlüssel zusammen mit diesem Login unter Einstellungen → Passwörter & Logins, dann gibt Hermes die Codes für Sie ein.',
+      'Tipp: Speichern Sie den Authentifizierungsschlüssel zusammen mit diesem Login unter Einstellungen → Passwörter & Logins, dann gibt A2Intelligence die Codes für Sie ein.',
     vaultCodeSkip: 'Überspringen',
     vaultCodeConfirm: 'Code eingeben'
   },
@@ -5502,8 +5502,8 @@ export const deOverrides = {
     sessionExportFailed: 'Session konnte nicht exportiert werden',
     imageSaved: 'Bild gespeichert',
     downloadStarted: 'Download gestartet',
-    restartToUseSaveImage: 'Starten Sie Hermes Desktop neu, um „Bild speichern“ zu verwenden.',
-    restartToSaveImages: 'Starten Sie Hermes Desktop neu, um Bilder zu speichern',
+    restartToUseSaveImage: 'Starten Sie A2Intelligence Desktop neu, um „Bild speichern“ zu verwenden.',
+    restartToSaveImages: 'Starten Sie A2Intelligence Desktop neu, um Bilder zu speichern',
     imageDownloadFailed: 'Bild-Download fehlgeschlagen',
     openImage: 'Bild öffnen',
     downloadImage: 'Bild herunterladen',
@@ -5539,14 +5539,14 @@ export const deOverrides = {
       },
       skills: {
         title: 'Einmal beibringen',
-        text: 'Skills sind Ordner mit Anweisungen, die Hermes lädt, wenn die Arbeit danach verlangt.'
+        text: 'Skills sind Ordner mit Anweisungen, die A2Intelligence lädt, wenn die Arbeit danach verlangt.'
       },
       messaging: {
-        title: 'Hermes abseits Ihres Schreibtischs',
+        title: 'A2Intelligence abseits Ihres Schreibtischs',
         text: 'Verbinden Sie Telegram, Discord, Slack und mehr – derselbe Agent, dasselbe Gedächtnis.'
       },
       artifacts: {
-        title: 'Alles, was Hermes gemacht hat',
+        title: 'Alles, was A2Intelligence gemacht hat',
         text: 'Bilder, Dateien und Links aus jeder Session, an einem Ort indexiert.'
       },
       cron: {
@@ -5559,7 +5559,7 @@ export const deOverrides = {
       },
       profiles: {
         title: 'Profile sind getrennt',
-        text: 'Jedes ist sein eigenes Hermes — eigene Schlüssel, eigenes Gedächtnis, eigene Sessions.'
+        text: 'Jedes ist sein eigenes A2Intelligence — eigene Schlüssel, eigenes Gedächtnis, eigene Sessions.'
       },
       'composer-mentions': {
         title: 'Anhängen und befehlen',

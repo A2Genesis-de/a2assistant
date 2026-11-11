@@ -61,6 +61,40 @@ _HERMES_BRANDING: dict[str, str] = _branding(
     "Hermes", "☤", "Goodbye! ☤", prompt="❯", help_header="(^_^)? Available Commands")
 
 _BUILTIN_SKINS: dict[str, dict[str, Any]] = {
+    "a2": {
+        "name": "a2", "description": "A2Intelligence — A2Genesis monochrome",
+        "colors": {
+            "banner_border": "#3f3f46", "banner_title": "#fafafa", "banner_accent": "#d4d4d8",
+            "banner_dim": "#6b6b73", "banner_text": "#d4d4d8", "ui_accent": "#fafafa",
+            "ui_label": "#a1a1aa", "ui_ok": "#4cb862", "ui_error": "#f0595e", "ui_warn": "#ffb224",
+            "prompt": "#fafafa", "input_rule": "#3f3f46", "response_border": "#a1a1aa",
+            "status_bar_bg": "#171717", "status_bar_text": "#d4d4d8",
+            "status_bar_strong": "#fafafa", "status_bar_dim": "#6b6b73",
+            "status_bar_good": "#4cb862", "status_bar_warn": "#ffb224", "status_bar_bad": "#f0595e",
+            "status_bar_critical": "#ff8a8e", "session_label": "#a1a1aa",
+            "session_border": "#3f3f46", "completion_menu_bg": "#171717",
+            "completion_menu_current_bg": "#2a2a2a", "selection_bg": "#3f3f46",
+            "shell_dollar": "#d4d4d8", "voice_status_bg": "#171717"},
+        "light_colors": {
+            "banner_border": "#d4d4d8", "banner_title": "#0a0a0a", "banner_accent": "#3f3f46",
+            "banner_dim": "#a1a1aa", "banner_text": "#3f3f46", "ui_accent": "#0a0a0a",
+            "ui_label": "#6b6b73", "ui_ok": "#297c3b", "ui_error": "#cb2a2f", "ui_warn": "#a35200",
+            "prompt": "#0a0a0a", "input_rule": "#d4d4d8", "response_border": "#6b6b73",
+            "status_bar_bg": "#f4f4f4", "status_bar_text": "#3f3f46",
+            "status_bar_strong": "#0a0a0a", "status_bar_dim": "#a1a1aa",
+            "status_bar_good": "#297c3b", "status_bar_warn": "#a35200", "status_bar_bad": "#cb2a2f",
+            "status_bar_critical": "#991b1b", "session_label": "#6b6b73",
+            "session_border": "#d4d4d8", "completion_menu_bg": "#f4f4f4",
+            "completion_menu_current_bg": "#e4e4e7", "selection_bg": "#e4e4e7",
+            "shell_dollar": "#3f3f46", "voice_status_bg": "#f4f4f4"},
+        "spinner": {},
+        "branding": {
+            "agent_name": "A2Intelligence",
+            "welcome": "Willkommen bei A2Intelligence! Nachricht eingeben oder /help für Befehle.",
+            "goodbye": "Bis bald! ▲", "response_label": " ▲ A2Intelligence ", "prompt_symbol": "❯",
+            "help_header": "(▲) Befehle"},
+        "banner_logo": "[bold]▲ A2Intelligence[/bold]\n[dim]A2Genesis GmbH · Bochum[/dim]",
+        "tool_prefix": "┊"},
     "default": {
         "name": "default", "description": "Classic Hermes — gold and kawaii",
         # Dark-authored; values match the TUI's DARK_THEME so both render the same gold.
