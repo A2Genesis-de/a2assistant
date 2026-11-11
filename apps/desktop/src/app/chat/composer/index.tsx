@@ -1131,7 +1131,7 @@ export function ChatBar({
       busyAction={busyAction}
       canSubmit={canSubmit}
       cardWaiting={cardWaiting}
-      compactModelPill={poppedOut || compactPill}
+      compactModelPill={poppedOut || compactPill || !showsAdvancedChrome}
       conversation={{
         active: voiceConversationActive,
         level: conversation.level,
