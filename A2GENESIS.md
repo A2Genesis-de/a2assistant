@@ -56,3 +56,26 @@ Visible branding is A2Intelligence; internal identifiers stay upstream (`hermes`
 - Agent identity (`agent/prompt_builder.py`, `hermes_cli/default_soul.py`, `SOUL.md`) and the CLI/TUI skin `a2`
   (`hermes_cli/skin_engine.py`, default in `hermes_cli/config_defaults.py`).
 - Expect merge conflicts in locale files on upstream syncs; resolve by taking upstream and re-running the script.
+
+## Elevation (plugin `a2-elevation`)
+
+Protected resources need a time-limited grant instead of being forbidden: `~/Admin/keys`, the keychain, production
+servers (`a2-server`, `kraftmatch-server`, `babau-server`, `gunna-server`), `a2-denise` and `sudo`.
+
+- `plugins/a2-elevation/policy.py` decides what is protected (terminal commands, executed code, file-tool paths).
+- A `pre_tool_call` hook blocks protected calls without a grant and tells the agent to call `request_elevation`.
+- `request_elevation` shows a native macOS dialog (`a2_elevate.swift`, compiled on first use with `swiftc` into
+  `~/.hermes/elevation/bin/`), verifies Joel's password with OpenDirectory and stores a grant for 10 minutes in
+  `~/.hermes/elevation/grant.json`; every decision is appended to `~/.hermes/elevation/audit.jsonl`.
+- Scope `admin` also hands the verified password to the sudo cache for the same 10 minutes
+  (`tools/terminal_tool_sudo.py`: cache entries now expire after `SUDO_PASSWORD_TTL_SECONDS`).
+- Enable on a new machine: `hermes plugins enable a2-elevation` and `hermes tools enable a2_elevation --platform cli`
+  (also `cron`, `telegram`).
+
+## Simpler desktop
+
+- Simple mode is the default (`apps/desktop/src/store/interface-mode.ts`, only Advanced is stored).
+- Messaging and the layout picker are Advanced-only; Bot Mode is off and the Kanban board on by default.
+- German labels use plain words; missing German strings live in `apps/desktop/src/i18n/de_a2_gaps.ts`, deep-merged
+  into `deOverrides` in `de.ts`. After upstream merges re-run
+  `OVERLAY_GAPS_UPDATE=1 pnpm exec vitest run src/i18n/overlay-completeness.test.ts` and translate new gaps there.
