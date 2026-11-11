@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Merge the newest upstream stable release tag (vX.Y.Z) into the fork's a2 branch.
+# Merge the newest upstream stable release tag (vX.Y.Z) into the fork's main branch.
 set -euo pipefail
 
 cd "$(git rev-parse --show-toplevel)"
@@ -12,11 +12,11 @@ fi
 git fetch upstream --tags --prune
 latest_tag="$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n1)"
 
-if git merge-base --is-ancestor "$latest_tag" a2; then
-  echo "a2 already contains $latest_tag."
+if git merge-base --is-ancestor "$latest_tag" main; then
+  echo "main already contains $latest_tag."
   exit 0
 fi
 
-git switch a2
+git switch main
 git merge --no-ff -m "Merge upstream release $latest_tag" "$latest_tag"
-echo "Merged $latest_tag into a2. Review, test and then: git push origin a2"
+echo "Merged $latest_tag into main. Review, test and then: git push origin main"

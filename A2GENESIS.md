@@ -13,26 +13,26 @@ The fork lets us change the core while still taking every upstream release.
 ## Branches and remotes
 
 - `origin` = `A2Genesis-de/hermes-agent`, `upstream` = `NousResearch/hermes-agent`.
-- `a2` (default branch) = latest upstream **stable release tag** plus our commits. Never merge `upstream/main` into it.
-- `main` mirrors `upstream/main` unchanged (GitHub "Sync fork"); do not commit to it.
-- Develop on the workstation in `~/Dev/a2genesis/hermes-agent`; feature branches are merged into `a2`.
+- `main` (default branch) = latest upstream **stable release tag** plus our commits. Never merge `upstream/main` into it.
+- `upstream-main` mirrors `upstream/main` unchanged; do not commit to it.
+- Develop on the workstation in `~/Dev/a2genesis/hermes-agent`; feature branches are merged into `main`.
 - Prefer extension over core changes where possible (skills, plugins, hooks, MCP); keep core changes small to
   limit merge conflicts.
 
 ## Taking an upstream release
 
 ```bash
-scripts/a2/sync-upstream.sh          # merges the newest upstream vX.Y.Z tag into a2
-git push origin a2
+scripts/a2/sync-upstream.sh          # merges the newest upstream vX.Y.Z tag into main
+git push origin main
 ```
 
 ## Deploying to a2-macbook
 
-The MacBook install (`~/.hermes/hermes-agent`) tracks `origin/a2` on the `main` channel (source branch instead of
+The MacBook install (`~/.hermes/hermes-agent`) tracks `origin/main` on the `main` channel (source branch instead of
 release tags):
 
 ```bash
-ssh a2-macbook '~/.local/bin/hermes update --yes --branch a2'
+ssh a2-macbook '~/.local/bin/hermes update --yes'
 ```
 
 `hermes update` reinstalls dependencies, rebuilds the desktop app and restarts the gateway (LaunchAgent
