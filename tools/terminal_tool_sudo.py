@@ -52,27 +52,55 @@ def _get_sudo_password_cache_scope() -> str:
     return f"callback:{id(callback)}"
 
 
+SUDO_PASSWORD_TTL_SECONDS = 600.0
+_ELEVATED_SCOPE = "elevated"
+_sudo_password_expiry: dict[str, float] = {}
+
+
+def _drop_expired_entry(scope: str, now: float) -> None:
+    expires_at = _sudo_password_expiry.get(scope)
+    if expires_at is not None and expires_at <= now:
+        _sudo_password_cache.pop(scope, None)
+        _sudo_password_expiry.pop(scope, None)
+
+
 def _get_cached_sudo_password() -> str:
-    """Return the cached sudo password for the current scope."""
+    """Return the cached sudo password for the current scope, else a still-valid elevated one."""
     scope = _get_sudo_password_cache_scope()
+    now = time.monotonic()
     with _sudo_password_cache_lock:
-        return _sudo_password_cache.get(scope, "")
+        for key in (scope, _ELEVATED_SCOPE):
+            _drop_expired_entry(key, now)
+            if password := _sudo_password_cache.get(key, ""):
+                return password
+        return ""
 
 
-def _set_cached_sudo_password(password: str) -> None:
-    """Persist a sudo password for the current scope ("" drops the entry)."""
-    scope = _get_sudo_password_cache_scope()
+def _store_sudo_password(scope: str, password: str, ttl_seconds: float) -> None:
     with _sudo_password_cache_lock:
         if password:
             _sudo_password_cache[scope] = password
+            _sudo_password_expiry[scope] = time.monotonic() + ttl_seconds
         else:
             _sudo_password_cache.pop(scope, None)
+            _sudo_password_expiry.pop(scope, None)
+
+
+def _set_cached_sudo_password(password: str) -> None:
+    """Persist a sudo password for the current scope for SUDO_PASSWORD_TTL_SECONDS ("" drops it)."""
+    _store_sudo_password(_get_sudo_password_cache_scope(), password, SUDO_PASSWORD_TTL_SECONDS)
+
+
+def set_elevated_sudo_password(password: str, ttl_seconds: float = SUDO_PASSWORD_TTL_SECONDS) -> None:
+    """Make a verified password usable by every session until it expires ("" revokes it)."""
+    _store_sudo_password(_ELEVATED_SCOPE, password, ttl_seconds)
 
 
 def _reset_cached_sudo_passwords() -> None:
     """Clear all cached sudo passwords (tests / process teardown)."""
     with _sudo_password_cache_lock:
         _sudo_password_cache.clear()
+        _sudo_password_expiry.clear()
 
 
 def _in_delegated_child_context() -> bool:
