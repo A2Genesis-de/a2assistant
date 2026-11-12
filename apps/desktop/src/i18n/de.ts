@@ -1,6 +1,9 @@
 // health: allow FILE_LINES -- locale data: translated copy for the usage-window plan UI (allowance gauges, Large/Free tags, the limit card), one key per string
+import { mergeTranslations } from '@hermes/shared/i18n'
+
 import { defineFieldCopy } from '@/app/settings/field-copy'
 
+import { deA2Gaps } from './de_a2_gaps'
 import { deBoot } from './de_boot'
 import { deClarify } from './de_clarify'
 import { deConnectorAccounts } from './de_connector_accounts'
@@ -28,7 +31,7 @@ import { deUpdateChannel } from './de_update_channel'
 import { defineLocale, type TranslationOverrides } from './define-locale'
 import { introDe } from './intro-de'
 
-export const deOverrides = {
+const deBaseOverrides = {
   gatewayGroupOpen: {
     opening: "Gruppenchat wird geöffnet…",
     lookupFailed: "Diese Gruppe konnte auf dem Gateway nicht gefunden werden. Versuche es erneut.",
@@ -577,11 +580,11 @@ export const deOverrides = {
       'nav.settings': 'Einstellungen öffnen',
       'nav.profiles': 'Profile öffnen',
       'nav.capabilities': 'Skills öffnen',
-      'nav.messaging': 'Messaging öffnen',
-      'nav.artifacts': 'Artefakte öffnen',
-      'nav.cron': 'Geplante Jobs öffnen',
+      'nav.messaging': 'Kanäle öffnen',
+      'nav.artifacts': 'Ergebnisse öffnen',
+      'nav.cron': 'Zeitpläne öffnen',
       'nav.agents': 'Agenten öffnen',
-      'session.new': 'Neue Session',
+      'session.new': 'Neuer Chat',
       'session.newTab': 'Neuer Session-Tab',
       'session.newWindow': 'Neues Fenster',
       'session.next': 'Nächste Session',
@@ -1443,22 +1446,22 @@ export const deOverrides = {
         gui: {
           title: 'Nur die Chat-Oberfläche deinstallieren',
           description:
-            'Entfernt diese Desktop-App. Der Hermes-Agent, Ihre Konfiguration und Ihre Chats bleiben erhalten.',
+            'Entfernt diese Desktop-App. Der A2Assistant-Agent, Ihre Konfiguration und Ihre Chats bleiben erhalten.',
           consequence: 'die Desktop-Chat-Oberfläche (diese App und ihre Daten)'
         },
         lite: {
           title: 'Oberfläche + Agent deinstallieren, Daten behalten',
           description:
-            'Entfernt die App und den Hermes-Agent, behält aber Konfiguration, Chats und Geheimnisse für eine spätere Neuinstallation.',
+            'Entfernt die App und den A2Assistant-Agent, behält aber Konfiguration, Chats und Geheimnisse für eine spätere Neuinstallation.',
           consequence:
-            'die Chat-Oberfläche und den Hermes-Agent (Konfiguration, Chats und Geheimnisse bleiben erhalten)'
+            'die Chat-Oberfläche und den A2Assistant-Agent (Konfiguration, Chats und Geheimnisse bleiben erhalten)'
         },
         full: {
           title: 'Alles deinstallieren',
           description:
             'Entfernt die App, den Agent und alle Benutzerdaten – Konfiguration, Chats, geplante Jobs, Geheimnisse, Logs.',
           consequence:
-            'ALLES – die Chat-Oberfläche, den Hermes-Agent sowie Ihre gesamte Konfiguration, Chats, Geheimnisse und Logs'
+            'ALLES – die Chat-Oberfläche, den A2Assistant-Agent sowie Ihre gesamte Konfiguration, Chats, Geheimnisse und Logs'
         }
       }
     },
@@ -2163,7 +2166,7 @@ export const deOverrides = {
         cliBillingDisabled: {
           title: 'Remote-Ausgaben sind deaktiviert',
           message:
-            'Remote-Ausgaben sind für dieses Konto deaktiviert – ein Abrechnungsadministrator kann sie auf der Hermes-Agent-Seite des Portals aktivieren.'
+            'Remote-Ausgaben sind für dieses Konto deaktiviert – ein Abrechnungsadministrator kann sie auf der A2Assistant-Agent-Seite des Portals aktivieren.'
         },
         roleRequired: {
           title: 'Administratorrolle erforderlich',
@@ -2778,24 +2781,24 @@ export const deOverrides = {
     },
     nav: {
       newChat: {
-        title: 'Neue Session',
-        detail: 'Eine neue Session starten'
+        title: 'Neuer Chat',
+        detail: 'Einen neuen Chat starten'
       },
       settings: {
         title: 'Einstellungen',
         detail: 'Hermes Desktop konfigurieren'
       },
       capabilities: {
-        title: 'Fähigkeiten',
-        detail: 'Skills, Tools, MCP-Server und Plugins'
+        title: 'Werkzeuge',
+        detail: 'Skills, Werkzeuge, MCP-Server und Plugins'
       },
       messaging: {
-        title: 'Messaging',
+        title: 'Kanäle',
         detail: 'Telegram, Slack, Discord und mehr einrichten'
       },
       artifacts: {
-        title: 'Artefakte',
-        detail: 'Generierte Ausgaben durchstöbern'
+        title: 'Ergebnisse',
+        detail: 'Erzeugte Dateien und Ausgaben durchsehen'
       }
     },
     sectionEntries: {
@@ -3412,7 +3415,7 @@ export const deOverrides = {
   cron: {
     control: deCronControl,
     close: 'Cron schließen',
-    title: 'Geplante Jobs',
+    title: 'Zeitpläne',
     count: count => `${count} ${count === 1 ? 'Job' : 'Jobs'}`,
     search: 'Cron-Jobs durchsuchen...',
     loading: 'Cron-Jobs werden geladen...',
@@ -3653,19 +3656,19 @@ export const deOverrides = {
     },
     profileRail: 'Profil-Leiste',
     nav: {
-      'new-session': 'Neue Session',
-      capabilities: 'Fähigkeiten',
-      messaging: 'Messaging',
-      artifacts: 'Artefakte',
-      cron: 'Geplante Jobs'
+      'new-session': 'Neuer Chat',
+      capabilities: 'Werkzeuge',
+      messaging: 'Kanäle',
+      artifacts: 'Ergebnisse',
+      cron: 'Zeitpläne'
     },
-    searchAria: 'Sessions durchsuchen',
-    searchPlaceholder: 'Sessions durchsuchen…',
+    searchAria: 'Chats durchsuchen',
+    searchPlaceholder: 'Chats durchsuchen…',
     clearSearch: 'Suche löschen',
-    noMatch: query => `Keine Sessions passen zu “${query}”.`,
+    noMatch: query => `Keine Chats passen zu “${query}”.`,
     results: 'Ergebnisse',
     pinned: 'Angepinnt',
-    sessions: 'Sessions',
+    sessions: 'Chats',
     terminal: 'Terminal',
     files: 'Dateien',
     review: 'Review',
@@ -3896,7 +3899,7 @@ export const deOverrides = {
       '/subscription': 'Ihren Nous-Tarif ansehen und im Browser ändern',
       '/topup': 'Ihr Nous-Guthaben anzeigen und die Abrechnung im Portal verwalten',
       '/platform': 'Eine fehlerhafte Gateway-Plattform pausieren, fortsetzen oder auflisten',
-      '/version': 'Hermes-Agent-Version anzeigen',
+      '/version': 'A2Assistant-Agent-Version anzeigen',
       '/debug': 'Debug-Bericht (Systeminfos + Logs) hochladen und teilbare Links erhalten',
       '/model': 'Modell für diese Session wechseln'
     },
@@ -4566,7 +4569,7 @@ export const deOverrides = {
       ariaLabel: mode => `Genehmigungsmodus: ${mode}`,
       manual: 'Manuell',
       manualDescription: 'Nachfragen bei Aktionen, die eine Genehmigung erfordern',
-      smart: 'Smart',
+      smart: 'Automatisch',
       smartDescription: 'Aktionen automatisch beurteilen und bei Bedarf nachfragen',
       off: 'Aus',
       offDescription: 'Ohne Genehmigungs-Abfragen ausführen'
@@ -5609,5 +5612,10 @@ export const deOverrides = {
     }
   }
 } satisfies TranslationOverrides
+
+export const deOverrides = mergeTranslations<TranslationOverrides>(
+  deBaseOverrides,
+  deA2Gaps
+) as typeof deBaseOverrides & typeof deA2Gaps
 
 export const de = defineLocale(deOverrides)

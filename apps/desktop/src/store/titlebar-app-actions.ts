@@ -27,12 +27,12 @@ export function setTitlebarAppActionsSide(side: TitlebarAppActionsSide) {
  * The fixed titlebar tools and which of them are instrumentation. ONE table:
  * the buttons spread their entry to render, the width reservation counts the
  * same entries, so a tool Simple hides also releases the space it held.
- * Settings and Layout never carry a tier — they are the way back.
+ * Settings never carries a tier — it is the way back (A2Genesis fork hides Layout in Simple).
  */
 export const TITLEBAR_FIXED_TOOLS = {
   'flip-panes': { tier: 'advanced' },
   hud: { tier: 'advanced' },
-  layout: {},
+  layout: { tier: 'advanced' },
   'right-sidebar': { tier: 'advanced' },
   settings: {},
   sidebar: {}
