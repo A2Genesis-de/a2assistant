@@ -593,7 +593,7 @@ def refresh_unloaded_launchd_plist() -> bool:
         return False
     if not _rewrite_stale_launchd_plist():
         return False
-    print(f"  ↻ Updated {_gw().get_launchd_plist_path().name} to match the current Hermes install")
+    print(f"  ↻ Updated {_gw().get_launchd_plist_path().name} to match the current A2Assistant install")
     return True
 
 
@@ -641,7 +641,7 @@ def refresh_launchd_plist_if_needed() -> bool:
             target, int(_reload_budget), _launchd_reload_log_path(),
         )
         return False
-    print("↻ Updated gateway launchd service definition to match the current Hermes install")
+    print("↻ Updated gateway launchd service definition to match the current A2Assistant install")
     return True
 
 
@@ -980,9 +980,9 @@ def launchd_status(deep: bool = False):
 
     print(f"Launchd plist: {plist_path}")
     if _gw().launchd_plist_is_current():
-        print("✓ Service definition matches the current Hermes install")
+        print("✓ Service definition matches the current A2Assistant install")
     else:
-        print("⚠ Service definition is stale relative to the current Hermes install")
+        print("⚠ Service definition is stale relative to the current A2Assistant install")
         print("  Run: hermes gateway start")
 
     if not service_listed:

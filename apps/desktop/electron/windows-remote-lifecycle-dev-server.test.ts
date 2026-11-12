@@ -64,7 +64,7 @@ function ownedWindowsSsh(lock: null | Record<string, unknown>) {
       }
 
       if (op('inspect')) {
-        return JSON.stringify({ path: HERMES_PATH, version: 'Hermes Agent v1', runtimeBootstrapOwnership: 1, supported: true })
+        return JSON.stringify({ path: HERMES_PATH, version: 'A2Assistant v1', runtimeBootstrapOwnership: 1, supported: true })
       }
 
       if (op('read-lock')) {

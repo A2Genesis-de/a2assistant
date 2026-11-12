@@ -1650,7 +1650,7 @@ class SlackAdapter(BasePlatformAdapter):
         async def handle_unhandled_event(event, body, logger):
             logger.debug(
                 "[Slack] Ignoring unhandled event type=%s (no listener registered; subscribed "
-                "events not handled by Hermes can be removed from the Slack app manifest via "
+                "events not handled by A2Assistant can be removed from the Slack app manifest via "
                 "`hermes slack manifest`)",
                 (event or {}).get("type", (body or {}).get("event", {}).get("type", "unknown")))
 
@@ -6807,7 +6807,7 @@ _SETUP_STEPS = (
     "   3. Install to Workspace: Settings → Install App",
     "   4. After installing, invite the bot to channels: /invite @YourBot",)
 _SETUP_HOME_CHANNEL_HELP = (
-    "📬 Home Channel: where Hermes delivers cron job results,",
+    "📬 Home Channel: where A2Assistant delivers cron job results,",
     "   cross-platform messages, and notifications.",
     "   To get a channel ID: open the channel in Slack, then right-click",
     "   the channel name → Copy link — the ID starts with C (e.g. C01ABC2DE3F).",
@@ -6821,7 +6821,7 @@ def _write_slack_manifest_and_instruct() -> None:
         from hermes_cli.slack_cli import _build_full_manifest
         from hermes_constants import get_hermes_home
         manifest = _build_full_manifest(
-            bot_name="Hermes", bot_description="Your Hermes agent on Slack")
+            bot_name="A2Assistant", bot_description="Your A2Assistant agent on Slack")
         target = _Path(get_hermes_home()) / "slack-manifest.json"
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(
@@ -6833,7 +6833,7 @@ def _write_slack_manifest_and_instruct() -> None:
             "reinstall if scopes or slash commands changed.")
         print_info(
             "   Re-run `hermes slack manifest --write` anytime to refresh after "
-            "Hermes adds new commands.")
+            "A2Assistant adds new commands.")
     except Exception as e:
         print_warning(f"Could not write Slack manifest: {e}")
 

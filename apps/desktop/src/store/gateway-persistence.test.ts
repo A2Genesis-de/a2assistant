@@ -88,7 +88,7 @@ it('keeps every registered gateway the primary socket does not serve connected, 
   expect(keepRoute).toHaveBeenCalledTimes(2)
 })
 
-it('with a remote primary, keeps This device only where Hermes is installed (never starts the installer)', async () => {
+it('with a remote primary, keeps This device only where A2Assistant is installed (never starts the installer)', async () => {
   $primaryGatewayRoute.set({ connectionId: 'homelab', mode: 'remote' })
   installProbe(true)
   stop = startPersistentGateways()

@@ -49,7 +49,7 @@ export const zh: Translations = {
   },
 
   app: {
-    brand: "Hermes Agent",
+    brand: "A2Assistant",
     brandShort: "HA",
     closeNavigation: "关闭导航",
     closeModelTools: "关闭模型与工具",
@@ -96,7 +96,7 @@ export const zh: Translations = {
     activeProvider: "当前记忆提供方",
     noProvider: "无 — 仅内置",
     builtinLayer: "内置层",
-    builtinNote: "MEMORY.md 和 USER.md 是 Hermes 自己的记忆，独立于任何外部提供方。两者默认都会载入会话；配置开关 (memory.memory_enabled / memory.user_profile_enabled) 可分别关闭。外部提供方是对它们的补充，绝不会取代它们。",
+    builtinNote: "MEMORY.md 和 USER.md 是 A2Assistant 自己的记忆，独立于任何外部提供方。两者默认都会载入会话；配置开关 (memory.memory_enabled / memory.user_profile_enabled) 可分别关闭。外部提供方是对它们的补充，绝不会取代它们。",
   },
 
   status: {
@@ -128,8 +128,8 @@ export const zh: Translations = {
     starting: "启动中",
     startedInBackground: "已在后台启动 — 请查看日志",
     stopped: "已停止",
-    updateHermes: "更新 Hermes",
-    updatingHermes: "正在更新 Hermes…",
+    updateHermes: "更新 A2Assistant",
+    updatingHermes: "正在更新 A2Assistant…",
     waitingForOutput: "等待输出…",
   },
 
@@ -337,7 +337,7 @@ export const zh: Translations = {
     toggleTakesEffectAfterRestart:
       "已保存 — 重启网关以应用更改。",
     forceReinstall: "强制重装（先删除已有目录）",
-    headline: "发现、安装、启用和更新 Hermes 插件（对齐 `hermes plugins` CLI）。",
+    headline: "发现、安装、启用和更新 A2Assistant 插件（对齐 `hermes plugins` CLI）。",
     identifierLabel: "Git 地址或 owner/repo",
     inactive: "未启用",
     installBtn: "安装",
@@ -457,7 +457,7 @@ export const zh: Translations = {
     showValue: "显示实际值",
     hideValue: "隐藏值",
     customTitle: "自定义密钥",
-    customHint: "存储在 .env 中、Hermes 无法识别的任意环境变量。可用于为技能、MCP 服务器或你自己的工具注入环境变量。",
+    customHint: "存储在 .env 中、A2Assistant 无法识别的任意环境变量。可用于为技能、MCP 服务器或你自己的工具注入环境变量。",
     customConfigured: "已设置 {count} 个自定义密钥",
     addCustomKey: "添加自定义密钥",
     customKeyName: "变量名",
@@ -522,11 +522,11 @@ export const zh: Translations = {
   achievements: {
     hero: {
       kicker: "Agentic Gamerscore",
-      title: "Hermes Achievements",
+      title: "A2Assistant Achievements",
       subtitle:
-        "从真实会话历史中获得的 Hermes 可收集徽章。已知尚未达成的成就显示为「已发现」；秘密成就在首次出现匹配行为之前保持隐藏。",
+        "从真实会话历史中获得的 A2Assistant 可收集徽章。已知尚未达成的成就显示为「已发现」；秘密成就在首次出现匹配行为之前保持隐藏。",
       scan_subtitle:
-        "正在扫描 Hermes 会话历史。在历史记录较多时，首次扫描可能需要 5–10 秒。",
+        "正在扫描 A2Assistant 会话历史。在历史记录较多时，首次扫描可能需要 5–10 秒。",
     },
     actions: {
       rescan: "重新扫描",
@@ -541,7 +541,7 @@ export const zh: Translations = {
       highest_tier: "最高等级",
       highest_tier_hint: "Copper → Silver → Gold → Diamond → Olympian",
       latest: "最新",
-      latest_hint_empty: "多多运行 Hermes",
+      latest_hint_empty: "多多运行 A2Assistant",
       none_yet: "暂无",
     },
     state: {
@@ -572,10 +572,10 @@ export const zh: Translations = {
       tiers_header: "等级",
       secret_header: "秘密成就",
       secret_body:
-        "秘密成就会隐藏其确切触发条件。一旦 Hermes 检测到相关信号，卡片将变为「已发现」并显示其要求。",
+        "秘密成就会隐藏其确切触发条件。一旦 A2Assistant 检测到相关信号，卡片将变为「已发现」并显示其要求。",
       scan_status_header: "扫描状态",
       scan_status_body:
-        "Hermes 正在对本地历史进行一次扫描，之后卡片会自动出现。即使这需要几秒钟，也没有卡住。",
+        "A2Assistant 正在对本地历史进行一次扫描，之后卡片会自动出现。即使这需要几秒钟，也没有卡住。",
       what_scanned_header: "扫描内容",
       what_scanned_body:
         "会话、工具调用、模型元数据、错误、成就和本地解锁状态。",

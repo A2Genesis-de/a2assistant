@@ -632,7 +632,7 @@ def _resolve_llamacpp_runtime(requested_provider: str, explicit_api_key: Optiona
                                            "model with /model.", retryable=True)
     # Every chat surface (messaging, TUI, Webapp) shows this sentence, so it names both places a
     # user can start the server and no Desktop-only pane; the Desktop client links its pane itself.
-    raise LocalRuntimeUnavailableError("The local model server is turned off. Start it from the Hermes "
+    raise LocalRuntimeUnavailableError("The local model server is turned off. Start it from the A2Assistant "
                                        "desktop app or `hermes model` → Local models, or switch to "
                                        "another model with /model.")
 

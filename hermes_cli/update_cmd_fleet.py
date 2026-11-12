@@ -1696,7 +1696,7 @@ def _restart_gateway_fleet_after_update(_pre_update_plan, gateway_mode: bool):
     from hermes_cli.update_cmd import _m
     from hermes_cli.update_stage import publish_stage
 
-    publish_stage("Restarting Hermes services")  # also after a failed build: the code is committed
+    publish_stage("Restarting A2Assistant services")  # also after a failed build: the code is committed
     # All bookkeeping is declared before the try so abort recovery and fleet reconciliation
     # can read it even if the phase raises early. ``pre_restart_gateway_pids`` stays empty
     # until we are about to stop/drain, so an early exception has nothing to fail closed on,

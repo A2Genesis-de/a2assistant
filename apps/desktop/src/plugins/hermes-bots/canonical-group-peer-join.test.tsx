@@ -38,7 +38,7 @@ import { translateBotsIn } from './i18n-test-helper'
 import { setPluginCtx } from './shared'
 
 const words = CANONICAL_GROUP_LOCALES.en
-const say = (text: string) => text.replace('{name}', 'Hermes · Mac Mini')
+const say = (text: string) => text.replace('{name}', 'A2Assistant · Mac Mini')
 const binding = { connectionId: 'local', profile: 'default', roomId: 'linked' }
 const pinned = { kind: 'peer', peer_id: 'install:3f2a0000000000000000000000000000', installation_id: 'install:3f2a0000000000000000000000000000', profile: 'default', capability_digest: MINI.room_link.catalog.catalog_digest }
 const mini = peerRosterRow('mini', 'Mac Mini')
@@ -48,7 +48,7 @@ const room = {
   members: [
     { member_id: 'default', profile: 'default', handle: 'hermes', target: { kind: 'local', profile: 'default' } },
     { member_id: 'coder', profile: 'coder', handle: 'coder', target: { kind: 'local', profile: 'coder' } },
-    { member_id: 'hermes-mac-mini', profile: 'default', handle: 'hermes-mac-mini', display_name: 'Hermes · Mac Mini', target: pinned }
+    { member_id: 'hermes-mac-mini', profile: 'default', handle: 'hermes-mac-mini', display_name: 'A2Assistant · Mac Mini', target: pinned }
   ]
 }
 
@@ -198,7 +198,7 @@ it.each(['confirmed', 'offline', 'unconfirmed', 'stop pending'])('starts the gro
 
   if (outcome === 'offline') {expect(within(row).queryByRole('button', { name: 'Retry' })).toBeNull()}
   // The control says what it does: a new group without that Bot, earlier messages not copied.
-  fireEvent.click(within(row).getByRole('button', { name: 'Start new group chat without Hermes · Mac Mini' }))
+  fireEvent.click(within(row).getByRole('button', { name: 'Start new group chat without A2Assistant · Mac Mini' }))
   const dialog = await screen.findByRole('dialog')
   expect(within(dialog).getByText(words.peerStartWithoutConfirm)).toBeTruthy()
   await act(async () => { fireEvent.click(within(dialog).getByRole('button', { name: words.startGatewayGroup })) })
@@ -224,7 +224,7 @@ it('shows the badge but no setup controls on a gateway that cannot register Bots
   render(<CanonicalGroupWorkspace binding={binding} />)
   await screen.findByText(words.peerNotJoinedBadge)
   await act(async () => {})
-  expect(screen.queryByText(words.peerNotJoined.replace('{name}', 'Hermes · Mac Mini'))).toBeNull()
+  expect(screen.queryByText(words.peerNotJoined.replace('{name}', 'A2Assistant · Mac Mini'))).toBeNull()
 })
 
 const calls = (method: string) => request.mock.calls.filter(call => call[1] === method)
@@ -251,7 +251,7 @@ it.each(['desktop', 'gateway'])('retries a lost replacement create without takin
   const onReplaced = vi.fn()
   render(<CanonicalGroupWorkspace binding={binding} onReplaced={onReplaced} />)
 
-  await startWithout('Hermes · Mac Mini')
+  await startWithout('A2Assistant · Mac Mini')
   expect(await screen.findByText('reply lost')).toBeTruthy()
   const payload = calls('groups.create')[0][2]
   updateGroupChat(payload.name, record => ({ ...record, roomId: 'unrelated',
@@ -266,7 +266,7 @@ it.each(['desktop', 'gateway'])('retries a lost replacement create without takin
   const created = Object.values($groupChats.get()).find(record => record.roomId === payload.room_id)
   expect(created?.engine).toEqual({ kind: 'gateway', ...binding, roomId: payload.room_id })
   expect(created?.log).toEqual([])
-  await startWithout('Hermes · Mac Mini')
+  await startWithout('A2Assistant · Mac Mini')
   expect(rooms.size).toBe(2)
   expect(calls('groups.create')[2][2].room_id).not.toBe(payload.room_id)
   expect($groupChats.get()[payload.name]).toEqual(other)
@@ -381,20 +381,20 @@ it.each(['acknowledgement', 'refusal'])('replays an uncertain replacement throug
   } })
   const onReplaced = vi.fn()
   render(<CanonicalGroupWorkspace binding={binding} onReplaced={onReplaced} />)
-  await startWithout('Hermes · Mac Mini')
+  await startWithout('A2Assistant · Mac Mini')
   expect(await screen.findByText('reply lost')).toBeTruthy()
   const payload = calls('groups.create')[0][2]
   await act(async () => { (host.state.gateway as ReturnType<typeof atom<string>>).set('closed') })
   expect(screen.queryByRole('dialog')).toBeNull()
   await act(async () => { (host.state.gateway as ReturnType<typeof atom<string>>).set('open') })
-  await startWithout('Hermes · Mac Mini')
+  await startWithout('A2Assistant · Mac Mini')
   expect(calls('groups.create')[1][2]).toEqual(payload)
   expect(rooms.size).toBe(1)
   expect(onReplaced).toHaveBeenCalledTimes(outcome === 'refusal' ? 0 : 1)
 
   if (outcome === 'refusal') {
     await act(async () => { fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: words.startGatewayGroup })) })
-  } else {await startWithout('Hermes · Mac Mini')}
+  } else {await startWithout('A2Assistant · Mac Mini')}
 
   expect(calls('groups.create')[2][2].room_id).not.toBe(payload.room_id)
   expect(rooms.size).toBe(2)
@@ -552,10 +552,10 @@ it.each(['create', 'disband'])('keeps a newer replacement request when an older 
   } })
   const onReplaced = vi.fn()
   const first = render(<CanonicalGroupWorkspace binding={binding} onReplaced={onReplaced} />)
-  await startWithout('Hermes · Mac Mini')
+  await startWithout('A2Assistant · Mac Mini')
   first.unmount()
   render(<CanonicalGroupWorkspace binding={binding} onReplaced={onReplaced} />)
-  await startWithout('Hermes · Mac Mini')
+  await startWithout('A2Assistant · Mac Mini')
   expect(calls('groups.create')[1][2]).toEqual(calls('groups.create')[0][2])
   await act(async () => pendingCreates[1]())
 
@@ -566,7 +566,7 @@ it.each(['create', 'disband'])('keeps a newer replacement request when an older 
 
   expect(onReplaced).toHaveBeenCalledTimes(1)
   loseNewReply = true
-  await startWithout('Hermes · Mac Mini')
+  await startWithout('A2Assistant · Mac Mini')
   expect(await screen.findByText('new reply lost')).toBeTruthy()
   const newer = calls('groups.create')[2][2]
   await act(async () => heldStep === 'disband' ? pendingDisbands[1]() : pendingCreates[0]())
@@ -591,7 +591,7 @@ it('keeps a replacement that finishes after its view closed registered, without 
     : method === 'groups.disband' ? { tombstone: { room_id: 'linked', disbanded_at: 1 } } : undefined })
   const onReplaced = vi.fn()
   const view = render(<CanonicalGroupWorkspace binding={binding} onReplaced={onReplaced} />)
-  await startWithout('Hermes · Mac Mini')
+  await startWithout('A2Assistant · Mac Mini')
   await waitFor(() => expect(calls('groups.create')).toHaveLength(1))
   // The person closes the group chat (or the socket resets) while the new group is being made.
   view.unmount()

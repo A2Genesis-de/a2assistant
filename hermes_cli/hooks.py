@@ -245,7 +245,7 @@ def _print_run_result(result: dict[str, Any]) -> None:
     # to show — failed-open and failed-closed must not render identically (#115968).
     parsed = result.get("parsed")
     if parsed:
-        print(f"      parsed (Hermes wire shape): {json.dumps(parsed)}")
+        print(f"      parsed (A2Assistant wire shape): {json.dumps(parsed)}")
     else:
         print("      parsed: <none — hook contributed nothing to the dispatcher>")
 

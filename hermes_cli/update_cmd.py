@@ -1672,7 +1672,7 @@ def _handle_update_called_process_error(
             print(f"✗ {stage} (the code update itself succeeded).")
             _print_called_process_error_tail(e)
             print()
-            print("  Hermes may not start until the dependencies are installed. Fix the error above")
+            print("  A2Assistant may not start until the dependencies are installed. Fix the error above")
             print("  (usually network or disk space), then run `hermes update` again.")
             if _m()._is_windows():
                 print("  If `hermes update` itself will not start, retry through the venv interpreter:")
@@ -1803,7 +1803,7 @@ def _cmd_update_impl(args, gateway_mode: bool):
     opts = _resolve_update_options(args, gateway_mode)
     gw_input_fn, assume_yes = opts.gw_input_fn, opts.assume_yes
 
-    print("☤ Updating Hermes Agent...")
+    print("☤ Updating A2Assistant...")
     print()
 
     _pre_update_plan = _begin_update_receipt_and_plan(args)

@@ -265,7 +265,7 @@ def batch_resolve_paths(skills: list, auth: GitHubAuth) -> list:
 
 
 def main():
-    print("Building Hermes Skills Index...", flush=True)
+    print("Building A2Assistant Skills Index...", flush=True)
     overall_start = time.time()
 
     auth = GitHubAuth()

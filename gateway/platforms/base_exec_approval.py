@@ -21,7 +21,7 @@ from typing import Any, Optional
 from agent.i18n import t
 
 # Bare strings; adapters add their own bold/HTML around them.
-EA_HEADER_TEXT = "Hermes wants to run a command that needs your OK"
+EA_HEADER_TEXT = "A2Assistant wants to run a command that needs your OK"
 EA_REASON_LABEL_TEXT = "Why it was flagged"
 
 # Timeout notice posted when nobody answered the prompt (``{window}`` = "5 minutes").

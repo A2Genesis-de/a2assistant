@@ -58,7 +58,8 @@ def _wings(*glyphs) -> list[list[str]]:
 
 # Branding shared by every Hermes-named built-in (mono/daylight override help_header).
 _HERMES_BRANDING: dict[str, str] = _branding(
-    "Hermes", "☤", "Goodbye! ☤", prompt="❯", help_header="(^_^)? Available Commands")
+    "A2Assistant", "☤", "Goodbye! ☤", prompt="❯", help_header="(^_^)? Available Commands") | {
+    "agent_name": "A2Assistant", "welcome": "Welcome to A2Assistant! Type your message or /help for commands."}
 
 _BUILTIN_SKINS: dict[str, dict[str, Any]] = {
     "a2": {
@@ -98,7 +99,7 @@ _BUILTIN_SKINS: dict[str, dict[str, Any]] = {
                        "[#71717a]      ▄████████▄[/]\n[#71717a]    ▄████████████▄[/]",
         "tool_prefix": "┊"},
     "default": {
-        "name": "default", "description": "Classic Hermes — gold and kawaii",
+        "name": "default", "description": "Classic A2Assistant — gold and kawaii",
         # Dark-authored; values match the TUI's DARK_THEME so both render the same gold.
         "colors": {
             "banner_border": "#CD7F32", "banner_title": "#FFD700", "banner_accent": "#FFBF00",

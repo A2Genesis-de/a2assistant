@@ -30,7 +30,7 @@ def _print_legacy_units_warning() -> None:
     if not (supports_systemd_services() and has_legacy_hermes_units()):
         return
     print()
-    print("⚠ Legacy Hermes gateway unit(s) detected:")
+    print("⚠ Legacy A2Assistant gateway unit(s) detected:")
     for name, path, is_sys in _find_legacy_hermes_units():
         scope = "system" if is_sys else "user"
         print(f"    {path}  ({scope} scope)")

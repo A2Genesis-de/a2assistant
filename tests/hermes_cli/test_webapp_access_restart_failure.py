@@ -65,7 +65,7 @@ def _status_after_child_exits(client, pid: int) -> dict:
 def test_a_restart_child_that_exits_at_once_reports_its_last_error_line(client, restart_child):
     restart_child["script"] = (
         "import sys; print('Starting gateway restart...');"
-        "print(\"error: Hermes's dependency environment is missing; run `hermes pm repair`\");"
+        "print(\"error: A2Assistant's dependency environment is missing; run `hermes pm repair`\");"
         "sys.exit(1)"
     )
 
@@ -76,7 +76,7 @@ def test_a_restart_child_that_exits_at_once_reports_its_last_error_line(client, 
     assert failure == {
         "pid": answer["restart_pid"],
         "exit_code": 1,
-        "reason": "error: Hermes's dependency environment is missing; run `hermes pm repair`",
+        "reason": "error: A2Assistant's dependency environment is missing; run `hermes pm repair`",
     }
 
 

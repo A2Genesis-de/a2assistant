@@ -21,7 +21,7 @@ def _install_tts_extra(extra: str) -> bool:
         _setup.print_error(f"Failed to install {extra}: {exc}")
         _setup.print_info("Retry with: hermes setup tts")
         return False
-    _setup.print_success(f"{extra} installed. Restart Hermes to use it.")
+    _setup.print_success(f"{extra} installed. Restart A2Assistant to use it.")
     return True
 
 

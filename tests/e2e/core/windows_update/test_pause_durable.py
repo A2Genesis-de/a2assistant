@@ -91,8 +91,8 @@ def _mint_two_file_change(machine) -> str:
     """A target commit on top of the installed HEAD that rewrites two existing tracked files."""
     base = machine.installed_head()
     index = machine.root / "torn.index"
-    env = {"GIT_INDEX_FILE": str(index), "GIT_AUTHOR_NAME": "Hermes E2E", "GIT_AUTHOR_EMAIL": "e2e@hermes.invalid",
-           "GIT_COMMITTER_NAME": "Hermes E2E", "GIT_COMMITTER_EMAIL": "e2e@hermes.invalid"}
+    env = {"GIT_INDEX_FILE": str(index), "GIT_AUTHOR_NAME": "A2Assistant E2E", "GIT_AUTHOR_EMAIL": "e2e@hermes.invalid",
+           "GIT_COMMITTER_NAME": "A2Assistant E2E", "GIT_COMMITTER_EMAIL": "e2e@hermes.invalid"}
     harness_git("-C", str(machine.serve), "read-tree", base, env=env)
     for path in (_EARLY, _HELD):
         src = machine.root / ("torn-" + path.replace("/", "_"))

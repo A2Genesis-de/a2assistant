@@ -139,7 +139,7 @@ def held_for_newer_hermes(result: CheckResult) -> Optional[str]:
     from hermes_cli.plugins_manifest import requires_hermes_error, running_hermes_version
     if not requires_hermes_error({"requires_hermes": result.min_hermes}):
         return None
-    return f"needs Hermes {result.min_hermes}; this is {running_hermes_version()}"
+    return f"needs A2Assistant {result.min_hermes}; this is {running_hermes_version()}"
 
 
 def check_provenanced(

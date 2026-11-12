@@ -593,7 +593,7 @@ def _init_prompt_cache_config(agent):
         # Config values and traceback frames may contain credentials.
         logger.warning(
             "Agent configuration for prompt_caching.cache_ttl could not be loaded (%s); "
-            "using default prompt caching settings. Check the active Hermes Python "
+            "using default prompt caching settings. Check the active A2Assistant Python "
             "environment and dependencies; run 'hermes config check' after "
             "configuration imports work again.",
             type(exc).__name__,
@@ -1939,7 +1939,7 @@ def _enforce_minimum_context(agent):
         raise ValueError(
             f"Model {agent.model} has a context window of {_ctx:,} tokens, "
             f"which is below the minimum {MINIMUM_CONTEXT_LENGTH:,} required "
-            f"by Hermes Agent.  {remedy}"
+            f"by A2Assistant.  {remedy}"
         )
 
 
@@ -2184,7 +2184,7 @@ def init_agent(
         logger.warning(
             "Agent configuration could not be loaded (%s); using defaults for "
             "memory, skills, compression and related settings. Check the active "
-            "Hermes Python environment and dependencies; run 'hermes config check' "
+            "A2Assistant Python environment and dependencies; run 'hermes config check' "
             "after configuration imports work again.",
             type(exc).__name__,
         )

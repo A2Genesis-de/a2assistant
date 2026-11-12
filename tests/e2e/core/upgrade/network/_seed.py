@@ -250,7 +250,7 @@ def canonical(value: object) -> bytes:
 
 def _identity(name: str, token: str) -> dict:
     pascal = f"HermesChannel{token}"
-    return {"token": token, "displayName": f"Hermes {name}", "appId": f"ai.hermes.channel.h{token}",
+    return {"token": token, "displayName": f"A2Assistant {name}", "appId": f"ai.hermes.channel.h{token}",
             "appNamePascal": pascal, "artifactNamePascal": pascal, "cliName": f"hermes-{name}",
             "windowsExecutableName": pascal, "msixAppIdWithOrg": f"NousResearch.{pascal}"}
 

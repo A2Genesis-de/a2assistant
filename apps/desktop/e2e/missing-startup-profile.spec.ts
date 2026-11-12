@@ -12,7 +12,7 @@ import { expect, test } from './test'
 // remembered startup profile (and an explicit default) can name a profile this
 // home no longer has. Every boot then ran `hermes --profile <gone> gateway
 // ensure`, which refuses a missing profile, and Desktop never started.
-test('a remembered profile missing from a reinstalled Hermes home boots the default profile', async () => {
+test('a remembered profile missing from a reinstalled A2Assistant home boots the default profile', async () => {
   test.setTimeout(300_000)
   const sandbox = createSandbox('missing-startup-profile')
   const mock = await startMockServer()

@@ -112,7 +112,7 @@ handler does; `client-local (cli_only)` commands are terminal/UI features of a c
 | `/skin` | refused | HermesCLI._handle_skin_command | config.get, config.set | action: skin | slash.exec: refused | client-local (cli_only) |
 | `/snapshot` (/snap) | refused | HermesCLI._handle_snapshot_command | slash.exec: refused | unavailable: terminal | slash.exec: refused | client-local (cli_only) |
 | `/start` | refused | messaging-only: unknown command | slash.exec: refused | slash.exec: refused | slash.exec: refused | messaging-only |
-| `/status` | read | HermesCLI._show_session_status | canonical route | slash.exec (rpc fallback) | slash.exec | TUI session: main's `Hermes TUI Status` |
+| `/status` | read | HermesCLI._show_session_status | canonical route | slash.exec (rpc fallback) | slash.exec | TUI session: main's `A2Assistant TUI Status` |
 | `/statusbar` (/sb) | refused | HermesCLI._cmd_statusbar | local (preference not saved) | unavailable: terminal | slash.exec: refused | client-local (cli_only) |
 | `/steer` (/s) | refused | HermesCLI._cmd_steer | canonical route | action: steer | session.steer |  |
 | `/stop` | refused | HermesCLI._handle_stop_command | canonical route | action: stop | slash.exec: refused |  |

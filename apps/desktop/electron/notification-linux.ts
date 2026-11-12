@@ -250,7 +250,7 @@ export function createLinuxNotifications() {
               member: 'Notify',
               signature: 'susssasa{sv}i',
               body: [
-                'Hermes',
+                'A2Assistant',
                 0,
                 options.icon || '',
                 options.title,

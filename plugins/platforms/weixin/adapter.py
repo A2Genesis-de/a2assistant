@@ -777,8 +777,8 @@ class WeixinAdapter(OwnAccessPolicyMixin, BasePlatformAdapter):
             logger.warning(
                 "[%s] WEIXIN_GROUP_POLICY=%s is set, but QR-login connects an iLink bot identity (e.g. ...@im.bot) "
                 "which typically cannot be invited into ordinary WeChat groups. iLink usually does not deliver "
-                "ordinary-group events for these accounts, so group messages may never reach Hermes regardless of "
-                "this policy. If group delivery doesn't work, the limitation is on the iLink side, not in Hermes.",
+                "ordinary-group events for these accounts, so group messages may never reach A2Assistant regardless of "
+                "this policy. If group delivery doesn't work, the limitation is on the iLink side, not in A2Assistant.",
                 self.name, self._group_policy)
         self._wire_plugin_handlers(None)  # plugin-registered native handlers
         return True
@@ -1320,9 +1320,9 @@ def interactive_setup() -> None:
     print_setup_header("💬 Weixin / WeChat")
     print()
     gw._print_info_lines(
-        "  1. Hermes will open Tencent iLink QR login in this terminal.",
+        "  1. A2Assistant will open Tencent iLink QR login in this terminal.",
         "  2. Use WeChat to scan and confirm the QR code.",
-        "  3. Hermes will store the returned account_id/token in ~/.hermes/.env.",
+        "  3. A2Assistant will store the returned account_id/token in ~/.hermes/.env.",
         "  4. This adapter supports native text, image, video, and document delivery.",
     )
     if not confirm_reconfigure("Weixin", "WEIXIN_ACCOUNT_ID", "WEIXIN_TOKEN"):

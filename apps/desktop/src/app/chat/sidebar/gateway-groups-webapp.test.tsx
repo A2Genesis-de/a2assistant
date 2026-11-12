@@ -82,7 +82,7 @@ it('names the Webapp gateway section after the host instead of its raw `local` i
   const sections = window.document.querySelectorAll('[data-gateway-section]')
   expect(sections).toHaveLength(1)
   const gateway = sections[0] as HTMLElement
-  expect(within(gateway).getByText('Hermes host')).toBeTruthy()
+  expect(within(gateway).getByText('A2Assistant host')).toBeTruthy()
   expect(screen.queryByText('local')).toBeNull()
   expect(gateway.querySelectorAll('[data-gateway-group]')).toHaveLength(2)
   expect(within(gateway).getByText('listed title')).toBeTruthy()

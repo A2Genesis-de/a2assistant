@@ -33,7 +33,7 @@ def _azure_entra_credentials(cfg_entra: dict[str, Any]) -> Any:
     except Exception as exc:
         raise AuthError(
             "Could not load the Azure Foundry Entra ID adapter. "
-            "Run hermes pm repair, then restart Hermes. "
+            "Run hermes pm repair, then restart A2Assistant. "
             f"(import failed: {exc})"
         ) from exc
     scope = str(cfg_entra.get("scope") or "").strip() or SCOPE_AI_AZURE_DEFAULT

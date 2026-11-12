@@ -70,7 +70,7 @@ class _AsyncBridge:
 # is never replayed; the caller decides after taking fresh state.
 _UNKNOWN_OUTCOME_MESSAGES = {
     "transport_outcome_unknown": (
-        "cua-driver transport failed during {name}; the action outcome is unknown, so Hermes "
+        "cua-driver transport failed during {name}; the action outcome is unknown, so A2Assistant "
         "did not replay it. Take fresh state before deciding whether to act again."),
     "timeout_outcome_unknown": (
         "cua-driver MCP call {name} timed out; the action outcome is unknown and may still have "

@@ -95,7 +95,7 @@ test.skipIf(process.platform !== 'win32')(
           platform: 'node',
           format: 'esm',
           define: {
-            'process.execPath': JSON.stringify(path.join(install, 'Hermes.exe')),
+            'process.execPath': JSON.stringify(path.join(install, 'A2Assistant.exe')),
             'process.env.HERMES_DESKTOP_IS_PACKAGED': 'undefined'
           },
           plugins: [

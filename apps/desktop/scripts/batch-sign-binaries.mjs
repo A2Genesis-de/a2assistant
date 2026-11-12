@@ -437,7 +437,7 @@ async function main() {
     console.error('usage: batch-sign-binaries.mjs <dir>')
     process.exit(2)
   }
-  const result = await batchSignAppTree(root, process.env.HERMES_PRODUCT_EXE || path.join(root, 'Hermes.exe'))
+  const result = await batchSignAppTree(root, process.env.HERMES_PRODUCT_EXE || path.join(root, 'A2Assistant.exe'))
   if (result.skipped) process.exit(0)
 }
 

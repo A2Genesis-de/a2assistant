@@ -50,7 +50,7 @@ export const es: Translations = {
   },
 
   app: {
-    brand: "Hermes Agent",
+    brand: "A2Assistant",
     brandShort: "HA",
     closeNavigation: "Cerrar navegación",
     closeModelTools: "Cerrar modelo y herramientas",
@@ -97,7 +97,7 @@ export const es: Translations = {
     activeProvider: "Proveedor de memoria activo",
     noProvider: "ninguno — solo integrada",
     builtinLayer: "Capa integrada",
-    builtinNote: "MEMORY.md y USER.md son la memoria propia de Hermes, independiente de cualquier proveedor externo. Ambos se cargan en las sesiones por defecto; los interruptores de configuración (memory.memory_enabled / memory.user_profile_enabled) desactivan cada uno. Un proveedor se suma a ellos; nunca los reemplaza.",
+    builtinNote: "MEMORY.md y USER.md son la memoria propia de A2Assistant, independiente de cualquier proveedor externo. Ambos se cargan en las sesiones por defecto; los interruptores de configuración (memory.memory_enabled / memory.user_profile_enabled) desactivan cada uno. Un proveedor se suma a ellos; nunca los reemplaza.",
   },
 
   status: {
@@ -129,8 +129,8 @@ export const es: Translations = {
     starting: "Iniciando",
     startedInBackground: "Iniciado en segundo plano — revisa los registros para ver el progreso",
     stopped: "Detenido",
-    updateHermes: "Actualizar Hermes",
-    updatingHermes: "Actualizando Hermes…",
+    updateHermes: "Actualizar A2Assistant",
+    updatingHermes: "Actualizando A2Assistant…",
     waitingForOutput: "Esperando salida…",
   },
 
@@ -343,7 +343,7 @@ export const es: Translations = {
       "Guardado: reinicia el gateway para aplicar el cambio.",
     forceReinstall: "Forzar reinstalación (eliminar carpeta existente primero)",
     headline:
-      "Descubre, instala, habilita y actualiza complementos de Hermes (equivalente a `hermes plugins`).",
+      "Descubre, instala, habilita y actualiza complementos de A2Assistant (equivalente a `hermes plugins`).",
     identifierLabel: "URL de Git u owner/repo",
     inactive: "inactivo",
     installBtn: "Instalar",
@@ -464,7 +464,7 @@ export const es: Translations = {
     showValue: "Mostrar valor real",
     hideValue: "Ocultar valor",
     customTitle: "Claves personalizadas",
-    customHint: "Variables de entorno arbitrarias almacenadas en tu .env que Hermes no reconoce. Úsalas para inyectar variables de entorno para skills, servidores MCP o tus propias herramientas.",
+    customHint: "Variables de entorno arbitrarias almacenadas en tu .env que A2Assistant no reconoce. Úsalas para inyectar variables de entorno para skills, servidores MCP o tus propias herramientas.",
     customConfigured: "{count} clave(s) personalizada(s) configurada(s)",
     addCustomKey: "Añadir una clave personalizada",
     customKeyName: "Nombre de la variable",
@@ -528,11 +528,11 @@ export const es: Translations = {
   achievements: {
     hero: {
       kicker: "Agentic Gamerscore",
-      title: "Hermes Achievements",
+      title: "A2Assistant Achievements",
       subtitle:
-        "Insignias coleccionables de Hermes ganadas a partir del historial real de sesiones. Los logros conocidos no completados se muestran como Descubiertos; los logros secretos permanecen ocultos hasta que aparece el primer comportamiento coincidente.",
+        "Insignias coleccionables de A2Assistant ganadas a partir del historial real de sesiones. Los logros conocidos no completados se muestran como Descubiertos; los logros secretos permanecen ocultos hasta que aparece el primer comportamiento coincidente.",
       scan_subtitle:
-        "Escaneando el historial de sesiones de Hermes. El primer escaneo puede tardar 5–10 segundos en historiales grandes.",
+        "Escaneando el historial de sesiones de A2Assistant. El primer escaneo puede tardar 5–10 segundos en historiales grandes.",
     },
     actions: {
       rescan: "Volver a escanear",
@@ -547,7 +547,7 @@ export const es: Translations = {
       highest_tier: "Nivel más alto",
       highest_tier_hint: "Copper → Silver → Gold → Diamond → Olympian",
       latest: "Más reciente",
-      latest_hint_empty: "usa Hermes más",
+      latest_hint_empty: "usa A2Assistant más",
       none_yet: "Ninguno aún",
     },
     state: {
@@ -578,10 +578,10 @@ export const es: Translations = {
       tiers_header: "Niveles",
       secret_header: "Logros secretos",
       secret_body:
-        "Los secretos ocultan su disparador exacto. Una vez que Hermes detecta una señal relacionada, la tarjeta pasa a Descubierto y muestra su requisito.",
+        "Los secretos ocultan su disparador exacto. Una vez que A2Assistant detecta una señal relacionada, la tarjeta pasa a Descubierto y muestra su requisito.",
       scan_status_header: "Estado del escaneo",
       scan_status_body:
-        "Hermes está escaneando el historial local una vez, después las tarjetas aparecerán automáticamente. No hay nada bloqueado si tarda unos segundos.",
+        "A2Assistant está escaneando el historial local una vez, después las tarjetas aparecerán automáticamente. No hay nada bloqueado si tarda unos segundos.",
       what_scanned_header: "Qué se escanea",
       what_scanned_body:
         "Sesiones, llamadas a herramientas, metadatos del modelo, errores, logros y estado de desbloqueo local.",

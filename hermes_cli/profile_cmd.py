@@ -47,7 +47,7 @@ def _render_distribution_plan(plan) -> None:
     if mf.author:
         print(f"  Author:   {mf.author}")
     if mf.hermes_requires:
-        print(f"  Requires: Hermes {mf.hermes_requires}")
+        print(f"  Requires: A2Assistant {mf.hermes_requires}")
     print(f"  Source:   {plan.provenance}")
     print(f"  Target:   {plan.target_dir}")
     if plan.existing:
@@ -560,7 +560,7 @@ _INFO_FIELDS = (
     ("description", "Description:  "),
     ("author", "Author:       "),
     ("license", "License:      "),
-    ("hermes_requires", "Requires:     Hermes "),
+    ("hermes_requires", "Requires:     A2Assistant "),
     ("source", "Source:       "),
     ("installed_at", "Installed:    "),
 )

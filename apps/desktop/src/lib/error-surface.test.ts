@@ -174,13 +174,13 @@ describe('free-tier refusals', () => {
   const surface = parseErrorSurface({
     code: 'free_tier_disabled',
     layer: 'provider',
-    message: '  Using Hermes without signing in is switched off right now. To sign in: /login. ',
+    message: '  Using A2Assistant without signing in is switched off right now. To sign in: /login. ',
     provider: 'nous',
     retryable: false
   })!
 
   it('carries the backend sentence and offers the free sign-in, never an OAuth re-login', () => {
-    expect(surface.message).toBe('Using Hermes without signing in is switched off right now. To sign in: /login.')
+    expect(surface.message).toBe('Using A2Assistant without signing in is switched off right now. To sign in: /login.')
     expect(errorCardActions(surface)).toEqual({ primary: 'sign_in_free_tier' })
   })
 

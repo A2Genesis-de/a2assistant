@@ -546,7 +546,7 @@ def _scan_block_message(result, identifier: str) -> str:
     n = len(result.findings)
     findings = f"{n} high-risk pattern(s)" if n else "high-risk patterns"
     hard_block = result.verdict == "dangerous" and result.trust_level in ("community", "trusted")
-    policy = ("Hermes never installs unverified skills with high-risk findings, even with --force."
+    policy = ("A2Assistant never installs unverified skills with high-risk findings, even with --force."
               if hard_block else "Re-run with --force to install anyway.")
     return (f"the security scan found {findings} in '{identifier}' (listed above). "
             f"{policy} Review the findings or ask the author to fix them; to read the skill without "
@@ -1435,8 +1435,8 @@ def _github_publish(skill_path: Path, skill_name: str, target_repo: str, auth) -
     try:
         resp = call("post", f"{target_repo}/pulls", json={
             "title": f"Add skill: {skill_name}",
-            "body": f"Submitting the `{skill_name}` skill via Hermes Skills Hub.\n\n"
-                    f"This skill was scanned by the Hermes Skills Guard before submission.",
+            "body": f"Submitting the `{skill_name}` skill via A2Assistant Skills Hub.\n\n"
+                    f"This skill was scanned by the A2Assistant Skills Guard before submission.",
             "head": f"{fork_repo.split('/')[0]}:{branch_name}", "base": default_branch})
         if resp.status_code == 201:
             return True, f"PR created: {resp.json().get('html_url', '')}"

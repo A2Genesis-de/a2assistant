@@ -73,7 +73,7 @@ test('backend runs the store toolchain even after the login-shell PATH is merged
   ])
 })
 
-test('HERMES_RUNTIME_DIR names the store; look-alike prefixes are not Hermes-owned', () => {
+test('HERMES_RUNTIME_DIR names the store; look-alike prefixes are not A2Assistant-owned', () => {
   const store = '/Applications/Hermes.app/Contents/Resources/agent-payload/tools'
 
   const backend = buildDesktopBackendEnv({
@@ -135,7 +135,7 @@ test('normalizeHermesHomeRoot expands a literal leading ~ against the home direc
   assert.equal(normalizeHermesHomeRoot('~', { pathModule: path.posix, homedir: '/Users/test' }), '/Users/test')
 })
 
-test('normalizeHermesHomeRoot maps profile homes back to the global Hermes root', () => {
+test('normalizeHermesHomeRoot maps profile homes back to the global A2Assistant root', () => {
   assert.equal(
     normalizeHermesHomeRoot('/Users/test/.hermes/profiles/oracle', { pathModule: path.posix }),
     '/Users/test/.hermes'

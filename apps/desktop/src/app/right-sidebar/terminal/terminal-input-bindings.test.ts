@@ -37,7 +37,7 @@ it('routes word erase only to a live shell and releases the context-menu handle 
   expect(terminalMenuHandleFor(host)).toBeNull()
 })
 
-it('keeps a plain Alt chord Hermes ran off the PTY and leaves shared Ctrl keys and other cancels to the shell', () => {
+it('keeps a plain Alt chord A2Assistant ran off the PTY and leaves shared Ctrl keys and other cancels to the shell', () => {
   const attachCustomKeyEventHandler = vi.fn()
   const term = { attachCustomKeyEventHandler, getSelection: () => '' } as unknown as Terminal
   const dispose = bindTerminalClipboard(term, document.createElement('div'), vi.fn(), vi.fn(), () => true)

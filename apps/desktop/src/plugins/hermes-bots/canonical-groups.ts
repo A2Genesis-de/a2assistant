@@ -198,7 +198,7 @@ function connectionSuffix(member: GroupMember, rivals: GroupMember[]) {
 
 /** A Bot's own name: its title, else its name (a default profile reads "Hermes"). */
 const botLabel = (member: GroupMember) => String(member.title || member.display_name || '').trim() ||
-  (member.name.trim().toLowerCase() === 'default' ? 'Hermes' : member.name)
+  (member.name.trim().toLowerCase() === 'default' ? 'A2Assistant' : member.name)
 
 /** A peer's name in the room: its own, then the connection it runs on, so two computers' default
  *  Bots never read alike. */

@@ -863,7 +863,7 @@ class EmailAdapter(BasePlatformAdapter):
                    attach_empty_body: bool = False) -> tuple[MIMEMultipart, str, str]:
         """Build a threaded reply skeleton. Returns ``(msg, msg_id, subject)``."""
         msg, ctx = MIMEMultipart(), self._thread_context.get(to_addr, {})
-        subject = ctx.get("subject", "Hermes Agent")
+        subject = ctx.get("subject", "A2Assistant")
         if not subject.startswith("Re:"):
             subject = f"Re: {subject}"
         original_msg_id = reply_to_msg_id or ctx.get("message_id")
@@ -1017,7 +1017,7 @@ def register(ctx) -> None:
         target_ref_syntax_fn=regex_stripped_parser(_SEND_TARGET_RE),
         standalone_send=StandaloneSendPolicy(text_direct=True),
         name="email", label="Email", adapter_factory=EmailAdapter, check_fn=check_email_requirements, is_connected=_is_connected,
-        dashboard_description="Talk to Hermes through an IMAP/SMTP mailbox.",
+        dashboard_description="Talk to A2Assistant through an IMAP/SMTP mailbox.",
         docs_url="https://hermes-agent.nousresearch.com/docs/user-guide/messaging/",
         dashboard_env_vars=("EMAIL_ADDRESS", "EMAIL_PASSWORD", "EMAIL_IMAP_HOST", "EMAIL_SMTP_HOST"),
         dashboard_required_env=("EMAIL_ADDRESS", "EMAIL_PASSWORD", "EMAIL_IMAP_HOST", "EMAIL_SMTP_HOST"),

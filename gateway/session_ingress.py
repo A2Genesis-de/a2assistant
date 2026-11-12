@@ -54,7 +54,7 @@ async def admit_message(authority, event):
             # The reply reaches the whole chat, so only content clauses are named; trust and provenance
             # clauses (and any new one) stay generic, and gateway.log keeps the clause (``_refuse``).
             named = f'{exc.reason}: {exc.field}' if exc.field in _CONTENT_CLAUSES else exc.reason
-            return (f'⚠️ Hermes refused this message ({named}), so it was not saved '
+            return (f'⚠️ A2Assistant refused this message ({named}), so it was not saved '
                     'or answered. Ask the operator to check gateway.log.')
         if exc.reason != 'queue_full':
             raise
@@ -93,7 +93,7 @@ async def admit_message(authority, event):
         row = get_session_admission(authority.db, admission_id=receipt.admission_id)
         if row is not None and row['status'] == 'terminal':
             # The drain refused this head (``_refuse_head``): cancelled, not saved behind a pause.
-            return (f'⚠️ Hermes did not answer this message ({exc.reason}): the conversation it was '
+            return (f'⚠️ A2Assistant did not answer this message ({exc.reason}): the conversation it was '
                     'queued for moved, so it was dropped. Send it again to continue.')
         if row is not None:
             note_busy_parked(event)  # still queued (saved): answered after the pause, not dropped
@@ -244,7 +244,7 @@ def pause_notice(authority, ref, reason):
     live.pause_notified = True
     if reason == 'runtime_draining':
         # Transient: the row runs when the restarted owner drains it, so /reset would be wrong advice.
-        return '⏳ Hermes is restarting — your message is saved and will be answered when it is back.'
+        return '⏳ A2Assistant is restarting — your message is saved and will be answered when it is back.'
     if reason == 'session_busy':
         # Transient: queued behind work already running on this conversation (a worker execution).
         return '⏳ Your message is saved and will be answered when the work running in this conversation finishes.'
@@ -254,7 +254,7 @@ def pause_notice(authority, ref, reason):
         # Slack registers no native /discard (its slash cap): the umbrella `/hermes discard` reaches it.
         slack = getattr(getattr(live.source, 'platform', None), 'value', None) == 'slack'
         discard = '/hermes discard' if slack else '/discard'
-        return ('⏸️ This conversation is paused: a previous turn did not finish when Hermes restarted, '
+        return ('⏸️ This conversation is paused: a previous turn did not finish when A2Assistant restarted, '
                 f'and only you know whether to send it again. Your message is saved. Send {discard} to drop '
                 'the lost turn and continue (it is not re-run), or /reset to start a fresh conversation.')
     cause = f'a queued message could not be re-authorized ({reason})'

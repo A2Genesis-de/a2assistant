@@ -138,7 +138,7 @@ def real_profile_cdp() -> tuple[Optional[str], Optional[str]]:
     lock = _home_lock()
     if not lock.acquire(timeout=_LOCK_TIMEOUT_S):
         return None, (_RP + "the real-profile browser is already being prepared by another call that has not "
-                      "finished. Retry after that call completes, or restart Hermes if it was abandoned.")
+                      "finished. Retry after that call completes, or restart A2Assistant if it was abandoned.")
     try:
         from tools.browser_launcher import get_browser
         running = get_browser(real_profile_key())

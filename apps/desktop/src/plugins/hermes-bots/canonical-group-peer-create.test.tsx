@@ -119,7 +119,7 @@ it('seats a Bot from another connection: the room on this gateway, the invitatio
   // Two default Bots: the one from Mac Mini joins under a handle and name that say where it runs.
   expect(create.members).toEqual([
     { member_id: 'default', profile: 'default', handle: 'hermes', target: { kind: 'local', profile: 'default' } },
-    { member_id: 'hermes-mac-mini', profile: 'default', handle: 'hermes-mac-mini', display_name: 'Hermes · Mac Mini',
+    { member_id: 'hermes-mac-mini', profile: 'default', handle: 'hermes-mac-mini', display_name: 'A2Assistant · Mac Mini',
       target: { kind: 'peer', peer_id: 'install:3f2a0000000000000000000000000000', installation_id: 'install:3f2a0000000000000000000000000000', profile: 'default',
         capability_digest: MINI.room_link.catalog.catalog_digest } }])
   expect(calls.find(call => call[1] === 'groups.peer.invite')![2]).toEqual({
@@ -145,9 +145,9 @@ it.each([
   gateways(local, peer)
   await createWithMini(await openDialog())
   // The opened group chat's row says why; one notice names who is missing, so a failed seat is never silent.
-  expect(notify.mock.calls).toEqual([[{ kind: 'warning', message: words.createdNotJoined.replace('{names}', 'Hermes · Mac Mini') }]])
+  expect(notify.mock.calls).toEqual([[{ kind: 'warning', message: words.createdNotJoined.replace('{names}', 'A2Assistant · Mac Mini') }]])
   const [binding] = Object.values($canonicalGroupBindings.get())
-  expect(peerJoinText($peerJoinErrors.get()[peerJoinKey(binding, 'hermes-mac-mini')], 'Hermes · Mac Mini', words)).toBe(why.replace('{name}', 'Hermes · Mac Mini'))
+  expect(peerJoinText($peerJoinErrors.get()[peerJoinKey(binding, 'hermes-mac-mini')], 'A2Assistant · Mac Mini', words)).toBe(why.replace('{name}', 'A2Assistant · Mac Mini'))
   expect(request.mock.calls.some(call => call[1] === 'groups.peer.register')).toBe(registers)
   expect(Object.values($canonicalGroupBindings.get())).toHaveLength(1)
   expect(request.mock.calls.filter(call => call[1] === 'groups.create')).toHaveLength(1)
@@ -156,9 +156,9 @@ it.each([
 })
 
 it.each([
-  ['uses classic groups', { driver: false, persistent_process: false }, 'Hermes on This device is too old to run group chats. Update Hermes there, then retry.'],
+  ['uses classic groups', { driver: false, persistent_process: false }, 'A2Assistant on This device is too old to run group chats. Update A2Assistant there, then retry.'],
   ['ends with Desktop', { ...HOME, persistent_process: false },
-    'Hermes on This device can’t seat bots from other computers yet. Update Hermes there and run its gateway (hermes gateway run), then retry.']
+    'A2Assistant on This device can’t seat bots from other computers yet. Update A2Assistant there and run its gateway (hermes gateway run), then retry.']
 ])('never makes a Desktop-driven group chat when the owner %s: it says what to change and offers Retry', async (_case, capabilities, words) => {
   gateways(home(method => method === 'groups.capabilities' ? capabilities : undefined))
   const { baseElement } = render(<CreateGroupChatDialog onClose={vi.fn()} open roster={roster} />)
@@ -408,7 +408,7 @@ it.each(['owner', 'lender'])('keeps the draft and a working Retry after a failed
   if (failing === 'owner') {
     offline = true
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Create group (2)' })) })
-  } else {expect(screen.getByText('Could not check Mac Mini. Make sure Hermes is running there, then retry.')).toBeTruthy()}
+  } else {expect(screen.getByText('Could not check Mac Mini. Make sure A2Assistant is running there, then retry.')).toBeTruthy()}
 
   expect((screen.getByRole('button', { name: 'Create group (2)' }) as HTMLButtonElement).disabled).toBe(true)
   expect(dialog.baseElement.querySelector('[data-group-engine="desktop"]')).toBeNull()
@@ -442,7 +442,7 @@ it('describes one membership storage for every selection', async () => {
 
 
 it.each([
-  ['mixed', 'default-this-device', undefined, 'Hermes'],
+  ['mixed', 'default-this-device', undefined, 'A2Assistant'],
   ['mixed', 'default-this-device', 'Custom name', 'Custom name'],
   ['mixed', 'hermes', undefined, undefined],
   ['local', 'default-this-device', undefined, undefined]

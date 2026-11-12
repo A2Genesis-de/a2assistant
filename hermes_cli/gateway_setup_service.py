@@ -6,7 +6,7 @@ import sys
 logger = logging.getLogger(__name__)
 
 SERVICE_INSTALL_QUESTION = (
-    "Install the gateway service so Hermes starts automatically at login "
+    "Install the gateway service so A2Assistant starts automatically at login "
     "and keeps scheduled jobs and messaging available?"
 )
 
