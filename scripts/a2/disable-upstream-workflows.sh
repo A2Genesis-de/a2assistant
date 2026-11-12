@@ -11,9 +11,9 @@ import yaml
 for name in yaml.safe_load(open("a2/brand.yaml", encoding="utf-8-sig"))["workflows"]["disabled"]:
     print(name)
 ' | while read -r workflow; do
-  state="$(gh workflow view "$workflow" --repo "$repo" --json state --jq .state 2>/dev/null || echo missing)"
+  state="$(gh api "repos/$repo/actions/workflows/$workflow" --jq .state 2>/dev/null || echo missing)"
   case "$state" in
-    active) gh workflow disable "$workflow" --repo "$repo" && echo "disabled $workflow" ;;
+    active) gh api --method PUT "repos/$repo/actions/workflows/$workflow/disable" && echo "disabled $workflow" ;;
     missing) echo "not on GitHub: $workflow" ;;
     *) echo "already $state: $workflow" ;;
   esac
