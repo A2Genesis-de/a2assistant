@@ -207,7 +207,7 @@ def _record_owed_finish(request: dict, result: Path, detail: str) -> None:
     from contextlib import suppress
 
     print(f"  ⚠ The update is installed, but its finishing steps did not run: {detail}. "
-          "The next `a2assistant` launch finishes them.", file=sys.stderr, flush=True)
+          "The next `hermes` launch finishes them.", file=sys.stderr, flush=True)
     saved = None
     # Receipt/exit-code writes are best effort: a committed update exits 0 whatever they hit.
     with suppress(Exception):  # health: allow BLE001 -- post-commit boundary: a receipt error never fails the update

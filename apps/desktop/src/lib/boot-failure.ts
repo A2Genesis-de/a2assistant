@@ -39,7 +39,7 @@ async function loadWordmarkFont(): Promise<void> {
 
 // Keep this independent of the app graph: its JavaScript or CSS may have failed to load.
 export function showBootFailure(error: unknown, reload: () => void = () => location.reload()): void {
-  console.error('Hermes failed to load', error)
+  console.error('A2Assistant failed to load', error)
 
   const root = document.getElementById('root')
 

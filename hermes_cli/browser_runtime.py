@@ -88,4 +88,4 @@ def chromium_missing_hint() -> str:
     if _pm_has_no_chromium():
         return ("No Chromium found: pm builds none for this platform. Install your distribution's "
                 "chromium package, or set browser.executable_path.")
-    return "Chromium is not installed: run `a2assistant pm install chromium`."
+    return "Chromium is not installed: run `hermes pm install chromium`."

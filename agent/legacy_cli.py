@@ -31,7 +31,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
     parser = argparse.ArgumentParser(
         prog="hermes-agent",
-        description="Legacy single-query A2Assistant runner. For the full CLI use `a2assistant`.",
+        description="Legacy single-query A2Assistant runner. For the full CLI use `hermes`.",
     )
     parser.add_argument("--version", action="version", version=f"A2Assistant v{__version__} ({__release_date__})")
     parser.add_argument("prompt", nargs="*", help="query to run (same as --query)")
@@ -71,7 +71,7 @@ def main(argv: Optional[list[str]] = None, *, run: Optional[Callable[..., object
     query = args.query or positional or None
     if query is None and not args.list_tools:
         parser.print_help()
-        print("\nNo query given: pass one with --query (or run `a2assistant` for the interactive CLI).")
+        print("\nNo query given: pass one with --query (or run `hermes` for the interactive CLI).")
         return 0
 
     if run is None:

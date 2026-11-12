@@ -544,7 +544,7 @@ def _launch_home_may_multiplex(config=None) -> bool:
         decision = MultiplexDecision(
             False, "guard",
             f"profile {name!r} launched the gateway, and only the default profile runs the multiplexer "
-            "(start it with `a2assistant gateway run` from the default profile to serve every profile)")
+            "(start it with `hermes gateway run` from the default profile to serve every profile)")
         config.multiplex_profiles = False
         # The first load armed fail-closed secret reads for a multiplexer; boot work before the
         # runner (the left-core install) reads this profile's own env, unscoped.

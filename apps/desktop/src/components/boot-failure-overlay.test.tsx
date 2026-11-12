@@ -387,7 +387,7 @@ describe('BootFailureOverlay', () => {
     $desktopBoot.set({
       ...$desktopBoot.get(),
       error:
-        'This app bundles its own A2Assistant runtime, but the runtime files are missing or damaged. Reinstall A2Assistant to restore it.'
+        'This app bundles its own A2Assistant runtime, but the runtime files are missing or damaged. Reinstall A2Assistant Desktop to restore it.'
     })
 
     try {

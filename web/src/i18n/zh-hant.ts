@@ -103,7 +103,7 @@ export const zhHant: Translations = {
   status: {
     actionFailed: "動作失敗",
     actionFinished: "已完成",
-    actionFinishedOwed: "已更新，但仍有待完成的步驟（重新執行 `a2assistant update` 以完成）",
+    actionFinishedOwed: "已更新，但仍有待完成的步驟（重新執行 `hermes update` 以完成）",
     actions: "動作",
     agent: "代理",
     activeSessions: "使用中工作階段",
@@ -341,7 +341,7 @@ export const zhHant: Translations = {
       "已儲存 — 重新啟動閘道以套用變更。",
     forceReinstall: "強制重新安裝（先刪除既有資料夾）",
     headline:
-      "探索、安裝、啟用並更新 A2Assistant 外掛（對齊 `a2assistant plugins` CLI）。",
+      "探索、安裝、啟用並更新 A2Assistant 外掛（對齊 `hermes plugins` CLI）。",
     identifierLabel: "Git 網址或 owner/repo",
     inactive: "未啟用",
     installBtn: "安裝",

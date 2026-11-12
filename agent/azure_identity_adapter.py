@@ -56,7 +56,7 @@ def _require_azure_identity():
         try:
             from pm import InstallError, ensure_import
         except ImportError as exc:
-            raise ImportError(_INSTALL_MSG + "Run: a2assistant pm repair") from exc
+            raise ImportError(_INSTALL_MSG + "Run: hermes pm repair") from exc
         try:
             ensure_import(_AZURE_IDENTITY_FEATURE)
         except InstallError as exc:

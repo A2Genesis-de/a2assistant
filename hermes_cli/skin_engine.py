@@ -58,21 +58,22 @@ def _wings(*glyphs) -> list[list[str]]:
 
 # Branding shared by every Hermes-named built-in (mono/daylight override help_header).
 _HERMES_BRANDING: dict[str, str] = _branding(
-    "Hermes", "☤", "Goodbye! ☤", prompt="❯", help_header="(^_^)? Available Commands")
+    "A2Assistant", "☤", "Goodbye! ☤", prompt="❯", help_header="(^_^)? Available Commands") | {
+    "agent_name": "A2Assistant", "welcome": "Welcome to A2Assistant! Type your message or /help for commands."}
 
 _BUILTIN_SKINS: dict[str, dict[str, Any]] = {
     "a2": {
         "name": "a2", "description": "A2Assistant — A2Genesis monochrome",
         "colors": {
-            "banner_border": "#3f3f46", "banner_title": "#fafafa", "banner_accent": "#d4d4d8",
+            "banner_border": "#62626b", "banner_title": "#fafafa", "banner_accent": "#d4d4d8",
             "banner_dim": "#6b6b73", "banner_text": "#d4d4d8", "ui_accent": "#fafafa",
             "ui_label": "#a1a1aa", "ui_ok": "#4cb862", "ui_error": "#f0595e", "ui_warn": "#ffb224",
-            "prompt": "#fafafa", "input_rule": "#3f3f46", "response_border": "#a1a1aa",
+            "prompt": "#fafafa", "input_rule": "#62626b", "response_border": "#a1a1aa",
             "status_bar_bg": "#171717", "status_bar_text": "#d4d4d8",
             "status_bar_strong": "#fafafa", "status_bar_dim": "#6b6b73",
             "status_bar_good": "#4cb862", "status_bar_warn": "#ffb224", "status_bar_bad": "#f0595e",
             "status_bar_critical": "#ff8a8e", "session_label": "#a1a1aa",
-            "session_border": "#3f3f46", "completion_menu_bg": "#171717",
+            "session_border": "#62626b", "completion_menu_bg": "#171717",
             "completion_menu_current_bg": "#2a2a2a", "selection_bg": "#3f3f46",
             "shell_dollar": "#d4d4d8", "voice_status_bg": "#171717"},
         "light_colors": {
@@ -98,7 +99,7 @@ _BUILTIN_SKINS: dict[str, dict[str, Any]] = {
                        "[#71717a]      ▄████████▄[/]\n[#71717a]    ▄████████████▄[/]",
         "tool_prefix": "┊"},
     "default": {
-        "name": "default", "description": "Classic Hermes — gold and kawaii",
+        "name": "default", "description": "Classic A2Assistant — gold and kawaii",
         # Dark-authored; values match the TUI's DARK_THEME so both render the same gold.
         "colors": {
             "banner_border": "#CD7F32", "banner_title": "#FFD700", "banner_accent": "#FFBF00",

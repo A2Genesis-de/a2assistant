@@ -30,7 +30,7 @@ export interface GitOwnerRoute {
 
 const windowApi: GitApi = <T>(path: string, body?: Record<string, unknown>) => {
   if (!window.hermesDesktop) {
-    throw new Error('A2Assistant bridge is unavailable')
+    throw new Error('A2Assistant Desktop bridge is unavailable')
   }
 
   return hermesApi<T>(

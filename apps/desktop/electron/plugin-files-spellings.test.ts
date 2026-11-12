@@ -81,7 +81,7 @@ describe('case on a case-sensitive macOS volume', () => {
     })
   })
 
-  it.runIf(posix)('a differently-cased spelling of the Hermes home still cannot be granted', async () => {
+  it.runIf(posix)('a differently-cased spelling of the A2Assistant home still cannot be granted', async () => {
     const lookalike = path.join(scratch, 'home', '.HERMES')
     fs.mkdirSync(lookalike)
 
@@ -232,7 +232,7 @@ describe('kernel pseudo-filesystems wherever they are mounted', () => {
   })
 })
 
-describe('Hermes data reached by another spelling', () => {
+describe('A2Assistant data reached by another spelling', () => {
   it('compares folders by filesystem identity', async () => {
     expect(await overlapsByIdentity(hermesHome, [hermesHome])).toBe(true)
     expect(await overlapsByIdentity(path.join(scratch, 'home'), [hermesHome])).toBe(true)

@@ -91,7 +91,7 @@ _FINISH_REASON_MAP = {
 _HTTP_ERROR_CODES = {401: "gemini_unauthorized", 429: "gemini_rate_limited", 404: "gemini_model_not_found"}
 _MISSING_KEY_ERROR = (
     "Gemini native client requires an API key, but none was provided. Set GOOGLE_API_KEY or GEMINI_API_KEY in your "
-    "environment / ~/.hermes/.env (get one at https://aistudio.google.com/app/apikey), or run `a2assistant setup` to "
+    "environment / ~/.hermes/.env (get one at https://aistudio.google.com/app/apikey), or run `hermes setup` to "
     "configure the Google provider."
 )
 

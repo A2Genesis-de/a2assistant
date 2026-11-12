@@ -309,7 +309,7 @@ def _minimax_fresh_state() -> dict[str, Any]:
         state = get_provider_auth_state("minimax-oauth")
         if not state or not state.get("access_token"):
             raise _minimax_err(
-                "Not logged into MiniMax OAuth. Run `a2assistant model` and select MiniMax (OAuth).",
+                "Not logged into MiniMax OAuth. Run `hermes model` and select MiniMax (OAuth).",
                 "not_logged_in", relogin=True,
             )
         try:

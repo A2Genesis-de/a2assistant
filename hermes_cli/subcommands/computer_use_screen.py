@@ -95,7 +95,7 @@ def _screen_install(args) -> int:
     if missing:
         print("Bot Desktop: still missing " + ", ".join(missing))
         return 1
-    print("Bot Desktop: ready. Start with `a2assistant computer-use screen start` or from A2Assistant Desktop.")
+    print("Bot Desktop: ready. Start with `hermes computer-use screen start` or from A2Assistant Desktop.")
     return 0
 
 

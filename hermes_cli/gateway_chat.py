@@ -28,7 +28,7 @@ _RELOCATED = {
     "w": "`hermes --tui -w`",
     "no_restore_cwd": "`--in <dir>` (the gateway keeps the session's frozen cwd)",
     "run_budget": "`agent.run_budget_seconds` in config.yaml",
-    "verbose": "`a2assistant logs --follow`, or `a2assistant chat --tui -v`",
+    "verbose": "`hermes logs --follow`, or `hermes chat --tui -v`",
     "compact": "`display.compact: true` in config.yaml",
     "create-if-missing without -c <name>": "`-c <name> --create-if-missing`",
 }
@@ -155,8 +155,8 @@ async def _resume_latest(client, args):
     except GatewayClientError as exc:
         if str(exc) != "not_found":
             raise
-        raise GatewayClientError("No previous CLI session to continue. Start a new one with `a2assistant`, "
-                                 "or list sessions with `a2assistant sessions list`.") from None
+        raise GatewayClientError("No previous CLI session to continue. Start a new one with `hermes`, "
+                                 "or list sessions with `hermes sessions list`.") from None
 
 
 async def run_gateway_chat(args, emitter=None):

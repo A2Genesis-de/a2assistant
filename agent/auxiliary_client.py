@@ -877,7 +877,7 @@ _PROVIDERS_WITHOUT_VISION: frozenset = frozenset({"kimi-coding", "kimi-coding-cn
 # OpenRouter app attribution (always sent). `X-Title` is what the dashboard reads.
 _OR_HEADERS_BASE = {
     "HTTP-Referer": "https://hermes-agent.nousresearch.com",
-    "X-Title": "Hermes Agent",
+    "X-Title": "A2Assistant",
     "X-OpenRouter-Categories": "productivity,cli-agent",
 }
 
@@ -945,7 +945,7 @@ from hermes_cli.version_info import hermes_user_agent
 
 
 def _ai_gateway_headers() -> dict[str, str]:
-    return {"HTTP-Referer": "https://hermes-agent.nousresearch.com", "X-Title": "Hermes Agent",
+    return {"HTTP-Referer": "https://hermes-agent.nousresearch.com", "X-Title": "A2Assistant",
             "User-Agent": hermes_user_agent("HermesAgent")}
 
 # Nous Portal attribution tags, built per call. They come from agent.portal_tags so the client=

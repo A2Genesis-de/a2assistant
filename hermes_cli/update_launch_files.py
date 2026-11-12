@@ -17,7 +17,7 @@ import os
 import sys
 
 FOLLOWUP_STEP = "launch_files"
-_RETRY = "the next `a2assistant update` or `a2assistant gateway restart` rewrites it"
+_RETRY = "the next `hermes update` or `hermes gateway restart` rewrites it"
 
 
 def refresh_launch_files() -> None:

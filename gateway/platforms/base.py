@@ -464,7 +464,7 @@ GATEWAY_SECRET_CAPTURE_UNSUPPORTED_MESSAGE = (
 # Kept under 200 chars: Telegram's answerCallbackQuery truncates longer text.
 UNAUTHORIZED_ACTION_NOTICE = (
     "This bot is private and you're not on its allowed list. If you own it, run "
-    "`a2assistant pairing approve {platform} <request-id>` on the host (`a2assistant pairing list` shows the id).")
+    "`hermes pairing approve {platform} <request-id>` on the host (`hermes pairing list` shows the id).")
 
 
 def unauthorized_action_notice(platform: Any) -> str:

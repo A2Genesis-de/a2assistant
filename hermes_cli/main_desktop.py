@@ -892,7 +892,7 @@ def _desktop_macos_relaunchable_fixup(
                     f"  ✗ macOS signing identity {configured!r} did not produce a verified "
                     f"signature, and the installed app is publisher-signed (Team ID "
                     f"{target_sig['team']}); keeping it (no ad-hoc fallback). Fix the identity "
-                    "(e.g. `a2assistant desktop --setup-tcc-identity` or edit "
+                    "(e.g. `hermes desktop --setup-tcc-identity` or edit "
                     "desktop.macos_signing_identity in config.yaml) and update again."
                 )
                 return False
@@ -1134,7 +1134,7 @@ def _install_rebuilt_macos_bundles(
         if app.resolve() in running:
             problems.append(
                 f"{app} is running and was not refreshed; quit A2Assistant Desktop and run "
-                "`a2assistant update` again (or update from inside the app)")
+                "`hermes update` again (or update from inside the app)")
             continue
         if codesign:
             installed_sig = _macos_signature_summary(codesign, app)
@@ -1480,7 +1480,7 @@ def build_prepared_desktop(desktop_dir: Path, *, source_mode: bool, pnpm: str, e
         # stamp stays stale, so `hermes desktop` run outside the app rebuilds it
         # (_desktop_build_needed), and the in-app update completes with desktop=True.
         print(f"  ⚠ Skipped rebuilding the desktop app: this update is running inside it (pid {ancestor}),")
-        print("    and Windows locks a running app's files. Quit A2Assistant Desktop and run `a2assistant desktop`")
+        print("    and Windows locks a running app's files. Quit A2Assistant Desktop and run `hermes desktop`")
         print("    from a terminal, or use Update now in Settings → About, to rebuild and reopen it.")
         return None
     build_label = "source build" if source_mode else "packaged app"
@@ -1691,7 +1691,7 @@ def _run_desktop_one_shot(args: argparse.Namespace, desktop_dir: Path, *, bundle
             with contextlib.suppress(NotBundledApp):
                 exe = resolve_bundle_layout(PROJECT_ROOT).launcher
         if exe is None:
-            print(f"✗ No packaged A2Assistant Desktop found under {desktop_dir / 'release'}; run `a2assistant desktop` first.")
+            print(f"✗ No packaged A2Assistant Desktop found under {desktop_dir / 'release'}; run `hermes desktop` first.")
         sys.exit(0 if exe is not None and install_profile(exe) else 1)
 
 
@@ -1721,7 +1721,7 @@ def cmd_gui(args: argparse.Namespace):
                 "  This A2Assistant came from Homebrew, which does not ship the desktop app's\n"
                 "  source tree, so it cannot be built from this install.\n"
                 "  Install the desktop app from https://hermes-agent.nousresearch.com,\n"
-                "  or run `a2assistant desktop` from a source checkout."
+                "  or run `hermes desktop` from a source checkout."
             )
         sys.exit(1)
 

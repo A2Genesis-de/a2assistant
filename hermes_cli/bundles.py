@@ -153,7 +153,7 @@ def register_cli(subparser) -> None:
         help="Skill name to include (repeat for multiple)")
     p_create.add_argument(
         "--description", "-d", default="",
-        help="Human-readable description shown in /help and `a2assistant bundles list`")
+        help="Human-readable description shown in /help and `hermes bundles list`")
     p_create.add_argument(
         "--instruction", "-i", default="",
         help="Extra guidance prepended to the loaded skill content")

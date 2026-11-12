@@ -52,7 +52,7 @@ _TURN_ERROR_LAYER_COPY: dict[str, tuple[str, str]] = {
 # ``retryable: false``), for codes whose retry hint cannot be reworded mechanically.
 _TURN_ERROR_NO_RETRY_HINT: dict[str, str] = {
     # Switched off: nothing comes up on its own, so the user starts it or picks another model.
-    "local_runtime_unavailable": ("Start the local model server (A2Assistant desktop app, or `a2assistant model` → "
+    "local_runtime_unavailable": ("Start the local model server (A2Assistant desktop app, or `hermes model` → "
                                   "Local models), or switch with /model."),
 }
 
@@ -127,7 +127,7 @@ def agent_init_failed_message(exc: Any) -> str:
                 "Wait for the other process to release the lock (or exit it — check for a running "
                 "dashboard or background hermes process), then retry.")
     return (f"A2Assistant could not start the assistant for this session. Details: {detail}. "
-            "Check the model and provider with /model, or run `a2assistant setup` in a terminal to reconfigure.")
+            "Check the model and provider with /model, or run `hermes setup` in a terminal to reconfigure.")
 
 
 AGENT_STILL_STARTING = (

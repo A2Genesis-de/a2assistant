@@ -103,7 +103,7 @@ export const ru: Translations = {
   status: {
     actionFailed: "Ошибка действия",
     actionFinished: "Завершено",
-    actionFinishedOwed: "Обновлено, но работа ещё не завершена (запустите `a2assistant update` снова, чтобы закончить)",
+    actionFinishedOwed: "Обновлено, но работа ещё не завершена (запустите `hermes update` снова, чтобы закончить)",
     actions: "Действия",
     agent: "Агент",
     activeSessions: "Активные сессии",
@@ -342,7 +342,7 @@ export const ru: Translations = {
       "Сохранено — перезапустите шлюз, чтобы применить изменение.",
     forceReinstall: "Принудительная переустановка (сначала удалить существующую папку)",
     headline:
-      "Поиск, установка, включение и обновление плагинов A2Assistant (аналог `a2assistant plugins`).",
+      "Поиск, установка, включение и обновление плагинов A2Assistant (аналог `hermes plugins`).",
     identifierLabel: "Git URL или owner/repo",
     inactive: "неактивно",
     installBtn: "Установить",

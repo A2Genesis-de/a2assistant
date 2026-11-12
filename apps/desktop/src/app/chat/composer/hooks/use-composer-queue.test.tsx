@@ -644,7 +644,7 @@ describe('useComposerQueue scope', () => {
     act(() => {
       hook.result.current.exitQueuedEdit('save')
     })
-    await act(async () => replies[0]!.reject(new Error('Hermes gateway is not connected')))
+    await act(async () => replies[0]!.reject(new Error('A2Assistant gateway is not connected')))
 
     expect(hook.result.current.queueEdit?.entryId).toBe('adm-1')
     expect(draftRef.current).toBe('new words')

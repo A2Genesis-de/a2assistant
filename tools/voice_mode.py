@@ -1523,7 +1523,7 @@ def check_voice_requirements() -> dict[str, Any]:
         else f"Audio capture: MISSING ({_audio_unavailable_reason()})",
         "STT provider: DISABLED in config (stt.enabled: false)" if not stt_enabled
         else f"STT provider: {stt_label}" if stt_label
-        else ("STT provider: MISSING (run `a2assistant tools` and configure "
+        else ("STT provider: MISSING (run `hermes tools` and configure "
               "Speech-to-Text: Local Whisper or a cloud provider)"),
     ]
     details += [f"Environment: {w}" for w in env_check["warnings"]]

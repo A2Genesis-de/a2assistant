@@ -129,7 +129,7 @@ async function openStoredBotChat(
   { background = false, intent = 'in-place' }: OpenStoredBotChatOptions = {}
 ): Promise<string> {
   if (!storedId || typeof host.openSession !== 'function') {
-    throw new Error('This A2Assistant version cannot open stored sessions')
+    throw new Error('This A2Assistant Desktop version cannot open stored sessions')
   }
 
   const { bot, name, route } = botOwner(owner)
@@ -734,7 +734,7 @@ export async function prepareBotSource(bot: RosterRow) {
   if (route && typeof host.requestProfile !== 'function') {
     throw new Error(
       getPluginCtx()?.i18n?.t('bot.remoteConnectionsUnsupported') ??
-        'Update A2Assistant to chat with bots on other connections.'
+        'Update A2Assistant Desktop to chat with bots on other connections.'
     )
   }
 

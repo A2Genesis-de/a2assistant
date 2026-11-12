@@ -138,7 +138,7 @@ def build_gateway_parser(
                     "is a credential: it is printed for the calling process only, never logged, and "
                     "expires 30 seconds after it is minted.",
         epilog="Exit codes: 0 attached; 2 invalid invocation; otherwise the exit code "
-               "`a2assistant gateway ensure` gives the same verdict.")
+               "`hermes gateway ensure` gives the same verdict.")
     _flag(gateway_attach, "--json", help="Emit one JSON result (default)")
     attach_mode = gateway_attach.add_mutually_exclusive_group()
     _flag(attach_mode, "--start", help="Start the gateway when none serves this profile")
@@ -273,7 +273,7 @@ def build_gateway_parser(
 
     proxy_start = proxy_subparsers.add_parser("start", help="Run the proxy in the foreground")
     proxy_start.add_argument("--provider", default="nous",
-        help="Upstream provider: nous or xai (default: nous). See `a2assistant proxy providers`.")
+        help="Upstream provider: nous or xai (default: nous). See `hermes proxy providers`.")
     proxy_start.add_argument("--host", default=None,
         help="Bind address (default: 127.0.0.1). Use 0.0.0.0 to expose on LAN.")
     proxy_start.add_argument("--port", type=int, default=None, help="Bind port (default: 8645)")

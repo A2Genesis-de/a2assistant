@@ -33,7 +33,7 @@ def _azure_entra_credentials(cfg_entra: dict[str, Any]) -> Any:
     except Exception as exc:
         raise AuthError(
             "Could not load the Azure Foundry Entra ID adapter. "
-            "Run a2assistant pm repair, then restart A2Assistant. "
+            "Run hermes pm repair, then restart A2Assistant. "
             f"(import failed: {exc})"
         ) from exc
     scope = str(cfg_entra.get("scope") or "").strip() or SCOPE_AI_AZURE_DEFAULT
@@ -55,7 +55,7 @@ def _azure_foundry_api_key(rp, explicit_api_key: str) -> str:
     if not api_key:
         raise rp.AuthError(
             "Azure Foundry requires an API key. Set AZURE_FOUNDRY_API_KEY in "
-            "~/.hermes/.env or run 'a2assistant model' to configure. To use "
+            "~/.hermes/.env or run 'hermes model' to configure. To use "
             "keyless Microsoft Entra ID auth instead, set "
             "model.auth_mode: entra_id in config.yaml (or pick "
             "'Microsoft Entra ID' in 'hermes model')."

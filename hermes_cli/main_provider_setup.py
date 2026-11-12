@@ -754,7 +754,7 @@ def _prompt_api_key(pconfig, existing_key: str, provider_id: str = "", existing_
         return new_key, False
     if choice.startswith("c") and not pool_backed:
         save_env_value(key_env, "")
-        print(f"  API key cleared.  Re-run `a2assistant setup` to configure {pconfig.name} again.")
+        print(f"  API key cleared.  Re-run `hermes setup` to configure {pconfig.name} again.")
         return "", True
     # Keep (default, or any other input)
     print()

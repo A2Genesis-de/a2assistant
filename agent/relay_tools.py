@@ -57,7 +57,7 @@ def execute(
             raise callback_error
         if isinstance(exc, Exception) and callback_error is None and "value" in raw_result:
             logger.warning(
-                "NeMo Relay tool post-processing failed after dispatch success; returning the Hermes tool result",
+                "NeMo Relay tool post-processing failed after dispatch success; returning the A2Assistant tool result",
                 exc_info=True,
             )
             return raw_result["value"], observed_args

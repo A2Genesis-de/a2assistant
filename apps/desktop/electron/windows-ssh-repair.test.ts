@@ -139,7 +139,7 @@ test('Test and Connect share one verdict on a helper too old for a boot-selected
   assert.equal(windowsHelperOwnsRuntime(runtime, { supported: true }), true)
 })
 
-test.runIf(process.platform === 'win32')('the real Windows probe finds a .cmd-only launcher in the Hermes home off PATH', async () => {
+test.runIf(process.platform === 'win32')('the real Windows probe finds a .cmd-only launcher in the A2Assistant home off PATH', async () => {
   const home = fs.mkdtempSync(path.join(os.tmpdir(), 'hermes-probe-home-'))
   fs.mkdirSync(path.join(home, 'bin'))
   fs.writeFileSync(path.join(home, 'bin', 'hermes.cmd'), '@echo off\r\n')

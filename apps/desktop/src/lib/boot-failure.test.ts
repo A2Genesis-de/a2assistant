@@ -37,7 +37,7 @@ it('shows a rejected loader’s cause and reloads only when the user clicks Relo
 
   await bootRenderer(() => Promise.reject(error)).catch(error => showBootFailure(error, reload))
 
-  expect(console.error).toHaveBeenCalledWith('Hermes failed to load', error)
+  expect(console.error).toHaveBeenCalledWith('A2Assistant failed to load', error)
   expect(within(root).getByRole('heading', { level: 1 }).textContent).toBe('A2Assistant couldn’t load')
   expect(within(root).getByRole('alert').textContent).toContain(
     'Part of the app didn’t load; reloading usually fixes it.'
@@ -63,7 +63,7 @@ it.each(['element', 'text'])('leaves mounted %s content untouched and still logs
 
   expect([...root.childNodes]).toEqual([content])
   expect(root.textContent).toBe('Already mounted')
-  expect(console.error).toHaveBeenCalledWith('Hermes failed to load', error)
+  expect(console.error).toHaveBeenCalledWith('A2Assistant failed to load', error)
   expect(reload).not.toHaveBeenCalled()
 })
 
@@ -85,7 +85,7 @@ it.each(['hud', 'overlay', 'quick', 'wake'])(
     showBootFailure(error, vi.fn())
 
     expect(root.childNodes).toHaveLength(0)
-    expect(console.error).toHaveBeenCalledWith('Hermes failed to load', error)
+    expect(console.error).toHaveBeenCalledWith('A2Assistant failed to load', error)
   }
 )
 

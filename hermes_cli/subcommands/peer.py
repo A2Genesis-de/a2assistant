@@ -219,7 +219,7 @@ def _resolve_peer_target(target: str) -> tuple[str, str | None, dict, str]:
     peer_name, profile = _parse_target(target)
     peer = _load_peers().get(peer_name)
     if not isinstance(peer, dict) or not peer.get("url"):
-        raise LookupError(f"No peer named '{peer_name}'. Run: a2assistant peer list")
+        raise LookupError(f"No peer named '{peer_name}'. Run: hermes peer list")
     key = _peer_secret(peer_name)
     if not key:
         raise PermissionError(

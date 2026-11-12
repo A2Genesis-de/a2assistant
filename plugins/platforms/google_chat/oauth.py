@@ -249,7 +249,7 @@ def install_deps() -> bool:
         return True
     except Exception as exc:
         print(f"ERROR: Failed to install dependencies: {exc}")
-        print("Run `a2assistant setup` to repair the managed installation, then retry.")
+        print("Run `hermes setup` to repair the managed installation, then retry.")
         return False
 
 

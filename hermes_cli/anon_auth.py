@@ -59,10 +59,10 @@ PREVIEW_FULL_CONNECTORS_ENV = "HERMES_PREVIEW_FULL_CONNECTORS"
 GUEST_MINT_TIMEOUT_SECONDS = 5.0
 # Copy shared by every surface that names the free tier (R-USR-1): never guest / anonymous / account.
 FREE_TIER_LABEL = "Nous · free tier"
-UPGRADE_HINT = "Run `a2assistant auth upgrade` to sign in with a Nous account, or /login inside a chat."
+UPGRADE_HINT = "Run `hermes auth upgrade` to sign in with a Nous account, or /login inside a chat."
 FREE_TIER_NOT_SIGNED_IN = (
     "You're not signed in. Free inference and connectors are always on. "
-    "Run `a2assistant auth` to sign in with a Nous account.")
+    "Run `hermes auth` to sign in with a Nous account.")
 
 
 class AnonCredentialDead(AuthError):
@@ -808,9 +808,9 @@ _WELCOME_ROUTE_COPY = {
 }
 # The sign-in door, phrased for a chat surface (slash command) and for a terminal.
 _SIGNIN_CHAT = "To sign in: /login."
-_SIGNIN_TERMINAL = "To sign in: `a2assistant auth upgrade`."
+_SIGNIN_TERMINAL = "To sign in: `hermes auth upgrade`."
 _MODEL_HINT_CHAT = "Run /model and pick the Nous row again."
-_MODEL_HINT_TERMINAL = "Run `a2assistant model` and pick the Nous row again."
+_MODEL_HINT_TERMINAL = "Run `hermes model` and pick the Nous row again."
 # Terminal copy for a free-model outage once the retries are spent (5xx, transport failure).
 FREE_TIER_OUTAGE_COPY = ("The free model is having trouble responding right now. "
                          "Try sending your message again in a minute.")

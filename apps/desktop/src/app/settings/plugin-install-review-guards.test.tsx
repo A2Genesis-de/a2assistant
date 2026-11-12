@@ -46,7 +46,7 @@ const REPO = 'https://github.com/example/pkg'
 
 const ADMISSION_REFUSAL =
   'invalid params for plugins.manage: inspected_sha: Extra inputs are not permitted — the client and the ' +
-  'Hermes backend are out of sync (different versions); run `hermes update` and restart both'
+  'A2Assistant backend are out of sync (different versions); run `hermes update` and restart both'
 
 const callsFor = (action: string) =>
   requestGateway.mock.calls.filter(([method, params]) => method === 'plugins.manage' && params?.action === action)

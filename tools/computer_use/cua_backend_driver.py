@@ -90,7 +90,7 @@ def cua_driver_binary_available() -> bool:
 
 def cua_driver_install_hint() -> str:
     return ("cua-driver is not installed. Install the pinned driver with:\n  hermes computer-use install\n"
-            "Or run `a2assistant tools` and enable the Computer Use toolset to install it automatically.")
+            "Or run `hermes tools` and enable the Computer Use toolset to install it automatically.")
 
 def _mcp_args_with_overlay_flag(args: list[str], driver_cmd: str = _CUA_DRIVER_DEFAULT_CMD) -> list[str]:
     """Return *args* with ``--no-overlay`` appended when configured and supported."""

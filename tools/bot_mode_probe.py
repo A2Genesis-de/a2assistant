@@ -280,7 +280,7 @@ def _peer_paragraph(root: Path) -> str:
         "\n\nTeammates on OTHER machines: this install also has peer gateways "
         f"registered ({listed}). Message an agent on a peer the same way — "
         'message_agent with target "<peer>/<agent-name>" (or "<peer>" alone '
-        "for the peer's main agent). Run `a2assistant peer list` for the live "
+        "for the peer's main agent). Run `hermes peer list` for the live "
         "peer list."
     )
 

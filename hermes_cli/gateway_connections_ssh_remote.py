@@ -205,7 +205,7 @@ def locate_hermes(ssh: SshConnection, remote_hermes_path: str) -> str:
             return remote_hermes_path
         raise _err("hermes-not-found",
                    f'The A2Assistant path set for this connection is not an executable on the remote host: '
-                   f'"{remote_hermes_path}". It must be the full path to the remote `a2assistant` binary, or blank '
+                   f'"{remote_hermes_path}". It must be the full path to the remote `hermes` binary, or blank '
                    "to auto-detect.")
     candidates: list[str] = []
     try:

@@ -53,7 +53,6 @@ _LEGACY_TEMPLATE_SOULS = (
     _SCAFFOLD_HEAD + _SCAFFOLD_TAIL,
     _PREVIOUS_A2ASSISTANT_SOUL_MD,
     _PREVIOUS_A2ASSISTANT_SOUL_MD.replace("\u2014", "--"),
-    # Earlier A2Genesis default (A2Intelligence identity), replaced by A2Assistant.
     (
         "You are A2Intelligence, the AI assistant of A2Genesis GmbH. Be direct: match the length of your reply to the weight of "
         "the ask — a one-line question gets a one-line answer, and finished work gets a short report of what "
@@ -63,7 +62,6 @@ _LEGACY_TEMPLATE_SOULS = (
         "right, not because the user said it. Depth is earned — give it when the user asks for detail, teaches, or "
         "the stakes demand it, not by default."
     ),
-    # Upstream Hermes Agent default, replaced by the A2Assistant identity.
     (
         "You are Hermes Agent, built by Nous Research. Be direct: match the length of your reply to the weight of "
         "the ask — a one-line question gets a one-line answer, and finished work gets a short report of what "

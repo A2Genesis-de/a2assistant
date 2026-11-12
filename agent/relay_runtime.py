@@ -188,7 +188,7 @@ def _report_requires_managed_execution(report: Any) -> bool:
 
     def keep_enabled() -> bool:
         logger.warning(
-            "Hermes could not determine whether the Relay plugin configuration is empty; keeping managed "
+            "A2Assistant could not determine whether the Relay plugin configuration is empty; keeping managed "
             "execution enabled"
         )
         return True
@@ -307,7 +307,7 @@ class _ProcessRelayPluginConfiguration:
                 if self._state is _RelayPluginConfigurationState.ACTIVE:
                     logger.info(
                         "The Relay plugin host is active process-wide and applies to all profiles hosted by this "
-                        "Hermes process. Configuration files: %s",
+                        "A2Assistant process. Configuration files: %s",
                         "; ".join(_activation_config_paths(self._activation)) or "none reported",
                     )
             self._owners.add(id(owner))
@@ -321,11 +321,11 @@ class _ProcessRelayPluginConfiguration:
             self._activation = None
             if _is_relay_host_conflict(exc):
                 logger.warning(
-                    "A process-global Relay plugin configuration is already active outside Hermes native "
-                    "ownership; leaving it unchanged and disabling Hermes-managed Relay middleware for this process"
+                    "A process-global Relay plugin configuration is already active outside A2Assistant native "
+                    "ownership; leaving it unchanged and disabling A2Assistant-managed Relay middleware for this process"
                 )
                 return _RelayPluginConfigurationState.FOREIGN
-            logger.warning("Hermes Relay plugin initialization failed: %s", exc, exc_info=True)
+            logger.warning("A2Assistant Relay plugin initialization failed: %s", exc, exc_info=True)
             return _RelayPluginConfigurationState.FAILED
         self._relay = relay
         return _RelayPluginConfigurationState.ACTIVE
@@ -334,7 +334,7 @@ class _ProcessRelayPluginConfiguration:
         """Return a terminal state when the process cannot take ownership; None to proceed."""
         if self._relay is not None and not self._clear_active():
             logger.warning(
-                "Hermes Relay plugin cleanup is still pending; refusing to replace the process-global configuration"
+                "A2Assistant Relay plugin cleanup is still pending; refusing to replace the process-global configuration"
             )
             return _RelayPluginConfigurationState.FAILED
         return None
@@ -386,7 +386,7 @@ class _ProcessRelayPluginConfiguration:
             try:
                 step()
             except Exception:
-                logger.warning("Hermes Relay plugin %s failed", what, exc_info=True)
+                logger.warning("A2Assistant Relay plugin %s failed", what, exc_info=True)
                 return False
         self._relay = self._activation = None
         return True
@@ -539,7 +539,7 @@ class RelayRuntime:
                 )
             except Exception:
                 logger.warning(
-                    "Hermes Relay segment close failed (session=%s segment=%d); abandoning the old segment span",
+                    "A2Assistant Relay segment close failed (session=%s segment=%d); abandoning the old segment span",
                     session.session_id, session.segment - 1, exc_info=True,
                 )
             scope_metadata = runtime_metadata(
@@ -549,7 +549,7 @@ class RelayRuntime:
                 self._open_session_scope(session, scope_metadata, resolve_parent=False)
             except Exception:
                 logger.warning(
-                    "Hermes Relay segment open failed (session=%s segment=%d); keeping the prior scope handle",
+                    "A2Assistant Relay segment open failed (session=%s segment=%d); keeping the prior scope handle",
                     session.session_id, session.segment, exc_info=True,
                 )
 
@@ -734,10 +734,10 @@ class RelayRuntime:
                 pop_relay_scope(self.relay, top, output=orphan_output, metadata=metadata)
                 drained += 1
             except Exception:
-                logger.warning("Hermes Relay orphaned scope drain failed", exc_info=True)
+                logger.warning("A2Assistant Relay orphaned scope drain failed", exc_info=True)
                 break
         if drained:
-            logger.warning("Hermes Relay drained %d orphaned scope(s) before closing %s", drained, handle)
+            logger.warning("A2Assistant Relay drained %d orphaned scope(s) before closing %s", drained, handle)
         try:
             pop_relay_scope(self.relay, handle, output=output, metadata=metadata)
             return None
@@ -793,7 +793,7 @@ class RelayRuntime:
                 del self._sessions[session_id]
             self._forget_subagent(session_id)
         if failure:
-            logger.warning("Hermes Relay session %s closed with errors: %s", session_id, failure)
+            logger.warning("A2Assistant Relay session %s closed with errors: %s", session_id, failure)
 
     def shutdown(self) -> None:
         """Close core scopes and release process plugin configuration."""
@@ -814,7 +814,7 @@ class RelayRuntime:
         except Exception:
             with self._sessions_lock:
                 self._shutdown_started = False
-            logger.warning("Hermes Relay deferred shutdown could not start", exc_info=True)
+            logger.warning("A2Assistant Relay deferred shutdown could not start", exc_info=True)
 
     def _finish_shutdown(self) -> None:
         try:
@@ -832,7 +832,7 @@ class RelayRuntime:
         except Exception:
             with self._sessions_lock:
                 self._shutdown_started = False
-            logger.warning("Hermes Relay shutdown failed", exc_info=True)
+            logger.warning("A2Assistant Relay shutdown failed", exc_info=True)
             return
         with self._sessions_lock:
             self._shutdown_complete.set()
@@ -876,7 +876,7 @@ class RelayHostRegistry:
             try:
                 host = RelayRuntime(profile_key=key)
             except Exception as exc:
-                logger.warning("Hermes Relay runtime initialization failed", exc_info=True)
+                logger.warning("A2Assistant Relay runtime initialization failed", exc_info=True)
                 host = NoopRelayRuntime(profile_key=key, reason=str(exc))
             self._hosts[key] = host
             return host
@@ -955,7 +955,7 @@ def _warn_on_error(what: str, callback: Callable[..., Any], *args: Any, **kwargs
     try:
         return callback(*args, **kwargs)
     except Exception:
-        logger.warning("Hermes Relay %s failed", what, exc_info=True)
+        logger.warning("A2Assistant Relay %s failed", what, exc_info=True)
         return None
 
 
@@ -998,7 +998,7 @@ class RelaySessionCoordinator:
             try:
                 callback(host, context)
             except Exception:
-                logger.warning("Hermes Relay session initializer failed: %s", name, exc_info=True)
+                logger.warning("A2Assistant Relay session initializer failed: %s", name, exc_info=True)
 
     def acquire_conversation(
         self,
@@ -1060,7 +1060,7 @@ class RelaySessionCoordinator:
                 # One physical scope stack per session; concurrent turns' sibling scopes would not close LIFO.
                 turn.relay_enabled = False
                 logger.warning(
-                    "Skipping Relay instrumentation for concurrent Hermes turn %s in session %s",
+                    "Skipping Relay instrumentation for concurrent A2Assistant turn %s in session %s",
                     turn_id, lease.session_id,
                 )
             else:
@@ -1132,7 +1132,7 @@ class RelaySessionCoordinator:
             turn.lease.session, turn.handle, output={"outcome": outcome}, failure_label="turn scope close failed",
         )
         if failure:
-            logger.warning("Hermes Relay turn finalization failed: %s", failure)
+            logger.warning("A2Assistant Relay turn finalization failed: %s", failure)
 
     @_fail_open("deferred session close")
     def _consume_deferred_close(self, lease: ConversationLease) -> None:
@@ -1214,7 +1214,7 @@ class RelaySessionCoordinator:
                 # Stack-owned: if the newest handle cannot close even after drain, older ones cannot either.
                 for pending_request_id, pending_handle in logical_calls:
                     turn.logical_llm_calls.setdefault(pending_request_id, pending_handle)
-            logger.warning("Hermes Relay logical LLM finalization failed: %s", failure)
+            logger.warning("A2Assistant Relay logical LLM finalization failed: %s", failure)
             break
 
     @staticmethod

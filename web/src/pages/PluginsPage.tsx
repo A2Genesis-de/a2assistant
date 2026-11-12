@@ -166,7 +166,7 @@ function MemoryProviderSetupHint({
   if (!hasDetails || !setup) {
     return (
       <p className="border border-destructive/50 px-3 py-2 text-xs text-destructive">
-        This provider is installed but unavailable. It may need local dependencies or a manual setup step before A2Assistant can activate it.
+        This provider is installed but unavailable. It may need local dependencies or a manual setup step before Hermes can activate it.
       </p>
     );
   }
@@ -249,7 +249,7 @@ function MemoryProviderSetupHint({
       {setup.required_env.length && needsDependencySetup ? (
         <div className="grid gap-2">
           <p className="text-muted-foreground">
-            Required environment values. Fill the matching fields below, or set them in the A2Assistant environment.
+            Required environment values. Fill the matching fields below, or set them in the Hermes environment.
           </p>
           <div className="flex flex-wrap gap-2">
             {setup.required_env.map((envKey) => (
@@ -614,7 +614,7 @@ export default function PluginsPage() {
 
                   {!selectedMemoryName && (
                     <p className="text-xs text-muted-foreground">
-                      A2Assistant will use the built-in MEMORY.md and USER.md files.
+                      Hermes will use the built-in MEMORY.md and USER.md files.
                     </p>
                   )}
 

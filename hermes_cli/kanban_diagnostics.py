@@ -285,7 +285,7 @@ _TRIAGE_SLOTS = {
     False: (
         "auxiliary.triage_specifier", "auxiliary.kanban_decomposer", "specifier",
         "Auto-decompose is off, so triage tasks need "
-        "`a2assistant kanban specify`, which uses auxiliary.triage_specifier.",
+        "`hermes kanban specify`, which uses auxiliary.triage_specifier.",
     ),
 }
 

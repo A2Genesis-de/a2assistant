@@ -574,7 +574,7 @@ def report_unaccounted_runtimes(outcomes: list[dict[str, Any]]) -> bool:
         print()
         print("  ⚠ Manual serve restarts deferred to their owner (reminders retained until the old processes exit):")
         for o in manual:
-            print(f"    • {o['kind']} [{o['profile']}] pid {o['pid']}: relaunch `a2assistant serve` / `a2assistant dashboard`, or reconnect Desktop for an SSH backend")
+            print(f"    • {o['kind']} [{o['profile']}] pid {o['pid']}: relaunch `hermes serve` / `hermes dashboard`, or reconnect Desktop for an SSH backend")
     deferred = [o for o in outcomes if o.get("outcome") == "deferred" and o.get("mechanism") != "respawn-argv"]
     if deferred:
         # Surfaced but not escalated: the updater has no authority over these, so holding
@@ -616,7 +616,7 @@ def report_unaccounted_runtimes(outcomes: list[dict[str, Any]]) -> bool:
         if any(o.get("kind") in _SERVE_KINDS and not o.get("systemd_unit") for o in missed):
             if sys.platform == "linux":
                 print("      systemctl --user restart hermes-serve.service   # unit-managed serve")
-            print("      relaunch `a2assistant serve` / `a2assistant dashboard`")
+            print("      relaunch `hermes serve` / `hermes dashboard`")
     return True
 
 

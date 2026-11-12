@@ -32,10 +32,10 @@ def build_migrate_parser(subparsers) -> None:
         "relay", help="Convert legacy HERMES_NEMO_RELAY_ATIF_*/ATOF_* exporter vars into relay-plugins.toml",
         description="The NeMo Relay cutover stopped reading the legacy exporter variables. Generate "
             "<hermes home>/relay-plugins.toml from them, point HERMES_NEMO_RELAY_PLUGINS_TOML at it, "
-            "and comment the legacy lines out. `a2assistant update` runs this for every profile automatically.")
+            "and comment the legacy lines out. `hermes update` runs this for every profile automatically.")
     migrate_relay.add_argument(
         "--all-profiles", action="store_true",
-        help="Migrate the default home and every named profile (what `a2assistant update` does)")
+        help="Migrate the default home and every named profile (what `hermes update` does)")
     migrate_relay.add_argument(
         "--no-validate", action="store_true",
         help="Skip activating the generated file through Relay's validator before writing it")

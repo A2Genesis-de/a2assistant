@@ -1962,17 +1962,17 @@ _WORKER_BLOCKED_COMMANDS: frozenset[str] = frozenset({"snapshot", "snap"})
 
 # argv shapes that must not run headless in the gateway process → user hint.
 _CLI_EXEC_BLOCKED = {
-    ("setup",): "`a2assistant setup` needs a full terminal — run it outside the TUI",
-    ("gateway",): "`a2assistant gateway` is long-running — run it in another terminal",
-    ("sessions", "browse"): "`a2assistant sessions browse` is interactive — use /resume here, or run browse in another terminal",
-    ("config", "edit"): "`a2assistant config edit` needs $EDITOR in a real terminal",
+    ("setup",): "`hermes setup` needs a full terminal — run it outside the TUI",
+    ("gateway",): "`hermes gateway` is long-running — run it in another terminal",
+    ("sessions", "browse"): "`hermes sessions browse` is interactive — use /resume here, or run browse in another terminal",
+    ("config", "edit"): "`hermes config edit` needs $EDITOR in a real terminal",
 }
 
 
 def _cli_exec_blocked(argv: list[str]) -> str | None:
     """Return user hint if this argv must not run headless in the gateway process."""
     if not argv:
-        return "bare `a2assistant` is interactive — use `/hermes chat -q …` or run `a2assistant` in another terminal"
+        return "bare `hermes` is interactive — use `/hermes chat -q …` or run `hermes` in another terminal"
     head = tuple(a.lower() for a in argv[:2])
     return _CLI_EXEC_BLOCKED.get(head[:1]) or _CLI_EXEC_BLOCKED.get(head)
 

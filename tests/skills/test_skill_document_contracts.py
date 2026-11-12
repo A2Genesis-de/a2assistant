@@ -37,7 +37,7 @@ def test_required_document_and_credit(skill, contributor):
     metadata, _ = _document(skill)  # A corpus glob alone cannot catch a deleted skill.
     if contributor:
         assert contributor in metadata["author"]
-    assert not metadata["author"].startswith("Hermes Agent")
+    assert not metadata["author"].startswith("A2Assistant")
 
 
 @pytest.mark.parametrize("skill,references", [

@@ -1650,7 +1650,7 @@ class SlackAdapter(BasePlatformAdapter):
         async def handle_unhandled_event(event, body, logger):
             logger.debug(
                 "[Slack] Ignoring unhandled event type=%s (no listener registered; subscribed "
-                "events not handled by Hermes can be removed from the Slack app manifest via "
+                "events not handled by A2Assistant can be removed from the Slack app manifest via "
                 "`hermes slack manifest`)",
                 (event or {}).get("type", (body or {}).get("event", {}).get("type", "unknown")))
 
@@ -1843,7 +1843,7 @@ class SlackAdapter(BasePlatformAdapter):
             "gateway.", env_name, env_name)
         self._set_fatal_error(
             f"missing_{env_name.lower()}",
-            f"{env_name} not configured. Use `a2assistant gateway setup` "
+            f"{env_name} not configured. Use `hermes gateway setup` "
             "or add it to your active profile's ~/.hermes/.env file, then restart the gateway.",
             retryable=False)
 
@@ -6832,7 +6832,7 @@ def _write_slack_manifest_and_instruct() -> None:
             "→ App Manifest → Edit, then Save.  Slack will prompt to "
             "reinstall if scopes or slash commands changed.")
         print_info(
-            "   Re-run `a2assistant slack manifest --write` anytime to refresh after "
+            "   Re-run `hermes slack manifest --write` anytime to refresh after "
             "A2Assistant adds new commands.")
     except Exception as e:
         print_warning(f"Could not write Slack manifest: {e}")
@@ -6851,7 +6851,7 @@ def interactive_setup() -> None:
         # Still offer a manifest refresh so new commands get registered.
         if prompt_yes_no(
             "Regenerate the Slack app manifest with the latest command "
-            "list? (recommended after `a2assistant update`)", True):
+            "list? (recommended after `hermes update`)", True):
             _write_slack_manifest_and_instruct()
         return
     for line in _SETUP_STEPS:
@@ -6933,7 +6933,7 @@ def register(ctx) -> None:
         ensure_deps_fn=check_slack_requirements,
         is_connected=_is_connected,
         required_env=["SLACK_BOT_TOKEN", "SLACK_APP_TOKEN"],
-        install_hint="Run `a2assistant setup` to install Slack support.",
+        install_hint="Run `hermes setup` to install Slack support.",
         setup_fn=interactive_setup,
         # YAML→env config bridge — owns the translation of config.yaml slack: keys (require_mention,
         # strict_mention, ignore_other_user_mentions, thread_require_mention, allow_bots,

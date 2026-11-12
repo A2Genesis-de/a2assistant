@@ -80,7 +80,7 @@ def definition_belongs_to_home(definition_path: Path, home: Path, action: str) -
     print(f"✗ Refusing to {action} {definition_path}: it runs HERMES_HOME={raw}, "
           f"but this process has HERMES_HOME={home}.")
     print("  That file is another install's gateway. Use that install, or pass --force-unit-path")
-    print("  to `a2assistant gateway install` if you really mean to repoint it at this home.")
+    print("  to `hermes gateway install` if you really mean to repoint it at this home.")
     return False
 
 

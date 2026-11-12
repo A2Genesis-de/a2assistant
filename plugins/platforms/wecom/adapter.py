@@ -844,7 +844,7 @@ _WECOM_PLATFORM_HINT = (
 
 
 def register(ctx) -> None:
-    common = dict(install_hint="Run `a2assistant setup` to install WeCom support.", emoji="💼", allow_update_command=True)
+    common = dict(install_hint="Run `hermes setup` to install WeCom support.", emoji="💼", allow_update_command=True)
     from . import gateway_env  # env -> GatewayConfig bridge (gateway.config_env)
     ctx.register_platform(
         target_ref_syntax_fn=parse_nonempty,

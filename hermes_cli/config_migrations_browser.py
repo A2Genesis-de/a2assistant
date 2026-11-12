@@ -83,10 +83,10 @@ def _config_decided(key: str, current: Any) -> bool:
 _BACKEND_REASONS = {
     "browser-use": "browser_exec (Browser Use mode) is the only browser now",
     "agent-browser": "agent-browser left A2Assistant; browser_exec is the browser now",
-    "camofox": "Camofox is now the camofox plugin (`a2assistant plugins install camofox`)",
+    "camofox": "Camofox is now the camofox plugin (`hermes plugins install camofox`)",
     "local": "browser_exec launches A2Assistant's packaged Chromium itself (browser.cloud_provider: local)",
     **dict.fromkeys(("browserbase", "firecrawl", "nous"),
-                    "a cloud browser is chosen with browser.cloud_provider (`a2assistant tools` → Browser Automation)"),
+                    "a cloud browser is chosen with browser.cloud_provider (`hermes tools` → Browser Automation)"),
 }
 
 
@@ -171,7 +171,7 @@ def migrate_to_52(results: dict[str, Any], quiet: bool) -> None:
         if backend is False or (isinstance(backend, str) and backend.strip().lower() == "off"):
             # config_added is what `hermes update` re-surfaces on its quiet path, so the notice rides in it.
             note = ("removed browser.backend: off — the built-in browser tools are gone and browser_exec is the "
-                    "browser now; to turn browsing off, disable the `browser` toolset in `a2assistant tools`")
+                    "browser now; to turn browsing off, disable the `browser` toolset in `hermes tools`")
             added.append(note)
             messages.append(f"  ✓ {note[0].upper()}{note[1:]}.")
             notices.append(f"{note[0].upper()}{note[1:]}.")

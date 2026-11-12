@@ -570,7 +570,7 @@ def _find_bash() -> str:
         return bash
     raise RuntimeError(
         "No shell found. A2Assistant needs bash (Git for Windows on Windows). "
-        "Run `a2assistant pm install` or reinstall the bundle."
+        "Run `hermes pm install` or reinstall the bundle."
     )
 
 

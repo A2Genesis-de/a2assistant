@@ -1094,7 +1094,7 @@ def _unknown_provider_message(explicit_provider: str) -> str:
         from hermes_cli.config import validate_config_structure
         issues = validate_config_structure()
         if issues:
-            msg += "\n\nRun 'a2assistant doctor' — config issues detected:" + "".join(f"\n  • {ci.message}" for ci in issues[:3])
+            msg += "\n\nRun 'hermes doctor' — config issues detected:" + "".join(f"\n  • {ci.message}" for ci in issues[:3])
     except Exception:
         pass
     return msg
@@ -1517,7 +1517,7 @@ def _creds_for_switched_provider(st: _Switch) -> Optional[ModelSwitchResult]:
                 return st.fail_on_target(str(e))
             return st.fail_on_target(
                 f"{st.provider_label} is not connected: no API key or login was found for it. Add one with "
-                f"`a2assistant auth add {st.target_provider}`, or pick a connected provider in /model.\n"
+                f"`hermes auth add {st.target_provider}`, or pick a connected provider in /model.\n"
                 f"  Details: {e}")
     return None
 

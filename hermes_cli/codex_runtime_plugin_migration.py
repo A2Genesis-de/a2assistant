@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # Marker comments wrapping the managed section so re-runs can detect what's ours and what's
 # user-edited. Both must appear or strip is a no-op.
 MIGRATION_MARKER = (
-    "# managed by hermes-agent — `a2assistant codex-runtime migrate` regenerates this section")
+    "# managed by hermes-agent — `hermes codex-runtime migrate` regenerates this section")
 MIGRATION_END_MARKER = "# end hermes-agent managed section"
 
 
@@ -486,7 +486,7 @@ def migrate(
             except tomllib.TOMLDecodeError:
                 # codex could not load the pre-broken file, so plugin/list failed for that reason.
                 report.plugin_query_error += (
-                    "; existing config.toml was unloadable — re-run `a2assistant codex-runtime migrate` "
+                    "; existing config.toml was unloadable — re-run `hermes codex-runtime migrate` "
                     "to migrate plugins")
         without_managed = _strip_existing_managed_block(existing)
         if plugin_query_succeeded:

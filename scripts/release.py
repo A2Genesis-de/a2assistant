@@ -312,7 +312,7 @@ def generate_changelog(commits, tag_name, semver, repo_url="https://github.com/N
     # Header
     now = datetime.now()
     date_str = now.strftime("%B %d, %Y")
-    lines.append(f"# Hermes Agent v{semver} ({tag_name})")
+    lines.append(f"# A2Assistant v{semver} ({tag_name})")
     lines.append("")
     lines.append(f"**Release Date:** {date_str}")
     lines.append("")
@@ -329,7 +329,7 @@ def generate_changelog(commits, tag_name, semver, repo_url="https://github.com/N
 
     if first_release:
         lines.append("> 🎉 **First official release!** This marks the beginning of regular weekly releases")
-        lines.append("> for Hermes Agent. See below for everything included in this initial release.")
+        lines.append("> for A2Assistant. See below for everything included in this initial release.")
         lines.append("")
 
     all_authors = set()
@@ -443,7 +443,7 @@ def _resume_canary(tag: str, remote: str, repository: str, *, notes_file: Path |
         create = [
             "gh", "release", "create", tag, "--repo", repository,
             "--verify-tag", "--draft", "--prerelease",
-            "--title", f"Hermes Agent canary {tag}",
+            "--title", f"A2Assistant canary {tag}",
         ]
         create.extend(["--notes-file", str(notes_file)] if notes_file else ["--generate-notes"])
         created = subprocess.run(
@@ -540,7 +540,7 @@ def cmd_canary(args) -> None:
         return
 
     tag_result = git_result(
-        "tag", "-a", tag_name, "-m", f"Hermes Agent canary {date_utc}"
+        "tag", "-a", tag_name, "-m", f"A2Assistant canary {date_utc}"
     )
     if tag_result.returncode != 0:
         print(f"✗ Failed to create tag {tag_name}: {tag_result.stderr.strip()}")
@@ -614,7 +614,7 @@ def prune_old_canaries(args) -> None:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Hermes Agent Release Tool")
+    parser = argparse.ArgumentParser(description="A2Assistant Release Tool")
     parser.add_argument("--canary", action="store_true",
                         help="Tag + publish a stable-core canary "
                              "(v<stable>+canary.<YYYYMMDDTHHMMSSZ>); no-op when "

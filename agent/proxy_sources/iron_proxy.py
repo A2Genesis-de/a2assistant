@@ -363,20 +363,20 @@ def _probe_target() -> tuple[str, int]:
 # Management-API error status -> operator message (422 = validation rejected, ruleset unchanged; 401 = daemon started with another management.token).
 _RELOAD_HTTP_ERRORS = {
     422: "iron-proxy rejected the new config (validation failed; the running ruleset is unchanged): {body}",
-    401: "management API rejected our key (401).  The running daemon was started with a different management.token — run `a2assistant egress restart`.",
+    401: "management API rejected our key (401).  The running daemon was started with a different management.token — run `hermes egress restart`.",
 }
 
 
 def reload_proxy() -> bool:
     """``POST /v1/reload`` (validation failures leave the running config untouched); actionable RuntimeError on any failure."""
     if not (pid := _read_pid()) or not _pid_alive(pid):
-        raise RuntimeError("iron-proxy is not running — nothing to reload.  Run `a2assistant egress start`.")
+        raise RuntimeError("iron-proxy is not running — nothing to reload.  Run `hermes egress start`.")
     if (mgmt := _read_management_listen_from_config()) is None:
         raise RuntimeError(
-            "The generated proxy.yaml has no management listener (written before reload support).  Re-run `a2assistant egress setup` and use `a2assistant egress restart` this one time."
+            "The generated proxy.yaml has no management listener (written before reload support).  Re-run `hermes egress setup` and use `hermes egress restart` this one time."
         )
     if not (token := _read_text_or_none(_management_token_path())):
-        raise RuntimeError("management.token is missing — re-run `a2assistant egress setup`, then `a2assistant egress restart`.")
+        raise RuntimeError("management.token is missing — re-run `hermes egress setup`, then `hermes egress restart`.")
     host, port = mgmt
     req = urllib.request.Request(f"http://{host}:{port}/v1/reload", method="POST", headers={"Authorization": f"Bearer {token}"}, data=b"")
     try:
@@ -393,7 +393,7 @@ def reload_proxy() -> bool:
     except (urllib.error.URLError, OSError) as exc:
         # A daemon started from a pre-management config is alive but has no listener.
         raise RuntimeError(
-            f"could not reach the management API at {host}:{port} ({exc}).  If the daemon was started before reload support, run `a2assistant egress restart` once."
+            f"could not reach the management API at {host}:{port} ({exc}).  If the daemon was started before reload support, run `hermes egress restart` once."
         ) from exc
 
 
@@ -663,9 +663,9 @@ def start_proxy(
     if (existing := _read_pid()) and _pid_alive(existing):
         return get_status()
     if (bin_path := binary or find_iron_proxy(install_if_missing=install_if_missing)) is None:
-        raise RuntimeError("iron-proxy binary not available — run `a2assistant egress install`.")
+        raise RuntimeError("iron-proxy binary not available — run `hermes egress install`.")
     if not (cfg := config_path or (_proxy_state_dir() / "proxy.yaml")).exists():
-        raise RuntimeError(f"iron-proxy config not found at {cfg}. Run `a2assistant egress setup` first.")
+        raise RuntimeError(f"iron-proxy config not found at {cfg}. Run `hermes egress setup` first.")
     # Minimal env: os.environ.copy() would expose every operator secret via /proc/<pid>/environ.
     env = _build_proxy_subprocess_env(extra_env=extra_env, refresh_from_bitwarden=refresh_secrets_from_bitwarden, bitwarden_config=bitwarden_config)
     # v0.39 validates api_key_env is non-empty when management.listen is set.
@@ -772,7 +772,7 @@ def _write_pidfile_safely(pidfile: Path, pid: int) -> None:
     except FileExistsError:
         if (existing_pid := _read_pid()) and _pid_alive(existing_pid):
             raise RuntimeError(
-                f"Another iron-proxy start appears to be in progress (pidfile {pidfile} -> pid {existing_pid}).  Run `a2assistant egress stop` if that proxy is stuck."
+                f"Another iron-proxy start appears to be in progress (pidfile {pidfile} -> pid {existing_pid}).  Run `hermes egress stop` if that proxy is stuck."
             )
         pidfile.unlink(missing_ok=True)
         fd = os.open(str(pidfile), open_flags, 0o600)
@@ -872,7 +872,7 @@ def _refresh_secrets_from_bitwarden(env: dict[str, str], needed: set, bitwarden_
         _bitwarden_shortfall(
             allow_env_fallback,
             f"Bitwarden refresh did not return secrets for {missing}.  Either add the secrets to your BWS project, switch to "
-            f"credential_source: env via `a2assistant egress setup --no-bitwarden`, or set `proxy.allow_env_fallback: true` in "
+            f"credential_source: env via `hermes egress setup --no-bitwarden`, or set `proxy.allow_env_fallback: true` in "
             f"config.yaml to opt into the legacy host-env fallback.",
             "Bitwarden refresh did not return secrets for %s — falling back to host env for those names (allow_env_fallback=true).", missing,
         )

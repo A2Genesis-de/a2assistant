@@ -1,6 +1,6 @@
 # Security & Privacy Toggles
 
-Common "why is A2Assistant doing X to my output / tool calls / commands?" toggles — and the exact commands to change them. Most of these need a fresh session (`/reset` in chat, or start a new `hermes` invocation) because they're read once at startup.
+Common "why is A2Assistant doing X to my output / tool calls / commands?" toggles — and the exact commands to change them. Most of these need a fresh session (`/reset` in chat, or start a new `a2assistant` invocation) because they're read once at startup.
 
 ### Secret redaction in tool output
 
@@ -40,7 +40,7 @@ hermes config set approvals.mode off         # bypass everything (not recommende
 ```
 
 Per-invocation bypass without changing config:
-- `hermes --yolo …`
+- `a2assistant --yolo …`
 - `export HERMES_YOLO_MODE=1`
 
 Note: YOLO / `approvals.mode: off` does NOT turn off secret redaction. They are independent.
@@ -51,10 +51,10 @@ The user usually means: wipe the accumulated "Always allow" state — NOT yolo
 mode, and NOT a per-edit diff prompt (which doesn't exist; file writes never
 go through the approval prompt, only shell commands do). Two stores hold it:
 
-1. Shell-command allowlist: `hermes config set command_allowlist '[]'`
+1. Shell-command allowlist: `a2assistant config set command_allowlist '[]'`
 2. Shell-hook consent (only if present): `rm -f ~/.hermes/shell-hooks-allowlist.json`
 
-Then sanity-check `hermes config get approvals.mode` (should not be `off`)
+Then sanity-check `a2assistant config get approvals.mode` (should not be `off`)
 and confirm `--yolo` isn't baked into their launch alias or systemd unit.
 
 ### Shell hooks allowlist
@@ -63,5 +63,5 @@ Some shell-hook integrations require explicit allowlisting before they fire. Man
 
 ### Disabling the web/browser/image-gen tools
 
-To keep the model away from network or media tools entirely, open `hermes tools` and toggle per-platform. Takes effect on next session (`/reset`). See `references/configuration.md` for the toolset list.
+To keep the model away from network or media tools entirely, open `a2assistant tools` and toggle per-platform. Takes effect on next session (`/reset`). See `references/configuration.md` for the toolset list.
 

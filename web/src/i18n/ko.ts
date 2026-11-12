@@ -103,7 +103,7 @@ export const ko: Translations = {
   status: {
     actionFailed: "작업 실패",
     actionFinished: "완료됨",
-    actionFinishedOwed: "업데이트되었지만 아직 남은 작업이 있습니다 (완료하려면 `a2assistant update`를 다시 실행하세요)",
+    actionFinishedOwed: "업데이트되었지만 아직 남은 작업이 있습니다 (완료하려면 `hermes update`를 다시 실행하세요)",
     actions: "작업",
     agent: "에이전트",
     activeSessions: "활성 세션",
@@ -341,7 +341,7 @@ export const ko: Translations = {
       "저장됨 — 변경 사항을 적용하려면 게이트웨이를 다시 시작하세요.",
     forceReinstall: "강제 재설치 (기존 폴더를 먼저 삭제)",
     headline:
-      "A2Assistant 플러그인을 검색, 설치, 활성화 및 업데이트합니다 (`a2assistant plugins` 동등).",
+      "A2Assistant 플러그인을 검색, 설치, 활성화 및 업데이트합니다 (`hermes plugins` 동등).",
     identifierLabel: "Git URL 또는 owner/repo",
     inactive: "비활성",
     installBtn: "설치",

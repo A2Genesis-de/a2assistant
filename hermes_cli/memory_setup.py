@@ -185,7 +185,7 @@ def cmd_setup_provider(provider_name: str) -> None:
         if install:
             print(f"  It is a catalog plugin that is not installed. Install it with: {install}\n")
         else:
-            print("  Run 'a2assistant memory setup' to see available providers.\n")
+            print("  Run 'hermes memory setup' to see available providers.\n")
         return
     name, _, provider = match
 

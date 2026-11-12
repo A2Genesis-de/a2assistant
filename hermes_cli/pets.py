@@ -91,7 +91,7 @@ def _cmd_select(args) -> int:
     if not slug:
         pets = store.installed_pets()
         if not pets:
-            _err("✗ no pets installed — run: a2assistant pets install boba")
+            _err("✗ no pets installed — run: hermes pets install boba")
             return 1
         slug = _interactive_pick(pets)
         if not slug:
@@ -99,7 +99,7 @@ def _cmd_select(args) -> int:
 
     pet = store.load_pet(slug)
     if pet is None or not pet.exists:
-        _err(f"✗ '{slug}' is not installed — run: a2assistant pets install {slug}")
+        _err(f"✗ '{slug}' is not installed — run: hermes pets install {slug}")
         return 1
 
     _set_active(slug)
@@ -137,7 +137,7 @@ def _cmd_show(args) -> int:
     slug = (args.slug or "").strip() or str(cfg.get("slug", "") or "")
     pet = store.resolve_active_pet(slug)
     if pet is None:
-        _err("✗ no pet to show — run: a2assistant pets install boba")
+        _err("✗ no pet to show — run: hermes pets install boba")
         return 1
 
     mode_cfg = args.mode or str(cfg.get("render_mode", "auto") or "auto")
@@ -231,13 +231,13 @@ def _cmd_doctor(args) -> int:
 
     ok = True
     if not pets:
-        print("  → no pets installed. Run: a2assistant pets install boba")
+        print("  → no pets installed. Run: hermes pets install boba")
         ok = False
     elif active is None:
-        print("  → active pet unresolved. Run: a2assistant pets select <slug>")
+        print("  → active pet unresolved. Run: hermes pets select <slug>")
         ok = False
     elif not enabled:
-        print("  → pet display is disabled. Run: a2assistant pets select " + active.slug)
+        print("  → pet display is disabled. Run: hermes pets select " + active.slug)
 
     try:
         import PIL

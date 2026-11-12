@@ -117,7 +117,7 @@ def _build_server() -> Any:
     for name in EXPOSED_TOOLS:
         spec = all_defs.get(name)
         if spec is None:
-            logger.debug("skipping %s — not registered in this Hermes process", name)
+            logger.debug("skipping %s — not registered in this A2Assistant process", name)
             continue
         description = spec.get("description") or f"A2Assistant {name} tool"
         params_schema = spec.get("parameters") or {"type": "object", "properties": {}}

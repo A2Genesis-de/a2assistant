@@ -377,7 +377,7 @@ def _exit_invalid_profile_name(value: str) -> None:
     from hermes_cli.profiles import _invalid_profile_name_error
 
     print(f"Error: {_invalid_profile_name_error(value)}", file=sys.stderr)
-    print("Run `a2assistant profile list` to see your profiles.", file=sys.stderr)
+    print("Run `hermes profile list` to see your profiles.", file=sys.stderr)
     sys.exit(2)
 
 
@@ -1387,7 +1387,7 @@ def _resolve_continue_arg(args, *, use_tui: bool) -> None:
                     kind = "TUI" if use_tui else "CLI"
                     print(
                         f"No previous {kind} session to continue. Start a new one with "
-                        "`a2assistant`, or list sessions with `a2assistant sessions list`.",
+                        "`hermes`, or list sessions with `hermes sessions list`.",
                         file=sys.stderr,
                     )
                     sys.exit(1)
@@ -1496,7 +1496,7 @@ def _warn_retired_xai_models() -> None:
             for _ref in _retired_xai_refs:
                 sys.stderr.write(f"  \033[33m⚠\033[0m {format_issue(_ref)}\n")
             sys.stderr.write(f"  \033[2mMigration guide: {MIGRATION_GUIDE_URL}\033[0m\n")
-            sys.stderr.write("  \033[2mRun 'a2assistant doctor' for details.\033[0m\n\n")
+            sys.stderr.write("  \033[2mRun 'hermes doctor' for details.\033[0m\n\n")
     except Exception:
         pass
 
@@ -1559,7 +1559,7 @@ def _first_run_setup_guard(args) -> None:
         "It looks like A2Assistant isn't configured yet -- no API keys or providers found."
     )
     print()
-    print("  Run:  a2assistant setup")
+    print("  Run:  hermes setup")
     print()
 
     from hermes_cli.setup import (
@@ -1581,7 +1581,7 @@ def _first_run_setup_guard(args) -> None:
         cmd_setup(args)
         return
     print()
-    print("You can run 'a2assistant setup' at any time to configure.")
+    print("You can run 'hermes setup' at any time to configure.")
     sys.exit(1)
 
 

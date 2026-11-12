@@ -19,7 +19,7 @@ def build_plugins_parser(subparsers, *, cmd_plugins: Callable) -> None:
         "install", help="Install a plugin from the curated catalog, a Git URL, or owner/repo")
     plugins_install.add_argument(
         "identifier",
-        help="Bare plugin catalog entry name (see `a2assistant plugins search`), Git URL, or owner/repo "
+        help="Bare plugin catalog entry name (see `hermes plugins search`), Git URL, or owner/repo "
             "shorthand (e.g. anpicasso/hermes-plugin-chrome-profiles)")
     plugins_install.add_argument(
         "--force", "-f", action="store_true",
@@ -44,7 +44,7 @@ def build_plugins_parser(subparsers, *, cmd_plugins: Callable) -> None:
         help="Auto-enable the plugin after install (skip confirmation prompt)")
     _install_enable_group.add_argument(
         "--no-enable", action="store_true",
-        help="Install disabled (skip confirmation prompt); enable later with `a2assistant plugins enable <name>`",
+        help="Install disabled (skip confirmation prompt); enable later with `hermes plugins enable <name>`",
     )
 
     plugins_search = plugins_subparsers.add_parser(
@@ -82,7 +82,7 @@ def build_plugins_parser(subparsers, *, cmd_plugins: Callable) -> None:
         help="Show or set unattended plugin updates (plugins.auto_apply)",
         description=(
             "With auto-update on, the gateway's update check (every plugins.auto_update_check_hours) "
-            "applies the catalog and tracked Git updates `a2assistant plugins update` would apply, through the "
+            "applies the catalog and tracked Git updates `hermes plugins update` would apply, through the "
             "same security scan. Updated code loads in new sessions; a widened catalog pin or new "
             "capabilities are never accepted unattended. Off by default."))
     plugins_auto.add_argument("state", nargs="?", choices=["on", "off"], help="Omit to show the current setting")
@@ -119,7 +119,7 @@ def build_plugins_parser(subparsers, *, cmd_plugins: Callable) -> None:
             "saved-tag update_url feeds (with mismatch protection), git "
             "ls-remote for git installs, and a stateless PyPI probe for "
             "pip entry-point plugins. NEVER mutates anything — apply with "
-            "`a2assistant plugins update <name>`."
+            "`hermes plugins update <name>`."
         ),
     )
     plugins_check.add_argument(

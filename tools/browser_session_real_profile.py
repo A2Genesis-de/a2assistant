@@ -54,7 +54,7 @@ def _snapshot_error(err: str) -> str:
     from hermes_cli.browser_connect import _PROFILE_LOCKED_PREFIX
     if err and err.startswith(_PROFILE_LOCKED_PREFIX):
         return (err[len(_PROFILE_LOCKED_PREFIX):] + " To close it (only after the user approves — it "
-                "quits their browser and loses unsaved tabs), run: `a2assistant browser close-profile`; the next "
+                "quits their browser and loses unsaved tabs), run: `hermes browser close-profile`; the next "
                 "browser session then uses the profile.")
     return f"{_RP}{err}"
 

@@ -383,6 +383,6 @@ def approvals_command(args) -> int:
         "  test       Dry-run the approval verdict for a command without\n"
         "             executing it (exit 0 allow / 2 ask / 3 deny)\n"
         "\n"
-        "Run `a2assistant approvals <subcommand> -h` for details."
+        "Run `hermes approvals <subcommand> -h` for details."
     )
     return 1

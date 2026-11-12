@@ -191,7 +191,7 @@ def _cmd_setup(args: argparse.Namespace) -> int:
             routing_live = False
             print(f"      ⚠ No iMessage line is assigned to {phone} yet — skipping the opt-in wait.\n"
                   f"        Once the Photon dashboard shows your line, text it once from {phone},\n"
-                  "        then check with `a2assistant photon status`.")
+                  "        then check with `hermes photon status`.")
         else:
             opted = _wait_for_opt_in(dashboard_id, secret, phone, agent_number)
             routing_live = opted is not None
@@ -237,7 +237,7 @@ def _cmd_setup(args: argparse.Namespace) -> int:
         return 0
     if not routing_live:  # saved, but not "complete": the gateway cannot reach this number yet
         print(f"\n⚠ Photon setup saved, but iMessage routing is NOT live: text {agent_number or 'your assigned line'} "
-              f"once from {phone}.\n  Check with `a2assistant photon status`; start the gateway once it shows opted in.")
+              f"once from {phone}.\n  Check with `hermes photon status`; start the gateway once it shows opted in.")
         return 0
     print("\n✓ Photon setup complete.\n  Start the gateway:  hermes gateway start")
     return 0
@@ -265,7 +265,7 @@ def _wait_for_opt_in(dashboard_id: str, secret: str, phone: str, agent_number: O
           f"      Photon assigned to it:\n        1. Open Messages on {phone}.\n"
           f"        2. Text {line_hint} — one message of any content is enough.")
     if not sys.stdin.isatty():  # scripted setup / CI: nobody can answer the poll
-        print("      Non-interactive run — skipping the opt-in wait. Verify later with `a2assistant photon status`.")
+        print("      Non-interactive run — skipping the opt-in wait. Verify later with `hermes photon status`.")
         return None
     print(f"      Setup waits here (up to {_OPT_IN_WAIT_S // 60} minutes) and continues once the opt-in lands.\n"
           "      (Ctrl-C to skip — re-running setup resumes where it left off.)")
@@ -282,7 +282,7 @@ def _wait_for_opt_in(dashboard_id: str, secret: str, phone: str, agent_number: O
         print()
     if opted is None:
         print(f"      ⚠ {why}\n        {phone} is not opted in yet: text {line_hint} once from it, then re-run\n"
-              "        `a2assistant photon setup` (it resumes where it left off).")
+              "        `hermes photon setup` (it resumes where it left off).")
         return None
     print("  ✓ opt-in landed — routing is live")
     return opted
@@ -321,8 +321,8 @@ def _cmd_status(_args: argparse.Namespace) -> int:
     photon_auth.print_credential_summary(print)
     node_bin = find_node_executable("node")
     print(f"  node binary         : {node_bin or '✗ missing (install Node 18+)'}")
-    print(f"  sidecar deps        : {'✓ installed' if sidecar_deps_installed() else '✗ run `a2assistant photon install-sidecar`'}")
-    print(f"  telemetry           : {'on' if _telemetry_enabled() else 'off'} (`a2assistant photon telemetry on|off`)")
+    print(f"  sidecar deps        : {'✓ installed' if sidecar_deps_installed() else '✗ run `hermes photon install-sidecar`'}")
+    print(f"  telemetry           : {'on' if _telemetry_enabled() else 'off'} (`hermes photon telemetry on|off`)")
     photon_auth.print_routing_status(print)
     return 0
 
@@ -341,7 +341,7 @@ def _cmd_telemetry(args: argparse.Namespace) -> int:
     state = getattr(args, "state", None)
     if state is None:
         print(f"Photon telemetry: {'on' if _telemetry_enabled() else 'off'}")
-        print("  Toggle with `a2assistant photon telemetry on` / `a2assistant photon telemetry off`.")
+        print("  Toggle with `hermes photon telemetry on` / `hermes photon telemetry off`.")
         return 0
     try:
         from hermes_cli.config import save_env_value

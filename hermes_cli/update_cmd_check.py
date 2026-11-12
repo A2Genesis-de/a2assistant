@@ -113,15 +113,15 @@ def channel_compare_branch(selected_channel: str, git_cmd: list[str], root: Path
     elif _refuses(git_cmd, root, target.commit, target.repository):
         # Before the rollback branch: a release this checkout contains is held too, not moved back to.
         print(f"→ Holding at this build: {target.label} predates the gateway runtime your sessions use.")
-        print("  `a2assistant update` stays on this build; the next release that includes the runtime"
-              " installs normally (`a2assistant update --set-channel main` follows every commit).")
+        print("  `hermes update` stays on this build; the next release that includes the runtime"
+              " installs normally (`hermes update --set-channel main` follows every commit).")
     elif _git(git_cmd, root, ["merge-base", "--is-ancestor", target.commit, "HEAD"]).returncode == 0:
         print(f"→ This checkout is newer than the selected release: {target.label}.")
-        print("  `a2assistant update` moves it back to that release"
-              " (`a2assistant update --set-channel main` follows every commit).")
+        print("  `hermes update` moves it back to that release"
+              " (`hermes update --set-channel main` follows every commit).")
     else:
         print(f"→ Selected release available: {target.label}")
-        print("  Run `a2assistant update` to install it.")
+        print("  Run `hermes update` to install it.")
     return None
 
 
@@ -323,5 +323,5 @@ def hold_channel_release_behind_runtime(git_cmd, target_ref: str, channel: str) 
     print(f"→ This build is newer than the {channel} release {target_ref[:12]}: that release predates the "
           "gateway runtime your sessions use, so there is nothing to update to yet.")
     print(f"  A2Assistant stays on {head[:12]} until a newer {channel} release ships. "
-          "To follow every commit instead: `a2assistant update --set-channel main`.")
+          "To follow every commit instead: `hermes update --set-channel main`.")
     return head

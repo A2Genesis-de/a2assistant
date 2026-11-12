@@ -82,7 +82,7 @@ def node_abi_error(server_name: str, stderr_text: str) -> Optional[NodeAbiMismat
     head = (f"native addon built for a different Node.js ({built}): {module or 'see logs/mcp-stderr.log'}. "
             "A2Assistant runs MCP servers on its own Node; rebuild the server under it")
     if node is None or npm is None:
-        return NodeAbiMismatchError(f"{head}: install A2Assistant's Node with `a2assistant pm install npm`, then run "
-                                    f"`a2assistant mcp test {server_name}`")
+        return NodeAbiMismatchError(f"{head}: install A2Assistant's Node with `hermes pm install npm`, then run "
+                                    f"`hermes mcp test {server_name}`")
     root, package = _package_of(module) if module else (None, "")
     return NodeAbiMismatchError(f"{head}: {_remedy(root, package, node, npm)}")

@@ -153,7 +153,7 @@ export const CROSS_GATEWAY_GROUP_LOCALES = {
     ownerUpdateRequired: place => `A2Assistant auf ${place} ist zu alt für Gruppenchats. Aktualisieren Sie A2Assistant dort und versuchen Sie es erneut.`,
     ownerCannotSeatPeers: place => `A2Assistant auf ${place} kann noch keine Bots anderer Computer aufnehmen. Aktualisieren Sie A2Assistant dort, starten Sie sein Gateway (hermes gateway run) und versuchen Sie es erneut.`,
     peerRouteMissing: 'Der Computer eines ausgewählten Bots ist nicht verbunden. Verbinden Sie ihn neu und versuchen Sie es erneut.',
-    peerGatewayChanged: place => `Auf ${place} läuft jetzt eine andere A2Assistant-Installation als die, von der dieser Bot stammt. Verbinden Sie ihn neu und versuchen Sie es erneut.`,
+    peerGatewayChanged: place => `Auf ${place} läuft jetzt eine andere Hermes-Installation als die, von der dieser Bot stammt. Verbinden Sie ihn neu und versuchen Sie es erneut.`,
     groupsOffline: (connection, bot) => `${connection} ist offline – verbinde es neu, um die Gruppen von ${bot} zu ändern.`,
     memberOffline: (connection, bot) => `${connection} ist offline – verbinde es neu, um ${bot} zu entfernen.`,
     memberSaveFailed: (connection, bot) => `Mitglieder nicht gespeichert: ${connection} hat die Änderung für ${bot} nicht übernommen. Nichts wurde geändert; versuche es erneut, sobald es erreichbar ist.`,

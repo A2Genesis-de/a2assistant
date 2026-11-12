@@ -60,7 +60,7 @@ def require_enabled(console: Console, cfg: dict, product: str, command: str) -> 
     if cfg.get("enabled"):
         return True
     console.print(f"[yellow]{product} integration is disabled.  Run "
-                  f"`a2assistant secrets {command} setup` first.[/yellow]")
+                  f"`hermes secrets {command} setup` first.[/yellow]")
     return False
 
 

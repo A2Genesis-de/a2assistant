@@ -274,7 +274,7 @@ def _push_stash(git_cmd: list[str], cwd: Path, stash_name: str, prev_stash: str,
             # No entry created: changes NOT saved — bail before touching HEAD.
             print("✗ Could not stash local changes — update aborted.")
             _print_first_line(push.stderr)
-            print("  Commit, stash, or clean up your local changes manually, then re-run `a2assistant update`.")
+            print("  Commit, stash, or clean up your local changes manually, then re-run `hermes update`.")
             print("  (An index entry from `git add -N` is the usual cause of this error; `git add` the")
             print("   paths it names, or `git reset` them, and the update will proceed.)")
             raise subprocess.CalledProcessError(push.returncode, push.args, output=push.stdout, stderr=push.stderr)

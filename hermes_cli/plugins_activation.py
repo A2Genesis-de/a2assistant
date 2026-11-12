@@ -291,7 +291,7 @@ def dependency_restart_hint(missing: list[str], processes: list[str]) -> str:
         return (f"Its Python dependencies ({deps}) were installed after the running gateway or dashboard "
                 "started, and a running process never switches dependency environments. Restart them to "
                 f"load the plugin:\n{restart}")
-    return f"Its Python dependencies ({deps}) are not installed. Run a2assistant pm repair, then restart:\n{restart}"
+    return f"Its Python dependencies ({deps}) are not installed. Run hermes pm repair, then restart:\n{restart}"
 
 
 def report_activation(console, name: str) -> None:

@@ -108,7 +108,7 @@ def _model_flow_moa(config, current_model=""):
     moa = normalize_moa_config(config.get("moa") if isinstance(config, dict) else {})
     presets = moa.get("presets") or {}
     if not presets:
-        print("No MoA presets configured. Run `a2assistant moa configure <name>` first.")
+        print("No MoA presets configured. Run `hermes moa configure <name>` first.")
         return
 
     names = list(presets.keys())
@@ -983,7 +983,7 @@ def _plugin_flow_oauth(provider_id: str, profile) -> tuple[str, str] | None:
     if not status.get("logged_in"):
         missing = plugin_missing_auth_handler_error(provider_id, "add")
         _say(f"  ⚠ Not signed in to {profile.display_name or provider_id}.",
-             f"  {missing.code if missing else status.get('hint') or f'Run `a2assistant auth add {provider_id}` to sign in.'}")
+             f"  {missing.code if missing else status.get('hint') or f'Run `hermes auth add {provider_id}` to sign in.'}")
         return None
     from agent.credential_pool import load_pool
     entry = load_pool(provider_id).select()

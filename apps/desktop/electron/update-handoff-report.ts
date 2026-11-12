@@ -160,7 +160,7 @@ function reportReleaseHolders(host: HandoffReportHost, holders: ReleaseHolder[],
     ? 'A2Assistant did not close it. Close it and retry the update now, or keep using the current app and update later.'
     : 'A2Assistant cannot close it. Close it yourself (Task Manager), then run the update again.'
 
-  host.log(`[updates] Desktop app swap blocked by programs outside Hermes: ${names}`)
+  host.log(`[updates] Desktop app swap blocked by programs outside A2Assistant: ${names}`)
   void host.dialog
     .showMessageBox({
       type: 'warning',

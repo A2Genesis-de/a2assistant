@@ -625,7 +625,7 @@ def _apply_tool_selection(
     """
     print()
     name = entry.name
-    configure_hint = f"`a2assistant mcp configure {name}`"
+    configure_hint = f"`hermes mcp configure {name}`"
 
     # Exclude-mode manifests never probe: the curated exclude list (names or globs) is written as-is
     # and everything else stays enabled, including tools the server adds later. A prior include
@@ -804,7 +804,7 @@ def _install_entry(entry: CatalogEntry, *, enable: bool, preloaded_env: Optional
         # guidance rather than auto-running it to keep install decoupled from provider-auth lifecycle.
         _say(
             f"  This MCP uses {entry.auth.provider} OAuth. Run "
-            f"`a2assistant auth {entry.auth.provider}` if you have not "
+            f"`hermes auth {entry.auth.provider}` if you have not "
             "already authenticated.",
             Colors.YELLOW)
     elif entry.auth.type == "oauth":

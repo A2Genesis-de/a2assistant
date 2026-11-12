@@ -135,15 +135,15 @@ def offer_consent(config: dict | None = None, *, reask: bool = False) -> bool:
     )
     if idx < 0 and reask:
         save_consent(False, False, config)
-        print_info("Kept \"No thanks\". Change it any time with `a2assistant setup telemetry`.")
+        print_info("Kept \"No thanks\". Change it any time with `hermes setup telemetry`.")
         return True
     if idx < 0:
-        print_info("Not answered; A2Assistant will ask again. Decide any time with `a2assistant setup telemetry`.")
+        print_info("Not answered; A2Assistant will ask again. Decide any time with `hermes setup telemetry`.")
         return False
     _, enabled, send = OFFER_CHOICES[idx]
     save_consent(enabled, send, config)
     outcome = "sent to Nous once a day" if send else "off"
-    print_success(f"Shared metrics {outcome}. Change it any time with `a2assistant setup telemetry`.")
+    print_success(f"Shared metrics {outcome}. Change it any time with `hermes setup telemetry`.")
     return True
 
 

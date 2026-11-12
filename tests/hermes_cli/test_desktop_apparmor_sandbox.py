@@ -151,7 +151,7 @@ def test_install_stages_loads_then_replaces_the_old_profile(tmp_path, monkeypatc
     monkeypatch.setattr(main_desktop_apparmor, "RESTRICT_SYSCTL", sysctl)
     exe = _packaged_app(tmp_path, _ALLOWED)
     target = main_desktop_apparmor.profile_path(exe)
-    target.write_text("# an older Hermes profile\n", encoding="utf-8")
+    target.write_text("# an older A2Assistant profile\n", encoding="utf-8")
 
     assert main_desktop_apparmor.install_profile(exe) is True
     calls = [call.split() for call in sudo_log.read_text(encoding="utf-8").splitlines()]

@@ -81,7 +81,7 @@ test('gitFor accepts a Windows no-console host tuple with restricted characters'
       windowsGitHost: () => ({
         isWindows: true,
         pythonBin: String.raw`C:\Tools\python-3.14+build\python.exe`,
-        scriptPath: String.raw`C:\A2Assistant\hermes-no-console-git.py`
+        scriptPath: String.raw`C:\Hermes\hermes-no-console-git.py`
       })
     }
   })

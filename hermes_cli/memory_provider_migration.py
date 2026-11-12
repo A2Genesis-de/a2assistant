@@ -135,7 +135,7 @@ def _pending_provider(home: Path, *, say: Callable[[str], None]) -> Optional[str
         return None
     if catalog_source(name) is None:
         say(f"  ⚠ Memory provider '{name}' is configured but not installed and not in the plugin catalog. "
-            f"Install it with `a2assistant plugins install <source>` or change memory.provider.")
+            f"Install it with `hermes plugins install <source>` or change memory.provider.")
         return None
     return name
 
@@ -161,7 +161,7 @@ def _install_pending(home: Path, name: str, *, install: Callable[[str], dict],
     if result.get("ok"):
         say(f"  ✓ Memory provider '{name}' moved out of core — installed its plugin from the catalog "
             f"(memory.provider and your stored memories are unchanged; check its settings with "
-            f"`a2assistant memory status`).")
+            f"`hermes memory status`).")
         return True
     error = str(result.get("error") or "unknown error").rstrip(". ")
     say(f"  ⚠ Memory provider '{name}' moved out of core and could not be installed automatically: "
@@ -274,7 +274,7 @@ def migrate_all_homes(*, say: Callable[[str], None] = print) -> list[str]:
                     break
     except KeyboardInterrupt:
         say("  ⚠ Memory provider migration cancelled. Profiles already migrated keep their plugin; "
-            "run `a2assistant plugins install <name>` (with `-p <profile>`) for the rest.")
+            "run `hermes plugins install <name>` (with `-p <profile>`) for the rest.")
     return installed
 
 

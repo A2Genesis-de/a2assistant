@@ -218,7 +218,7 @@ class TestCodexBuildKwargs:
         binding = ProviderProfile(name="acme-responses", base_url="https://api.acme-responses.test",
                                   api_mode="codex_responses", responses_replay_item_ids=False)
         messages = [
-            {"role": "system", "content": "You are Hermes."},
+            {"role": "system", "content": "You are A2Assistant."},
             {
                 "role": "assistant",
                 "content": "pong",
@@ -250,7 +250,7 @@ class TestCodexBuildKwargs:
 
     def test_non_github_responses_keeps_message_item_id_end_to_end(self, transport):
         messages = [
-            {"role": "system", "content": "You are Hermes."},
+            {"role": "system", "content": "You are A2Assistant."},
             {
                 "role": "assistant",
                 "content": "pong",

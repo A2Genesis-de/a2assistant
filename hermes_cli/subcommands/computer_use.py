@@ -41,7 +41,7 @@ def _cu_status(args) -> int:
     override = _os.environ.get("HERMES_CUA_DRIVER_CMD", "").strip()
     if not path:
         print("cua-driver: not installed")
-        print("  Run: a2assistant computer-use install")
+        print("  Run: hermes computer-use install")
         return 1
     contract = _cua_driver_contract_status(path)
     version = _cua_version_summary(contract.get("version") or "")
@@ -55,9 +55,9 @@ def _cu_status(args) -> int:
         if override:
             print(
                 "    Update the binary selected by HERMES_CUA_DRIVER_CMD, or unset "
-                "the override and run: a2assistant computer-use install --upgrade")
+                "the override and run: hermes computer-use install --upgrade")
         else:
-            print("    Run: a2assistant computer-use install")
+            print("    Run: hermes computer-use install")
         return 1
     rc = 0
     if sys.platform == "linux":  # hand-written daemon units: dead `serve` is invisible to the binary contract (#114748)
@@ -95,7 +95,7 @@ def _cu_perms_status(args) -> None:
         print(f"Computer Use is not supported on {st['platform']}.")
         sys.exit(1)
     if not st["installed"]:
-        print("cua-driver: not installed. Run: a2assistant computer-use install")
+        print("cua-driver: not installed. Run: hermes computer-use install")
         sys.exit(1)
     glyph = lambda v: "✅" if v is True else ("❌" if v is False else "•")
     print(f"cua-driver: {st['version'] or 'installed'} ({st['platform']})")
@@ -129,13 +129,13 @@ def build_computer_use_parser(subparsers) -> None:
         description="Install or check the cua-driver binary used by the\n"
             "`computer_use` toolset. Supported on macOS, Windows, and\n"
             "Linux.\n\n"
-            "Use `a2assistant computer-use install` to prepare the pinned\n"
+            "Use `hermes computer-use install` to prepare the pinned\n"
             "cua-driver package and host integration. This is equivalent to the\n"
-            "post-setup hook that `a2assistant tools` runs when you first\n"
+            "post-setup hook that `hermes tools` runs when you first\n"
             "enable the Computer Use toolset, and is a stable target\n"
             "for re-running the install if it didn't fire (e.g. when\n"
             "toggling the toolset on a returning-user setup).\n\n"
-            "Use `a2assistant computer-use doctor` to run cua-driver's\n"
+            "Use `hermes computer-use doctor` to run cua-driver's\n"
             "`health_report` MCP tool and surface its check matrix\n"
             "(TCC, bundle identity, version, platform support, ...)\n"
             "in human-readable form.")

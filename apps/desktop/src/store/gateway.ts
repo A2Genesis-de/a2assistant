@@ -1186,7 +1186,7 @@ export async function requestGatewayForAgent<T>(
   traceAgentRoute(scope, 'secondary')
 
   if (!window.hermesDesktop?.getConnectionFor) {
-    throw new Error('This Desktop build cannot dial registry connections. Update A2Assistant.')
+    throw new Error('This Desktop build cannot dial registry connections. Update A2Assistant Desktop.')
   }
 
   const entry = g.secondaries.get(scope) ?? createSecondary(key, connectionId)
@@ -1674,7 +1674,7 @@ export async function openGatewayForAgent(
   }
 
   if (!window.hermesDesktop?.getConnectionFor) {
-    throw new Error('This Desktop build cannot dial registry connections. Update A2Assistant.')
+    throw new Error('This Desktop build cannot dial registry connections. Update A2Assistant Desktop.')
   }
 
   const entry = g.secondaries.get(scope) ?? createSecondary(profile, connectionId)
@@ -1728,7 +1728,7 @@ export async function ensureGatewayForAgent(
   }
 
   if (!window.hermesDesktop?.getConnectionFor) {
-    throw new Error('This Desktop build cannot dial registry connections. Update A2Assistant.')
+    throw new Error('This Desktop build cannot dial registry connections. Update A2Assistant Desktop.')
   }
 
   let entry = g.secondaries.get(scope)

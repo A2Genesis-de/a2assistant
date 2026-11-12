@@ -755,7 +755,7 @@ def _refresh_access_token(
             "~/.hermes/auth.json) called POST /api/oauth/token with A2Assistant's "
             "refresh token without persisting the rotated token back.\n"
             "Nous refresh tokens are single-use — only A2Assistant may call the "
-            "refresh endpoint. For health checks, use `a2assistant auth status` "
+            "refresh endpoint. For health checks, use `hermes auth status` "
             "instead.\n"
             "Re-authenticate with: hermes auth add nous")
         relogin = True
@@ -1530,7 +1530,7 @@ def _nous_device_code_login(
             print(format_auth_error(exc))
             print(f"  Subscribe here: {portal_url}/billing")
             print()
-            print("After subscribing, run `a2assistant model` again to finish setup.")
+            print("After subscribing, run `hermes model` again to finish setup.")
             raise SystemExit(1)
         raise
 
@@ -1759,7 +1759,7 @@ def _login_nous(args, pconfig: ProviderConfig) -> None:
             _restore_active_provider(prior_active_provider)
             print()
             print("No provider change. Nous credentials saved for future use.")
-            print("  Run `a2assistant model` again to switch to Nous Portal.")
+            print("  Run `hermes model` again to switch to Nous Portal.")
             return
         config_path = _update_config_for_provider(
             "nous", inference_base_url, default_model=selected_model)

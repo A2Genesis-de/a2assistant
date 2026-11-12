@@ -231,7 +231,7 @@ def describe_block(holders: list[ReleaseHolder], release_dir: Path) -> str:
         "".join(f"  {h.holder_line()}\n" for h in holders)
         + f"✗ Windows would not replace the desktop app: {names} is using a folder inside {release_dir}.\n"
         f"    It is not part of A2Assistant, so it was left running. Close it (Task Manager, or `taskkill {pids}`)\n"
-        "    and run `a2assistant desktop --force-build`, or run Update now in A2Assistant Desktop and choose to close it."
+        "    and run `hermes desktop --force-build`, or run Update now in A2Assistant Desktop and choose to close it."
     )
 
 

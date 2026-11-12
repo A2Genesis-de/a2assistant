@@ -94,7 +94,7 @@ def profile_text(packaged_executable: Path) -> str:
     exe = str(packaged_executable.resolve())
     return (
         "# A2Assistant Desktop: let Chromium's user-namespace sandbox start under\n"
-        "# kernel.apparmor_restrict_unprivileged_userns=1 (written by `a2assistant desktop --install-apparmor-profile`).\n"
+        "# kernel.apparmor_restrict_unprivileged_userns=1 (written by `hermes desktop --install-apparmor-profile`).\n"
         "abi <abi/4.0>,\n"
         "include <tunables/global>\n\n"
         f'profile {name} "{exe}" flags=(unconfined) {{\n'

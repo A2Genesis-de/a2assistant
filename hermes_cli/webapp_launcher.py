@@ -225,9 +225,9 @@ def _status(target: Path) -> int:
     except GatewayUnreachable:
         from gateway.webapp_listener import webapp_settings
         if webapp_settings(target).enabled:
-            print("The gateway is not running. Run a2assistant webapp to start it.")
+            print("The gateway is not running. Run hermes webapp to start it.")
         else:
-            print(_off_message(target, "run a2assistant webapp"))
+            print(_off_message(target, "run hermes webapp"))
         return 1
     if not response.get("ok"):
         print(_refusal(response))
@@ -243,7 +243,7 @@ def _status(target: Path) -> int:
             print(f"{target / 'config.yaml'} no longer turns the Webapp on: it stops at the next gateway restart "
                   f"({RESTART_COMMAND}).")
     elif status["state"] == "starting":
-        print("The gateway is still starting the Webapp. Run a2assistant webapp --status again in a moment.")
+        print("The gateway is still starting the Webapp. Run hermes webapp --status again in a moment.")
     elif status["state"] == "off":
         print(_off_message(target, f"run {RESTART_COMMAND}"))
     else:
@@ -291,7 +291,7 @@ def _signed_out_summary(result: dict) -> str:
         return (f"Signed out every browser: {connections}. Every browser login behind sign-in has ended, "
                 "and the account tokens it held no longer work here: browsers must sign in again. Native apps "
                 "signed in to this gateway with their own sign-in stay signed in.")
-    return f"Signed out of every Webapp tab: {connections}. Run a2assistant webapp to open it again."
+    return f"Signed out of every Webapp tab: {connections}. Run hermes webapp to open it again."
 
 
 def _sign_out(target: Path) -> int:
@@ -324,7 +324,7 @@ def _sign_out(target: Path) -> int:
         # never reaches it: wait until it answers the sign-out itself.
         if attempt < _START_WAIT_ATTEMPTS:
             time.sleep(_START_WAIT_INTERVAL)
-    print(f"The gateway is still starting, so nobody was signed out. Run a2assistant webapp --sign-out again once "
+    print(f"The gateway is still starting, so nobody was signed out. Run hermes webapp --sign-out again once "
           f"it is up ({RESTART_COMMAND} if it never comes up).")
     return 1
 
@@ -365,7 +365,7 @@ def cmd_webapp(args) -> int:
     if args.sign_out:
         return _sign_out(target)
     if not args.build_only and not webapp_settings(target).enabled:
-        print(_still_served(target) or _off_message(target, "run a2assistant webapp again"))
+        print(_still_served(target) or _off_message(target, "run hermes webapp again"))
         return 1
     try:
         _build(args)

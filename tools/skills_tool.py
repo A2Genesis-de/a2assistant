@@ -578,7 +578,7 @@ def locate_skill(name: str, local_category_name: Optional[str], roots):
                 f"Project skill '{name}' is quarantined: the security scan flagged its content as "
                 "dangerous. It will not load until the repo's skill content changes and passes a re-scan.",
                 hint="Inspect the skill in the repo checkout, or untrust the repo with "
-                "`a2assistant skills untrust`."), None, None
+                "`hermes skills untrust`."), None, None
     if not skill_md or not skill_md.exists():
         available = [s["name"] for s in sort_skills(find_all_skills())[:20]]
         return _fail(f"Skill '{name}' not found.", available_skills=available,
@@ -649,7 +649,7 @@ def skill_view(
         rel = _owned_relative(skill_dir, skill_md, all_dirs)
         if _is_skill_disabled(resolved_name, rel) and (_is_skill_disabled(resolved_name) or any(
                 e["path"] == skill_md and e["load_name"] == rel for e in _skill_catalog(skip_disabled=True, include_hidden=True))):
-            return _fail(f"Skill '{resolved_name}' is disabled. Enable it with `a2assistant skills` or inspect the files directly on disk.")
+            return _fail(f"Skill '{resolved_name}' is disabled. Enable it with `hermes skills` or inspect the files directly on disk.")
         if file_path and skill_dir:
             return _serve_skill_file(
                 skill_dir, file_path, name, list_available=True, mark_read=True,
@@ -690,7 +690,7 @@ def skill_view(
                 deps_note = (
                     "Tool dependencies could not be installed — "
                     + "; ".join(failed_deps)
-                    + ". Run `a2assistant pm install "
+                    + ". Run `hermes pm install "
                     + " ".join(str(d) for d in declared_deps)
                     + "` and reload."
                 )

@@ -169,7 +169,7 @@ def oauth_notice(manifest: Mapping[str, Any]) -> str:
     """Install/show text for the declared clients; empty when the plugin declares none."""
     name = str((manifest or {}).get("name") or "<plugin>")
     return "; ".join(
-        f"Signs in to {c.id} at {_idp_hosts(c)} for {', '.join(c.hosts)} with `a2assistant auth add {name}:{c.id}` "
+        f"Signs in to {c.id} at {_idp_hosts(c)} for {', '.join(c.hosts)} with `hermes auth add {name}:{c.id}` "
         "(A2Assistant stores and refreshes the token; the plugin never receives it)"
         for c in parse_oauth_clients(manifest)[0])
 
@@ -204,7 +204,7 @@ def oauth_admission_problems(manifest: Mapping[str, Any], plugin_dir: Path) -> l
             if name not in declared:
                 problems.append(f"oauth {client.id!r}: {name} must be declared under requires_env or optional_env")
     if clients and plugin_dir.name == "custom":
-        problems.append("a plugin named 'custom' cannot declare oauth: `a2assistant auth add custom:<name>` is a custom provider")
+        problems.append("a plugin named 'custom' cannot declare oauth: `hermes auth add custom:<name>` is a custom provider")
     return problems
 
 
@@ -364,19 +364,19 @@ def _not_signed_in(message: str):
 
 def _revoked(client: OAuthClient, key: str, code: str):
     return _not_signed_in(f"The {client.id} sign-in for plugin '{key.rsplit(':', 1)[0]}' was revoked ({code}). "
-                          f"Run `a2assistant auth add {key}` to sign in again.")
+                          f"Run `hermes auth add {key}` to sign in again.")
 
 
 def _usable_grant(row: Optional[dict], client: OAuthClient, key: str) -> dict:
     plugin = key.rsplit(":", 1)[0]
     if row is None:
         raise _not_signed_in(f"Not signed in to {client.id} for plugin '{plugin}' in this A2Assistant profile. "
-                             f"Run `a2assistant auth add {key}`.")
+                             f"Run `hermes auth add {key}`.")
     if row.get("dead"):
         raise _revoked(client, key, str(row["dead"]))
     if row.get("fingerprint") != client.fingerprint:
         raise _not_signed_in(f"Plugin '{plugin}' changed its oauth entry '{client.id}' since you signed in. "
-                             f"Run `a2assistant auth add {key}` to sign in again.")
+                             f"Run `hermes auth add {key}` to sign in again.")
     return row
 
 
@@ -472,7 +472,7 @@ def _cli_add(args: Any, client: OAuthClient, key: str) -> bool:
     from hermes_cli.auth_oauth_pkce_plugin import login
 
     if _unattended():
-        raise SystemExit(f"`a2assistant auth add {key}` signs you in through a browser; run it in your own terminal, "
+        raise SystemExit(f"`hermes auth add {key}` signs you in through a browser; run it in your own terminal, "
                          "not from a gateway, cron job or agent session.")
     secret = " and the client secret" if client.client_secret_env else ""
     print(f"Plugin '{key.rsplit(':', 1)[0]}' signs in to {client.id} at {urlparse(client.authorize_url).hostname}. "

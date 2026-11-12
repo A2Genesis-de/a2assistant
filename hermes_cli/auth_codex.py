@@ -249,7 +249,7 @@ def _recover_codex_tokens_from_cli(
         if known and _codex_principal_identity(imported["access_token"]) not in (None, known):
             logger.warning(
                 "Codex CLI recovery refused (%s): the Codex CLI login belongs to a different ChatGPT "
-                "workspace than the Hermes credential. Run `%s` to re-authenticate it.",
+                "workspace than the A2Assistant credential. Run `%s` to re-authenticate it.",
                 reason, _codex_relogin_command())
             return None
         logger.info("Codex auth recovered from Codex CLI auth.json (%s).", reason)

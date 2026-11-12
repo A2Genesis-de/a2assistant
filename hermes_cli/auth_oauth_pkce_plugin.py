@@ -242,7 +242,7 @@ def pkce_auth_handler(cfg: OAuthPKCEConfig) -> Callable[[str, Any], bool]:
             elif any(_is_usable(e.access_token, e.expires_at_ms, now_ms) for e in entries):
                 print(f"{provider}: logged in\n  auth_type: oauth (pkce)\n  credentials: {len(entries)}")
             else:
-                print(f"{provider}: expired (needs refresh) — run `a2assistant auth refresh {provider}`")
+                print(f"{provider}: expired (needs refresh) — run `hermes auth refresh {provider}`")
             return True
         if action == "logout":
             pool = load_pool(provider)

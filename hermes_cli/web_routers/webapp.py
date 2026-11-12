@@ -293,7 +293,7 @@ const params = new URLSearchParams(location.hash.slice(1));
 history.replaceState(null, '', location.pathname);
 const ticket = params.get('ticket') || '';
 const show = message => { document.getElementById('status').textContent = message; };
-const fail = () => show('This launch link was already used or has expired. Run a2assistant webapp again for a new one.');
+const fail = () => show('This launch link was already used or has expired. Run hermes webapp again for a new one.');
 if (!/^[A-Za-z0-9_-]{43}$/.test(ticket)) {
   fail();
 } else {
@@ -305,7 +305,7 @@ if (!/^[A-Za-z0-9_-]{43}$/.test(ticket)) {
       sessionStorage.setItem(`hermes.webapp.session.v1:${JSON.stringify([location.origin, basePath])}`, token);
     } catch {
       show('This browser does not let the Webapp keep its sign-in in this tab. Allow site data for this '
-        + 'address, then run a2assistant webapp again.');
+        + 'address, then run hermes webapp again.');
       return;
     }
     const target = new URL(`${basePath}/`, location.origin);

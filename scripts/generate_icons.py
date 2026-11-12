@@ -108,7 +108,7 @@ try:
     import resvg_py
 except ImportError:
     sys.exit(
-        "resvg-py is missing: run the generator with a Hermes runtime interpreter\n"
+        "resvg-py is missing: run the generator with an A2Assistant runtime interpreter\n"
         "  (HERMES_PYTHON=<hermes venv python> node scripts/generate-icons.mjs)"
     )
 

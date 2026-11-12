@@ -422,9 +422,9 @@ test('Windows managed launcher starts a hidden child and leaves exit 75 to the e
     {
       ssh: { exec: async () => '' },
       platform: 'Windows',
-      hermesPath: 'C:\\A2Assistant\\hermes.exe',
+      hermesPath: 'C:\\Hermes\\hermes.exe',
       hermesHome: 'C:\\Users\\alice\\.hermes',
-      pythonPath: 'C:\\A2Assistant\\python.exe'
+      pythonPath: 'C:\\Hermes\\python.exe'
     },
     CORRELATION
   )
@@ -724,9 +724,9 @@ test('Windows coordinator handoff is pending until its marker clears and correla
 
   const target = {
     platform: 'Windows' as const,
-    hermesPath: 'C:\\A2Assistant\\hermes.exe',
+    hermesPath: 'C:\\Hermes\\hermes.exe',
     hermesHome: 'C:\\Users\\alice\\.hermes',
-    pythonPath: 'C:\\A2Assistant\\python.exe',
+    pythonPath: 'C:\\Hermes\\python.exe',
     ssh: {
       exec: async () => {
         const reply = replies[Math.min(calls, replies.length - 1)]

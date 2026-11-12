@@ -25,7 +25,7 @@ import {
 markOnboardingDecided()
 
 const NOT_CONNECTED =
-  'Hermes is not connected to any AI provider yet. Run `hermes model` to pick one, or `hermes auth add <provider>`.'
+  'A2Assistant is not connected to any AI provider yet. Run `hermes model` to pick one, or `hermes auth add <provider>`.'
 
 function baseState(overrides: Partial<DesktopOnboardingState> = {}): DesktopOnboardingState {
   return {
@@ -221,7 +221,7 @@ describe('refreshOnboarding', () => {
       if (method === 'setup.runtime_check') {
         return {
           ok: false,
-          error: 'Hermes is not connected to any AI provider yet. Run `hermes model` to pick one.'
+          error: 'A2Assistant is not connected to any AI provider yet. Run `hermes model` to pick one.'
         } as never
       }
 

@@ -30,7 +30,7 @@ def _default_auth_request_user_agent() -> str:
     """``Hermes-Agent/<version>`` for SDK-built OAuth requests that would otherwise carry no User-Agent at
     all; versioned so an operator debugging a WAF block can tell which client they are looking at."""
     from hermes_cli.version_info import get_version_info
-    return f"Hermes-Agent/{get_version_info().base_version}"
+    return f"A2Assistant/{get_version_info().base_version}"
 
 
 DEFAULT_AUTH_REQUEST_USER_AGENT = _default_auth_request_user_agent()
@@ -101,7 +101,7 @@ class HermesProviderMixin:
                 or ("urn:ietf:params:oauth:grant-type:device_code" in grants and "authorization_code" not in grants)):
             from tools.mcp_oauth import OAuthNonInteractiveError
             raise OAuthNonInteractiveError(
-                "MCP device authorization requires `a2assistant mcp login <server> --flow device`; "
+                "MCP device authorization requires `hermes mcp login <server> --flow device`; "
                 "background reconnects cannot start a device login")
         self._tolerate_missing_iss_for_known_server()
         self._request_google_offline_access()

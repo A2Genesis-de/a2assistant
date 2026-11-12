@@ -22,7 +22,7 @@ def _err(msg: str) -> None:
 def cmd_proxy_start(args: Any) -> int:
     """Run the proxy server in the foreground."""
     if not AIOHTTP_AVAILABLE:
-        _err("hermes proxy requires aiohttp. Run `a2assistant setup` to install it.")
+        _err("hermes proxy requires aiohttp. Run `hermes setup` to install it.")
         return 1
     provider = getattr(args, "provider", None) or "nous"
     try:

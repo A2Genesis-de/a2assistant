@@ -307,7 +307,7 @@ def cmd_token(args: argparse.Namespace) -> int:
             console.print(
                 f"[yellow]Warning: configured project {project_id} is not visible "
                 "to this machine account.  Grant it access in the Bitwarden web "
-                "app or re-run `a2assistant secrets bitwarden setup` to pick a different project.[/yellow]")
+                "app or re-run `hermes secrets bitwarden setup` to pick a different project.[/yellow]")
         return True
 
     return rotate_token(
@@ -323,7 +323,7 @@ def cmd_token(args: argparse.Namespace) -> int:
         save=save_env_value, env_path=get_env_path, clear_caches=bw.clear_caches,
         disabled_note=None if bw_cfg.get("enabled") else (
             "[yellow]Note: the Bitwarden integration is currently disabled — "
-            "run `a2assistant secrets bitwarden setup` (or set "
+            "run `hermes secrets bitwarden setup` (or set "
             "secrets.bitwarden.enabled: true) to turn it on.[/yellow]"
         ))
 

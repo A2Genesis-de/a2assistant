@@ -7288,7 +7288,7 @@ def register(ctx) -> None:
         ensure_deps_fn=check_discord_requirements,
         is_connected=_is_connected,
         required_env=["DISCORD_BOT_TOKEN"],
-        install_hint="Run `a2assistant setup` to install Discord support.",
+        install_hint="Run `hermes setup` to install Discord support.",
         setup_fn=interactive_setup,
         # YAML→env config bridge — owns the translation of ``config.yaml`` ``discord:`` keys
         # (require_mention, free_response_channels, auto_thread, free_response_auto_thread,

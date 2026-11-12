@@ -115,7 +115,7 @@ def _validate_moa(req: _Request) -> dict[str, Any]:
         cfg = normalize_moa_config(load_config().get("moa") or {})
         if req.requested in cfg["presets"]:
             return _accept()
-        return _reject(f"MoA preset `{req.requested}` was not found. Run `a2assistant moa list`.")
+        return _reject(f"MoA preset `{req.requested}` was not found. Run `hermes moa list`.")
     except Exception as exc:
         return _reject(f"Could not read MoA presets: {exc}")
 

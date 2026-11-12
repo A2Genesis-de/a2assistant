@@ -539,7 +539,7 @@ def shared_credential_warning(profile: str, platforms: list[str], source: str = 
         f"⚠ Profile '{profile}' shares its {', '.join(platforms)} credential with {source}: the bot can "
         f"only belong to one profile. Give '{profile}' its own bot (hermes -p {profile} setup, or the "
         f"dashboard Messaging page) or remove the token from '{profile}'; a multiplexed gateway parks "
-        f"the duplicate and `a2assistant gateway migrate --multiplex` refuses until it is gone."
+        f"the duplicate and `hermes gateway migrate --multiplex` refuses until it is gone."
     )
 
 

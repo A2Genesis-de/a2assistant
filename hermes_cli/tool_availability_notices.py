@@ -18,7 +18,7 @@ _MULTI_PROVIDER_NOTICES: dict[str, str] = {
             "\"Web Search & Scraping\"."),
 }
 
-_GENERIC_FOOTER = "[dim]   Run 'a2assistant setup tools' to configure[/]"
+_GENERIC_FOOTER = "[dim]   Run 'hermes setup tools' to configure[/]"
 
 
 def filter_to_enabled_toolsets(unavailable: list[dict], enabled: Iterable[str],

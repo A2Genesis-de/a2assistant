@@ -1408,7 +1408,7 @@ def _refuse_env_adoption_if_config_corrupt() -> None:
     raise AuthError(
         f"config.yaml at {path} is corrupt ({err}) — refusing to auto-select "
         f"an inference provider from environment keys. Fix the YAML (a backup "
-        f"was saved next to it) or run a2assistant setup.",
+        f"was saved next to it) or run hermes setup.",
         code="corrupt_config")
 
 
@@ -1636,7 +1636,7 @@ def resolve_provider(
         from hermes_cli.auth_error_copy import unknown_provider_hint
         hint = unknown_provider_hint(normalized)
         tail = (f"\n\n{hint}" if hint else " Check 'hermes model' for available providers, "
-                "or run 'a2assistant doctor' to diagnose config issues.")
+                "or run 'hermes doctor' to diagnose config issues.")
         raise AuthError(f"Unknown provider '{normalized}'." + tail, code="invalid_provider")
 
     if explicit_api_key or explicit_base_url:  # one-off CLI creds always mean openrouter/custom
@@ -1695,8 +1695,8 @@ def resolve_provider(
         pass  # boto3 not installed
     from hermes_constants import display_hermes_home
     raise AuthError(
-        "A2Assistant is not connected to any AI provider yet. Run `a2assistant model` to pick one, type `/login` in chat, "
-        f"or add a key with `a2assistant auth add <provider>`. (Advanced: put an API key such as OPENROUTER_API_KEY in "
+        "A2Assistant is not connected to any AI provider yet. Run `hermes model` to pick one, type `/login` in chat, "
+        f"or add a key with `hermes auth add <provider>`. (Advanced: put an API key such as OPENROUTER_API_KEY in "
         f"{display_hermes_home()}/.env.)",
         code="no_provider_configured")
 
@@ -2182,7 +2182,7 @@ def _get_azure_foundry_auth_status() -> dict[str, Any]:
                 credential_verified=False, logged_in=bool(installed),
                 hint=(
                     "azure-identity is installed; live credential validation "
-                    "is skipped here. Run `a2assistant doctor` to verify token acquisition."
+                    "is skipped here. Run `hermes doctor` to verify token acquisition."
                 ) if installed else (
                     "azure-identity not installed. From the A2Assistant environment, run: "
                     f"{install_hint('azure-identity')}. "
@@ -2369,7 +2369,7 @@ def _reset_config_provider() -> Path:
 def login_command(args) -> None:
     """Deprecated: use 'hermes model' or 'hermes setup' instead."""
     print("The 'hermes login' command has been removed.\nUse 'hermes auth' to manage credentials,\n"
-          "'hermes model' to select a provider, or 'a2assistant setup' for full setup.")
+          "'hermes model' to select a provider, or 'hermes setup' for full setup.")
     raise SystemExit(0)
 
 
@@ -2420,4 +2420,4 @@ def logout_command(args) -> None:
     elif os.getenv("OPENROUTER_API_KEY"):
         print("A2Assistant will use OpenRouter for inference.")
     else:
-        print("Run `a2assistant model` or configure an API key to use A2Assistant.")
+        print("Run `hermes model` or configure an API key to use A2Assistant.")

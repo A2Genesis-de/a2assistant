@@ -26,7 +26,7 @@ def cmd_pause(args: argparse.Namespace) -> int:
     print(
         "    Cron dispatch, kanban dispatch, and new gateway turns (messaging and interactive\n"
         "    CLI, TUI and Desktop turns alike) are on hold. In-flight work keeps running.\n"
-        "    Run `a2assistant resume` to lift the pause.")
+        "    Run `hermes resume` to lift the pause.")
     return 0
 
 
@@ -47,7 +47,7 @@ def build_pause_parser(subparsers) -> None:
         "pause", help="Emergency stop: pause cron/kanban dispatch and new gateway turns",
         description="Engage the global emergency stop. Halts NEW work only — cron "
             "dispatch, kanban dispatch, and new gateway turns — until "
-            "`a2assistant resume`. Interactive CLI, TUI and Desktop turns are gateway turns, so they "
+            "`hermes resume`. Interactive CLI, TUI and Desktop turns are gateway turns, so they "
             "are held too: each gets \"A2Assistant is paused\" with the reason. Turns already "
             "running finish; in-flight work is never killed.")
     pause_parser.add_argument(
@@ -55,6 +55,6 @@ def build_pause_parser(subparsers) -> None:
     pause_parser.set_defaults(func=cmd_pause)
 
     resume_parser = subparsers.add_parser(
-        "resume", help="Lift the emergency stop set by `a2assistant pause`",
+        "resume", help="Lift the emergency stop set by `hermes pause`",
         description="Remove the ESTOP sentinel; dispatch resumes on the next tick.")
     resume_parser.set_defaults(func=cmd_resume)

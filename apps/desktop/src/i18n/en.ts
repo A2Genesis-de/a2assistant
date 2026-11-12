@@ -435,7 +435,7 @@ export const en: Translations = {
       gatewayAuthFailed:
         'This A2Assistant no longer accepts your saved sign-in. Open Gateways and sign in again (or paste a new access token), then retry.',
       methodNotAllowed:
-        "A2Assistant' background service is out of step with the app, probably after an update. Restart it to fix this.",
+        "A2Assistant's background service is out of step with the app, probably after an update. Restart it to fix this.",
       microphonePermission: 'Microphone permission was denied.',
       openaiRejectedApiKey: "OpenAI didn't accept your API key. Update it in Settings → Keys, then try again.",
       openaiTtsNeedsKey: 'Voice needs an OpenAI key. Add one in Settings → Keys.',
@@ -1310,9 +1310,9 @@ export const en: Translations = {
       kindCloud: 'Hermes Cloud',
       kindSsh: 'SSH',
       kindLocalDesc: 'The A2Assistant runtime managed by this app.',
-      kindRemoteDesc: 'A A2Assistant gateway reachable over HTTP(S) — LAN, Tailscale, or the internet.',
+      kindRemoteDesc: 'An A2Assistant gateway reachable over HTTP(S) — LAN, Tailscale, or the internet.',
       kindCloudDesc: 'A hosted instance discovered through your Hermes Cloud account.',
-      kindSshDesc: 'A A2Assistant install reached over SSH.',
+      kindSshDesc: 'An A2Assistant install reached over SSH.',
       labelTitle: 'Name',
       labelDesc: 'Required. Shown everywhere this instance appears; must be unique (e.g. “Homelab”, “Work laptop”).',
       labelPlaceholder: 'Homelab',
@@ -1361,7 +1361,7 @@ export const en: Translations = {
       title: 'Gateway Connection',
       envOverride: 'env override',
       intro:
-        'Local by default. Use remote when this app should drive a A2Assistant backend elsewhere. Gateway connections are machine-level; profiles are discovered from the gateways you connect.',
+        'Local by default. Use remote when this app should drive an A2Assistant backend elsewhere. Gateway connections are machine-level; profiles are discovered from the gateways you connect.',
       envOverrideTitle: 'This connection was fixed by the way A2Assistant was launched.',
       envOverrideDesc:
         'A startup setting outside the app chose this connection, so the options below are read-only. Restart A2Assistant without that setting — or ask whoever set it up — to change it here.',
@@ -3881,15 +3881,15 @@ export const en: Translations = {
     retryAfterRun: 'I’ve run it -- retry',
     setupChoiceTitle: 'Set up A2Assistant Desktop',
     setupChoiceDesc:
-      'Connect this app to a A2Assistant gateway you already run, or install A2Assistant locally on this computer.',
-    setupChoiceDescLocal: 'Install A2Assistant on this computer, or connect to a A2Assistant gateway you already run.',
+      'Connect this app to an A2Assistant gateway you already run, or install A2Assistant locally on this computer.',
+    setupChoiceDescLocal: 'Install A2Assistant on this computer, or connect to an A2Assistant gateway you already run.',
     connectExistingTitle: 'Connect to existing A2Assistant',
     connectExistingShort: 'Connect existing',
     connectExistingDesc: 'Use a remote backend with a session token or browser sign-in. No local install will start.',
     installLocalTitle: 'Install A2Assistant locally',
     installLocalDesc: 'Download A2Assistant, create its Python environment, and run the backend on this computer.',
     useLocalTitle: 'Use A2Assistant on this computer',
-    useLocalDesc: 'A A2Assistant runtime is already installed here — start it with one click. Nothing downloads.',
+    useLocalDesc: 'An A2Assistant runtime is already installed here — start it with one click. Nothing downloads.',
     bundledLocalDesc: 'Use the A2Assistant runtime included with this app — the bundled backend is the local install.',
     localStartUnavailable: 'Local installation could not start. Restart A2Assistant Desktop and try again.',
     remoteSetupTitle: 'Connect to existing A2Assistant',

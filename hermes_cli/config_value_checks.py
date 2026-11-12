@@ -72,7 +72,7 @@ def _validate_web_backends(config: dict[str, Any], issues: list[ConfigIssue]) ->
             _issue(issues, "warning",
                    f"web.{_key} is set to '{_val}', but {note} — "
                    "web_search/web_extract will fail until it is changed",
-                   "Run 'a2assistant tools' and pick a different Web Search & Extract provider")
+                   "Run 'hermes tools' and pick a different Web Search & Extract provider")
 
 
 def _container_slots() -> dict[str, str]:
@@ -118,5 +118,5 @@ def _validate_quoted_containers(config: dict[str, Any], issues: list[ConfigIssue
             _issue(issues, "warning",
                    f"{key} is the quoted string {value!r} — A2Assistant expects a YAML {kind} here "
                    "and every reader ignores the string",
-                   f"Run: a2assistant config set {key} {shlex.quote(value)}  (stores a real {kind}), "
+                   f"Run: hermes config set {key} {shlex.quote(value)}  (stores a real {kind}), "
                    "or remove the quotes in config.yaml")

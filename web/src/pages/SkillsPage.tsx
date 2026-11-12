@@ -707,7 +707,7 @@ export default function SkillsPage() {
           <DialogHeader>
             <DialogTitle>Learn a skill</DialogTitle>
             <DialogDescription>
-              Point A2Assistant at anything and it will distill a reusable skill —
+              Point Hermes at anything and it will distill a reusable skill —
               following the house authoring standards. Fill in any combination
               below; the agent gathers the sources and writes the skill in chat.
             </DialogDescription>
@@ -1209,7 +1209,7 @@ function ConnectedHubs({
     return (
       <p className="text-xs text-muted-foreground">
         Results come from the same sources as{" "}
-        <span className="font-mono">a2assistant skills search</span>.
+        <span className="font-mono">hermes skills search</span>.
       </p>
     );
   }

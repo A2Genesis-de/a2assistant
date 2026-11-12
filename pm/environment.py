@@ -56,7 +56,7 @@ _BUILD_MARKERS = ("the build backend returned an error",)
 # and hints the version was filtered, so that case needs both lines.
 _UNDATED_PIN = "has no publish time"
 _UNDATED_FILE = ("is missing an upload date", "was filtered by `exclude-newer")
-UNDATED_INDEX_HINT = ("the package index did not report upload times, which locking Hermes's "
+UNDATED_INDEX_HINT = ("the package index did not report upload times, which locking A2Assistant's "
                       "dependencies needs for its 3-day release-age check. Use https://pypi.org/simple "
                       "or a mirror that serves upload times (pip.conf index-url / UV_INDEX_URL), then retry.")
 
@@ -554,7 +554,7 @@ class PythonEnvironment:
                                                      cwd=self.cache.parent, timeout=900)
         except InstallError as exc:
             raise InstallError("uv", f"could not clean the uv cache at {cache}: {exc.cause}",
-                               "stop other Hermes installs and retry") from exc
+                               "stop other A2Assistant installs and retry") from exc
         if result.returncode:
             raise InstallError("uv", f"could not remove {', '.join(names)} from the uv cache at "
                                f"{cache}: {(result.stderr or result.stdout)[-600:]}")

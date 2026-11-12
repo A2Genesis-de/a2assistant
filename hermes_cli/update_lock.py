@@ -1000,7 +1000,7 @@ def describe_holder(holder: UpdateHolder | None) -> str:
             "  Updating without the lock could let two updates corrupt the install, or run\n"
             "  under a Desktop app, gateway or installer that cannot see it. Make that path\n"
             "  writable (fix its owner or permissions, or remount a read-only filesystem\n"
-            "  read-write), or run `a2assistant update` as the user that owns the install."
+            "  read-write), or run `hermes update` as the user that owns the install."
         )
     minutes, seconds = divmod(int(max(0 if holder is None else holder.age_seconds, 0)), 60)
     elapsed = f"{minutes}m {seconds}s" if minutes else f"{seconds}s"
@@ -1011,8 +1011,8 @@ def describe_holder(holder: UpdateHolder | None) -> str:
         f"✗ Another A2Assistant update is already running (started {elapsed} ago{who}).\n"
         "\n"
         "  Running two at once would corrupt the install. Wait for it to finish\n"
-        "  (watch `a2assistant logs`), or close the Desktop/dashboard window that\n"
-        "  started it, then run `a2assistant update` again."
+        "  (watch `hermes logs`), or close the Desktop/dashboard window that\n"
+        "  started it, then run `hermes update` again."
     )
 
 

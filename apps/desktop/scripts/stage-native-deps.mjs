@@ -743,7 +743,7 @@ export function missingGetWindowsWarning({ platform, arch, halfInstalledDir }) {
     lines.push(
       `[stage-native-deps] ${halfInstalledDir} exists but is not a loadable package — an ` +
         'interrupted install left it half-extracted (look for TAR_ENTRY_ERROR in the install log). ' +
-        'To restore read_window_below: close every Hermes window and gateway so the extract is not ' +
+        'To restore read_window_below: close every A2Assistant window and gateway so the extract is not ' +
         'interrupted again, then run `hermes desktop --force-build` — it reinstalls the dependency tree.'
     )
   }

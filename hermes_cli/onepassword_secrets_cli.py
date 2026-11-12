@@ -282,7 +282,7 @@ def cmd_token(args: argparse.Namespace) -> int:
         save=save_env_value, env_path=get_env_path, clear_caches=op_src.clear_caches,
         disabled_note=None if op_cfg.get("enabled") else (
             "[yellow]Note: the 1Password integration is currently disabled — "
-            "run `a2assistant secrets onepassword setup` to turn it on.[/yellow]"
+            "run `hermes secrets onepassword setup` to turn it on.[/yellow]"
         ),
     )
 
@@ -297,7 +297,7 @@ def cmd_sync(args: argparse.Namespace) -> int:
     if not references:
         console.print(
             "[yellow]No op:// references configured.  Add one with "
-            "`a2assistant secrets onepassword set ENV_VAR \"op://…\"`.[/yellow]"
+            "`hermes secrets onepassword set ENV_VAR \"op://…\"`.[/yellow]"
         )
         return 0
 

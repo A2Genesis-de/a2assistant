@@ -221,6 +221,6 @@ def test_plugin_docs_import_only_the_published_plugin_api():
         "these plugin-docs Python blocks import something but do not parse, so their imports cannot be "
         f"checked; make the block valid Python (placeholders like `...` are fine): {unparsable}")
     assert not found - seams, (
-        "plugin docs import Hermes names outside hermes_cli/data/plugin_api.json; rewrite the example "
+        "plugin docs import A2Assistant names outside hermes_cli/data/plugin_api.json; rewrite the example "
         f"onto ctx.* or a listed name: {sorted(found - seams)}")
     assert not seams - found, f"no longer in the docs, delete from {_SEAMS.name}: {sorted(seams - found)}"

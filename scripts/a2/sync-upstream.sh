@@ -1,23 +1,139 @@
 #!/usr/bin/env bash
-# Merge the newest upstream stable release tag (vX.Y.Z) into the fork's main branch.
+# Build the fork: upstream release tag + hand-written A2 layer + generated brand layer, integrated fast-forward.
+#
+#   scripts/a2/sync-upstream.sh                      newest upstream vX.Y.Z tag, current layer, onto main
+#   scripts/a2/sync-upstream.sh --tag v0.24.0        a specific upstream tag
+#   scripts/a2/sync-upstream.sh --layer feat/x       rebuild from a new layer tip (branch it from --layer-tip)
+#   scripts/a2/sync-upstream.sh --target sync/v0.24.0 --skip-tests   build onto another branch (CI)
+#   scripts/a2/sync-upstream.sh --layer-tip          print the current layer tip and exit
+#   options: --from <branch> (default main) --keep-workdir
+#
+# The result is a merge commit: first parent = previous target tip, second parent = the build commit
+# "Apply A2Assistant brand (generated)", tree = the build tree. Its trailers record tag, layer and build.
 set -euo pipefail
+
+BRAND_SUBJECT="Apply A2Assistant brand (generated)"
+TAG_PATTERN='^v[0-9]{1,3}\.[0-9]+\.[0-9]+$'
+
+tag=""
+layer=""
+target="main"
+from="main"
+run_tests=1
+print_layer=0
+keep_workdir=0
+
+usage() { sed -n '2,12p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+
+while (($#)); do
+  case "$1" in
+    --tag) tag="$2"; shift 2 ;;
+    --layer) layer="$2"; shift 2 ;;
+    --target) target="$2"; shift 2 ;;
+    --from) from="$2"; shift 2 ;;
+    --skip-tests) run_tests=0; shift ;;
+    --keep-workdir) keep_workdir=1; shift ;;
+    --layer-tip) print_layer=1; shift ;;
+    -h|--help) usage ;;
+    *) echo "unknown option: $1" >&2; usage 2 ;;
+  esac
+done
 
 cd "$(git rev-parse --show-toplevel)"
 
-if [[ -n "$(git status --porcelain)" ]]; then
-  echo "Working tree is not clean." >&2
+trailer() { git log -1 --format="%(trailers:key=$2,valueonly)" "$1" | sed -n 1p; }
+
+record="$(git log -1 --format=%H --grep='^A2-Build: ' "$from")"
+if [[ -z "$record" ]]; then
+  echo "No A2 build record on $from (a commit with A2-Upstream/A2-Layer/A2-Build trailers)." >&2
   exit 1
 fi
+current_tag="$(trailer "$record" A2-Upstream)"
+current_layer="$(trailer "$record" A2-Layer)"
+current_build="$(trailer "$record" A2-Build)"
 
-# Releases are semver tags (v0.23.1); date tags (v2026.9.24) are a legacy scheme and must be ignored.
-git fetch upstream '+refs/heads/main:refs/remotes/upstream/main' --tags
-latest_tag="$(git tag --list --sort=-v:refname | grep -E '^v[0-9]{1,3}\.[0-9]+\.[0-9]+$' | head -n1)"
-
-if git merge-base --is-ancestor "$latest_tag" main; then
-  echo "main already contains $latest_tag."
+if ((print_layer)); then
+  echo "$current_layer"
   exit 0
 fi
 
-git switch main
-git merge --no-ff -m "Merge upstream release $latest_tag" "$latest_tag"
-echo "Merged $latest_tag into main. Review, test and then: git push origin main"
+if ! git diff --quiet "$current_build" "$from" --; then
+  echo "$from has changes that are not part of its last build ($current_build)." >&2
+  echo "Move them onto the layer (branch from $current_layer) and rebuild with --layer." >&2
+  exit 1
+fi
+
+git remote get-url upstream >/dev/null 2>&1 || git remote add upstream https://github.com/NousResearch/hermes-agent.git
+git fetch --quiet --no-tags upstream '+refs/tags/v*:refs/tags/v*'
+if [[ -z "$tag" ]]; then
+  tag="$(git tag --list 'v*' --sort=-v:refname | grep -E "$TAG_PATTERN" | head -n1)"
+fi
+[[ "$tag" =~ $TAG_PATTERN ]] || { echo "Not a stable release tag: $tag" >&2; exit 1; }
+layer_rev="$(git rev-parse --verify "${layer:-$current_layer}^{commit}")"
+
+if [[ "$tag" == "$current_tag" && "$layer_rev" == "$current_layer" ]]; then
+  echo "$from is already built from $tag with layer ${layer_rev:0:10}."
+  exit 0
+fi
+
+workdir="$(mktemp -d "${TMPDIR:-/tmp}/a2-build.XXXXXX")"
+cleanup() {
+  if ((keep_workdir)); then
+    echo "Build worktree kept at $workdir"
+  else
+    git worktree remove --force "$workdir" >/dev/null 2>&1 || true
+    rm -rf "$workdir"
+  fi
+}
+trap cleanup EXIT
+git worktree add --quiet --detach "$workdir" "$tag"
+
+tag_commit="$(git rev-parse "$tag^{commit}")"
+if [[ "$tag_commit" == "$(git rev-parse "$current_tag^{commit}")" ]] ||
+   { git merge-base --is-ancestor "$current_tag" "$tag" && git merge-base --is-ancestor "$tag" "$layer_rev"; }; then
+  git -C "$workdir" checkout --quiet --detach "$layer_rev"
+else
+  echo "Rebasing the A2 layer ($(git rev-list --count --no-merges "$current_tag..$layer_rev") commits) onto $tag"
+  if ! git -C "$workdir" -c core.hooksPath=/dev/null rebase --quiet --onto "$tag" "$current_tag" "$layer_rev"; then
+    keep_workdir=1
+    echo "The A2 layer does not apply cleanly to $tag. Resolve it in $workdir:" >&2
+    echo "  cd $workdir && git status    # fix conflicts, git add, git rebase --continue" >&2
+    echo "Then rebuild from the resolved layer:" >&2
+    echo "  scripts/a2/sync-upstream.sh --tag $tag --layer <resolved HEAD> --target $target" >&2
+    exit 1
+  fi
+fi
+new_layer="$(git -C "$workdir" rev-parse HEAD)"
+
+echo "Generating the brand layer"
+(cd "$workdir" && uv run --quiet scripts/a2/apply_brand.py --derived)
+git -C "$workdir" add -A
+git -C "$workdir" -c core.hooksPath=/dev/null commit --quiet --allow-empty -m "$BRAND_SUBJECT" \
+  -m "Generated by scripts/a2/apply_brand.py from a2/brand.yaml on $tag + layer ${new_layer:0:10}."
+build="$(git -C "$workdir" rev-parse HEAD)"
+
+if ((run_tests)); then
+  echo "Testing the build"
+  (cd "$workdir" && scripts/a2/test-build.sh)
+fi
+
+previous="$(git rev-parse --verify --quiet "refs/heads/$target" || true)"
+merge="$(git commit-tree "$build^{tree}" -p "${previous:-$(git rev-parse "$from")}" -p "$build" \
+  -m "Build A2 fork from upstream $tag" \
+  -m "A2-Upstream: $tag
+A2-Layer: $new_layer
+A2-Build: $build")"
+
+if [[ "$(git symbolic-ref --quiet --short HEAD || true)" == "$target" ]]; then
+  git merge --quiet --ff-only "$merge"
+elif git worktree list --porcelain | grep -qx "branch refs/heads/$target"; then
+  echo "$target is checked out in another worktree; there run: git merge --ff-only $merge" >&2
+  exit 1
+elif [[ -n "$previous" ]]; then
+  git update-ref "refs/heads/$target" "$merge" "$previous"
+else
+  git branch "$target" "$merge"
+fi
+
+echo "Built $target from upstream $tag: ${merge:0:10} (layer ${new_layer:0:10}, build ${build:0:10})"
+echo "Review, then: git push origin $target"

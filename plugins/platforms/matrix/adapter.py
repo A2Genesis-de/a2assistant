@@ -778,7 +778,7 @@ def ensure_matrix_deps() -> bool:
     if extras.missing("matrix") and not extras.ensure_and_bind("matrix", _import, globals()):
         logger.warning(
             "Matrix: required packages not installed or need a restart. "
-            "Run `hermes pm install`, then restart Hermes."
+            "Run `hermes pm install`, then restart A2Assistant."
         )
         return False
     e2ee_mode = _resolve_e2ee_mode()
@@ -3220,7 +3220,7 @@ def interactive_setup() -> None:
             print_success("Matrix dependencies prepared. Restart A2Assistant to use them.")
         except Exception as exc:
             print_warning(f"Matrix dependencies could not be prepared: {exc}")
-            print_info("Run `a2assistant pm install`, then restart A2Assistant.")
+            print_info("Run `hermes pm install`, then restart A2Assistant.")
         print_info("🔒 Security: Restrict who can use your bot")
         print_info("   Matrix user IDs look like @username:server")
         allowed_users = prompt("Allowed user IDs (comma-separated, leave empty for open access)")

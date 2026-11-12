@@ -96,8 +96,8 @@ _SCHEMA_OVERRIDES: dict[str, dict[str, Any]] = {
     "proxy.enabled": {
         "type": "boolean",
         "description": (
-            "Docker-only egress credential firewall. Requires `a2assistant egress setup` "
-            "and `a2assistant egress start`; Modal/SSH/Daytona are not wired yet."
+            "Docker-only egress credential firewall. Requires `hermes egress setup` "
+            "and `hermes egress start`; Modal/SSH/Daytona are not wired yet."
         ),
         "category": "security",
     },
@@ -113,7 +113,7 @@ _SCHEMA_OVERRIDES: dict[str, dict[str, Any]] = {
         "type": "boolean",
         "description": (
             "Borrow and refresh the Codex CLI / Claude Code logins when A2Assistant has no usable login of its own. "
-            "Off: A2Assistant uses only its own logins (`a2assistant auth add <provider>`)."
+            "Off: A2Assistant uses only its own logins (`hermes auth add <provider>`)."
         ),
         "category": "security",
     },

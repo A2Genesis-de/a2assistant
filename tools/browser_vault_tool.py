@@ -355,7 +355,7 @@ def browser_vault_save_login(label: str = "", task_id: Optional[str] = None) -> 
     if prompt is None or not can_prompt_here():
         return json.dumps({"success": False, "error_type": "prompt_unavailable",
                            "error": (f"This session cannot ask the user for a login (headless/cron/API). Tell them to run "
-                                     f"`a2assistant vault add` or use Desktop → Settings → Passwords & Logins for {origin}.")})
+                                     f"`hermes vault add` or use Desktop → Settings → Passwords & Logins for {origin}.")})
     host = origin.split("://", 1)[-1]
     site = label.strip() or host
     answer = prompt(origin, host)  # the prompt names the site by host: the user recognises URLs, not agent labels
@@ -495,7 +495,7 @@ def browser_vault_fill(handle: str, task_id: Optional[str] = None, *, with_ident
                 "success": False,
                 "error": (
                     f"No vault item with handle {handle!r}. Use browser_vault action=list. "
-                    "To save a credential: run `a2assistant vault add` in a terminal, or "
+                    "To save a credential: run `hermes vault add` in a terminal, or "
                     "in the desktop app open Settings → Credential Vault."
                 ),
             }

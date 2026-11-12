@@ -126,7 +126,7 @@ def _check_dispatcher_presence(hermes_home: Optional[Path] = None) -> tuple[bool
         return (False, "Gateway is running but kanban.dispatch_in_gateway=false in "
                 "config.yaml — the task will sit in 'ready' until you flip it "
                 "back on and restart the gateway, OR run the legacy "
-                "standalone daemon (`a2assistant kanban daemon --force`).")
+                "standalone daemon (`hermes kanban daemon --force`).")
     return (False, "No gateway is running — the task will sit in 'ready' until you "
             "start it. Run:\n    hermes gateway start\n"
             "The gateway hosts an embedded dispatcher (tick interval 60s by "
@@ -145,7 +145,7 @@ def kanban_command(args: argparse.Namespace) -> int:
             parser.print_help()
         else:
             print("usage: hermes kanban <action> [options]\n"
-                  "Run 'a2assistant kanban --help' for the full list of actions.", file=sys.stderr)
+                  "Run 'hermes kanban --help' for the full list of actions.", file=sys.stderr)
         return 0
 
     # Fast-fail for UX only; the durable trust boundary is in kanban_db, since children can
@@ -173,7 +173,7 @@ def kanban_command(args: argparse.Namespace) -> int:
         # create an empty board.
         if normed != kb.DEFAULT_BOARD and not kb.board_exists(normed):
             return _err(f"kanban: board {normed!r} does not exist. "
-                        f"Create it with `a2assistant kanban boards create {normed}`.")
+                        f"Create it with `hermes kanban boards create {normed}`.")
         board_scope = kb.scoped_current_board(normed)
 
     with board_scope:
@@ -438,7 +438,7 @@ def _cmd_list(args: argparse.Namespace) -> int:
     if len(all_boards) > 1:
         other_count = len(all_boards) - 1
         print(f"Board: {kb.get_current_board()} ({other_count} other board{'s' if other_count != 1 else ''} — "
-              f"`a2assistant kanban boards list`)\n")
+              f"`hermes kanban boards list`)\n")
     if not tasks:
         print("(no matching tasks)")
         return 0
@@ -719,7 +719,7 @@ def _cmd_link(args: argparse.Namespace) -> int:
             f"Note: {args.child_id} was ready and is now todo — parent "
             f"{args.parent_id} is not done yet. The ready -> running claim "
             f"re-checks parents, so the child only runs after the parent "
-            f"completes; use `a2assistant kanban unlink {args.parent_id} {args.child_id}` "
+            f"completes; use `hermes kanban unlink {args.parent_id} {args.child_id}` "
             f"to run it now."
         )
     return 0
@@ -924,7 +924,7 @@ def _cmd_complete(args: argparse.Namespace) -> int:
                                         force=bool(getattr(args, "force", False)))
             except kb.LiveClaimError:
                 fail_msg[tid] = (f"cannot complete {tid}: a live worker is running it. Wait for the "
-                                 f"worker, `a2assistant kanban reclaim {tid}` to release it, or re-run with "
+                                 f"worker, `hermes kanban reclaim {tid}` to release it, or re-run with "
                                  f"--force to close its run and complete anyway.")
                 return False
             except kb.EmptyCompletionError as empty_err:
@@ -938,7 +938,7 @@ def _cmd_complete(args: argparse.Namespace) -> int:
                 if blockers:
                     detail = ", ".join(f"{pid} ({status})" for pid, status in blockers)
                     fail_msg[tid] = (f"cannot complete {tid}: unsatisfied parent dependencies: {detail}; "
-                                     f"complete the parents first, or `a2assistant kanban unlink <parent> {tid}`.")
+                                     f"complete the parents first, or `hermes kanban unlink <parent> {tid}`.")
             return done
 
         return _bulk_apply(ids, op, lambda tid: f"Completed {tid}", fail_msg.__getitem__)

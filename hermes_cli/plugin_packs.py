@@ -296,7 +296,7 @@ def render_pack_review(console, pack: PluginPack, resolved: list[ResolvedPackPlu
     if pack.skills:
         console.print(
             "[yellow]Pack lists skills (NOT auto-installed yet):[/yellow] " + ", ".join(pack.skills))
-        console.print("[dim]Install them manually, e.g. `a2assistant skills install <id>`.[/dim]")
+        console.print("[dim]Install them manually, e.g. `hermes skills install <id>`.[/dim]")
     console.print(
         "\n[dim]Installing a pack runs third-party code × "
         f"{len(resolved)} plugins. Each plugin's declared capabilities still "
@@ -487,7 +487,7 @@ def export_pack(*, enabled_only: bool = False, pack_name: str = "my-hermes-pack"
 
     doc: dict[str, Any] = {
         "name": pack_name,
-        "description": "Exported by `a2assistant plugins pack export`.",
+        "description": "Exported by `hermes plugins pack export`.",
         "version": "1.0.0",
         "plugins": entries,
     }
@@ -524,7 +524,7 @@ def cmd_pack_show(source: str) -> None:
         console.print(
             f"\n[yellow]{len(unresolved)} entr{'y' if len(unresolved) == 1 else 'ies'} "
             "could not be resolved — install would skip them and exit non-zero.[/yellow]")
-    console.print("\n[dim]Dry run only. Install with `a2assistant plugins pack install ...`.[/dim]")
+    console.print("\n[dim]Dry run only. Install with `hermes plugins pack install ...`.[/dim]")
 
 
 def cmd_pack_install(source: str, *, force: bool = False) -> None:

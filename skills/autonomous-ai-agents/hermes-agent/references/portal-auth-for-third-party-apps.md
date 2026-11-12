@@ -16,7 +16,7 @@ trips agents up.
 
 | Surface | What it actually is | Auth path |
 |---|---|---|
-| **OpenViking memory plugin** (catalog: `hermes plugins install openviking`) | Code that runs **inside the A2Assistant process**. Its LLM calls go through A2Assistant's already-configured provider. | Already uses Portal if user's A2Assistant is configured for Portal. Nothing extra needed. `OPENVIKING_API_KEY` is the OpenViking *server's* own auth, not LLM auth. |
+| **OpenViking memory plugin** (catalog: `a2assistant plugins install openviking`) | Code that runs **inside the A2Assistant process**. Its LLM calls go through A2Assistant's already-configured provider. | Already uses Portal if user's A2Assistant is configured for Portal. Nothing extra needed. `OPENVIKING_API_KEY` is the OpenViking *server's* own auth, not LLM auth. |
 | **OpenViking the standalone server** (separate container) | A separate context-DB service. If it ever calls an LLM on its own, that's a separate HTTP client. | Same as any external app — Layer 2/3 below. |
 | **Karakeep, n8n, LibreChat, OpenWebUI, any self-hosted app** | Different process, often different machine. Makes its own HTTPS calls to `inference-api.nousresearch.com`. | Layer 2/3 below. |
 
@@ -41,7 +41,7 @@ There is **no general OAuth 2.0 authorization server**. There is no
 against. There is no shared cookie or session that browser-Portal-login
 extends to other apps on the same machine.
 
-What A2Assistant has that *feels* like OAuth — `hermes login --provider nous`
+What A2Assistant has that *feels* like OAuth — `a2assistant login --provider nous`
 opening a browser, user signs in, token lands in `~/.hermes/auth.json` — is a
 **A2Assistant-specific browser flow**. Under the hood it produces a credential
 A2Assistant uses as a bearer. It is not a public OAuth provider that Karakeep et al.
@@ -122,7 +122,7 @@ When the user asks "can $APP use my Portal subscription":
    point each at a different endpoint.
 
 **Note on the Tool Gateway**: the "no separate accounts, no API key juggling"
-pitch in the Tool Gateway announcement is specifically about Hermes Agent's
+pitch in the Tool Gateway announcement is specifically about A2Assistant's
 *tools* (web search, browser, image gen, TTS) flowing through the Portal
 subscription when A2Assistant is configured to use Portal as its provider. It is
 **not** a claim that arbitrary third-party apps inherit Portal auth.

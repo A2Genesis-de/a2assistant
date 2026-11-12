@@ -766,7 +766,7 @@ export const host = {
     const bridge = window.hermesDesktop?.connections
 
     if (!bridge) {
-      throw new Error('This Desktop build has no connection registry. Update A2Assistant.')
+      throw new Error('This Desktop build has no connection registry. Update A2Assistant Desktop.')
     }
 
     const registryPayload = await bridge.list()
@@ -783,7 +783,7 @@ export const host = {
     const roster = window.hermesDesktop?.getAgentRoster
 
     if (!roster) {
-      throw new Error('This Desktop build cannot enumerate multi-source agents. Update A2Assistant.')
+      throw new Error('This Desktop build cannot enumerate multi-source agents. Update A2Assistant Desktop.')
     }
 
     return roster()
@@ -1253,7 +1253,7 @@ export const host = {
       const openTab = $newSessionTabAction.get()
 
       if (!openTab) {
-        notify({ kind: 'error', message: 'Update A2Assistant to open another bot chat.' })
+        notify({ kind: 'error', message: 'Update A2Assistant Desktop to open another bot chat.' })
 
         return
       }
@@ -1350,7 +1350,7 @@ export const host = {
     const getProfileRoutes = desktop?.getProfileRoutes
 
     if (!getProfileRoutes) {
-      throw new Error('A2Assistant connection routing unavailable')
+      throw new Error('A2Assistant Desktop connection routing unavailable')
     }
 
     let profiles = $profiles.get()

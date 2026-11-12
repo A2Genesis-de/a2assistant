@@ -71,7 +71,7 @@ def _confirm_or_exit_code(prompt: str, *, declined: str = "Cancelled.", unattend
 
 
 def _not_found(session_id) -> int:
-    print(f"No session '{session_id}'. Run: a2assistant sessions list to find the id.")
+    print(f"No session '{session_id}'. Run: hermes sessions list to find the id.")
     return 1
 
 
@@ -760,9 +760,9 @@ def _note_pinned_skipped(db, filters, action):
     suffix = "" if skipped == 1 else "s"
     if action == "prune":
         verb = "deleted"
-        optin = "Pass --include-pinned to delete them anyway, or unpin first with `a2assistant sessions unpin <id>`."
+        optin = "Pass --include-pinned to delete them anyway, or unpin first with `hermes sessions unpin <id>`."
     else:
-        verb, optin = "archived", "Unpin first with `a2assistant sessions unpin <id>` to include them."
+        verb, optin = "archived", "Unpin first with `hermes sessions unpin <id>` to include them."
     print(f"Note: {skipped} pinned session{suffix} also match these filters but will NOT be {verb} "
           f"(pin is a keep flag). {optin}")
 
@@ -807,7 +807,7 @@ def _cmd_prune_or_archive(db, args, action):
     skipped_open = db.count_open_prune_matches(**filters) if (prune or not include_open) else 0
     if skipped_open and prune:
         print(f"Note: {skipped_open} open session{'' if skipped_open == 1 else 's'} also match these filters but "
-              "will be skipped because prune only deletes ended sessions. Use `a2assistant sessions delete <id>` "
+              "will be skipped because prune only deletes ended sessions. Use `hermes sessions delete <id>` "
               "to remove one explicitly.")
     elif skipped_open:
         print(f"Note: {skipped_open} matching session{'' if skipped_open == 1 else 's'} still open — "
@@ -1114,10 +1114,10 @@ def _cmd_optimize_storage(db, args):
     print("✓ Search index optimized.")
     _print_size_change(db, before_mb, prefix="  ")
     if result.get("vacuum_skipped") == "in_use":
-        print("  (VACUUM skipped: another process is using the database. Re-run `a2assistant sessions optimize` "
+        print("  (VACUUM skipped: another process is using the database. Re-run `hermes sessions optimize` "
               "with it closed to reclaim freed space.)")
     elif result.get("vacuumed") is False:
-        print("  (VACUUM was skipped or failed — run `a2assistant sessions optimize` later to reclaim freed space.)")
+        print("  (VACUUM was skipped or failed — run `hermes sessions optimize` later to reclaim freed space.)")
 
 
 def _cmd_repair_routing(db, args):
@@ -1435,7 +1435,7 @@ def cmd_sessions(args, sessions_parser=None):
         if observational and not path.exists():
             return _print_empty_store(action, args)
         print("Could not open your session history database. "
-              "Run: a2assistant sessions repair to fix it (a backup is made first).")
+              "Run: hermes sessions repair to fix it (a backup is made first).")
         print(f"Details: {e}")
         return 1
     try:

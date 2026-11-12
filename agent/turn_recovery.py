@@ -378,7 +378,7 @@ def _print_anthropic_401_diagnostics(agent: Any, key: Any) -> None:
         _plines(
             agent,
             "   Auth method: Microsoft Entra ID (httpx event hook)",
-            "   Run `a2assistant doctor` for credential-chain diagnostics, or",
+            "   Run `hermes doctor` for credential-chain diagnostics, or",
             "   `az login` if your developer session expired.",
         )
     else:
@@ -395,8 +395,8 @@ def _print_anthropic_401_diagnostics(agent: Any, key: Any) -> None:
         f"     • Check ANTHROPIC_TOKEN in {_dhh}/.env for A2Assistant-managed OAuth/setup tokens",
         f"     • Check ANTHROPIC_API_KEY in {_dhh}/.env for API keys or legacy token values",
         "     • For API keys: verify at https://platform.claude.com/settings/keys",
-        "     • A2Assistant login (OAuth): run 'a2assistant auth add anthropic' to sign in again, then retry",
-        "     • Inspect what A2Assistant holds: a2assistant auth list anthropic",
+        "     • A2Assistant login (OAuth): run 'hermes auth add anthropic' to sign in again, then retry",
+        "     • Inspect what A2Assistant holds: hermes auth list anthropic",
         "     • Legacy cleanup: hermes config set ANTHROPIC_TOKEN \"\"",
         "     • Clear stale keys: hermes config set ANTHROPIC_API_KEY \"\"",
     )
@@ -910,7 +910,7 @@ def _print_nonretryable_auth_guidance(
             _vlines(
                 agent,
                 "   💡 xAI OAuth token was rejected (HTTP 401). To fix:",
-                "      re-authenticate with xAI Grok OAuth (SuperGrok / Premium+) from `a2assistant model`.",
+                "      re-authenticate with xAI Grok OAuth (SuperGrok / Premium+) from `hermes model`.",
             )
         else:  # nous
             _vlines(
@@ -939,7 +939,7 @@ def _print_nonretryable_auth_guidance(
     _vlines(
         agent,
         "   💡 Your API key was rejected by the provider. Check:",
-        "      • Is the key valid? Run: a2assistant setup",
+        "      • Is the key valid? Run: hermes setup",
         f"      • Does your account have access to {model}?",
     )
     if base_url_host_matches(str(base_url), "openrouter.ai"):

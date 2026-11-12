@@ -101,7 +101,7 @@ def setup_qqbot() -> None:
                 print_success(f"  Allow list set to {user_openid}")
         save_env_value("QQ_ALLOWED_USERS", allowed)
         print_success("  DM pairing enabled.")
-        print_info("  Unknown users can request access; approve with `a2assistant pairing approve`.")
+        print_info("  Unknown users can request access; approve with `hermes pairing approve`.")
     elif access_idx == 1:
         save_env_values(QQ_ALLOW_ALL_USERS="true", QQ_ALLOWED_USERS="")
         print_warning("  Open DM access enabled for QQ Bot.")

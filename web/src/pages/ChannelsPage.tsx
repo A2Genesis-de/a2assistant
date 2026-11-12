@@ -159,7 +159,7 @@ export default function ChannelsPage() {
   const [platforms, setPlatforms] = useState<MessagingPlatform[]>([]);
   const [envPath, setEnvPath] = useState("~/.hermes/.env");
   const [gatewayStartCommand, setGatewayStartCommand] = useState(
-    "a2assistant gateway start",
+    "hermes gateway start",
   );
   const [loading, setLoading] = useState(true);
   const { toast, showToast } = useToast();
@@ -190,7 +190,7 @@ export default function ChannelsPage() {
       .then((res) => {
         setPlatforms(res.platforms);
         setEnvPath(res.env_path || "~/.hermes/.env");
-        setGatewayStartCommand(res.gateway_start_command || "a2assistant gateway start");
+        setGatewayStartCommand(res.gateway_start_command || "hermes gateway start");
       })
       .catch((e) => showToast(`Could not load channels: ${errorMessage(e)}`, "error"));
   }, [showToast]);
@@ -487,7 +487,7 @@ export default function ChannelsPage() {
                     </a>
                   </div>
                   <p className="text-xs">
-                    You can leave allowed users blank. A2Assistant will then send new DM
+                    You can leave allowed users blank. Hermes will then send new DM
                     users a code that you approve from the Pairing page.
                   </p>
                 </div>
@@ -1063,7 +1063,7 @@ export function WhatsAppOnboardingPanel({
 
               {phase === "waiting" && (
                 <div className="text-xs text-muted-foreground">
-                  After saving, unknown DMs use A2Assistant pairing codes unless their
+                  After saving, unknown DMs use Hermes pairing codes unless their
                   number is already allowed.
                 </div>
               )}
@@ -1372,7 +1372,7 @@ function TelegramOnboardingPanel({
         </span>
         <span className="text-xs text-muted-foreground">
           Both options connect a bot you control and save its credentials only to
-          this A2Assistant installation.
+          this Hermes installation.
         </span>
       </div>
 
@@ -1385,7 +1385,7 @@ function TelegramOnboardingPanel({
             <Badge tone="success">recommended</Badge>
           </div>
           <p className="text-xs text-muted-foreground">
-            Scan a QR code and confirm in Telegram. A2Assistant creates the bot and
+            Scan a QR code and confirm in Telegram. Hermes creates the bot and
             detects your Telegram user ID automatically.
           </p>
           <Button

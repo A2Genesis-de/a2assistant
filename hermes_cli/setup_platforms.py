@@ -301,7 +301,7 @@ def setup_gateway(config: dict):
     pre_selected = [i for i, status in enumerate(statuses) if status == "configured"]
     selected = prompt_checklist("Select platforms to configure:", items, pre_selected)
     if not selected:
-        print_info("No platforms selected. Run 'a2assistant setup gateway' later to configure.")
+        print_info("No platforms selected. Run 'hermes setup gateway' later to configure.")
     for idx in selected or ():
         _configure_platform(platforms[idx])
 

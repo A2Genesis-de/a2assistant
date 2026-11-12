@@ -9,7 +9,7 @@ export const deBoot = {
       connectingGateway: 'Live-Desktop-Gateway wird verbunden',
       loadingSettings: 'A2Assistant-Einstellungen werden geladen',
       loadingSessions: 'Letzte Sessions werden geladen',
-      retryingRemoteBackend: 'Wird mit dem Remote-A2Assistant-Backend neu verbunden…',
+      retryingRemoteBackend: 'Wird mit dem Remote-Hermes-Backend neu verbunden…',
       startingDesktopConnection: 'Desktop-Verbindung wird gestartet',
       startingHermesDesktop: 'A2Assistant Desktop wird gestartet…'
     },

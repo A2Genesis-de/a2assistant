@@ -212,7 +212,7 @@ class ReasoningParamsMixin:
             logging.getLogger("run_agent").warning(
                 "Agent configuration for model.reasoning_echo could not be loaded (%s); "
                 "using the default reasoning echo setting. Check the active A2Assistant Python "
-                "environment and dependencies; run 'a2assistant config check' after "
+                "environment and dependencies; run 'hermes config check' after "
                 "configuration imports work again.",
                 type(exc).__name__,
             )

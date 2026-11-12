@@ -145,7 +145,7 @@ describe('Classic A2Assistant is an explicit Desktop pick, never inferred from s
     const themes = run.api.theme?.availableThemes ?? []
     expect(themes.filter(t => t.label === 'Classic A2Assistant').map(t => t.name)).toEqual(['classic'])
     expect(themes.some(t => t.name === 'default')).toBe(false)
-    expect(run.api.skin?.('list').match(/Classic Hermes/g)).toHaveLength(1)
+    expect(run.api.skin?.('list').match(/Classic A2Assistant/g)).toHaveLength(1)
     expect(JSON.parse(window.localStorage.getItem(BACKEND_THEMES_KEY) ?? '{}')).not.toHaveProperty('default')
   })
 

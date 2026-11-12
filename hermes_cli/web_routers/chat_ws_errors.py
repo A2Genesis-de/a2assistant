@@ -22,7 +22,7 @@ CHAT_TOO_MANY_TERMINALS = (
     "Close one and click Start new session."
 )
 CHAT_PROFILE_UNKNOWN = "{surface} could not start: {detail} Pick another profile from the switcher and reopen this tab."
-CHAT_START_FAILED = "{surface} could not start: {detail} Check the server log (`a2assistant dashboard` terminal) and click Start new session."
+CHAT_START_FAILED = "{surface} could not start: {detail} Check the server log (`hermes dashboard` terminal) and click Start new session."
 
 
 def _node_missing(exc: BaseException) -> bool:

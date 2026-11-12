@@ -40,7 +40,7 @@ _GH_EXTENSION_ERROR = (
     "If `copilot` already resolves to the new CLI but you still see this,\npoint A2Assistant at it explicitly:\n"
     "  export HERMES_COPILOT_ACP_COMMAND=/path/to/new/copilot\n\n"
     "Alternative: use the `copilot` provider (no ACP, hits the Copilot API\ndirectly with a Copilot subscription "
-    "token) via `a2assistant setup`.\n\nOriginal error:\n"
+    "token) via `hermes setup`.\n\nOriginal error:\n"
 )
 
 

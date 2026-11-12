@@ -132,7 +132,7 @@ def remove_path_from_shell_configs():
             
             for line in content.split('\n'):
                 # Skip the "# Hermes Agent" comment and following line
-                if '# Hermes Agent' in line or '# hermes-agent' in line:
+                if '# A2Assistant' in line or '# hermes-agent' in line:
                     skip_next = True
                     continue
                 if skip_next and ('hermes' in line.lower() and 'PATH' in line):
@@ -711,7 +711,7 @@ def run_gui_uninstall(args):
     skip_confirm = bool(getattr(args, "yes", False))
 
     print()
-    _print_box("│         ▲ A2Assistant Chat GUI Uninstaller             │", Colors.MAGENTA)
+    _print_box("│         ☤ A2Assistant Chat GUI Uninstaller                  │", Colors.MAGENTA)
     print()
 
     if not summary["gui_installed"]:
@@ -753,7 +753,7 @@ def run_gui_uninstall(args):
     _print_box("│            ✓ Chat GUI Uninstalled!                      │", Colors.GREEN)
     print()
     print("The A2Assistant agent is still installed. Run 'hermes' to use the CLI,")
-    print("or 'a2assistant uninstall' to remove the agent too.")
+    print("or 'hermes uninstall' to remove the agent too.")
     print()
 
 
@@ -790,7 +790,7 @@ def run_uninstall(args):
         return
 
     print()
-    _print_box("│            ▲ A2Assistant Uninstaller                   │", Colors.MAGENTA)
+    _print_box("│            ☤ A2Assistant Uninstaller                  │", Colors.MAGENTA)
     print()
 
     # Show what will be affected
@@ -1142,7 +1142,7 @@ def _perform_uninstall(
     for line, col in _RELOAD_HINT[windows]:
         print(color(line, col) if col else line)
     print()
-    print("Thank you for using A2Assistant! ▲")
+    print("Thank you for using A2Assistant! ☤")
     print()
 
 

@@ -386,7 +386,7 @@ def _check_manifest_v2(report: DoctorReport, manifest: Any) -> None:
         report.warning(
             "declared python_dependencies not installed: " + ", ".join(missing)
             + " — install and enable the plugin with hermes plugins. "
-            "For an enabled plugin, run a2assistant pm repair, then restart A2Assistant.")
+            "For an enabled plugin, run hermes pm repair, then restart A2Assistant.")
 
     schema = getattr(manifest, "config_schema", {}) or {}
     if schema:

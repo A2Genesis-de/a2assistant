@@ -144,5 +144,5 @@ def slack_manifest_command(args) -> int:
         "     slash commands changed.\n"
         "  4. Make sure Socket Mode is enabled and you have a bot token\n"
         "     (xoxb-...) and app token (xapp-...) configured via\n"
-        "     `a2assistant setup`.\n", file=sys.stderr)
+        "     `hermes setup`.\n", file=sys.stderr)
     return 0

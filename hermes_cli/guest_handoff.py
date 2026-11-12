@@ -46,7 +46,7 @@ _FORCE_REFRESH_SKEW = 10**9
 _CLAIMED, _GONE, _RETRY, _FAIL = "claimed", "gone", "retry", "fail"
 # A plain reason per final code; any other code shows only the generic sentence, never the code.
 _FAILURE_COPY = {
-    "client_not_allowed": "This sign-in can't receive them. Sign in again with `a2assistant auth add nous`.",
+    "client_not_allowed": "This sign-in can't receive them. Sign in again with `hermes auth add nous`.",
     "account_locked": "This Nous account is locked.",
 }
 # The service's refusal codes; anything unlisted retries (``_classify``).

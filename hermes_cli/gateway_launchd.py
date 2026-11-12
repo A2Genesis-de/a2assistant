@@ -676,7 +676,7 @@ def launchd_install(force: bool = False, *, start_now: bool = True, force_unit_p
                 from hermes_constants import display_hermes_home
                 print(
                     "⚠ Service definition could not be reloaded with launchd. "
-                    "Run 'a2assistant gateway install --force' or check "
+                    "Run 'hermes gateway install --force' or check "
                     f"{display_hermes_home()}/logs/launchd-reload.log for details."
                 )
             return
@@ -983,12 +983,12 @@ def launchd_status(deep: bool = False):
         print("✓ Service definition matches the current A2Assistant install")
     else:
         print("⚠ Service definition is stale relative to the current A2Assistant install")
-        print("  Run: a2assistant gateway start")
+        print("  Run: hermes gateway start")
 
     if not service_listed:
         print("✗ Gateway service is not loaded")
         print("  Service definition exists locally but launchd has not loaded it.")
-        print("  Run: a2assistant gateway start")
+        print("  Run: hermes gateway start")
         if fallback_pid:
             print(f"  Note: a detached gateway process is running (PID {fallback_pid})")
     elif launchd_pid is not None:
@@ -1004,7 +1004,7 @@ def launchd_status(deep: bool = False):
             print("  Cron jobs will fire. Stop with: hermes gateway stop")
         else:
             print("✗ No fallback process is running")
-            print("  Run: a2assistant gateway start")
+            print("  Run: hermes gateway start")
         print("  ⚠ Auto-start at login and auto-restart on crash are NOT available.")
     else:
         print("✓ Gateway service is registered with launchd")

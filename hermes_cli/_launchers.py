@@ -22,7 +22,6 @@ if __name__ == "__main__":
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from pm.environments import owning_home_root, store_root
-from hermes_cli.branding import CLI_COMMAND
 
 # ``sys`` attribute a launcher sets before ``import hermes_bootstrap``: pin HERMES_HOME to the
 # install's default root once the launch-time repair ran (``hermes_bootstrap._pin_launcher_home``).
@@ -105,7 +104,7 @@ WINDOWS_BIN_LAUNCHERS = ("hermes", "hermes-acp")
 
 CONVENIENCE_COMMANDS = {
     "hermes-agent": ("hermes", "--run-module", "run_agent"),
-    CLI_COMMAND: ("hermes",),
+    "a2assistant": ("hermes",),
 }
 
 #: command name -> (entry module, callable) — mirrors pyproject.toml
@@ -436,13 +435,13 @@ def _hermes_closure_repair():
             from hermes_cli import _early_recovery
             restored = _early_recovery.restore_interrupted_pull(root)
     except Exception as exc:
-        said.write('hermes: the checkout cannot start after an interrupted `a2assistant update`, and it was not '
+        said.write('hermes: the checkout cannot start after an interrupted `hermes update`, and it was not '
                    'repaired: %s\\n' % (exc,))
     if restored:
-        sys.stderr.write('hermes: the checkout could not start after an interrupted `a2assistant update`; '
+        sys.stderr.write('hermes: the checkout could not start after an interrupted `hermes update`; '
                          'repaired it with the recovery code saved before the update.\\n' + said.getvalue())
         _early_recovery.relaunch_after_restore()
-    sys.stderr.write(said.getvalue() or 'hermes: the checkout cannot start after an interrupted `a2assistant update`; '
+    sys.stderr.write(said.getvalue() or 'hermes: the checkout cannot start after an interrupted `hermes update`; '
                      'launch again once the update that owns it finishes.\\n')
     raise SystemExit(1)
 """

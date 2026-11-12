@@ -123,12 +123,12 @@ export function createStaleGatewayRestarter(
     }
 
     if (pending) {
-      log(`[gateway] owner still runs ${stale.gateway} (this Hermes is ${stale.client}) after a restart; attaching as-is`)
+      log(`[gateway] owner still runs ${stale.gateway} (this A2Assistant is ${stale.client}) after a restart; attaching as-is`)
 
       return null
     }
 
-    log(`[gateway] owner runs ${stale.gateway} but this Hermes is ${stale.client}; restarting it`)
+    log(`[gateway] owner runs ${stale.gateway} but this A2Assistant is ${stale.client}; restarting it`)
     const entry = { done: false, promise: restart(gatewayOwnerProfile(endpoint)).catch(() => undefined) }
     restarts.set(key, entry)
     void entry.promise.then(() => { entry.done = true })

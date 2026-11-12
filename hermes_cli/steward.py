@@ -63,7 +63,7 @@ STEWARD_UPDATE_MESSAGES = {
 SOURCE_ON_TERMUX_UPDATE_MESSAGE = (
     "✗ This A2Assistant is a source checkout running under Termux.\n"
     "\n"
-    "Source installs are not supported on Termux — `a2assistant update` would\n"
+    "Source installs are not supported on Termux — `hermes update` would\n"
     "build Python packages on the device. Switch to the APT package:\n"
     "  pkg install hermes-agent"
 )
@@ -73,7 +73,7 @@ SOURCE_ON_TERMUX_UPDATE_COMMAND = "pkg install hermes-agent"
 _STEWARD_UPDATE_FALLBACK = (
     "✗ This A2Assistant install is managed by {steward}.\n"
     "\n"
-    "The tree has no git checkout, so `a2assistant update` cannot update it.\n"
+    "The tree has no git checkout, so `hermes update` cannot update it.\n"
     "Update it with the tool that installed it."
 )
 
@@ -129,7 +129,7 @@ _STEWARD_DESKTOP_UNINSTALL_BY_PLATFORM = {
     "darwin": (
         _STEWARD_MANAGED_BY_DESKTOP +
         "\n"
-        "Quit the app and drag A2Assistant.app from Applications to the Trash.\n" +
+        "Quit the app and drag Hermes.app from Applications to the Trash.\n" +
         _STEWARD_DELETE_DATA_PREAMBLE +
         _STEWARD_DELETE_DATA_DESKTOP
     ),

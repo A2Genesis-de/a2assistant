@@ -499,5 +499,5 @@ async def get_update_receipt():
     """
     receipt = _read_latest_receipt()
     if not receipt:
-        raise HTTPException(status_code=404, detail="No update receipt found (no `a2assistant update` run recorded).")
+        raise HTTPException(status_code=404, detail="No update receipt found (no `hermes update` run recorded).")
     return {"receipt": receipt, "summary": _latest_update_receipt_summary()}

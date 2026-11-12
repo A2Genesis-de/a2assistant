@@ -304,7 +304,7 @@ def build_bundle() -> None:
         prepare_webapp_renderer(get_project_root())
     except WebappBuildError as exc:
         raise WebappAccessError(
-            f"{str(exc).rstrip('.')}. Run a2assistant webapp --build-only to see the full output, then start again.") from exc
+            f"{str(exc).rstrip('.')}. Run hermes webapp --build-only to see the full output, then start again.") from exc
 
 
 def register(callback_url: str) -> None:

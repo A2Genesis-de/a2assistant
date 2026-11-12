@@ -153,9 +153,9 @@ def _setup_backend_docker(config: dict) -> None:
         proxy_cfg.setdefault("enforce_on_docker", True)
         _setup.print_success("Egress firewall enabled in config")
         _setup.print_info(
-            "Run `a2assistant egress setup` then `a2assistant egress start` to mint tokens and launch the proxy.")
+            "Run `hermes egress setup` then `hermes egress start` to mint tokens and launch the proxy.")
     else:
-        _setup.print_info("Skipping egress firewall. You can enable it later with `a2assistant egress setup`.")
+        _setup.print_info("Skipping egress firewall. You can enable it later with `hermes egress setup`.")
 
 
 def _setup_backend_modal(config: dict) -> None:

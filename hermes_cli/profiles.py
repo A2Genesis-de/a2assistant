@@ -341,8 +341,8 @@ def _unknown_profile_error(canon: str) -> FileNotFoundError:
 
 def _profile_exists_error(canon: str) -> FileExistsError:
     return FileExistsError(
-        f"A profile named '{canon}' already exists. Switch to it with `a2assistant profile use {canon}`, "
-        "see all profiles with `a2assistant profile list`, or choose a different name."
+        f"A profile named '{canon}' already exists. Switch to it with `hermes profile use {canon}`, "
+        "see all profiles with `hermes profile list`, or choose a different name."
     )
 
 
@@ -362,7 +362,7 @@ def _invalid_profile_name_error(name: str) -> ValueError:
     suggestion = _suggest_profile_name(name)
     return ValueError(
         f"{name!r} is not a valid profile name. {_PROFILE_NAME_RULE} (for example: {suggestion}). "
-        f"Then run `a2assistant profile create {suggestion}`."
+        f"Then run `hermes profile create {suggestion}`."
     )
 
 
