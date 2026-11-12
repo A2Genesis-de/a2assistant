@@ -1,0 +1,269 @@
+brand:
+  product: A2Assistant
+  command: a2assistant
+  product_lower: a2assistant
+  model: A2Intelligence
+  company: A2Genesis GmbH
+  email: info@a2genesis.de
+  website: https://a2genesis.de
+  mac_app: A2Assistant
+  left: (?:(?<=\\[nt])|(?<![A-Za-z0-9_./~\\\]-]))
+
+keep:
+  - Hermes Cloud
+  - "[Hh]ey [Hh]ermes"
+  - Hermes(?= [34]\b)
+  - X-Hermes-
+  - Hermes\.app
+  - Hermes-Setup
+  - internally named Hermes Agent
+  - (?<=runs on )Hermes Agent
+  - 'Hermes(?: Agent)?\|'
+  - Hermes vault key
+  - Hermes Local Signing
+  - (?i:anonymous hermes agent accounts)
+
+keep_lines:
+  - TERM_PROGRAM
+  - -HostName Hermes
+  - 'Hermes\$/'
+  - / "Hermes"
+  - path: "*.py"
+    match: Hermes\.(?:exe|desktop)
+  - "\"MacOS\" / \"Hermes\""
+  - "'MacOS', 'Hermes'"
+  - \("hermes", "Hermes"\)
+  - path: tests/hermes_cli/test_config.py
+    match: You are Hermes Agent, an intelligent
+  - literal value `Hermes`
+  - HERMES_DESKTOP_APP_NAME \|\| 'Hermes'
+  - path: hermes_cli/default_soul.py
+    match: '^ {8}"|Hermes Agent Persona|how Hermes communicates'
+
+keep_spans:
+  - '(?i:pascal)[''"]?\s*:\s*[''"][^''"]*[''"]'
+
+fragments:
+  identity: &identity
+    - match: Hermes Agent, built by Nous Research
+      replace: "{product}, the AI assistant of {company}, powered by the {model} models"
+  names: &names
+    - match: (?<![A-Za-z0-9_./~\\\]-])([Aa])n? Hermes(?:[ -]Agent)?(?![A-Za-z0-9_]|-[A-Z0-9])
+      replace: "\\1n {product}"
+    - match: "{left}Hermes(?:[ -]Agent)?'(?=\\s)"
+      replace: "{product}'s"
+    - match: "{left}Hermes[ -]Agent(?![A-Za-z0-9_]|-[A-Z0-9])"
+      replace: "{product}"
+    - match: "{left}Hermes(?![A-Za-z0-9_]|-[A-Z0-9])"
+      replace: "{product}"
+    - match: (?<![A-Za-z0-9_./~-])hermes agent(?![A-Za-z0-9_])
+      replace: "{product_lower}"
+  catalog_names: &catalog_names
+    - match: "{left}Hermes[ -]Agent(?![A-Za-z0-9_]|-\\d)"
+      replace: "{product}"
+    - match: "{left}Hermes(?![A-Za-z0-9_]|-\\d)"
+      replace: "{product}"
+  command: &command
+    - match: (?<=`)hermes(?=[ `])
+      replace: "{command}"
+    - match: '(?:(?<='')|(?<=\])|(?<=[Rr]un )|(?<=: ))hermes(?= (?:[a-z-]|\Z))'
+      replace: "{command}"
+
+rules:
+  code:
+    replace: [*identity, *names]
+  copy:
+    replace: [*identity, *names, *command]
+  catalog:
+    replace: [*catalog_names]
+  locale_source:
+    replace: &locale_names
+      - match: "{left}Hermes[ -]Agent(?![A-Za-z0-9_])"
+        replace: "{product}"
+      - match: "{left}Hermes(?![A-Za-z0-9_])"
+        replace: "{product}"
+  locale:
+    replace:
+      - *locale_names
+      - match: "`hermes(?=[ `])"
+        replace: "`{command}"
+      - match: "{left}hermes(?![A-Za-z0-9_-])"
+        replace: "{command}"
+
+locale:
+  rules:
+    en: locale_source
+  skip_keys:
+    - killswitch_reason_overview
+    - killswitch_reason_buy
+    - charge_error_remote_spending_disabled
+    - allowed_but_org_off
+    - billing.overview.remoteSpendingOff
+    - slashCmd.topup.error.remoteSpendingDisabled
+  key_rules:
+    mic_silent_macos_hint:
+      - {match: /Hermest\b, replace: "/{product}ot"}
+      - {match: /Hermes'e\b, replace: "/{product}'a"}
+      - {match: "/Hermes(?![A-Za-z0-9_])", replace: "/{product}"}
+  languages:
+    hu:
+      before:
+        - {match: "{left}Hermes Agenthez", replace: "{product}hoz"}
+        - {match: "{left}Hermes-t\\b", replace: "{product}-ot"}
+        - {match: "{left}Hermest\\b", replace: "{product}ot"}
+        - {match: "{left}Hermesnek\\b", replace: "{product}nak"}
+        - {match: "{left}Hermesszel\\b", replace: "{product}tal"}
+        - {match: "{left}Hermesben\\b", replace: "{product}ban"}
+        - {match: "{left}Hermesbe\\b", replace: "{product}ba"}
+      after:
+        - {match: "(?<![^\\s\"('„—–-])([Aa]) ({product}|{command})", replace: "\\1z \\2"}
+    tr:
+      before:
+        - {match: "{left}Hermes'in\\b", replace: "{product}'ın"}
+        - {match: "{left}Hermes'i\\b", replace: "{product}'ı"}
+        - {match: "{left}Hermes'e\\b", replace: "{product}'a"}
+        - {match: "{left}hermes'ten\\b", replace: "{command}'tan"}
+
+exclude:
+  - a2/*
+  - tests/hermes_cli/test_projects_db.py
+  - tests/tools/test_skill_linter.py
+  - tests/gateway/test_multiplex_api_server_routing.py
+  - tests/scripts/install/*
+  - apps/desktop/electron/windows-remote-lifecycle.test.ts
+  - apps/desktop/e2e/update/harness.unit.test.ts
+  - apps/desktop/scripts/batch-sign-binaries.test.mjs
+  - apps/desktop/src/plugins/hermes-bots/data.identity.test.ts
+  - apps/desktop/electron/desktop-uninstall.test.ts
+  - apps/desktop/src/lib/find-in-page-scope.test.ts
+  - scripts/a2/*
+  - plugins/a2-elevation/*
+  - website/*
+
+targets:
+  - format: locale
+    rules: locale
+    include: [locales/*.yaml]
+  - format: script
+    rules: catalog
+    include:
+      - apps/desktop/src/i18n/intro-*.ts
+      - apps/desktop/src/i18n/ar.ts
+      - apps/desktop/src/i18n/ar_*.ts
+      - apps/desktop/src/i18n/de.ts
+      - apps/desktop/src/i18n/de_*.ts
+      - apps/desktop/src/i18n/es.ts
+      - apps/desktop/src/i18n/es_*.ts
+      - apps/desktop/src/i18n/fr.ts
+      - apps/desktop/src/i18n/fr_*.ts
+      - apps/desktop/src/i18n/ja.ts
+      - apps/desktop/src/i18n/ja_*.ts
+      - apps/desktop/src/i18n/ru.ts
+      - apps/desktop/src/i18n/ru_*.ts
+      - apps/desktop/src/i18n/zh*.ts
+      - web/src/i18n/??.ts
+      - web/src/i18n/zh-hant.ts
+    exclude: [web/src/i18n/en.ts]
+  - format: python
+    rules: code
+    include: ["*.py"]
+    exclude: [tools/skill_linter.py]
+  - format: script
+    rules: code
+    include: [apps/*.ts, apps/*.tsx, apps/*.js, apps/*.mjs, apps/*.cjs, ui-tui/*.ts, ui-tui/*.tsx, web/*.ts, web/*.tsx]
+  - format: text
+    rules: copy
+    include: [SOUL.md, skills/autonomous-ai-agents/hermes-agent/*, apps/desktop/src/components/chat/intro-copy.jsonl]
+
+workflows:
+  disabled:
+    - archive-inputs.yml
+    - bootstrap-installer-build.yml
+    - canary-release.yml
+    - ci-review-comment.yml
+    - deploy-site.yml
+    - desktop-bundled-release.yml
+    - docker.yml
+    - docs-search-monitor.yml
+    - install-e2e-red.yml
+    - js-autofix.yml
+    - label-rerun.yml
+    - live-providers.yml
+    - sandbox-image.yml
+    - skills-index-freshness.yml
+    - skills-index.yml
+    - stable-release-publication.yml
+    - stable-release.yml
+
+generate:
+  hermes_cli/branding.py: |
+    PRODUCT_NAME = "{product}"
+    CLI_COMMAND = "{command}"
+    MODEL_NAME = "{model}"
+    COMPANY = "{company}"
+  hermes_cli/desktop_bundle.py: |
+    MACOS_APP_NAME = "{mac_app}"
+    MACOS_APP_BUNDLE = "{mac_app}.app"
+    MACOS_APP_EXECUTABLE = MACOS_APP_NAME
+
+edits:
+  - path: apps/desktop/package.json
+    match: '"author": "Nous Research"'
+    replace: '"author": "{company}"'
+  - path: apps/desktop/package.json
+    match: Native desktop shell for Hermes Agent\.
+    replace: Native desktop shell for {product}.
+  - path: apps/desktop/electron-builder.config.cjs
+    match: "publisherDisplayName : 'Nous Research'"
+    replace: "publisherDisplayName : '{company}'"
+  - path: apps/desktop/electron-builder.config.cjs
+    match: "maintainer: 'Nous Research <support@nousresearch.com>'"
+    replace: "maintainer: '{company} <{email}>'"
+  - path: apps/desktop/electron/main.ts
+    match: Copyright © 2026 Nous Research
+    replace: © 2026 {company}
+  - path: apps/desktop/scripts/set-exe-identity.mjs
+    match: "CompanyName: 'Nous Research'"
+    replace: "CompanyName: '{company}'"
+  - path: apps/desktop/scripts/set-exe-identity.mjs
+    match: Copyright \(c\) 2026 Nous Research
+    replace: Copyright (c) 2026 {company}
+  - path: ui-tui/src/components/branding.tsx
+    match: "const TAG_TINY = 'Nous Research'"
+    replace: "const TAG_TINY = '{company}'"
+  - path: plugins/platforms/a2a/protocol.py
+    match: '"A2A_PROVIDER_ORG", "Hermes Agent"'
+    replace: '"A2A_PROVIDER_ORG", "{company}"'
+
+  - path: hermes_cli/_launchers.py
+    match: '    "hermes-agent": \("hermes", "--run-module", "run_agent"\),\n}'
+    replace: '    "hermes-agent": ("hermes", "--run-module", "run_agent"),\n    "{command}": ("hermes",),\n}'
+  - path: hermes_cli/skin_engine.py
+    match: 'prompt="❯", help_header="\(\^_\^\)\? Available Commands"\)\n'
+    replace: 'prompt="❯", help_header="(^_^)? Available Commands") | {\n    "agent_name": "{product}", "welcome": "Welcome to {product}! Type your message or /help for commands."}\n'
+
+  - path: tests/hermes_cli/test_gui_command.py
+    match: /Applications/Hermes\.app/Contents/MacOS/Hermes
+    replace: /Applications/{mac_app}.app/Contents/MacOS/{mac_app}
+  - path: tests/hermes_cli/test_gui_command.py
+    match: '"Hermes\.app"'
+    replace: '"{mac_app}.app"'
+  - path: tests/hermes_cli/test_gui_command.py
+    match: '"MacOS" / "Hermes"'
+    replace: '"MacOS" / "{mac_app}"'
+  - path: tools/kanban_tools_schemas.py
+    match: \(Hermes downloads it server-side,
+    replace: (downloaded server-side,
+  - path: tools/read_window_tool.py
+    match: behind the Hermes desktop window
+    replace: behind the desktop window
+  - path: tools/set_theme_tool.py
+    match: Change how the Hermes desktop app looks
+    replace: Change how the desktop app looks
+
+derived:
+  - run: [scripts/run-in-hermes-env, bash, -c, '"$__HERMES_TEST_PYTHON" scripts/ci/prompt_surface.py render']
+  - run: [scripts/run-in-hermes-env, bash, -c, '"$__HERMES_TEST_PYTHON" scripts/gen_gateway_contracts.py']
+  - run: [scripts/run-in-hermes-env, bash, -c, '"$__HERMES_TEST_PYTHON" scripts/gen_gateway_command_parity.py']
+  - run: [scripts/run-in-hermes-env, bash, -c, '"$__HERMES_TEST_PYTHON" scripts/build_model_catalog.py']
+  - run: [scripts/run-in-hermes-env, bash, -c, '"$__HERMES_TEST_PYTHON" scripts/gen_plugin_api_docs.py']
