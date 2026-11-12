@@ -25,6 +25,7 @@ from hermes_cli.config import (
     save_env_value, remove_env_value, get_env_value, ensure_hermes_home,
 )
 from hermes_cli.colors import Colors, color
+from hermes_cli.branding import PRODUCT_NAME
 from hermes_cli.cli_output import print_error, print_info, print_success, print_warning
 from hermes_cli.secret_prompt import masked_secret_prompt
 
@@ -617,7 +618,7 @@ def _run_setup_section(config: dict, section: str) -> None:
         print_info(f"Available sections: {', '.join(k for k, _, _ in SETUP_SECTIONS)}")
         return
     label, func = entry
-    _print_banner(f"│     ☤ Hermes Setup — {label:<34s} │")
+    _print_banner(f"│     ▲ {PRODUCT_NAME} Setup — {label:<29s} │")
     _run_setup_steps([(label, lambda: func(config))])
     save_config(config)
     print()

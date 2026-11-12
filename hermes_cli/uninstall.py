@@ -10,6 +10,7 @@ from hermes_constants import get_hermes_home
 
 from hermes_cli._startup_fast import project_root_str
 from hermes_cli.colors import Colors, color
+from hermes_cli.branding import CLI_COMMAND
 
 def _logger(mark: str, col: str):
     return lambda msg: print(f"{color(mark, col)} {msg}")
@@ -172,6 +173,8 @@ def remove_wrapper_script():
         Path("/usr/local/bin/hermes"),
         Path("/usr/local/bin/hermes-acp"),
         Path("/usr/local/bin/hermes-agent"),
+        Path.home() / ".local" / "bin" / CLI_COMMAND,
+        Path("/usr/local/bin") / CLI_COMMAND,
     ]
     
     removed = []

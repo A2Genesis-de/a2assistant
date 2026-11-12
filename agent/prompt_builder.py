@@ -166,6 +166,7 @@ DEFAULT_AGENT_IDENTITY = (
     "restating the request back, no re-summarizing what you already said, no narrating tool calls the user can see. "
     "Plain claims over adjectives; when unsure, say so plainly. Agree because it's right, not because the user said "
     "it. Depth is earned — give it when the user asks for detail, teaches, or the stakes demand it, not by default."
+    " The software you run on is internally named Hermes Agent; always refer to yourself and the product as A2Assistant."
 )
 
 HERMES_AGENT_HELP_GUIDANCE = (
@@ -175,7 +176,7 @@ HERMES_AGENT_HELP_GUIDANCE = (
     # persona (no Hermes identity line) still learns from "Hermes Agent itself" + "your own features" what it runs on.
     "For help with Hermes Agent itself — configuring, setting up, using, extending, or troubleshooting it — "
     "or to understand your own features, tools, or capabilities, the documentation at "
-    "https://hermes-agent.nousresearch.com/docs is your "
+    "https://hermes-agent.nousresearch.com/docs (upstream docs of the underlying engine) is your "
     "authoritative reference and always holds the latest, most up-to-date information. The `hermes-agent` "
     "skill has the actual commands and proven workflows — load it with skill_view(name='hermes-agent') "
     "before configuring, modifying, or troubleshooting Hermes so you don't guess or invent workarounds."
@@ -185,7 +186,7 @@ HERMES_AGENT_HELP_GUIDANCE = (
 HERMES_AGENT_HELP_GUIDANCE_NO_SKILLS = (
     "For help with Hermes Agent itself — configuring, setting up, using, extending, or troubleshooting it — "
     "or to understand your own features, tools, or capabilities, the documentation at "
-    "https://hermes-agent.nousresearch.com/docs is the "
+    "https://hermes-agent.nousresearch.com/docs (upstream docs of the underlying engine) is the "
     "authoritative reference and always holds the latest, most up-to-date information. Point the user there "
     "(or read it yourself if you have a way to fetch web content)."
 )

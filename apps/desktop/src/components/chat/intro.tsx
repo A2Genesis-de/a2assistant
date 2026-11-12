@@ -1,10 +1,10 @@
 import { useState } from 'react'
 
+import { BrandMark } from '@/components/brand-mark'
 import { useI18n } from '@/i18n'
 import { capitalize, normalize } from '@/lib/text'
 
 import introCopyJsonl from './intro-copy.jsonl?raw'
-import { Wordmark } from './wordmark'
 
 type IntroCopy = {
   headline: string
@@ -146,7 +146,7 @@ function pickCopy(copies: IntroCopy[], seed = 0): IntroCopy {
   return copies[Math.abs(seed) % copies.length] || FALLBACK_COPY[0]
 }
 
-const WORDMARK = 'HERMES AGENT'
+const PRODUCT_NAME = 'A2Assistant'
 
 function resolveCopy(personality?: string, seed?: number): IntroCopy {
   const personalityKey = normalizeKey(personality)
@@ -176,7 +176,10 @@ export function Intro({ personality, seed }: IntroProps) {
       data-slot="aui_intro"
     >
       <div className="w-full min-w-0">
-        <Wordmark className="mb-1" text={WORDMARK} />
+        <BrandMark className="mx-auto mb-6 size-12" />
+        <h1 className="m-0 mb-3 text-[2.5rem] leading-none font-semibold tracking-[-0.04em] text-foreground">
+          {PRODUCT_NAME}
+        </h1>
 
         <p className="m-0 text-center leading-normal tracking-tight">{body}</p>
       </div>

@@ -342,8 +342,8 @@ class TestExposeCli:
         home, root = fake_install
         result = _launchers.expose_cli()
         assert result["ok"] is True
-        assert sorted(result["written"]) == ["hermes", "hermes-acp", "hermes-agent"]
-        for name in ("hermes", "hermes-agent", "hermes-acp"):
+        assert sorted(result["written"]) == ["a2assistant", "hermes", "hermes-acp", "hermes-agent"]
+        for name in ("hermes", "hermes-agent", "hermes-acp", "a2assistant"):
             wrapper = home / ".local" / "bin" / name
             body = wrapper.read_text(encoding="utf-8-sig")
             assert str(root) in body
@@ -364,7 +364,7 @@ class TestExposeCli:
         assert (wrapper_dir / "hermes").read_text(encoding="utf-8-sig") == foreign
         assert "hermes" not in result["written"]
         # The other two had no file at all — those ARE written.
-        assert sorted(result["written"]) == ["hermes-acp", "hermes-agent"]
+        assert sorted(result["written"]) == ["a2assistant", "hermes-acp", "hermes-agent"]
 
     @posix_only
     def test_config_gate_disables(self, fake_install, monkeypatch):

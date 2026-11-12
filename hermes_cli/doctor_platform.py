@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 from hermes_cli.colors import Colors, color
 from hermes_cli.config import is_nix_install_method, recommended_update_command_for_method
+from hermes_cli.desktop_bundle import MACOS_APP_BUNDLE
 from hermes_cli.doctor_report import (
     Finding, _fail_and_issue, _section, check_bool, check_fail, check_info, check_ok, check_warn, doctor_check,
     warn_on_error,
@@ -323,7 +324,7 @@ def _desktop_app_bundle() -> Path | None:
     deliberately not probed: it is the separately-signed, certificate-anchored Hermes-Setup launcher.
     """
     release_dir = Path(__file__).resolve().parents[1] / "apps" / "desktop" / "release"
-    candidates = [p for p in release_dir.glob("mac*/Hermes.app") if p.is_dir()]
+    candidates = [p for p in release_dir.glob(f"mac*/{MACOS_APP_BUNDLE}") if p.is_dir()]
     return max(candidates, key=lambda p: p.stat().st_mtime) if candidates else None
 
 

@@ -62,6 +62,7 @@ import { Spinner } from "@nous-research/ui/ui/components/spinner";
 import { Typography } from "@nous-research/ui/ui/components/typography/index";
 import { ConfirmDialog } from "@nous-research/ui/ui/components/confirm-dialog";
 import { cn } from "@/lib/utils";
+import { BrandGlyph } from "@/components/BrandMark";
 import { SidebarFooter } from "@/components/SidebarFooter";
 import { SidebarStatusStrip, gatewayLine } from "@/components/SidebarStatusStrip";
 import { useBelowBreakpoint } from "@nous-research/ui/hooks/use-below-breakpoint";
@@ -552,6 +553,8 @@ export default function App() {
           <Menu />
         </Button>
 
+        <BrandGlyph className="h-5 w-5 text-midground" />
+
         <Typography className="font-bold text-[0.95rem] leading-[0.95] tracking-[0.05em] text-midground">
           {t.app.brand}
         </Typography>
@@ -617,10 +620,12 @@ export default function App() {
               >
                 <PluginSlot name="header-left" />
 
+                <BrandGlyph className="h-6 w-6 text-midground" />
+
                 <Typography className="font-bold text-[1.125rem] leading-[0.95] tracking-[0.0525rem] text-midground uppercase">
-                  Hermes
+                  A2
                   <br />
-                  Agent
+                  Assistant
                 </Typography>
               </div>
 

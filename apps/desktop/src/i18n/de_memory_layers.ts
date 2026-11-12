@@ -27,5 +27,5 @@ export const deMemoryLayers: MemoryLayersTranslations = {
   off: 'Aus',
   onlyFile: file => `nur ${file}`,
   builtinDesc:
-    'MEMORY.md und USER.md sind Hermes’ eigener Speicher, unabhängig von externen Anbietern. Beide werden standardmäßig in Sitzungen geladen; die Schalter für Speicher und Benutzerprofil unter Einstellungen › Speicher & Kontext schalten sie einzeln ab. Ein Anbieter ergänzt diese Ebene, er ersetzt sie nie.'
+    'MEMORY.md und USER.md sind der eigene Speicher von A2Assistant, unabhängig von externen Anbietern. Beide werden standardmäßig in Sitzungen geladen; die Schalter für Speicher und Benutzerprofil unter Einstellungen › Speicher & Kontext schalten sie einzeln ab. Ein Anbieter ergänzt diese Ebene, er ersetzt sie nie.'
 }

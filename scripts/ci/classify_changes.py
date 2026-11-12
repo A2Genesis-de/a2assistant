@@ -468,6 +468,8 @@ _E2E_LANES: dict[str, tuple[str, ...]] = {
         # The search-index notice (hermes_cli/update_cmd_maint.py) reads the stored FTS layout through it.
         "hermes_state_fts.py",
         "hermes_cli/_old_updater",
+        "hermes_cli/branding.py",
+        "hermes_cli/desktop_bundle.py",
         "hermes_cli/post_update",
         "hermes_cli/config_migrations",
         "hermes_cli/subcommands/update",
@@ -498,6 +500,8 @@ _E2E_LANES: dict[str, tuple[str, ...]] = {
     "e2e_desktop_update": (
         *_DESKTOP_E2E_SHARED,
         "apps/desktop/e2e/update/",
+        "hermes_cli/branding.py",
+        "hermes_cli/desktop_bundle.py",
         "apps/desktop/electron/updater",
         "apps/desktop/electron/update-",
         "apps/desktop/electron/app-updater",

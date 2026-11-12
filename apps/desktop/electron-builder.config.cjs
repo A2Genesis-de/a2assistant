@@ -135,6 +135,10 @@ module.exports = {
     {
       from: 'assets/icon.ico',
       to: 'icon.ico'
+    },
+    {
+      from: '../../LICENSE',
+      to: 'ThirdPartyNotices-HermesAgent.txt'
     }
   ],
   asar: {

@@ -1,6 +1,6 @@
 ---
 name: hermes-agent
-description: "Use, configure, theme, extend, and orchestrate Hermes Agent."
+description: "Use, configure, extend and troubleshoot A2Assistant."
 version: 3.3.0
 author: Hermes Agent + Teknium
 license: MIT
@@ -14,7 +14,9 @@ metadata:
 
 # Hermes Agent
 
-Hermes Agent is an open-source AI agent framework by Nous Research that runs in your terminal, a native desktop app, messaging platforms, and IDEs. It's in the same category as Claude Code (Anthropic), Codex (OpenAI), and OpenClaw — autonomous coding and task-execution agents that use tool calling to interact with your system. Hermes works with any LLM provider (OpenRouter, Anthropic, OpenAI, Google, DeepSeek, xAI, local models, and 20+ others) and runs on Linux, macOS, Windows, and WSL.
+A2Assistant is the AI assistant of A2Genesis GmbH, powered by the A2Intelligence models. Internally it runs on Hermes Agent, the open-source agent framework by Nous Research, so the upstream documentation, commands, and paths apply unchanged. It runs in your terminal, a native desktop app (A2Assistant.app), messaging platforms, and IDEs. It's in the same category as Claude Code (Anthropic), Codex (OpenAI), and OpenClaw — autonomous coding and task-execution agents that use tool calling to interact with your system. A2Assistant works with any LLM provider (OpenRouter, Anthropic, OpenAI, Google, DeepSeek, xAI, local models, and 20+ others) and runs on Linux, macOS, Windows, and WSL.
+
+**Names:** the product is A2Assistant and its models are A2Intelligence; always call it A2Assistant when talking to the user. The CLI answers to `a2assistant` and to the upstream name hermes; the examples below use `a2assistant`. Internal paths and identifiers keep the upstream names: `~/.hermes`, `HERMES_HOME`, `HERMES_*` variables, this `hermes-agent` skill, and the upstream docs at hermes-agent.nousresearch.com.
 
 What makes Hermes different:
 

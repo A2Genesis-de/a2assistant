@@ -16,7 +16,7 @@ const variants = {
     pascal: 'HermesLight'
   },
   bundled: {
-    display: 'Hermes Agent',
+    display: 'A2Assistant Agent',
     kebab: 'hermes-bundled',
     pascal: 'HermesBundled'
   }
