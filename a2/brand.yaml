@@ -21,6 +21,7 @@ keep:
   - 'Hermes(?: Agent)?\|'
   - Hermes vault key
   - Hermes Local Signing
+  - Hermes Agent Canary\.app
   - (?i:anonymous hermes agent accounts)
 
 keep_lines:
@@ -147,7 +148,6 @@ exclude:
   - apps/desktop/e2e/update/harness.unit.test.ts
   - apps/desktop/scripts/batch-sign-binaries.test.mjs
   - apps/desktop/src/plugins/hermes-bots/data.identity.test.ts
-  - apps/desktop/electron/desktop-uninstall.test.ts
   - apps/desktop/src/lib/find-in-page-scope.test.ts
   - scripts/a2/*
   - plugins/a2-elevation/*

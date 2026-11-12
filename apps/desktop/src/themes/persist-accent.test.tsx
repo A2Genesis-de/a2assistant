@@ -6,7 +6,7 @@ import { $activeGatewayProfile } from '@/store/profile'
 import { $accentOverride, setAccentOverride } from './accent-override'
 import { skinPref, ThemeProvider, useTheme } from './context'
 import { persistAccent } from './persist-accent'
-import { nousTheme } from './presets'
+import { a2Theme, nousTheme } from './presets'
 import type { DesktopTheme } from './types'
 import { $userThemes, installUserTheme, resolveTheme } from './user-themes'
 
@@ -30,7 +30,7 @@ afterEach(() => {
 })
 
 describe('persistAccent', () => {
-  it('saves an accent as the profile theme and returns to Nous on null', () => {
+  it('saves an accent as the profile theme and returns to the default theme on null', () => {
     render(
       <ThemeProvider>
         <ThemeProbe />
@@ -43,7 +43,7 @@ describe('persistAccent', () => {
     })
     const saved = theme.themeName
 
-    expect(saved).not.toBe(nousTheme.name)
+    expect(saved).not.toBe(a2Theme.name)
     expect(skinPref.resolve('default')).toBe(saved)
     expect($accentOverride.get()).toBeNull()
 
@@ -51,8 +51,8 @@ describe('persistAccent', () => {
     expect(theme.themeName).toBe(saved)
 
     act(() => persistAccent(null))
-    expect(theme.themeName).toBe(nousTheme.name)
-    expect(skinPref.resolve('default')).toBe(nousTheme.name)
+    expect(theme.themeName).toBe(a2Theme.name)
+    expect(skinPref.resolve('default')).toBe(a2Theme.name)
   })
 
   it('retints the active theme, keeping its own colours and CSS, exactly as the preview painted it', () => {
@@ -122,7 +122,7 @@ describe('persistAccent', () => {
 
     expect(skinPref.resolve('work')).not.toBe(violet)
     expect(skinPref.resolve('home')).toBe(violet)
-    expect(resolveTheme(violet)!.accentOf).toBe(nousTheme.name)
+    expect(resolveTheme(violet)!.accentOf).toBe(a2Theme.name)
     expect(resolveTheme(skinPref.resolve('work'))!.label).toContain('#e0218a')
     expect(resolveTheme(violet)!.label).toContain('#8a2be2')
   })

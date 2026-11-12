@@ -37,6 +37,7 @@ afterEach(async () => {
 
 describe('theme repaint subscriptions', () => {
   it('ignores geometry from the first subscription, coalesces real changes, and survives re-subscription', async () => {
+    window.document.getElementById('hermes-desktop-custom-css')?.remove()
     root.style.setProperty('--theme-primary', '#123456')
     await flush()
     const first = vi.fn()
