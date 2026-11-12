@@ -76,6 +76,19 @@ rules:
     replace: [*identity, *names, *command]
   catalog:
     replace: [*catalog_names]
+  runners:
+    markers: [blacksmith]
+    replace:
+      - match: 'useblacksmith/checkout@[0-9a-f]{40}\s+# v1'
+        replace: 'actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v7.0.1'
+      - match: blacksmith-\d+vcpu-ubuntu-2404-arm
+        replace: ubuntu-24.04-arm
+      - match: blacksmith-\d+vcpu-ubuntu-2404
+        replace: ubuntu-24.04
+      - match: blacksmith-\d+vcpu-windows-2025
+        replace: windows-2025
+      - match: blacksmith-\d+vcpu-macos-(latest|\d+)
+        replace: macos-\1
   locale_source:
     replace: &locale_names
       - match: "{left}Hermes[ -]Agent(?![A-Za-z0-9_])"
@@ -171,6 +184,9 @@ targets:
   - format: script
     rules: code
     include: [apps/*.ts, apps/*.tsx, apps/*.js, apps/*.mjs, apps/*.cjs, ui-tui/*.ts, ui-tui/*.tsx, web/*.ts, web/*.tsx]
+  - format: text
+    rules: runners
+    include: [.github/workflows/*.yml, .github/workflows/*.yaml]
   - format: text
     rules: copy
     include: [SOUL.md, skills/autonomous-ai-agents/hermes-agent/*, apps/desktop/src/components/chat/intro-copy.jsonl]
