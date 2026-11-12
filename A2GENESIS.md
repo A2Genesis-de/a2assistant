@@ -59,11 +59,14 @@ The single source of truth for the white label:
   layer, so a layer checkout runs on its own; the build always regenerates them from `a2/brand.yaml`.
 - `edits` – exact per-file substitutions for packaging metadata (author, publisher, copyright, maintainer).
   An edit that matches nothing and whose result is missing fails the run, so upstream drift is noticed.
-- `derived` – commands that regenerate committed artifacts after rebranding (the prompt-surface snapshot in
-  `tests/fixtures/prompt_surface/`).
+- `derived` – commands that regenerate committed artifacts after rebranding: prompt-surface snapshot, gateway
+  contracts, gateway command parity doc, model catalog and plugin API docs.
 - `workflows.disabled` – upstream workflows that make no sense on the fork (releases, canary, docs deploy, Docker
   and sandbox publishing, index bots, autofix, live-provider runs). They stay in the tree, because upstream tests read
   them, and are disabled on GitHub by `scripts/a2/disable-upstream-workflows.sh`.
+- `rules.runners` – maps Blacksmith runner labels and its checkout action in every workflow to GitHub-hosted
+  runners (`ubuntu-24.04`, `ubuntu-24.04-arm`, `windows-2025`, `macos-*`), so the kept CI, test and lint
+  workflows run on the fork without hand edits to upstream files.
 
 Internal identifiers stay upstream so updates, macOS permissions and plugins keep working: the `hermes` command
 (the CLI also answers to `a2assistant`), `~/.hermes`, `HERMES_*`, package names, bundle id
@@ -178,7 +181,9 @@ servers (`a2-server`, `kraftmatch-server`, `babau-server`, `gunna-server`), `a2-
 
 ## Simpler desktop
 
-- Simple mode is the default (`apps/desktop/src/store/interface-mode.ts`, only Advanced is stored).
+- Simple mode is the default: `apps/desktop/src/store/simple-mode-default.ts` (imported by `main.tsx`) switches a
+  fresh install to Simple once and records that in `a2.desktop.simpleModeSeeded.v1`; the mode store itself keeps
+  the upstream encoding, so upstream tests and an explicit Advanced choice stay untouched.
 - Messaging and the layout picker are Advanced-only; Bot Mode is off and the Kanban board on by default.
 - German labels use plain words; missing German strings live in `apps/desktop/src/i18n/de_a2_gaps.ts`, deep-merged
   into `deOverrides` in `de.ts`. After an upstream sync run
