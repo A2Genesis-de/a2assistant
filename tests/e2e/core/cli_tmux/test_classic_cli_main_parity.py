@@ -117,14 +117,14 @@ def test_classic_cli_matches_main_baseline_across_fifteen_steps(tmp_path: Path) 
         try:
             pane.launch()
             assert pane.ready(), f"01_startup: no status bar:\n{pane.screen()}"
-            s.expect("01_startup", ["Welcome to Hermes Agent!", "Session:", PROMPT], s.capture("01_startup", scrollback=True))
+            s.expect("01_startup", ["Welcome to A2Assistant!", "Session:", PROMPT], s.capture("01_startup", scrollback=True))
 
             pane.submit("STEP2 please show me some markdown")
             assert pane.wait(["End of STEP2 reply."], 60), pane.screen()
             pane.settle()
             md = s.capture("02_markdown")
             # Rendered through Rich inside main's reply box, not raw markdown.
-            s.expect("02_markdown", ["\u2624 Hermes", "Heading Two", "- alpha item", "def hello():"], md)
+            s.expect("02_markdown", ["\u2624 A2Assistant", "Heading Two", "- alpha item", "def hello():"], md)
             assert "# Heading Two" not in md and "```" not in md, f"02_markdown: raw markdown:\n{md}"
 
             pane.submit("STEP3 please run echo hi in the terminal")
@@ -135,7 +135,7 @@ def test_classic_cli_matches_main_baseline_across_fifteen_steps(tmp_path: Path) 
             pane.keys("Enter")  # main's preselected first choice: Allow once
             assert pane.wait([STEP3_DONE], 60), pane.screen()
             pane.settle()
-            s.expect("03b_tool_reply", ["\u2192 allowed once", "\u2624 Hermes", STEP3_DONE], s.capture("03b_tool_reply"))
+            s.expect("03b_tool_reply", ["\u2192 allowed once", "\u2624 A2Assistant", STEP3_DONE], s.capture("03b_tool_reply"))
 
             pane.submit("STEP4 please read notes.txt")
             assert pane.wait([STEP4_DONE], 60), pane.screen()
@@ -197,7 +197,7 @@ def test_classic_cli_matches_main_baseline_across_fifteen_steps(tmp_path: Path) 
             pane.launch("chat", "-q", "hello")
             assert pane.wait([HELLO_REPLY], 120), f"11a_q_tty:\n{pane.screen()}"
             pane.settle(quiet=3.0, timeout=30)
-            s.expect("11a_q_tty", ["\u2624 Hermes", HELLO_REPLY, PROMPT], s.capture("11a_q_tty"))
+            s.expect("11a_q_tty", ["\u2624 A2Assistant", HELLO_REPLY, PROMPT], s.capture("11a_q_tty"))
             pane.kill()
 
             piped = ch.run("chat", "-q", "hello")

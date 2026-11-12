@@ -14,7 +14,7 @@ from fastapi import HTTPException
 from hermes_cli.pty_session import RegistryFull
 
 CHAT_NEEDS_NODE = (
-    "{surface} could not start: Hermes needs Node.js to run the terminal chat. "
+    "{surface} could not start: A2Assistant needs Node.js to run the terminal chat. "
     "Install Node 18+ (for example from nodejs.org) and reopen this tab."
 )
 CHAT_TOO_MANY_TERMINALS = (

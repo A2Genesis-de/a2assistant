@@ -137,7 +137,7 @@ def register(ctx) -> None:
     ctx.register_platform(
         standalone_send=StandaloneSendPolicy(label="QQ Bot", media=True, captionable=True, text_direct=True),
         name="qqbot",
-        dashboard_description="Connect Hermes to a QQ Bot from the QQ Open Platform.",
+        dashboard_description="Connect A2Assistant to a QQ Bot from the QQ Open Platform.",
         docs_url="https://q.qq.com",
         dashboard_env_vars=("QQ_APP_ID", "QQ_CLIENT_SECRET", "QQ_ALLOWED_USERS"),
         label="QQ Bot",

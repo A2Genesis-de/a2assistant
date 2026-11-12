@@ -53,9 +53,9 @@ def hermes_xai_user_agent() -> str:
     """Return a stable Hermes-specific User-Agent for xAI HTTP calls."""
     try:
         from hermes_cli.version_info import get_version_info
-        return f"Hermes-Agent/{get_version_info().base_version}"
+        return f"A2Assistant/{get_version_info().base_version}"
     except Exception:
-        return "Hermes-Agent/unknown"
+        return "A2Assistant/unknown"
 
 
 def hermes_xai_default_headers() -> dict[str, str]:

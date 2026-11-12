@@ -253,7 +253,7 @@ def add_arguments(parser) -> None:
         choices=BRANDINGS,
         default="preview",
         help="App name, icon and package ID for --channel: 'stable' installs as the "
-        "regular Hermes app (fixed when the channel is created), 'preview' as "
+        "regular A2Assistant app (fixed when the channel is created), 'preview' as "
         "its own side-by-side app",
     )
     parser.add_argument(

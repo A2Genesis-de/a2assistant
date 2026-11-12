@@ -301,7 +301,7 @@ def stable_manifest(request, archive_prefix):
     manifest = {"schema": 1, "receiverProtocol": 1, "request": request, "packages": [
         {"platform": "darwin", "arch": "arm64", "variant": "bundled",
          "identity": request["identity"]["appId"], "version": request["version"], "teamId": "ABCDEFGHIJ",
-         "artifact": {"key": archive_prefix + "Hermes.dmg", "sha256": "d" * 64, "size": 100},
+         "artifact": {"key": archive_prefix + "A2Assistant.dmg", "sha256": "d" * 64, "size": 100},
          "feed": {"key": archive_prefix + "stable-mac.yml", "channel": "stable"}}]}
     record = {"schema": 1, "name": request["channel"], "repository": request["repository"],
               "policy": "stable-release", "state": "active", "revision": 1, "nextSequence": 2,

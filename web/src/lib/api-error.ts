@@ -22,14 +22,14 @@ const STATUS_COPY: Record<number, string> = {
   413: "That upload is too large for the server to accept.",
   422: "Some of the entered values are not valid.",
   429: "Too many requests. Wait a moment and try again.",
-  500: "The Hermes service hit an internal error.",
-  502: "The dashboard proxy could not reach the Hermes service.",
-  503: "The Hermes service is not ready yet. Try again in a moment.",
-  504: "The Hermes service took too long to respond.",
+  500: "The A2Assistant service hit an internal error.",
+  502: "The dashboard proxy could not reach the A2Assistant service.",
+  503: "The A2Assistant service is not ready yet. Try again in a moment.",
+  504: "The A2Assistant service took too long to respond.",
 };
 
 export function humanizeStatus(status: number): string {
-  return STATUS_COPY[status] ?? `The Hermes service answered with an unexpected error (${status}).`;
+  return STATUS_COPY[status] ?? `The A2Assistant service answered with an unexpected error (${status}).`;
 }
 
 /** Pull a human sentence out of a FastAPI-style error body, or null. */

@@ -13,11 +13,11 @@ from hermes_cli.sessions_cmd import _cmd_repair_prompts
 from hermes_state import SessionDB
 
 HEALTHY = (
-    "You are Hermes.\n"
+    "You are A2Assistant.\n"
     "<available_skills>\n  dogfood: exploratory QA of web apps\n</available_skills>\n"
     f"{SKILLS_GUIDANCE}\n"
 )
-DEGRADED = "You are Hermes.\n(reduced maintenance build without the skills index)\n"
+DEGRADED = "You are A2Assistant.\n(reduced maintenance build without the skills index)\n"
 
 
 def _tool(name: str) -> dict:
@@ -79,7 +79,7 @@ def test_scan_leaves_reduced_memory_only_zero_skills_rows_and_session_id_overrid
     memory = db.create_session("memory-only-1", "telegram", system_prompt=DEGRADED)
     db.update_session_tool_names(memory, _pin("memory"))
     # Zero skills installed + no skill_manage: the real builder emits neither skills marker.
-    zero_skills = "You are Hermes.\nNo skills are installed.\n"
+    zero_skills = "You are A2Assistant.\nNo skills are installed.\n"
     readonly = db.create_session("zero-skills-readonly", "telegram", system_prompt=zero_skills)
     db.update_session_tool_names(readonly, _pin("terminal", "skills_list", "skill_view"))
 
@@ -107,7 +107,7 @@ def test_scan_leaves_reduced_memory_only_zero_skills_rows_and_session_id_overrid
 def test_scan_leaves_a_healthy_prompt_stored_before_the_skill_guidance_rewordings(db, monkeypatch, capsys):
     # Literal skills guidance stored before its opening line was reworded: old opening, then the Skill Safety heading.
     legacy = (
-        "You are Hermes.\n"
+        "You are A2Assistant.\n"
         "<available_skills>\n  dogfood: exploratory QA of web apps\n</available_skills>\n"
         "After completing a complex task (5+ tool calls), fixing a tricky error, or discovering a non-trivial "
         "workflow, save the approach as a skill with skill_manage so you can reuse it next time.\n\n"

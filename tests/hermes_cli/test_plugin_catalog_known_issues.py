@@ -66,7 +66,7 @@ def test_install_summary_shows_known_issues(monkeypatch):
     """The dashboard install result and capability summary surface the text; install still proceeds."""
     from hermes_cli.plugins_cmd_install import dashboard_install_plugin
 
-    entry = _entry(known_issues=["Local embedded mode is not supported on PM-managed Hermes."])
+    entry = _entry(known_issues=["Local embedded mode is not supported on PM-managed A2Assistant."])
     monkeypatch.setattr("hermes_cli.plugins_cmd_catalog.get_live_catalog_entry", lambda _n: entry)
     monkeypatch.setattr(
         "hermes_cli.plugins_cmd._resolve_git_url",
@@ -82,10 +82,10 @@ def test_install_summary_shows_known_issues(monkeypatch):
 
     result = dashboard_install_plugin("", force=False, enable=False, catalog_name="hindsight")
     assert result["ok"] is True  # informational — the install is not refused
-    assert result["known_issues"] == ["Local embedded mode is not supported on PM-managed Hermes."]
+    assert result["known_issues"] == ["Local embedded mode is not supported on PM-managed A2Assistant."]
     assert any(w.startswith("Known issue:") for w in result["warnings"])
 
     # The catalog capability summary (shown at install/enable prompts and in the UI) carries the text.
     summary = entry_capability_summary(entry)
     assert "Known issues:" in summary
-    assert "Local embedded mode is not supported on PM-managed Hermes." in summary
+    assert "Local embedded mode is not supported on PM-managed A2Assistant." in summary

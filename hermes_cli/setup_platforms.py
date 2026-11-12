@@ -170,7 +170,7 @@ def _setup_telegram():
         "TELEGRAM_ALLOWED_USERS", "Allowed user IDs (comma-separated, leave empty for open access)",
         "Telegram allowlist configured - only listed users can use the bot",
         "⚠️  No allowlist set - anyone who finds your bot can use it!", preset=allowed_users)
-    _info(None, "📬 Home Channel: where Hermes delivers cron job results,",
+    _info(None, "📬 Home Channel: where A2Assistant delivers cron job results,",
           "   cross-platform messages, and notifications.",
           "   For Telegram DMs, this is your user ID (same as above).")
     first_user_id = allowed_users.split(",")[0].strip() if allowed_users else ""
@@ -291,7 +291,7 @@ def setup_gateway(config: dict):
     from hermes_cli.setup import _info, print_header, print_info, print_success, prompt_checklist
     from hermes_cli.gateway import _all_platforms, _platform_status, _configure_platform
     print_header("Messaging Platforms")
-    _info("Connect to messaging platforms to chat with Hermes from anywhere.",
+    _info("Connect to messaging platforms to chat with A2Assistant from anywhere.",
           "Toggle with Space, confirm with Enter.", None)
     platforms = _all_platforms()
 

@@ -296,7 +296,7 @@ def _one_use_links_work(platform: str = sys.platform) -> bool:
 #: How every missing-bundle reason starts; ``hermes webapp --status`` asks for no restart after it.
 NOT_BUILT = "The Webapp is not built"
 #: Why a bundle ``hermes update`` could not rebuild is not served (``hermes_cli.webapp.mark_webapp_stale``).
-NOT_REBUILT = (f"{NOT_BUILT} for this version of Hermes: hermes update could not rebuild it. "
+NOT_REBUILT = (f"{NOT_BUILT} for this version of A2Assistant: hermes update could not rebuild it. "
                "Run hermes webapp to rebuild it.")
 
 

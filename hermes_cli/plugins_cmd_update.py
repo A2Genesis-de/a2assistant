@@ -315,7 +315,7 @@ def cmd_check_updates(args: Any | None = None) -> None:
         if r.needs_fixing:
             status = f"[red]needs fixing[/red]\n[dim]{r.needs_fixing}[/dim]"
         elif r.update_available is True and (held := held_for_newer_hermes(r)):
-            status = f"[yellow]update available after updating Hermes[/yellow]\n[dim]{held}[/dim]"
+            status = f"[yellow]update available after updating A2Assistant[/yellow]\n[dim]{held}[/dim]"
         elif r.update_available is True:
             status = "[green]update available[/green]"
         elif r.update_available is False:

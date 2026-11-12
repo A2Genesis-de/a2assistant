@@ -26,7 +26,7 @@ _SYSTEMCTL_FAILED_LINES = (
 )
 
 _NO_SYSTEMCTL_LINES = (
-    "This system has no systemd, so Hermes cannot install a background service here.",
+    "This system has no systemd, so A2Assistant cannot install a background service here.",
     "Run the gateway directly with `hermes gateway run` (keep it alive with tmux or screen).",
 )
 

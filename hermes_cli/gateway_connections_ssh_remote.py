@@ -131,7 +131,7 @@ def expand_remote_path(path: str) -> str:
 def assert_safe_remote_home(home: str) -> str:
     value = str(home or "").strip()
     if not re.fullmatch(r"(/|~/)[A-Za-z0-9._/+-]+", value) or ".." in value:
-        raise _err("unknown", "Unsafe remote Hermes home.")
+        raise _err("unknown", "Unsafe remote A2Assistant home.")
     return value.rstrip("/")
 
 
@@ -161,7 +161,7 @@ def probe_remote_hermes_home(ssh: SshConnection) -> str:
     try:
         out = ssh.exec('echo "${HERMES_HOME:-$HOME/.hermes}"').strip().split("\n")[-1]
     except SshReachError as exc:
-        raise _err("transient-transport-error", "Could not resolve the remote Hermes home.") from exc
+        raise _err("transient-transport-error", "Could not resolve the remote A2Assistant home.") from exc
     return out or "~/.hermes"
 
 
@@ -176,17 +176,17 @@ def assert_remote_install_update_clear(ssh: SshConnection, hermes_home: str, her
         lines = ssh.exec(f"python3 - {marker}{hermes}", stdin_data=REMOTE_MARKER_GATE_PY).strip().splitlines()
     except SshReachError as exc:
         raise _err("update-in-progress",
-                   "Could not prove that the remote Hermes install is clear for SSH startup.") from exc
+                   "Could not prove that the remote A2Assistant install is clear for SSH startup.") from exc
     observation = lines[-1] if lines else ""
     if observation == "CLEAR":
         return
     live = re.fullmatch(r"LIVE:([1-9][0-9]*)", observation)
     if live:
-        message = f"Remote Hermes update process {live.group(1)} is still running; SSH startup is paused."
+        message = f"Remote A2Assistant update process {live.group(1)} is still running; SSH startup is paused."
     elif observation == "HELD":
-        message = "A process the remote Hermes update started still holds the install; SSH startup is paused."
+        message = "A process the remote A2Assistant update started still holds the install; SSH startup is paused."
     else:
-        message = "The remote Hermes update marker is unreadable, malformed, or locked; refusing SSH startup."
+        message = "The remote A2Assistant update marker is unreadable, malformed, or locked; refusing SSH startup."
     raise _err("update-in-progress", message)
 
 
@@ -204,7 +204,7 @@ def locate_hermes(ssh: SshConnection, remote_hermes_path: str) -> str:
         if _is_executable(ssh, remote_hermes_path):
             return remote_hermes_path
         raise _err("hermes-not-found",
-                   f'The Hermes path set for this connection is not an executable on the remote host: '
+                   f'The A2Assistant path set for this connection is not an executable on the remote host: '
                    f'"{remote_hermes_path}". It must be the full path to the remote `hermes` binary, or blank '
                    "to auto-detect.")
     candidates: list[str] = []
@@ -220,8 +220,8 @@ def locate_hermes(ssh: SshConnection, remote_hermes_path: str) -> str:
         if candidate and _is_executable(ssh, candidate):
             return candidate
     raise _err("hermes-not-found",
-               "Hermes is not installed on the remote host (no `hermes` executable found). Install it there, "
-               "or set the Hermes path explicitly on the connection.")
+               "A2Assistant is not installed on the remote host (no `hermes` executable found). Install it there, "
+               "or set the A2Assistant path explicitly on the connection.")
 
 
 def probe_hermes_version(ssh: SshConnection, hermes_path: str) -> str:
@@ -405,7 +405,7 @@ except OSError:
   # pid already gone — a dead process is FOREIGN, not a transport error
   print("FOREIGN");sys.exit(0)
  # ps joins argv with spaces and no quoting (macOS has no /proc), so a quote or space in the
- # Hermes path breaks shlex: cut the known entry path out before splitting the rest.
+ # A2Assistant path breaks shlex: cut the known entry path out before splitting the rest.
  head,rest=None,line
  for e in sorted(expected_entries,key=len,reverse=True):
   at=0 if line.startswith(e+" ") else line.find(" "+e+" ")+1
@@ -635,8 +635,8 @@ class Spawned:
 def spawn_remote_serve(ssh: SshConnection, *, hermes_path: str, profile: str, token: str, ownership_id: str,
                        hermes_home: str, assert_install_clear: Callable[[], None]) -> Spawned:
     if not remote_supports_ssh_ownership(ssh, hermes_path):
-        raise _err("update-required", "The remote Hermes install does not support --ssh-session-token-file and "
-                                      "--ssh-owner-nonce. Update Hermes on the remote host.")
+        raise _err("update-required", "The remote A2Assistant install does not support --ssh-session-token-file and "
+                                      "--ssh-owner-nonce. Update A2Assistant on the remote host.")
     nonce = secrets.token_hex(8)
     plan = SpawnPlan(
         hermes_path=hermes_path, profile=profile, spawn_nonce=nonce, ownership_id=ownership_id,
@@ -660,7 +660,7 @@ def spawn_remote_serve(ssh: SshConnection, *, hermes_path: str, profile: str, to
         return Spawned(existing=True)
     if not lines or not lines[-1].isdigit() or int(lines[-1]) <= 0:
         _remove_remote(ssh, plan.token_file_path)
-        raise _err("spawn-failed", "Failed to launch the remote Hermes serve (no pid returned).")
+        raise _err("spawn-failed", "Failed to launch the remote A2Assistant serve (no pid returned).")
     return Spawned(False, int(lines[-1]), nonce, plan.log_path, plan.token_file_path)
 
 
@@ -675,7 +675,7 @@ def remote_profile_missing_error(output: str) -> SshReachError | None:
         return None
     create = (match.group(2) or "").strip()
     hint = f" or create it with: {create}" if create else "."
-    return _err("spawn-failed", f"The remote Hermes profile '{match.group(1)}' does not exist. "
+    return _err("spawn-failed", f"The remote A2Assistant profile '{match.group(1)}' does not exist. "
                                 f"Select an existing remote profile{hint}")
 
 
@@ -690,12 +690,12 @@ def scrape_ready_port(ssh: SshConnection, log_path: str, *, timeout_s: float = D
             tail = ""
         if is_alive is not None and not is_alive():
             raise remote_profile_missing_error(tail) or _err(
-                "spawn-failed", "Remote Hermes serve exited before announcing its port.")
+                "spawn-failed", "Remote A2Assistant serve exited before announcing its port.")
         match = READY_RE.search(tail)
         if match:
             return int(match.group(1))
         time.sleep(READY_POLL_INTERVAL_S)
-    raise _err("ready-timeout", f"Timed out waiting for the remote Hermes serve to announce its port ({timeout_s:.0f}s).")
+    raise _err("ready-timeout", f"Timed out waiting for the remote A2Assistant serve to announce its port ({timeout_s:.0f}s).")
 
 
 # ---------------------------------------------------------------------------
@@ -787,7 +787,7 @@ class _Remote:
 def _skew_error(ownership_id: str, skew: LockfileSkew) -> SshReachError:
     path = lockfile_path(ownership_id)
     return _err("remote-lockfile-skew",
-                f"The remote ownership record {path} does not match this Hermes build ({skew.reason}). It was "
+                f"The remote ownership record {path} does not match this A2Assistant build ({skew.reason}). It was "
                 "probably written by a different build sharing this remote, or the file is corrupt. Refusing to "
                 "reap or overwrite it. If nothing else uses this remote, delete that file there and reconnect.")
 
@@ -823,7 +823,7 @@ def _try_reuse(deps: ConnectDeps, remote: _Remote, lock: dict) -> Connected | No
         return None
     if not remote_pid_alive(ssh, lock["pid"]):
         ssh.cancel_forward(local_port, lock["port"])
-        raise _err("spawn-failed", "The reused remote Hermes serve exited while it was being verified.")
+        raise _err("spawn-failed", "The reused remote A2Assistant serve exited while it was being verified.")
     return Connected(base_url, deps.reuse_token, local_port, lock["port"], lock["pid"], True,
                      remote.hermes_version, remote.hermes_path, remote.hermes_home, lock["spawnNonce"],
                      remote.platform)

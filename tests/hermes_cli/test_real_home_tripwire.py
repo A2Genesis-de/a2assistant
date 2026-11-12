@@ -103,7 +103,7 @@ def test_installed_desktop_app_can_be_read_but_never_changed(tmp_path, monkeypat
     monkeypatch.setattr(conftest, "_REAL_INSTALLED_GUI_APPS", [os.path.normcase(os.path.realpath(app))])
     assert plist.read_text(encoding="utf-8") == "unchanged"
     for change in changes:
-        with pytest.raises(pytest.fail.Exception, match="REAL installed Hermes desktop app"):
+        with pytest.raises(pytest.fail.Exception, match="REAL installed A2Assistant desktop app"):
             change()
     assert plist.read_text(encoding="utf-8") == "unchanged"
 

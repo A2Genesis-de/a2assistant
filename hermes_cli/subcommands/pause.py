@@ -19,7 +19,7 @@ def cmd_pause(args: argparse.Namespace) -> int:
     already = is_engaged()
     path = engage(reason=reason)
     state = get_state() or {}
-    verb = "Still paused" if already else "Hermes paused"
+    verb = "Still paused" if already else "A2Assistant paused"
     detail = f" — reason: {state['reason']}" if state.get("reason") else ""
     print(f"⏸️  {verb}{detail}")
     print(f"    sentinel: {path}")
@@ -35,9 +35,9 @@ def cmd_resume(args: argparse.Namespace) -> int:
     from agent.estop import disengage, sentinel_path
 
     if disengage():
-        print("▶️  Hermes resumed — dispatch picks up on the next tick.")
+        print("▶️  A2Assistant resumed — dispatch picks up on the next tick.")
     else:
-        print(f"Hermes is not paused (no sentinel at {sentinel_path()}).")
+        print(f"A2Assistant is not paused (no sentinel at {sentinel_path()}).")
     return 0
 
 
@@ -48,7 +48,7 @@ def build_pause_parser(subparsers) -> None:
         description="Engage the global emergency stop. Halts NEW work only — cron "
             "dispatch, kanban dispatch, and new gateway turns — until "
             "`hermes resume`. Interactive CLI, TUI and Desktop turns are gateway turns, so they "
-            "are held too: each gets \"Hermes is paused\" with the reason. Turns already "
+            "are held too: each gets \"A2Assistant is paused\" with the reason. Turns already "
             "running finish; in-flight work is never killed.")
     pause_parser.add_argument(
         "--reason", default=None, help="Optional reason stored in the sentinel and shown to users")

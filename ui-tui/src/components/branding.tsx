@@ -58,7 +58,7 @@ export function ArtLines({ lines }: { lines: [string, string][] }) {
 // comfortably without forcing wrap or truncation drift on box-drawing edges.
 // Taglines live in the catalog (chatBits.branding.tagFull/tagMid); the tiny
 // tier is the bare brand name and stays untranslated.
-const TAG_TINY = 'Nous Research'
+const TAG_TINY = 'A2Genesis GmbH'
 const HIDE_BELOW = 34
 const COMPACT_FROM = 58
 

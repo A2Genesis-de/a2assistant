@@ -309,7 +309,7 @@ async function gatewayRequest<T>(method: string, params: Record<string, unknown>
   }
 
   if (!gateway) {
-    throw new Error('Hermes gateway is not connected')
+    throw new Error('A2Assistant gateway is not connected')
   }
 
   return gateway.request<T>(method, params)
@@ -407,7 +407,7 @@ async function activeProjectsContext(profile = projectProfile()): Promise<Active
   }
 
   if (!gateway || !stillOnWritableProjectOwner({ connectionId, gateway, profile })) {
-    throw new Error('Active Hermes profile changed while connecting')
+    throw new Error('Active A2Assistant profile changed while connecting')
   }
 
   return { connectionId, gateway, profile, stampLocal }

@@ -51,7 +51,7 @@ This issue was opened by `.github/workflows/skills-index-freshness.yml`. Close i
     "plugin-catalog-cors": Watchdog(
         title_prefix="[plugin-catalog-cors-watchdog]",
         title="Desktop cannot read the plugin catalog ({status})",
-        body="""Hermes Desktop cannot read the plugin catalog.
+        body="""A2Assistant Desktop cannot read the plugin catalog.
 
 **Status:** `{status}`
 **Detail:** {detail}
@@ -59,7 +59,7 @@ This issue was opened by `.github/workflows/skills-index-freshness.yml`. Close i
 Desktop's `hermes://plugin/install?catalog=` links fetch `/docs/api/plugins.json` cross-origin.
 A browser rejects that fetch when any response in the redirect chain, including the docs host's
 redirect to GitHub Pages, lacks `Access-Control-Allow-Origin`. Every catalog install link then
-shows "Could not load the Hermes plugin catalog". Background: #136483.
+shows "Could not load the A2Assistant plugin catalog". Background: #136483.
 
 This issue was opened by `.github/workflows/skills-index-freshness.yml` (job `check-catalog-cors`). Close it once the header is back; the next probe will reopen it if it's still broken.""",
     ),

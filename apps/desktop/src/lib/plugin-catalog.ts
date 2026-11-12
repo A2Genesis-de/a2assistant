@@ -138,7 +138,7 @@ export function sendWhenGatewayOpen<T>(
     })
   })
 
-  return withTimeout(opened, timeoutMs, 'Hermes backend did not connect', () => stop()).then(send)
+  return withTimeout(opened, timeoutMs, 'A2Assistant backend did not connect', () => stop()).then(send)
 }
 
 // The route lookup inside requestGatewayForActiveRoute has no deadline of its own, so the

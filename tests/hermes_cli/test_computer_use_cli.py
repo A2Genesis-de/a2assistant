@@ -35,7 +35,7 @@ def test_computer_use_status_reports_pm_without_polling_vendor(monkeypatch, caps
     monkeypatch.setattr(cua, "_cua_driver_contract_status", lambda _binary=None: {"ready": True, "version": "0.20.0"})
     assert _invoke(monkeypatch, "status") == 0
     output = capsys.readouterr().out
-    assert "Hermes PM" in output
+    assert "A2Assistant PM" in output
     assert "latest" not in output
 
 

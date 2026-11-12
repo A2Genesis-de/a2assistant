@@ -54,7 +54,7 @@ def test_never_logged_in_is_debug_but_a_dead_credential_warns(caplog, monkeypatc
     """The auto-route walk resolves Nous on every pass; users who never chose Nous must not be nagged."""
     _reset(monkeypatch)
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-    not_logged_in = AuthError("Hermes is not logged into Nous Portal.", provider="nous", relogin_required=True)
+    not_logged_in = AuthError("A2Assistant is not logged into Nous Portal.", provider="nous", relogin_required=True)
     dead = AuthError("Invalid refresh token", provider="nous", code="invalid_grant", relogin_required=True)
     with caplog.at_level(logging.DEBUG, logger="agent.auxiliary_unavailable"):
         quiet = unavailable.record_nous_credential_failure(not_logged_in)

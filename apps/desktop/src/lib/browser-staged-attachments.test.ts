@@ -246,7 +246,7 @@ describe('browser staged attachment transport', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
-  it.each(['another Hermes backend', 'Profile not found'])(
+  it.each(['another A2Assistant backend', 'Profile not found'])(
     'does not replace an authoritative %s rejection with a byte-upload fallback',
     async message => {
       const fetchMock = await installBrowser()

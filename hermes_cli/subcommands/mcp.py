@@ -12,7 +12,7 @@ def build_mcp_parser(subparsers, *, cmd_mcp: Callable) -> None:
         "mcp", help="Manage MCP server connections",
         description="Manage MCP server connections.\n\n"
             "MCP servers provide additional tools via the Model Context Protocol.\n"
-            "Use 'hermes mcp add' to connect to a new server. Running Hermes itself as an\n"
+            "Use 'hermes mcp add' to connect to a new server. Running A2Assistant itself as an\n"
             "MCP server is the mcp-serve plugin: `hermes plugins install mcp-serve`.")
     mcp_sub = mcp_parser.add_subparsers(dest="mcp_action")
 

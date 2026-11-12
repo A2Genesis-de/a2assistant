@@ -245,7 +245,7 @@ def ensure_import(extra: str) -> None:
         app_running = True
     if not app_running and sys.stdin.isatty() and sys.stdout.isatty():
         try:
-            answer = input(f"\nThis needs Hermes' optional {extra!r} feature, which isn't installed yet.\n"
+            answer = input(f"\nThis needs A2Assistant's optional {extra!r} feature, which isn't installed yet.\n"
                            "Install it now? [Y/n] ").strip().lower()
         except (EOFError, KeyboardInterrupt):
             answer = "n"
@@ -270,7 +270,7 @@ def ensure_import(extra: str) -> None:
         if selected not in {Path(entry).resolve() for entry in sys.path}:
             reason = restart_needed(root) or "this process does not run from the install's dependency environment"
             note_restart_pending(f"{extra} installed ({reason})")
-            raise InstallError("venv", f"{extra} installed; restart Hermes to activate it ({reason})")
+            raise InstallError("venv", f"{extra} installed; restart A2Assistant to activate it ({reason})")
 
 
 def ensure_and_bind(extra, importer, target_globals) -> bool:

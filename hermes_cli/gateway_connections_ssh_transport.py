@@ -281,7 +281,7 @@ def ssh_error_message(kind: str, endpoint: SshEndpoint, stderr: str = "") -> str
             f"change is expected, then remove the old key with `ssh-keygen -R {endpoint.host}` and reconnect."
             f"\n\n{detail}"),
         "auth-failed": (
-            f"SSH authentication to {target} failed. Hermes runs ssh non-interactively (BatchMode), so a "
+            f"SSH authentication to {target} failed. A2Assistant runs ssh non-interactively (BatchMode), so a "
             "key requiring a passphrase or 2FA must be loaded into ssh-agent first, or set an IdentityFile "
             f"in ~/.ssh/config. Original error: {detail}"),
         "interactive-auth": (

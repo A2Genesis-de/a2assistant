@@ -70,7 +70,7 @@ async def test_a_create_without_client_keeps_its_request_and_info_shape(tmp_path
 @pytest.mark.asyncio
 @pytest.mark.parametrize('bad', [
     'hermes-tern', None, [], {}, {'version': '1'}, {'name': 'x', 'extra': 1}, {'name': ''},
-    {'name': 'Hermes'}, {'name': '-x'}, {'name': 'a b'}, {'name': 'x' * 65}, {'name': 7},
+    {'name': 'A2Assistant'}, {'name': '-x'}, {'name': 'a b'}, {'name': 'x' * 65}, {'name': 7},
     {'name': 'x', 'version': ''}, {'name': 'x', 'version': 'v 1'}, {'name': 'x', 'version': 'v' * 65},
     {'name': 'x', 'version': None}, {'name': 'x', 'version': 1}, {'name': 'x', 'version': 'caf\u00e9'},
 ])

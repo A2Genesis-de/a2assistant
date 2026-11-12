@@ -104,7 +104,7 @@ def test_baked_path_to_a_missing_binary_is_ignored_and_hinted(homes):
     browser_runtime.BAKED_EXECUTABLE_FILE.parent.mkdir()
     browser_runtime.BAKED_EXECUTABLE_FILE.write_text(str(homes / "gone"), encoding="utf-8")
     assert browser_runtime.chromium_executable() is None
-    assert "pull the current Hermes image" in browser_runtime.chromium_missing_hint()
+    assert "pull the current A2Assistant image" in browser_runtime.chromium_missing_hint()
 
 
 @pytest.mark.platforms("posix")

@@ -71,9 +71,9 @@ describe('grants', () => {
   })
 
   it.each([
-    ['the Hermes home', () => hermesHome],
-    ['a folder inside the Hermes home', () => path.join(hermesHome, 'skills')],
-    ['a folder that contains the Hermes home', () => path.join(scratch, 'home')],
+    ['the A2Assistant home', () => hermesHome],
+    ['a folder inside the A2Assistant home', () => path.join(hermesHome, 'skills')],
+    ['a folder that contains the A2Assistant home', () => path.join(scratch, 'home')],
     ['the app data folder', () => userData],
     ['another plugin data folder', () => path.join(userData, 'plugin-files', 'data', 'other')]
   ])('refuses to grant %s', async (_label, folder) => {
@@ -90,7 +90,7 @@ describe('grants', () => {
     expect(await files.addGrant('plexus', ssh)).toMatchObject({ ok: false, error: 'protected' })
   })
 
-  it('refuses to grant a symlink that resolves into the Hermes home', async () => {
+  it('refuses to grant a symlink that resolves into the A2Assistant home', async () => {
     const link = path.join(scratch, 'innocent')
     fs.symlinkSync(hermesHome, link)
 
@@ -119,7 +119,7 @@ describe('grants', () => {
     })
   })
 
-  it('refuses a grant whose folder was swapped for a link into the Hermes home', async () => {
+  it('refuses a grant whose folder was swapped for a link into the A2Assistant home', async () => {
     const id = await grantVault()
     fs.rmSync(vault, { recursive: true })
     fs.symlinkSync(hermesHome, vault)
@@ -135,13 +135,13 @@ describe('path containment', () => {
     ['nested traversal', 'notes/../../.hermes/.env'],
     ['backslash traversal', 'notes\\..\\..\\.hermes\\.env'],
     ['an absolute POSIX path', '/etc/passwd'],
-    ['an absolute path into the Hermes home', ''],
+    ['an absolute path into the A2Assistant home', ''],
     ['a Windows drive path', 'C:\\Users\\me\\.hermes\\.env'],
     ['a UNC path', '\\\\server\\share\\x'],
     ['a NUL byte', 'notes/a.md\0.png']
   ])('refuses %s', async (label, rel) => {
     const id = await grantVault()
-    const target = label === 'an absolute path into the Hermes home' ? path.join(hermesHome, '.env') : rel
+    const target = label === 'an absolute path into the A2Assistant home' ? path.join(hermesHome, '.env') : rel
 
     expect(await files.run('plexus', { op: 'readText', folder: id, path: target })).toMatchObject({
       ok: false,
@@ -194,7 +194,7 @@ describe('path containment', () => {
     expect(fs.existsSync(outside)).toBe(false)
   })
 
-  it('refuses listing, renaming and trashing through a symlinked folder into the Hermes home', async () => {
+  it('refuses listing, renaming and trashing through a symlinked folder into the A2Assistant home', async () => {
     const id = await grantVault()
     fs.symlinkSync(hermesHome, path.join(vault, 'home'))
 

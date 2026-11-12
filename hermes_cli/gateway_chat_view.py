@@ -33,7 +33,7 @@ def _quoted(row, fallback):
     return f'    "{preview}"' if preview else f"    ({fallback} {row['admission_id']})"
 
 
-_UNKNOWN_OUTCOME = ("Hermes couldn't confirm how this turn ended (usually because it restarted mid-turn). "
+_UNKNOWN_OUTCOME = ("A2Assistant couldn't confirm how this turn ended (usually because it restarted mid-turn). "
                     "Resume this session and use the /discard <id> command it shows to drop the turn. "
                     "Don't send the same message again until you've checked.")
 
@@ -52,17 +52,17 @@ def pending_lines(pending, *, interactive=True):
     queued = [row for row in pending if row["status"] == "queued"]
     lines = []
     if len(lost) == 1:
-        lines.append("⏸ This chat is paused. Hermes couldn't confirm how the last turn ended "
+        lines.append("⏸ This chat is paused. A2Assistant couldn't confirm how the last turn ended "
                      "(usually because it restarted mid-turn):")
         if _pending_preview(lost[0].get("text")):
             lines.append(_quoted(lost[0], "lost turn"))
-        lines.append("  Hermes won't re-run it by itself, since it may already have done part of the work.")
+        lines.append("  A2Assistant won't re-run it by itself, since it may already have done part of the work.")
         if interactive:
             lines += ["  To drop it and continue, type:", f"/discard {lost[0]['admission_id']}"]
     elif lost:
-        lines.append(f"⏸ This chat is paused. Hermes couldn't confirm how {len(lost)} turns ended "
+        lines.append(f"⏸ This chat is paused. A2Assistant couldn't confirm how {len(lost)} turns ended "
                      "(usually because it restarted mid-turn):")
-        lines.append("  Hermes won't re-run them by itself, since they may already have done part of the work.")
+        lines.append("  A2Assistant won't re-run them by itself, since they may already have done part of the work.")
         if interactive:
             lines.append("  To continue, drop each one with the /discard line under it:")
         for row in lost:
@@ -96,7 +96,7 @@ class GatewayChatView:
         self.generation = snapshot.get("execution_generation", 0)
         self.prompts = {p["prompt_id"]: p for p in snapshot.get("prompts", [])}
         self.pending = snapshot.get("pending", [])
-        self.model = str((snapshot.get("info") or {}).get("model") or "Hermes").split("/")[-1]
+        self.model = str((snapshot.get("info") or {}).get("model") or "A2Assistant").split("/")[-1]
         # ``--format stream-json``: stdout belongs to the JSONL protocol, so every human line is
         # replaced by an emitter event and the terminal record carries the exit code.
         self.emitter = emitter
@@ -479,7 +479,7 @@ class GatewayChatView:
             self.completions[admission] = {"outcome": "unknown", "text": _UNKNOWN_OUTCOME}
             return None
         if own == "queued" and self.unknown_admissions():
-            return ("This chat is paused behind a turn whose ending Hermes couldn't confirm. "
+            return ("This chat is paused behind a turn whose ending A2Assistant couldn't confirm. "
                     "Your message is saved and will run once you resume this session and /discard "
                     "that turn; don't send it again.")
         if self.prompts and (own or not self.gaps):  # a control blocks only a turn still pending
@@ -597,7 +597,7 @@ class GatewayChatView:
             from prompt_toolkit import PromptSession
             from prompt_toolkit.patch_stdout import patch_stdout
             from hermes_cli.skin_engine import get_active_prompt_symbol, get_active_skin
-            welcome = "Welcome to Hermes Agent! Type your message or /help for commands."
+            welcome = "Welcome to A2Assistant! Type your message or /help for commands."
             print(get_active_skin().get_branding("welcome", welcome), flush=True)
             # The classic status bar's leading segments: model, then the attached session.
             prompt = PromptSession(erase_when_done=True,

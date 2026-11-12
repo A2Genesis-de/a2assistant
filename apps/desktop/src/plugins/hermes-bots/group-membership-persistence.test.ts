@@ -137,7 +137,7 @@ beforeEach(() => {
 describe('a membership write its machine dropped after the read', () => {
   it('fails the removal and keeps the seat: the machine still names the room', async () => {
     const room = await loadRoom()
-    const homelab = remoteBot('homelab', 'Homelab Hermes')
+    const homelab = remoteBot('homelab', 'Homelab A2Assistant')
     const machine = new RemoteMachine(['Core'])
     serve({ homelab: machine })
     seed(room, [homelab], ['Core'], [programmer, reviewer, homelab])
@@ -152,7 +152,7 @@ describe('a membership write its machine dropped after the read', () => {
       }
     }
 
-    await expect(room.members.setGroupMembership(homelab, 'Core', false)).rejects.toThrow(/Homelab Hermes/)
+    await expect(room.members.setGroupMembership(homelab, 'Core', false)).rejects.toThrow(/Homelab A2Assistant/)
 
     expect(machine.groups).toEqual(['Core'])
     expect(seatedKeys(room)).toEqual(['homelab::default', 'local::programmer', 'local::reviewer'])
@@ -160,7 +160,7 @@ describe('a membership write its machine dropped after the read', () => {
 
   it('still treats a gateway without the method as the older-gateway fallback', async () => {
     const room = await loadRoom()
-    const homelab = remoteBot('homelab', 'Homelab Hermes')
+    const homelab = remoteBot('homelab', 'Homelab A2Assistant')
     const machine = new RemoteMachine(['Core'])
     serve({ homelab: machine })
     seed(room, [homelab], ['Core'], [programmer, reviewer, homelab])
@@ -178,7 +178,7 @@ describe('a membership write its machine dropped after the read', () => {
 describe('overlapping edits of one bot', () => {
   it('an older failed join never erases a newer acknowledged one', async () => {
     const room = await loadRoom()
-    const homelab = remoteBot('homelab', 'Homelab Hermes')
+    const homelab = remoteBot('homelab', 'Homelab A2Assistant')
     const machine = new RemoteMachine([])
     serve({ homelab: machine })
     seed(room, [homelab], [], [programmer, reviewer])
@@ -202,7 +202,7 @@ describe('overlapping edits of one bot', () => {
     expect(reads).toBe(1)
     held.fail?.(transportClosed())
 
-    await expect(joinA).rejects.toThrow(/Homelab Hermes/)
+    await expect(joinA).rejects.toThrow(/Homelab A2Assistant/)
     await expect(joinB).resolves.toBeUndefined()
 
     expect(machine.groups).toEqual(['B'])

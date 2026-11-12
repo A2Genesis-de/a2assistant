@@ -45,7 +45,7 @@ const room = { room_id: 'room-1', name: 'Launch crew', members: [], updated_at: 
 beforeEach(() => {
   requestProfile.mockImplementation(async () => {
     if (gatewayState().get() !== 'open') {
-      throw new Error('Hermes gateway is not connected')
+      throw new Error('A2Assistant gateway is not connected')
     }
 
     return { rooms: [room], next_offset: null }
