@@ -348,7 +348,7 @@ describe('ThemeProvider customCSS injection', () => {
       )
     )
 
-    expect(customStyleEl()?.textContent).toBe('.chat-input { font-size: 18px; }')
+    expect(customStyleEl()?.textContent?.endsWith('.chat-input { font-size: 18px; }')).toBe(true)
   })
 })
 

@@ -1,6 +1,8 @@
 {
   "module_to_core": {
     "plugins/a2-elevation/__init__.py tools.terminal_tool_sudo.set_elevated_sudo_password": 1,
+    "plugins/a2-elevation/mac_dialog.py hermes_cli.desktop_bundle.MACOS_APP_BUNDLE": 1,
+    "plugins/a2-elevation/texts.py hermes_cli.branding.PRODUCT_NAME": 1,
     "plugins/browser/browser_use/provider.py plugins.browser._common.CloudBrowserProvider": 1,
     "plugins/browser/browser_use/provider.py tools.managed_tool_gateway.peek_nous_access_token": 1,
     "plugins/browser/browser_use/provider.py tools.managed_tool_gateway.resolve_managed_tool_gateway": 1,

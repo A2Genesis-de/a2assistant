@@ -276,7 +276,7 @@ export const deA2Gaps = {
         'Jeden angeklickten Link im Systembrowser statt im In-App-Browser öffnen. „Im In-App-Browser öffnen“ im Kontextmenü funktioniert weiterhin.',
       alwaysExternalLinksTitle: 'Links immer im externen Browser öffnen',
       voiceShortcutHintDesc:
-        'Das Tastenkürzel für Sprachaufnahmen legen Sie unter Einstellungen → Tastaturkürzel fest („Sprachunterhaltung starten / beenden“). Der Konfigurationswert voice.record_key gilt nur für CLI und TUI.',
+        'Das Tastenkürzel für Sprachaufnahmen legen Sie unter Einstellungen → Tastaturkürzel fest („Sprachkonversation starten / stoppen“). Der Konfigurationswert voice.record_key gilt nur für CLI und TUI.',
       voiceShortcutHintTitle: 'Tastenkürzel für Sprachaufnahme'
     },
     fieldDescriptions: {

@@ -198,11 +198,8 @@ function paletteFor(seed: DesktopTheme, mode: 'light' | 'dark'): DesktopThemeCol
   return seed.darkColors ? seed.colors : synthLightColors(seed)
 }
 
-// A backend skin named `default`/`mono`/… keeps the desktop's own palette
-// (never shadowed — see ingestBackendSkin), but its customCSS is carried
-// separately in $backendCustomCSS. The seed's own customCSS (non-built-in
-// backend skins) wins when both exist.
-const customCSSOf = (seed: DesktopTheme): string | undefined => seed.customCSS ?? $backendCustomCSS.get()[seed.name]
+const customCSSOf = (seed: DesktopTheme): string | undefined =>
+  [seed.customCSS, $backendCustomCSS.get()[seed.name]].filter(Boolean).join('\n') || undefined
 
 function deriveFrom(seed: DesktopTheme, mode: 'light' | 'dark'): DesktopTheme {
   return {

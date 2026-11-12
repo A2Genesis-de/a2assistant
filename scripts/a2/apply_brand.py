@@ -51,12 +51,13 @@ def flatten_rules(items: list) -> Iterator[dict]:
 
 
 class Rebrander:
-    def __init__(self, brand: Brand, keep: list[str], rules: list[dict]):
+    def __init__(self, brand: Brand, keep: list[str], rules: list[dict], markers: tuple[str, ...] = MARKERS):
         self.keep = re.compile("|".join(f"(?:{brand.expand(pattern)})" for pattern in keep)) if keep else None
         self.rules = brand.compile(rules)
+        self.markers = markers
 
     def apply(self, text: str, before: list[Rule] = (), after: list[Rule] = ()) -> str:
-        if not mentions_upstream(text):
+        if not any(marker in text for marker in self.markers):
             return text
         kept: list[str] = []
 
@@ -437,7 +438,8 @@ class BrandOverlay:
 
     def rebrander(self, name: str) -> Rebrander:
         rules = self.config["rules"][name]
-        return Rebrander(self.brand, self.config.get("keep", []) + rules.get("keep", []), rules["replace"])
+        markers = tuple(rules.get("markers", MARKERS))
+        return Rebrander(self.brand, self.config.get("keep", []) + rules.get("keep", []), rules["replace"], markers)
 
     def rewriter(self, name: str) -> LiteralRewriter:
         return LiteralRewriter(self.rebrander(name), self.scoped_patterns("keep_lines"), self.scoped_patterns("keep_spans"))

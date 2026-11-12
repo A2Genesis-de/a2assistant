@@ -39,13 +39,14 @@ export type InterfaceMode = 'advanced' | 'simple'
 /** Picker order — the quiet option first. */
 export const INTERFACE_MODES: readonly InterfaceMode[] = ['simple', 'advanced']
 
-export const DEFAULT_INTERFACE_MODE: InterfaceMode = 'simple'
+export const DEFAULT_INTERFACE_MODE: InterfaceMode = 'advanced'
 
-const INTERFACE_MODE_STORAGE_KEY = 'hermes.desktop.interfaceMode.v1'
+export const INTERFACE_MODE_STORAGE_KEY = 'hermes.desktop.interfaceMode.v1'
 
-// A2Genesis fork: Simple is the default and the ABSENCE of a record; only Advanced is stored.
+// Advanced is the ABSENCE of a mode: encoded as "no key" so a user who never
+// touched the picker never gains a record, and clearing the key means Advanced.
 const modeCodec: Codec<InterfaceMode> = {
-  decode: raw => (raw === 'advanced' ? 'advanced' : DEFAULT_INTERFACE_MODE),
+  decode: raw => (raw === 'simple' ? 'simple' : DEFAULT_INTERFACE_MODE),
   encode: mode => (mode === DEFAULT_INTERFACE_MODE ? null : mode)
 }
 
