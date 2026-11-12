@@ -138,7 +138,7 @@ def refuse_foreign_systemd_unit(action: str, system: bool) -> None:
     gw.print_error(
         f"Refusing to {action} {gw.get_service_name()}: that {gw._service_scope_label(system)} unit runs "
         f"HERMES_HOME={unit_home}, but this process has HERMES_HOME={gw.get_hermes_home()}.\n"
-        f"It belongs to another Hermes install. Run this from that install's HERMES_HOME."
+        f"It belongs to another A2Assistant install. Run this from that install's HERMES_HOME."
     )
     sys.exit(1)
 

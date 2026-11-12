@@ -121,7 +121,7 @@ def test_401_diagnostics_follow_request_identity_on_welcome_host(tier, capsys, m
     monkeypatch.setattr(loop, "_print_nous_entitlement_guidance", lambda *a: False)
     _print_nous_401_diagnostics(agent_for(make_jwt(account_tier=tier), WELCOME), Exception("unauthorized"))
     output = capsys.readouterr().out
-    assert ("Hermes couldn't start a new one" in output) == (tier == "anonymous")
+    assert ("A2Assistant couldn't start a new one" in output) == (tier == "anonymous")
     assert ("hermes auth add nous" in output) == (tier != "anonymous")
 
 

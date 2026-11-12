@@ -176,7 +176,7 @@ class IRCAdapter(BasePlatformAdapter):
         if self.server_password:
             await self._send_raw(f"PASS {self.server_password}")
         await self._send_raw(f"NICK {self.nickname}")
-        await self._send_raw(f"USER {self.nickname} 0 * :Hermes Agent")
+        await self._send_raw(f"USER {self.nickname} 0 * :A2Assistant")
         self._recv_task = asyncio.create_task(self._receive_loop())
         try:  # wait for registration (001 RPL_WELCOME)
             await asyncio.wait_for(self._registration_event.wait(), timeout=30.0)
@@ -362,7 +362,7 @@ def interactive_setup() -> None:
     existing_server = get_env_value("IRC_SERVER")
     if declines_reconfigure("IRC", "Reconfigure IRC?", "IRC_SERVER"):
         return
-    info("Connect Hermes to an IRC network. Uses Python stdlib — no extra packages needed.",
+    info("Connect A2Assistant to an IRC network. Uses Python stdlib — no extra packages needed.",
          "   Works with Libera.Chat, OFTC, your own ZNC/InspIRCd, etc.")
     print()
     if not _required("IRC server hostname (e.g. irc.libera.chat)", "IRC_SERVER", existing_server or "", "Server"):
@@ -503,7 +503,7 @@ async def _sa_register(conn: _StandaloneConn, nick_base: str, server_password: s
     if server_password:
         await conn.raw(f"PASS {_strip_irc_control_chars(server_password)}")
     await conn.raw(f"NICK {standalone_nick}")
-    await conn.raw(f"USER {standalone_nick} 0 * :Hermes Agent (cron)")
+    await conn.raw(f"USER {standalone_nick} 0 * :A2Assistant (cron)")
     registered = await conn.pump(15.0, _on_registration)
     if registered is None:
         return _sa_error("registration timeout (no RPL_WELCOME)")
@@ -590,7 +590,7 @@ def register(ctx):
     """Plugin entry point: called by the Hermes plugin system."""
     ctx.register_platform(
         name="irc",
-        dashboard_description="Relay messages between an IRC channel (or DMs) and Hermes.",
+        dashboard_description="Relay messages between an IRC channel (or DMs) and A2Assistant.",
         docs_url="https://hermes-agent.nousresearch.com/docs/user-guide/messaging/irc",
         label="IRC",
         adapter_factory=IRCAdapter,

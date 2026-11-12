@@ -87,4 +87,4 @@ def test_refuses_to_print_cookie_values_to_a_terminal(monkeypatch, capsys):
     code, out = _run(monkeypatch, tty=True)
 
     assert code == 2 and out == ""
-    assert "Hermes Desktop" in capsys.readouterr().err
+    assert "A2Assistant Desktop" in capsys.readouterr().err

@@ -35,7 +35,7 @@ function resolvePackagedAsarPath(context) {
     if (appOutDir.endsWith('.app')) {
       return path.join(appOutDir, 'Contents', 'Resources', 'app.asar')
     }
-    const productName = context.packager?.appInfo?.productFilename || 'Hermes'
+    const productName = context.packager?.appInfo?.productFilename || 'A2Assistant'
     return path.join(appOutDir, `${productName}.app`, 'Contents', 'Resources', 'app.asar')
   }
 

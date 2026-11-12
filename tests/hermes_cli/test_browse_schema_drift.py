@@ -231,7 +231,7 @@ def test_session_list_reconciles_once_only_when_unowned(own_store_client, missin
     assert response.status_code == 503
     assert "gateway owns it" in response.json()["detail"]
     # A failed read is a retryable failed load naming the drift, never an empty list.
-    assert "behind this Hermes version" in sidebar["errors"][0]["error"]
+    assert "behind this A2Assistant version" in sidebar["errors"][0]["error"]
     assert "sessions" not in sidebar["recents"] and sidebar["recents"]["failed"] is True
     assert path.read_bytes() == before
     assert missing_column not in _session_columns(path)

@@ -737,7 +737,7 @@ class RelayAdapter(RelayDiscordInteractionMixin, BasePlatformAdapter):
         chat_id: str,
         tasks: list,
         *,
-        title: str = "Hermes is working",
+        title: str = "A2Assistant is working",
         reply_to: Optional[str] = None,
         metadata: Optional[dict[str, Any]] = None,
         fallback_text: Optional[str] = None,

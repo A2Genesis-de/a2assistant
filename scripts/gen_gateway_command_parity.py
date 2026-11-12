@@ -63,7 +63,7 @@ def gateway_cell(name):
 
 
 # Reads a TUI session gets as main's TUI sidecar rendered them (gateway/session_tui_reads.py).
-TUI_READS = {"status": "TUI session: main's `Hermes TUI Status`",
+TUI_READS = {"status": "TUI session: main's `A2Assistant TUI Status`",
              "context": "TUI session: main's live /context with the category table"}
 
 

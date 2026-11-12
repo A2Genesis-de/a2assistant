@@ -59,7 +59,7 @@ test('structured storage_* error codes route to Maintenance', () => {
   expect($routeRequest.get()?.path).toBe('/command-center?section=maintenance')
 })
 
-test('405 method-not-allowed toasts a restart in plain words with a Restart Hermes action', () => {
+test('405 method-not-allowed toasts a restart in plain words with a Restart A2Assistant action', () => {
   const before = $backendRestartRequest.get()
   notifyError(new Error('405 Method Not Allowed'), 'Request failed')
 
@@ -232,7 +232,7 @@ test('a launch-credentials refusal says the key changed and offers a new chat', 
 const sshTimeout = 'SSH operation to user@ssh.example.test timed out. It will be re-established on the next attempt.'
 
 const sshAuthFailed =
-  'SSH authentication to user@ssh.example.test failed. Hermes runs ssh non-interactively (BatchMode), so a key ' +
+  'SSH authentication to user@ssh.example.test failed. A2Assistant runs ssh non-interactively (BatchMode), so a key ' +
   'requiring a passphrase or 2FA must be loaded into ssh-agent first. Original error: Permission denied (publickey).'
 
 const objectDetail = (message: string, kind: string) => `502: ${JSON.stringify({ detail: { message, kind } })}`

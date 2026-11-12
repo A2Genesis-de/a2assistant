@@ -9,41 +9,41 @@ function shownTitles(innerText) {
 
 describe('browser smoke startup screens', () => {
   it("knows the boot-failure and sign-in titles the renderer shows", () => {
-    expect(STARTUP_FAILURE_TITLES).toContain("Hermes couldn't start")
-    expect(STARTUP_FAILURE_TITLES).toContain('Sign in to Hermes')
+    expect(STARTUP_FAILURE_TITLES).toContain("A2Assistant couldn't start")
+    expect(STARTUP_FAILURE_TITLES).toContain('Sign in to A2Assistant')
   })
 
   it('finds the boot-failure screen on the page', () => {
-    const titles = shownTitles("Hermes couldn't start\nHermes' background service didn't come up.\nRetry")
+    const titles = shownTitles("A2Assistant couldn't start\nA2Assistant's background service didn't come up.\nRetry")
 
-    expect(titles).toEqual(["Hermes couldn't start"])
+    expect(titles).toEqual(["A2Assistant couldn't start"])
     expect(startupScreenFailures(titles, { allowGatewayFailure: false })).toEqual([
-      'Webapp shows the boot-failure screen ("Hermes couldn\'t start")'
+      'Webapp shows the boot-failure screen ("A2Assistant couldn\'t start")'
     ])
   })
 
   it('finds the Webapp sign-in screen on the page', () => {
-    const titles = shownTitles('Sign in to Hermes\nRun hermes webapp on this computer to sign this browser in.')
+    const titles = shownTitles('Sign in to A2Assistant\nRun hermes webapp on this computer to sign this browser in.')
 
     expect(startupScreenFailures(titles, { allowGatewayFailure: false })).toEqual([
-      'Webapp shows the sign-in screen ("Sign in to Hermes")'
+      'Webapp shows the sign-in screen ("Sign in to A2Assistant")'
     ])
   })
 
   it('tolerates the boot-failure screen only when a gateway failure is allowed', () => {
-    const titles = shownTitles("Hermes couldn't start")
+    const titles = shownTitles("A2Assistant couldn't start")
 
     expect(startupScreenFailures(titles, { allowGatewayFailure: true })).toEqual([])
   })
 
   it('fails on the sign-in screen even when a gateway failure is allowed', () => {
-    const titles = shownTitles('Sign in to Hermes')
+    const titles = shownTitles('Sign in to A2Assistant')
 
     expect(startupScreenFailures(titles, { allowGatewayFailure: true })).toHaveLength(1)
   })
 
   it('passes a ready Webapp', () => {
-    const titles = shownTitles('New session\nAsk Hermes anything')
+    const titles = shownTitles('New session\nAsk A2Assistant anything')
 
     expect(titles).toEqual([])
     expect(startupScreenFailures(titles, { allowGatewayFailure: false })).toEqual([])

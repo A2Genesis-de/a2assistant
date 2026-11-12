@@ -101,7 +101,7 @@ def _make_packaged_executable(root: Path, monkeypatch) -> Path:
     """
     desktop_dir = root / "apps" / "desktop"
     if sys.platform == "darwin":
-        exe = desktop_dir / "release" / "mac-arm64" / "Hermes.app" / "Contents" / "MacOS" / "Hermes"
+        exe = desktop_dir / "release" / "mac-arm64" / "A2Assistant.app" / "Contents" / "MacOS" / "A2Assistant"
     elif sys.platform == "win32":
         exe = desktop_dir / "release" / "win-unpacked" / "Hermes.exe"
     else:
@@ -125,7 +125,7 @@ def _staging_dir_from(cmd) -> Path:
 def _packaged_exe_rel() -> Path:
     """Packaged-exe path relative to electron-builder's output dir on THIS host."""
     if sys.platform == "darwin":
-        return Path("mac-arm64") / "Hermes.app" / "Contents" / "MacOS" / "Hermes"
+        return Path("mac-arm64") / "A2Assistant.app" / "Contents" / "MacOS" / "A2Assistant"
     if sys.platform == "win32":
         return Path("win-unpacked") / "Hermes.exe"
     return Path("linux-unpacked") / "hermes"
@@ -188,7 +188,7 @@ def test_source_launch_reads_bom_electron_path_without_provisioning(tmp_path, mo
 
 def _stamped_macos_bundle(app: Path, asar: bytes) -> Path:
     (app / "Contents" / "MacOS").mkdir(parents=True)
-    (app / "Contents" / "MacOS" / "Hermes").write_bytes(b"\xcf\xfa\xed\xfe")
+    (app / "Contents" / "MacOS" / "A2Assistant").write_bytes(b"\xcf\xfa\xed\xfe")
     (app / "Contents" / "Resources").mkdir()
     (app / "Contents" / "Resources" / "app.asar").write_bytes(asar)
     (app / "Contents" / "Resources" / "install-stamp.json").write_text('{"updateMechanism": "self"}')
@@ -202,8 +202,8 @@ def test_packaged_launch_opens_the_refreshed_installed_app(tmp_path, monkeypatch
     import shutil
 
     root = _make_desktop_tree(tmp_path)
-    _stamped_macos_bundle(root / "apps" / "desktop" / "release" / "mac-arm64" / "Hermes.app", b"checkout build")
-    installed = _stamped_macos_bundle(tmp_path / "Applications" / "Hermes.app", b"stale build")
+    _stamped_macos_bundle(root / "apps" / "desktop" / "release" / "mac-arm64" / "A2Assistant.app", b"checkout build")
+    installed = _stamped_macos_bundle(tmp_path / "Applications" / "A2Assistant.app", b"stale build")
     monkeypatch.setattr("hermes_cli.gui_uninstall.packaged_gui_app_paths", lambda: [installed])
     monkeypatch.setattr("hermes_constants.get_default_hermes_root", lambda **kw: tmp_path)  # root is its hermes-agent
     monkeypatch.setattr(main_desktop, "_stage_macos_bundle_copy", lambda src, dst: shutil.copytree(src, dst, symlinks=True))
@@ -220,7 +220,7 @@ def test_packaged_launch_opens_the_refreshed_installed_app(tmp_path, monkeypatch
         main_desktop.cmd_gui(_ns(skip_build=True))
 
     assert exit_info.value.code == 0
-    assert calls == [[str(installed / "Contents" / "MacOS" / "Hermes")]]
+    assert calls == [[str(installed / "Contents" / "MacOS" / "A2Assistant")]]
     assert (installed / "Contents" / "Resources" / "app.asar").read_bytes() == b"checkout build"
 
 
@@ -342,7 +342,7 @@ def test_gui_close_preview_flag_forwards_to_packaged_exe(tmp_path, monkeypatch):
 @pytest.mark.parametrize("exists,platform", [(True, "darwin"), (False, "darwin"), (True, "linux")])
 def test_launch_installed_macos_desktop_app_gates_on_bundle_and_platform(tmp_path, monkeypatch, exists, platform):
     monkeypatch.setattr(main_desktop.sys, "platform", platform)
-    exe = Path("/Applications/Hermes.app/Contents/MacOS/Hermes")
+    exe = Path("/Applications/A2Assistant.app/Contents/MacOS/A2Assistant")
     monkeypatch.setattr(main_desktop.Path, "is_file", lambda self: exists if self == exe else Path.is_file(self))
     calls = []
     if exists and platform == "darwin":
@@ -384,12 +384,12 @@ def _make_signable_app(desktop_dir: Path) -> Path:
     (ent_dir / "entitlements.mac.plist").write_text("<plist/>", encoding="utf-8")
     (ent_dir / "entitlements.mac.inherit.plist").write_text("<plist/>", encoding="utf-8")
 
-    app = desktop_dir / "release" / "mac-arm64" / "Hermes.app"
+    app = desktop_dir / "release" / "mac-arm64" / "A2Assistant.app"
     _write_info_plist(app, "com.nousresearch.hermes")
     (app / "Contents" / "MacOS").mkdir(parents=True)
-    (app / "Contents" / "MacOS" / "Hermes").write_text("", encoding="utf-8")
+    (app / "Contents" / "MacOS" / "A2Assistant").write_text("", encoding="utf-8")
 
-    helper = app / "Contents" / "Frameworks" / "Hermes Helper.app"
+    helper = app / "Contents" / "Frameworks" / "A2Assistant Helper.app"
     _write_info_plist(helper, "com.nousresearch.hermes.helper")
 
     framework = app / "Contents" / "Frameworks" / "Electron Framework.framework"
@@ -953,7 +953,7 @@ def test_relaunchable_fixup_failed_identity_uses_pinned_adhoc_before_legacy(tmp_
     """
     root = _make_desktop_tree(tmp_path)
     desktop_dir = root / "apps" / "desktop"
-    exe = desktop_dir / "release" / "mac-arm64" / "Hermes.app" / "Contents" / "MacOS" / "Hermes"
+    exe = desktop_dir / "release" / "mac-arm64" / "A2Assistant.app" / "Contents" / "MacOS" / "A2Assistant"
     exe.parent.mkdir(parents=True)
     exe.write_text("", encoding="utf-8")
 
@@ -995,7 +995,7 @@ def test_relaunchable_fixup_legacy_when_pinned_adhoc_also_fails(tmp_path, monkey
     """Legacy deep ad-hoc still runs when identifier-pinned signing fails too."""
     root = _make_desktop_tree(tmp_path)
     desktop_dir = root / "apps" / "desktop"
-    exe = desktop_dir / "release" / "mac-arm64" / "Hermes.app" / "Contents" / "MacOS" / "Hermes"
+    exe = desktop_dir / "release" / "mac-arm64" / "A2Assistant.app" / "Contents" / "MacOS" / "A2Assistant"
     exe.parent.mkdir(parents=True)
     exe.write_text("", encoding="utf-8")
     app = exe.parents[2]

@@ -56,7 +56,7 @@ def codex_messages() -> list[dict[str, Any]]:
     """Minimal Codex-shaped chat history mirroring the #32892 reproducer:
     one system + one short user message, with no tool calls in history."""
     return [
-        {"role": "system", "content": "You are Hermes."},
+        {"role": "system", "content": "You are A2Assistant."},
         {"role": "user", "content": "Hey! What can I help you with?"},
     ]
 
@@ -94,7 +94,7 @@ def test_build_kwargs_keeps_required_codex_fields_without_tools(transport, codex
     kwargs = _build_kwargs_no_tools(transport, codex_messages)
 
     assert kwargs["model"] == "gpt-5.5"
-    assert kwargs["instructions"] == "You are Hermes."
+    assert kwargs["instructions"] == "You are A2Assistant."
     assert kwargs["store"] is False
     assert isinstance(kwargs["input"], list)
     assert kwargs["input"] and kwargs["input"][0]["role"] == "user"

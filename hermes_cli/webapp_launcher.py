@@ -31,7 +31,7 @@ STARTED_BEFORE_ON = f"The gateway started before the Webapp was turned on. Resta
 # A gateway answers a verb it does not know this way; the Webapp's are registered before its control
 # socket answers, so the gateway running predates them (an upgrade it has not restarted onto).
 OLDER_GATEWAY = ("The running gateway is older than the Webapp and does not know its commands. Restart it "
-                 f"onto this version of Hermes: {RESTART_COMMAND}")
+                 f"onto this version of A2Assistant: {RESTART_COMMAND}")
 # Browsers keep secure-context APIs (crypto.subtle, mediaDevices, navigator.clipboard, Notification) from a
 # plain-HTTP origin that is not loopback.
 PLAIN_HTTP_NOTE = ("This address is plain HTTP, so the browser turns off what needs a secure connection: the bot "
@@ -106,8 +106,8 @@ def _open(url: str) -> bool:
 # else, so the referrer and any script stay out of it.
 _LAUNCH_PAGE = ('<!doctype html><meta charset="utf-8"><meta name="referrer" content="no-referrer">'
                 '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'">'
-                '<meta http-equiv="refresh" content="0;url={url}"><title>Opening Hermes</title>'
-                '<p><a href="{url}">Open Hermes Webapp</a></p>\n')
+                '<meta http-equiv="refresh" content="0;url={url}"><title>Opening A2Assistant</title>'
+                '<p><a href="{url}">Open A2Assistant Webapp</a></p>\n')
 
 
 def _open_privately(target: Path, url: str) -> bool:

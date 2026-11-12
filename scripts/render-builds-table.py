@@ -105,7 +105,7 @@ def table_rows(assets_by_app: dict) -> list[tuple[str, list[tuple[str, str, str,
     a row exists only for an object that is actually in the bucket.
     """
     sections: list[tuple[str, list[tuple[str, str, str, str]]]] = []
-    for app, title in (("HermesBundled", "Hermes Desktop"), ("HermesLight", "Hermes Light (remote-only client)")):
+    for app, title in (("HermesBundled", "A2Assistant Desktop"), ("HermesLight", "A2Assistant Light (remote-only client)")):
         rows = []
         for key in _ROW_ORDER:
             entry = assets_by_app.get(app, {}).get(key)
@@ -401,7 +401,7 @@ def render_page(tag: str, assets_by_app: dict, base_url: str,
     channel = r2.channel_for_tag(tag)
     tag_url = f"https://github.com/{quote(repo, safe='/')}/releases/tag/{quote(tag, safe='')}"
     body = [
-        f"<h1>Hermes Desktop {channel} builds</h1>",
+        f"<h1>A2Assistant Desktop {channel} builds</h1>",
         f"<p>Release {_link(tag_url)}<code>{html.escape(tag)}</code></a>. Only objects this release "
         "actually staged in the bucket are listed.</p>",
     ]
@@ -434,7 +434,7 @@ def render_page(tag: str, assets_by_app: dict, base_url: str,
             [[html.escape(job), f"{_link(run_url)}View build run</a>"] for job in incomplete_jobs],
         ))
     body.extend(smoke_html(smoke_results))
-    return _page(f"Hermes Desktop {channel} builds", tag, body)
+    return _page(f"A2Assistant Desktop {channel} builds", tag, body)
 
 
 def render_commit_page(commit: str, names: list[str], base_url: str,
@@ -451,7 +451,7 @@ def render_commit_page(commit: str, names: list[str], base_url: str,
         cell = (f"{_link(url)}{html.escape(link_text)}</a>" if url and link_text else "—")
         rows.append([html.escape(label), html.escape(status), cell])
     body = [
-        f"<h1>Hermes commit build <code>{html.escape(commit[:12])}</code></h1>",
+        f"<h1>A2Assistant commit build <code>{html.escape(commit[:12])}</code></h1>",
         f"<p>Commit {_link(commit_url)}<code>{html.escape(commit)}</code></a>. Every expected binary is listed; "
         "built rows link to downloads; incomplete rows link to the build run when available.</p>",
         *_table(("Binary", "Status", "Download / diagnostics"), rows),
@@ -470,7 +470,7 @@ def render_commit_page(commit: str, names: list[str], base_url: str,
             ]),
         ])
     body.extend(smoke_html(smoke_results))
-    return _page(f"Hermes commit build {commit[:12]}", commit, body)
+    return _page(f"A2Assistant commit build {commit[:12]}", commit, body)
 
 
 def recorded_build(page: str | None) -> str | None:

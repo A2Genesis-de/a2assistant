@@ -722,7 +722,7 @@ def _migrate_to_50(results: dict[str, Any], quiet: bool) -> None:
     for key in present:
         del security[key]
     _commit(config, results, quiet, "removed security.tirith_* (scanner no longer bundled)",
-            "  ✓ Removed security.tirith_* — the tirith scanner is no longer bundled with Hermes.")
+            "  ✓ Removed security.tirith_* — the tirith scanner is no longer bundled with A2Assistant.")
 
 
 MIGRATIONS: tuple[tuple[int, Callable[[dict[str, Any], bool], None]], ...] = (

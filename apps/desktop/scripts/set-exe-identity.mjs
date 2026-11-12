@@ -86,10 +86,10 @@ async function stampExeIdentity(
   const options = {
     icon,
     'version-string': {
-      ProductName: 'Hermes',
-      FileDescription: 'Hermes',
-      CompanyName: 'Nous Research',
-      LegalCopyright: 'Copyright (c) 2026 Nous Research'
+      ProductName: 'A2Assistant',
+      FileDescription: 'A2Assistant',
+      CompanyName: 'A2Genesis GmbH',
+      LegalCopyright: 'Copyright (c) 2026 A2Genesis GmbH'
     }
   }
 
@@ -107,7 +107,7 @@ async function stampExeIdentity(
     }
   }
 
-  console.log('[set-exe-identity] done — Hermes icon + identity stamped')
+  console.log('[set-exe-identity] done — A2Assistant icon + identity stamped')
 }
 
 export { RCEDIT_COMMIT_RETRY_DELAYS_MS, stampExeIdentity }

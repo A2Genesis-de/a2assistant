@@ -50,7 +50,7 @@ def _parse():
     ap.add_argument("--calls", type=int, default=6, help="tool calls per session")
     ap.add_argument("--out", required=True, help="JSONL of every call; summary written next to it")
     ap.add_argument("--wire", choices=["chat", "native"], default=None,
-                    help="force the wire (default: what Hermes would pick for the provider/model)")
+                    help="force the wire (default: what A2Assistant would pick for the provider/model)")
     ap.add_argument("--model", default=None)
     ap.add_argument("--pin", default=None, help="OpenRouter provider slug to pin (providers_allowed)")
     ap.add_argument("--settle", type=float, default=0.0, help="seconds to sleep before every request")

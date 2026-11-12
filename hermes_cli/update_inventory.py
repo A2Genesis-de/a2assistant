@@ -364,7 +364,7 @@ def print_update_plan(plan: UpdatePlan) -> None:
         print(f"    Update via: {plan.update_mechanism}")
     print(f"  Profiles: {', '.join(plan.profiles) if plan.profiles else '(none found)'}")
     if not plan.runtimes:
-        print("  Running Hermes services: none detected — code swap only.")
+        print("  Running A2Assistant services: none detected — code swap only.")
         return
     print(f"  Running services to restart ({len(plan.runtimes)}):")
     for runtime in plan.runtimes:

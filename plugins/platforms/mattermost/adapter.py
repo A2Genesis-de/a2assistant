@@ -703,7 +703,7 @@ def interactive_setup() -> None:
     else:
         print_info("⚠️  No allowlist set - anyone who can message the bot can use it!")
     print()
-    info("📬 Home Channel: where Hermes delivers cron job results and notifications.",
+    info("📬 Home Channel: where A2Assistant delivers cron job results and notifications.",
          "   To get a channel ID: click channel name → View Info → copy the ID",
          "   You can also set this later by typing /set-home in a Mattermost channel.")
     home_channel = prompt("Home channel ID (leave empty to set later with /set-home)").strip()
@@ -747,7 +747,7 @@ def register(ctx) -> None:
     from . import gateway_env  # env -> GatewayConfig bridge (gateway.config_env)
     ctx.register_platform(
         name="mattermost", label="Mattermost", adapter_factory=MattermostAdapter,
-        dashboard_description="Connect Hermes to Mattermost channels and direct messages.",
+        dashboard_description="Connect A2Assistant to Mattermost channels and direct messages.",
         docs_url="https://mattermost.com/deploy/",
         dashboard_env_vars=("MATTERMOST_URL", "MATTERMOST_TOKEN", "MATTERMOST_ALLOWED_USERS"),
         check_fn=check_mattermost_requirements, validate_config=validate_mattermost_config,

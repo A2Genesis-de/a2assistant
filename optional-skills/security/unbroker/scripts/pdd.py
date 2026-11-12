@@ -187,7 +187,7 @@ def cmd_doctor(args) -> None:
                  "verify links via your logged-in webmail); or set EMAIL_* for SMTP/IMAP.")
     elif cfg["email_mode"] == "browser":
         L.append("  Email mode: browser (no password) - the agent sends opt-outs and opens verify "
-                 "links via the operator's logged-in webmail. This needs Hermes pointed at the "
+                 "links via the operator's logged-in webmail. This needs A2Assistant pointed at the "
                  "operator's OWN Chrome over CDP (launch with --remote-debugging-port=9222 "
                  "--user-data-dir=~/.hermes/chrome-debug, signed into the webmail once); else it falls "
                  "back to drafts. Run `pdd.py cdp` to launch it (or `pdd.py cdp --print` for the command). "
@@ -260,7 +260,7 @@ def cmd_cdp(args) -> None:
         _out({"running": True, "endpoint": f"127.0.0.1:{port}",
               "browser": live.get("Browser"),
               "webSocketDebuggerUrl": live.get("webSocketDebuggerUrl"),
-              "note": "a debuggable browser is already listening; attach Hermes's browser (`/browser connect`) to "
+              "note": "a debuggable browser is already listening; attach A2Assistant's browser (`/browser connect`) to "
                       f"127.0.0.1:{port} and make sure the operator's webmail is signed in in THAT browser."})
         return
 
@@ -292,7 +292,7 @@ def cmd_cdp(args) -> None:
     _out({"running": bool(live), "launched_pid": pid, "browser": browser,
           "profile": str(profile), "endpoint": f"127.0.0.1:{port}",
           "webSocketDebuggerUrl": (live or {}).get("webSocketDebuggerUrl"),
-          "next": ([f"attach Hermes's browser (browser_exec) with `/browser connect` to 127.0.0.1:{port} (CDP)",
+          "next": ([f"attach A2Assistant's browser (browser_exec) with `/browser connect` to 127.0.0.1:{port} (CDP)",
                     "in the launched browser, sign into the operator's webmail ONCE (dedicated debug profile)",
                     "then run email/verify flows in browser mode -- they use this logged-in session"]
                    if live else

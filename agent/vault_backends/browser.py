@@ -220,5 +220,5 @@ class BrowserProfileLoginBackend(LoginBackend):
             raise RuntimeError(
                 "The browser did not autofill a saved password for this login. It may have been "
                 "removed, need a chooser (several accounts on this site), redirect off its origin, or "
-                "be unavailable in this session. Save it to the Hermes vault, or sign in in the browser.")
+                "be unavailable in this session. Save it to the A2Assistant vault, or sign in in the browser.")
         return password

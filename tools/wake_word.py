@@ -278,7 +278,7 @@ def _resample_audio_frame(np, frame, output_length: int):
 def silent_audio_hint(details: dict[str, Any]) -> str:
     """Platform-specific remediation for an armed stream delivering silence."""
     if sys.platform == "darwin":
-        return ("Microphone delivers only silence. Grant the Hermes backend "
+        return ("Microphone delivers only silence. Grant the A2Assistant backend "
                 "microphone access in System Settings > Privacy & Security > "
                 "Microphone, then toggle the wake word.")
     fix = ("Set wake_word.input_device to a different PortAudio input device"

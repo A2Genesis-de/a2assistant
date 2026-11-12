@@ -742,7 +742,7 @@ async function readPluginSourceText(file: string): Promise<string> {
 
   if (result.truncated) {
     throw new PluginSourceOversizeError(
-      "plugin.js exceeds this shell's 512 KiB read limit — update Hermes Desktop to load larger plugins"
+      "plugin.js exceeds this shell's 512 KiB read limit — update A2Assistant Desktop to load larger plugins"
     )
   }
 
@@ -1070,7 +1070,7 @@ export async function uninstallDiskPlugin(
   const remove = removeDesktop ?? window.hermesDesktop?.removeDesktopPlugin
 
   if (!remove) {
-    return { ok: false, error: 'this Hermes Desktop build cannot remove desktop plugins — delete the folder by hand' }
+    return { ok: false, error: 'this A2Assistant Desktop build cannot remove desktop plugins — delete the folder by hand' }
   }
 
   const result = await remove({ name: record.origin })

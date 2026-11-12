@@ -100,7 +100,7 @@ def _install_dependencies(provider_name: str) -> None:
     if status:
         print(f"  ✓ Dependencies prepared for {provider_name}")
         if status == "restart_required":
-            print("  Restart Hermes to use the prepared dependencies.")
+            print("  Restart A2Assistant to use the prepared dependencies.")
 
     # Also show external (non-pip) dependencies that are missing.
     for dep in meta.get("external_dependencies", []):

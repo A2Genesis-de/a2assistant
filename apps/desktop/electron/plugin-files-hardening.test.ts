@@ -119,7 +119,7 @@ describe('only plain files', () => {
     ).toMatchObject({ ok: false, error: 'not-a-file' })
   })
 
-  it.runIf(posix)('refuses a hard link, which may be a second name for Hermes data', async () => {
+  it.runIf(posix)('refuses a hard link, which may be a second name for A2Assistant data', async () => {
     const id = await grantVault()
     fs.linkSync(path.join(hermesHome, 'config.yaml'), path.join(vault, 'notes', 'c.md'))
 
@@ -153,7 +153,7 @@ describe('a swap between the check and the open is refused', () => {
     }) as never)
   }
 
-  it.runIf(posix)('a parent folder swapped for a link into the Hermes home: no file lands there', async () => {
+  it.runIf(posix)('a parent folder swapped for a link into the A2Assistant home: no file lands there', async () => {
     const id = await grantVault()
     const sub = path.join(vault, 'sub')
     fs.mkdirSync(sub)
@@ -172,7 +172,7 @@ describe('a swap between the check and the open is refused', () => {
     expect(fs.existsSync(path.join(hermesHome, 'pwn.txt'))).toBe(false)
   })
 
-  it.runIf(posix)('a checked file swapped for a link to Hermes data is not read or written', async () => {
+  it.runIf(posix)('a checked file swapped for a link to A2Assistant data is not read or written', async () => {
     const id = await grantVault()
     const note = path.join(vault, 'notes', 'a.md')
 
@@ -218,7 +218,7 @@ describe('a swap before the final look is refused too', () => {
     }) as never)
   }
 
-  it.runIf(posix)('a checked file swapped for a link to Hermes data: not read, not written', async () => {
+  it.runIf(posix)('a checked file swapped for a link to A2Assistant data: not read, not written', async () => {
     const id = await grantVault()
     const note = path.join(vault, 'notes', 'a.md')
 
@@ -244,7 +244,7 @@ describe('a swap before the final look is refused too', () => {
     expect(fs.readFileSync(path.join(hermesHome, 'config.yaml'), 'utf8')).toBe('model: secret-config\n')
   })
 
-  it.runIf(posix)('a parent folder swapped for a link into the Hermes home: not read, not written', async () => {
+  it.runIf(posix)('a parent folder swapped for a link into the A2Assistant home: not read, not written', async () => {
     const id = await grantVault()
     fs.writeFileSync(path.join(hermesHome, 'a.md'), 'hermes-secret\n')
     const notes = path.join(vault, 'notes')
@@ -297,7 +297,7 @@ describe('rename, trash and list after a parent swap', () => {
     fs.writeFileSync(path.join(hermesHome, 'a.md'), 'hermes-file\n')
   })
 
-  it.runIf(posix)('rename does not move a Hermes file', async () => {
+  it.runIf(posix)('rename does not move an A2Assistant file', async () => {
     const id = await grantVault()
     const notes = path.join(vault, 'notes')
     swapParentAfterResolve(path.join(notes, 'a.md'), notes)
@@ -361,7 +361,7 @@ describe('rename, trash and list after a parent swap', () => {
     expect(fs.readFileSync(path.join(hermesHome, 'b.md'), 'utf8')).toBe('hermes-file\n')
   })
 
-  it.runIf(posix)('trash does not remove a Hermes file', async () => {
+  it.runIf(posix)('trash does not remove an A2Assistant file', async () => {
     const id = await grantVault()
     const notes = path.join(vault, 'notes')
     swapParentAfterResolve(path.join(notes, 'a.md'), notes)
@@ -370,7 +370,7 @@ describe('rename, trash and list after a parent swap', () => {
     expect(fs.readFileSync(path.join(hermesHome, 'a.md'), 'utf8')).toBe('hermes-file\n')
   })
 
-  it.runIf(posix)('list does not return the Hermes home', async () => {
+  it.runIf(posix)('list does not return the A2Assistant home', async () => {
     const id = await grantVault()
     const sub = path.join(vault, 'notes', 'sub')
     fs.mkdirSync(sub)
@@ -385,7 +385,7 @@ describe('rename, trash and list after a parent swap', () => {
   })
 })
 
-describe('Hermes data mounted inside a granted folder', () => {
+describe('A2Assistant data mounted inside a granted folder', () => {
   // Stands in for a bind mount of the Hermes home at Vault/mounted (present
   // before the grant or added after): same filesystem identity, inside path.
   it('refuses every op under it', async () => {

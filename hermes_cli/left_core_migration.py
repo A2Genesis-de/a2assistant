@@ -201,7 +201,7 @@ def _core_platforms_except(platform: str, *others: str) -> tuple[str, ...]:
 # platform's default composite carried them. A third-party plugin platform core never knew stays uncovered.
 _YUANBAO_OFF_PLATFORMS = _core_platforms_except("yuanbao", "homeassistant")
 
-_YUANBAO_NOTICE = ("Yuanbao is now a Hermes Labs plugin: built by Nous Research, not supported, and likely not "
+_YUANBAO_NOTICE = ("Yuanbao is now an A2Assistant Labs plugin: built by Nous Research, not supported, and likely not "
                    "maintained going forward. Fixes from the community are welcome.")
 
 
@@ -594,7 +594,7 @@ LEFT_CORE: tuple[LeftCoreFeature, ...] = (
     LeftCoreFeature(
         # MCP clients that launch `hermes mcp serve` are configured outside Hermes, so no home shows the
         # feature in use: nothing installs automatically, and the old spelling prints where it went.
-        plugin="mcp-serve", label="Hermes as an MCP server", in_use=lambda home, **_: False,
+        plugin="mcp-serve", label="A2Assistant as an MCP server", in_use=lambda home, **_: False,
         unchanged="the conversation tools keep their names; MCP clients change their args to [\"mcp-serve\"]",
         command="mcp-serve", old_command="hermes mcp serve",
     ),
@@ -1114,7 +1114,7 @@ def _pending(home: Path, *, say: Callable[[str], None], process_env: bool = Fals
         if catalog_source(feature.plugin) is None:
             _note_failure(home, feature.plugin)
             say(_noticed(f"  ⚠ {feature.label} moved out of core into the '{feature.plugin}' plugin, which this "
-                         f"Hermes cannot find in the plugin catalog yet. Run "
+                         f"A2Assistant cannot find in the plugin catalog yet. Run "
                          f"`{_install_command(feature.plugin, home)}` once it is listed.", home, feature, process_env))
             continue
         out.append(feature)
@@ -1307,7 +1307,7 @@ def recover_at_startup(*, say: Optional[Callable[[str], None]] = None, gateway_s
         if not lazy_installs_allowed():
             for feature in features:
                 report(_noticed(f"⚠ {feature.label} moved out of core and its '{feature.plugin}' plugin is not "
-                                f"installed, so it is off. security.allow_lazy_installs is off, so Hermes did not "
+                                f"installed, so it is off. security.allow_lazy_installs is off, so A2Assistant did not "
                                 f"fetch it: run `{_install_command(feature.plugin, home)}`.", home, feature, True))
             return []
         installed = []

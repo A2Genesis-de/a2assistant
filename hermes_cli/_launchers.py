@@ -104,6 +104,7 @@ WINDOWS_BIN_LAUNCHERS = ("hermes", "hermes-acp")
 
 CONVENIENCE_COMMANDS = {
     "hermes-agent": ("hermes", "--run-module", "run_agent"),
+    "a2assistant": ("hermes",),
 }
 
 #: command name -> (entry module, callable) — mirrors pyproject.toml
@@ -1014,7 +1015,7 @@ def owns_user_path(root: Path) -> bool:
 
     logging.getLogger(__name__).info(
         "User PATH left unchanged: new consoles use %s, not %s",
-        console_root or "an unknown Hermes home", root)
+        console_root or "an unknown A2Assistant home", root)
     return False
 
 

@@ -141,7 +141,7 @@ test('a failed run with no receipt keeps the generic retry dialog', () => {
   const { lines, dialogs } = failedReport(home, 'run-plain', null)
 
   assert.equal(dialogs.length, 1)
-  assert.equal(dialogs[0].message, "Hermes couldn't finish updating")
+  assert.equal(dialogs[0].message, "A2Assistant couldn't finish updating")
   assert.deepEqual(dialogs[0].buttons, ['Try again', 'Open log', 'Close'])
   assert.ok(
     lines.some(line => line.includes('detached update FAILED (exit 1)') && !line.includes('stop_class')),

@@ -156,7 +156,7 @@ export class AppInstallerStrategy {
 
     this.deps.emitUpdateProgress({
       stage: 'restart',
-      message: 'Applying the Hermes update — the window will close and the App Installer will finish.',
+      message: 'Applying the A2Assistant update — the window will close and the App Installer will finish.',
       percent: 100
     })
 
@@ -171,7 +171,7 @@ export class AppInstallerStrategy {
             this.deps.emitUpdateProgress({
               stage: 'restart',
               percent: 100,
-              message: 'Automatic relaunch could not be registered. Reopen Hermes after App Installer finishes.'
+              message: 'Automatic relaunch could not be registered. Reopen A2Assistant after App Installer finishes.'
             })
         }
       },

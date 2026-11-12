@@ -244,7 +244,7 @@ export function createPluginFiles(deps: PluginFilesDeps): PluginFiles {
     const avoid = await protectedRoots()
 
     if (overlapsProtected(real, avoid)) {
-      return refuse('protected', 'That folder overlaps Hermes data and cannot be used by a plugin.')
+      return refuse('protected', 'That folder overlaps A2Assistant data and cannot be used by a plugin.')
     }
 
     await refusePseudo(real)
@@ -262,7 +262,7 @@ export function createPluginFiles(deps: PluginFilesDeps): PluginFiles {
       }
 
       if (avoid.some(protectedRoot => insideLoose(real, protectedRoot)) || secondPath(real)) {
-        refuse('protected', 'That path is Hermes data and cannot be used by a plugin.')
+        refuse('protected', 'That path is A2Assistant data and cannot be used by a plugin.')
       }
     }
 
@@ -270,7 +270,7 @@ export function createPluginFiles(deps: PluginFilesDeps): PluginFiles {
     // filesystem identity gives it away.
     const refuseMounted = async (real: string) => {
       if (await protectedIdentityWithin(real, root, avoid)) {
-        refuse('protected', 'That path is Hermes data mounted inside the folder and cannot be used by a plugin.')
+        refuse('protected', 'That path is A2Assistant data mounted inside the folder and cannot be used by a plugin.')
       }
     }
 
@@ -361,7 +361,7 @@ export function createPluginFiles(deps: PluginFilesDeps): PluginFiles {
         const roots = await protectedRoots()
 
         if (overlapsProtected(real, roots) || (await overlapsByIdentity(real, roots))) {
-          return fail('protected', 'That folder holds Hermes data and cannot be shared with a plugin.')
+          return fail('protected', 'That folder holds A2Assistant data and cannot be shared with a plugin.')
         }
 
         await refusePseudo(real)

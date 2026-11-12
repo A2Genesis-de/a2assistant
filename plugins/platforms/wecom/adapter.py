@@ -677,7 +677,7 @@ def qr_scan_for_bot_info(*, timeout_seconds: int = _QR_POLL_TIMEOUT) -> Optional
         print(f"\n  Scan the QR code above, or open this URL directly:\n  {page_url}")
     except Exception:
         print(f"  Open this URL in WeCom on your phone:\n\n  {page_url}\n")
-        print("  Tip: from the Hermes environment, run: "
+        print("  Tip: from the A2Assistant environment, run: "
               f"{install_hint('messaging')} "
               "to display a scannable QR code here next time")
     print("\n  Fetching configuration results...", end="", flush=True)

@@ -69,7 +69,7 @@ def _cu_status(args) -> int:
                 print(f"    Check: systemctl --user status {unit}  (reinstalling the driver does not start it)")
                 rc = 1
     print("  ✓ Runtime contract ready (externally managed)." if override
-          else "  ✓ Runtime contract ready (Hermes PM pin).")
+          else "  ✓ Runtime contract ready (A2Assistant PM pin).")
     return rc
 
 
@@ -145,7 +145,7 @@ def build_computer_use_parser(subparsers) -> None:
         "install", help="Install or repair the cua-driver binary (macOS/Windows/Linux)")
     computer_use_install.add_argument(
         "--upgrade", action="store_true",
-        help="Reconcile cua-driver with Hermes' pinned PM package and repair host setup.")
+        help="Reconcile cua-driver with A2Assistant's pinned PM package and repair host setup.")
     computer_use_sub.add_parser("status", help="Check the selected cua-driver and its runtime contract")
     computer_use_doctor = computer_use_sub.add_parser(
         "doctor", help="Run cua-driver `health_report` and surface the check matrix",
@@ -170,7 +170,7 @@ def build_computer_use_parser(subparsers) -> None:
         "permissions", help="Check or grant macOS Accessibility + Screen Recording (macOS)",
         description="Computer Use drives the Mac through cua-driver, whose TCC grants\n"
             "attach to cua-driver's own identity (com.trycua.driver) — not the\n"
-            "terminal or the Hermes app. `status` reports the driver's grant\n"
+            "terminal or the A2Assistant app. `status` reports the driver's grant\n"
             "state; `grant` launches CuaDriver via LaunchServices so the macOS\n"
             "permission dialog is attributed to the process that does the work.")
     computer_use_perms_sub = computer_use_perms.add_subparsers(dest="computer_use_perms_action")

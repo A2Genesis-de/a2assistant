@@ -4875,7 +4875,7 @@ def _claim_host_gateway_role(force: bool = False) -> None:
         # The lock is per OS user, so a second tenant root can never win it against the first:
         # refusing 75 here would retry forever and its gateway would never start (#121352).
         logger.warning(
-            "Another Hermes home's gateway owns this host (%s); starting this home's gateway beside it.",
+            "Another A2Assistant home's gateway owns this host (%s); starting this home's gateway beside it.",
             hr.describe(owner))
         return
     if profile_is_standalone(get_hermes_home()):
@@ -5115,7 +5115,7 @@ def main():
         logger.debug("boot bootstrap failed", exc_info=True)
 
     import argparse
-    parser = argparse.ArgumentParser(description="Hermes Gateway - Multi-platform messaging")
+    parser = argparse.ArgumentParser(description="A2Assistant Gateway - Multi-platform messaging")
     parser.add_argument("--config", "-c", help="Path to gateway config file")
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose output")
     args = parser.parse_args()

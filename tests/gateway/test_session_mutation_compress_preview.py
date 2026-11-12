@@ -250,7 +250,7 @@ async def test_no_op_compress_without_a_resident_agent_estimates_the_stored_prom
                                                               model='frozen', toolsets=[]))
     db.append_message(ref.session_id, 'user', 'hi')
     db.append_message(ref.session_id, 'assistant', 'hello')
-    prompt = 'You are Hermes. ' * 400
+    prompt = 'You are A2Assistant. ' * 400
     tools = [{'type': 'function', 'function': {'name': 'read_file', 'description': 'Read a file. ' * 50,
                                                'parameters': {'type': 'object', 'properties': {}}}}]
     db.update_system_prompt(ref.session_id, prompt)

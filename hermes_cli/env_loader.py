@@ -898,8 +898,8 @@ def _refuse_protected_env_from_sources(report, backend=None, environ_before=None
         print(f"  Secret sources: ignored {BACKEND_ENV} from a secrets: source (the config backend is "
               "chosen by .env or the process environment only).", file=sys.stderr)
         return
-    outcome = (f"Hermes does not serve profile home {routed_home} with it." if routed_home is not None
-               else "Hermes does not start with it.")
+    outcome = (f"A2Assistant does not serve profile home {routed_home} with it." if routed_home is not None
+               else "A2Assistant does not start with it.")
     raise ConfigBackendUnavailable(
         f"A secrets: source supplies {', '.join(clash)}, which the {backend.name!r} config "
         "backend uses to reach its config plane. That credential must come from auth.json or .env, never "

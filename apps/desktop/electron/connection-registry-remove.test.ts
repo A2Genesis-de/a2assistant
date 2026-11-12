@@ -196,7 +196,7 @@ it('applying another remote profile on a saved SSH host adds it and leaves the s
   expect(next.connections.find(c => c.id === next.primary)?.remoteProfile).toBe('writer')
 })
 
-it('saving a corrected key or Hermes path updates the matching SSH entry in place, set or cleared', () => {
+it('saving a corrected key or A2Assistant path updates the matching SSH entry in place, set or cleared', () => {
   const registry = normalizeRegistry({
     version: 2,
     primary: 'coder',

@@ -250,7 +250,7 @@ test('a Webapp tab opened on a named profile runs and reads that profile', async
     await expect.poll(() => storedSessionForMarker(sandbox, 'p2', U(1)), { timeout: 60_000 }).toBe(sessionId)
     expect(storedSessionForMarker(sandbox, 'default', U(1))).toBeNull()
 
-    const ended = page.getByText('Hermes ended this turn without a reply')
+    const ended = page.getByText('A2Assistant ended this turn without a reply')
     await page.waitForTimeout(50_000)
     await expect(ended).toHaveCount(0)
     await expect(page.getByText(A(1)).first()).toBeVisible({ timeout: 120_000 })

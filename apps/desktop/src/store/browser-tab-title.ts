@@ -28,7 +28,7 @@ import { $unreadSessionCount } from './session-dot-state'
 import { $focusedStoredSessionId } from './session-focus'
 import { $attentionSessionIds, $sessionTiles, $workingSessionIds } from './session-states'
 
-const APP_NAME = 'Hermes'
+const APP_NAME = 'A2Assistant'
 
 export interface BrowserTabStatus {
   /** The focused session's name, or empty when it has none yet. */

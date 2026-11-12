@@ -49,7 +49,7 @@ _HOMEBREW_CI_POLLER_HINT = (
 
 # A foreground call whose only backgrounding was a trailing `&` is spawned as background=true.
 _AUTO_BACKGROUND_NOTE = (
-    "Ran in the background (the trailing & was converted to background=true; Hermes tracks the "
+    "Ran in the background (the trailing & was converted to background=true; A2Assistant tracks the "
     "process). Do NOT re-run it. Use process_manage (poll/log/wait/kill, session_id above) to check it."
 )
 

@@ -38,7 +38,7 @@ function check(overrides: Partial<MissingLocalProfileCheck> = {}): MissingLocalP
   }
 }
 
-test('a remembered local profile missing from the Hermes home falls back to default on disk', () => {
+test('a remembered local profile missing from the A2Assistant home falls back to default on disk', () => {
   createDesktopProfilePreferences(target).remember('hermes-contributor')
 
   const preferences = createDesktopProfilePreferences(target)
