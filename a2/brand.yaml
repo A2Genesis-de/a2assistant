@@ -281,5 +281,15 @@ derived:
   - run: [scripts/run-in-hermes-env, bash, -c, '"$__HERMES_TEST_PYTHON" scripts/ci/prompt_surface.py render']
   - run: [scripts/run-in-hermes-env, bash, -c, '"$__HERMES_TEST_PYTHON" scripts/gen_gateway_contracts.py']
   - run: [scripts/run-in-hermes-env, bash, -c, '"$__HERMES_TEST_PYTHON" scripts/gen_gateway_command_parity.py']
-  - run: [scripts/run-in-hermes-env, bash, -c, '"$__HERMES_TEST_PYTHON" scripts/build_model_catalog.py']
+  - run:
+      - scripts/run-in-hermes-env
+      - bash
+      - -c
+      - >-
+        "$__HERMES_TEST_PYTHON" scripts/build_model_catalog.py &&
+        "$__HERMES_TEST_PYTHON" -c "import json, pathlib, subprocess;
+        p = pathlib.Path('website/static/api/model-catalog.json');
+        text = p.read_text(encoding='utf-8-sig');
+        head = subprocess.run(['git', 'show', 'HEAD:' + p.as_posix()], capture_output=True, check=True, timeout=60);
+        p.write_text(text.replace(json.loads(text)['updated_at'], json.loads(head.stdout)['updated_at'], 1), encoding='utf-8')"
   - run: [scripts/run-in-hermes-env, bash, -c, '"$__HERMES_TEST_PYTHON" scripts/gen_plugin_api_docs.py']
