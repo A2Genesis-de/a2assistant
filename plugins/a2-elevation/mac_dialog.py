@@ -31,13 +31,14 @@ class SwiftHelper:
         self._binary.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
         subprocess.run(
             ["/usr/bin/swiftc", "-O", str(self._source), "-o", str(self._binary)],
-            check=True, capture_output=True, text=True, encoding="utf-8", timeout=300,
+            check=True, capture_output=True, text=True, encoding="utf-8", timeout=300, stdin=subprocess.DEVNULL,
         )
         return self._binary
 
 
 def launch_dialog(command: list[str]) -> subprocess.Popen:
-    return subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding="utf-8")
+    pipe = subprocess.PIPE
+    return subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=pipe, stderr=pipe, text=True, encoding="utf-8")
 
 
 def dialog_command(binary: Path, request: ApprovalRequest) -> list[str]:
