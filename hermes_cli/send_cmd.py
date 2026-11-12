@@ -271,7 +271,7 @@ def register_send_subparser(subparsers) -> argparse.ArgumentParser:
         "send",
         help="Send a message to a configured platform (scripts, cron jobs, CI).",
         description=(
-            "Pipe text from any shell script to any messaging platform Hermes "
+            "Pipe text from any shell script to any messaging platform A2Assistant "
             "is already configured for. Reuses the gateway's platform "
             f"credentials ({hermes_home / '.env'} + "
             f"{hermes_home / 'config.yaml'}) — no LLM, "

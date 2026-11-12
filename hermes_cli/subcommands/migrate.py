@@ -52,7 +52,7 @@ def _add_agent_import_parsers(migrate_subparsers) -> None:
 
     for source in IMPORT_SOURCES:
         sub = migrate_subparsers.add_parser(
-            source.name, help=f"Import your {source.label} setup into Hermes",
+            source.name, help=f"Import your {source.label} setup into A2Assistant",
             description=f"Import your {source.label} setup into the active profile through the "
                 "agent-importers plugin (installed from the plugin catalog when missing). Always "
                 "previews first and asks before changing anything.")

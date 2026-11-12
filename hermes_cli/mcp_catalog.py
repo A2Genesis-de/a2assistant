@@ -322,7 +322,7 @@ def _parse_manifest(path: Path) -> CatalogEntry:
     if mv != _MANIFEST_VERSION:
         raise CatalogError(
             f"{path}: manifest_version {mv!r} unsupported "
-            f"(this Hermes understands version {_MANIFEST_VERSION})"
+            f"(this A2Assistant understands version {_MANIFEST_VERSION})"
         )
     name = data.get("name") or ""
     if not name or not re.match(r"^[A-Za-z0-9_-]+$", name):
@@ -838,7 +838,7 @@ def _install_entry(entry: CatalogEntry, *, enable: bool, preloaded_env: Optional
     _say(
         f"  ✓ Installed '{entry.name}' "
         f"({'enabled' if enable else 'disabled'}). "
-        f"Start a new Hermes session to load its tools."
+        f"Start a new A2Assistant session to load its tools."
     )
     if entry.post_install:
         print()

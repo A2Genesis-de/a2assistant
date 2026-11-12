@@ -108,7 +108,7 @@ export async function confirmSendDiagnostics(): Promise<void> {
     const gateway = $gateway.get()
 
     if (!gateway) {
-      throw new Error('Hermes gateway unavailable')
+      throw new Error('A2Assistant gateway unavailable')
     }
 
     const extraFiles = { ...(await collectLocalExtras()), ...current.extraFiles }

@@ -148,7 +148,7 @@ def _consent_python_deps(
             "Run `hermes plugins enable` when ready to prepare them.[/dim]\n"
         )
         return False, _ConsentRefusal("dependency install skipped (non-interactive)", "non_interactive")
-    if not _ask_yes_no(("python", plugin_name, deps), "  Prepare these with Hermes through PM now? [y/N]: ", console):
+    if not _ask_yes_no(("python", plugin_name, deps), "  Prepare these with A2Assistant through PM now? [y/N]: ", console):
         console.print(
             "[dim]Skipped — run `hermes plugins enable` when ready "
             "to prepare them.[/dim]\n"
@@ -229,7 +229,7 @@ def _check_manifest_version(manifest: dict, plugin_name: str) -> None:
     reason = manifest_version_error(manifest, plugin_name)
     if reason:
         from hermes_cli.config import recommended_update_command
-        raise _pc().PluginOperationError(f"{reason} Run {recommended_update_command()} to update Hermes.",
+        raise _pc().PluginOperationError(f"{reason} Run {recommended_update_command()} to update A2Assistant.",
                                          failure_class="incompatible")
 
 
@@ -604,7 +604,7 @@ def _announce_source(identifier: str, console, *, brief: bool) -> tuple[Optional
     catalog pin (plus the entry's description unless *brief*) or the custom-source warning."""
     from hermes_cli import plugins_cmd_catalog as catalog
     if not catalog.looks_like_catalog_name(identifier):
-        console.print("[yellow]Warning:[/yellow] custom (unreviewed) source — not from the Hermes catalog.")
+        console.print("[yellow]Warning:[/yellow] custom (unreviewed) source — not from the A2Assistant catalog.")
         return None, identifier
     entry = catalog.resolve_catalog_name(identifier, console)
     console.print(f"[bold]{entry.name}[/bold] [cyan]\\[{entry.tier}][/cyan] [dim]pinned @ {entry.sha[:8]}[/dim]")
@@ -678,7 +678,7 @@ def cmd_install(
     if not _pc()._looks_like_plugin_dir(target):
         console.print(
             f"[yellow]Warning:[/yellow] {installed_name} doesn't contain plugin.yaml, "
-            f"plugin.json, or __init__.py. It may not be a valid Hermes plugin.")
+            f"plugin.json, or __init__.py. It may not be a valid A2Assistant plugin.")
     _prompt_plugin_env_vars(installed_manifest, console)
 
     from pm.workspace import enabled_plugin_dirs
@@ -840,11 +840,11 @@ def _resolve_source(identifier: str, catalog_name: Optional[str]) -> tuple:
     if catalog_name:
         entry = catalog.get_live_catalog_entry(catalog_name)
         if entry is None:
-            return None, identifier, warnings, {"ok": False, "error": f"'{catalog_name}' is not in the Hermes plugin catalog."}
+            return None, identifier, warnings, {"ok": False, "error": f"'{catalog_name}' is not in the A2Assistant plugin catalog."}
         warnings.extend(_known_issue_warnings(entry))
         identifier = entry.install_identifier
     else:
-        warnings.append("Custom (unreviewed) source — not from the Hermes catalog.")
+        warnings.append("Custom (unreviewed) source — not from the A2Assistant catalog.")
     try:
         git_url = _pc()._resolve_git_url(identifier)[0]
         if git_url.startswith(("http://", "file://")):

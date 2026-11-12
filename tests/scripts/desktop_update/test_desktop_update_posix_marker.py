@@ -254,7 +254,7 @@ def test_nonzero_exit_after_the_commit_point_is_installed_with_a_followup(tmp_pa
     assert result.returncode == 0, result.stdout + result.stderr
     receipt = json.loads((home / ".hermes-update-result.json").read_text(encoding="utf-8-sig"))
     assert (receipt["ok"], receipt["exit_code"], receipt["manual"]) == (True, 0, True), receipt
-    assert receipt["message"].startswith("Hermes was updated, but"), receipt
+    assert receipt["message"].startswith("A2Assistant was updated, but"), receipt
     assert [w.split(":")[0] for w in receipt["warnings"]] == ["update"], receipt
     assert f"exited {code} after the commit point" in receipt["warnings"][0]
 

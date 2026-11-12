@@ -1110,8 +1110,8 @@ class TestTeamsRequireMention:
         ("channel", {}, False),
         ("groupChat", {}, False),
         ("channel", {"text": "<at>Alice</at> hi", "mentioned_id": "29:alice"}, False),  # someone else
-        ("channel", {"text": "<at>Hermes</at> hi", "mentioned_id": "28:bot-id"}, True),  # wire form of the bot id
-        ("groupChat", {"text": "<at>Hermes</at> hi", "mentioned_id": "bot-id"}, True),
+        ("channel", {"text": "<at>A2Assistant</at> hi", "mentioned_id": "28:bot-id"}, True),  # wire form of the bot id
+        ("groupChat", {"text": "<at>A2Assistant</at> hi", "mentioned_id": "bot-id"}, True),
         ("channel", {"reply_to_id": "bot-msg-1"}, True),
         ("personal", {}, True),
     ])

@@ -89,7 +89,7 @@ export function cleanStaleAppOutDir(appOutDir) {
  * safe fallback and matches pre-#69179 behavior exactly.
  */
 /** @param {string | null | undefined} appOutDir @param {string} [productExeName] @returns {boolean} */
-export function preserveRollbackBackup(appOutDir, productExeName = 'Hermes.exe') {
+export function preserveRollbackBackup(appOutDir, productExeName = 'A2Assistant.exe') {
   if (!appOutDir || typeof appOutDir !== 'string' || !existsSync(appOutDir)) {
     return false
   }
@@ -121,7 +121,7 @@ export default async function beforePack(context) {
     // post-build integrity gate (#69179) instead of destroying it. Falls
     // through to the plain wipe when the old tree is partial/corrupt or the
     // rename fails.
-    const productExe = `${(context && context.packager?.appInfo?.productFilename) || 'Hermes'}.exe`
+    const productExe = `${(context && context.packager?.appInfo?.productFilename) || 'A2Assistant'}.exe`
     if (platformName === 'win32' && preserveRollbackBackup(appOutDir, productExe)) {
       console.log(`[before-pack] preserved previous unpacked dir for rollback: ${appOutDir}.bak`)
     } else if (cleanStaleAppOutDir(appOutDir)) {

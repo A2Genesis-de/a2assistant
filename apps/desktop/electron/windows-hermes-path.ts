@@ -164,14 +164,14 @@ export async function resolveVenvHermesCommand(
   // cwd at the checkout root, no PYTHONPATH.
   if (!(await canImportHermesCli(python, { cwd: directoryExists(root) ? root : undefined }))) {
     rememberLog?.(
-      `Ignoring venv Hermes at ${python}: runtime import probe failed (broken/partial venv); falling through to bootstrap.`
+      `Ignoring venv A2Assistant at ${python}: runtime import probe failed (broken/partial venv); falling through to bootstrap.`
     )
 
     return null
   }
 
   return {
-    label: `existing Hermes Python at ${python}`,
+    label: `existing A2Assistant Python at ${python}`,
     command: python,
     args: ['-m', 'hermes_cli.main', ...backendArgs],
     bootstrap: false,

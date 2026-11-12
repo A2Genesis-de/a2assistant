@@ -180,7 +180,7 @@ describe('FreeTierSignInDialog', () => {
         setOnboardingSurfaceActive('onboarding', false)
       })
 
-      await waitFor(() => expect(screen.getByText('Keep going with Hermes')).toBeTruthy())
+      await waitFor(() => expect(screen.getByText('Keep going with A2Assistant')).toBeTruthy())
       expect(requestGateway).toHaveBeenCalledWith('free_tier.claim_nudge', undefined)
     })
 
@@ -196,7 +196,7 @@ describe('FreeTierSignInDialog', () => {
 
       await act(async () => noteFreeTierTurnComplete())
 
-      await waitFor(() => expect(screen.getByText('Keep going with Hermes')).toBeTruthy())
+      await waitFor(() => expect(screen.getByText('Keep going with A2Assistant')).toBeTruthy())
     })
 
     it('Sign in continues into the normal sign-in flow', async () => {
@@ -215,7 +215,7 @@ describe('FreeTierSignInDialog', () => {
       await act(async () => screen.getByRole('button', { name: 'Not now' }).click())
 
       expect($freeTierSignIn.get()).toEqual({ status: 'closed' })
-      expect(screen.queryByText('Keep going with Hermes')).toBeNull()
+      expect(screen.queryByText('Keep going with A2Assistant')).toBeNull()
     })
 
     it('an app connected without the trial: claims the connector offer and shows its copy', async () => {
@@ -230,7 +230,7 @@ describe('FreeTierSignInDialog', () => {
 
       await waitFor(() => expect(screen.getByText('Keep your connected apps')).toBeTruthy())
       expect(requestGateway).toHaveBeenCalledWith('free_tier.claim_nudge', { kind: 'connector' })
-      expect(screen.queryByText('Keep going with Hermes')).toBeNull()
+      expect(screen.queryByText('Keep going with A2Assistant')).toBeNull()
     })
   })
 })

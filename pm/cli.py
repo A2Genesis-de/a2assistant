@@ -870,7 +870,7 @@ def cmd_repair(args) -> int:
 
     if not recover_if_needed(repo_root(), explicit=True):
         return 1
-    print("Restart Hermes to use the repaired dependency environment.")
+    print("Restart A2Assistant to use the repaired dependency environment.")
     return 0
 
 
@@ -1007,7 +1007,7 @@ def main(argv=None) -> int:
     p = sub.add_parser(
         "environment", help="make a named side environment current and print its python",
         description="Build or reuse HERMES_HOME/environments/NAME, an isolated venv that never "
-                    "touches Hermes's own: --extra installs the pins of a declared extra, "
+                    "touches A2Assistant's own: --extra installs the pins of a declared extra, "
                     "--requirement an ad hoc bounded requirement (both repeatable). "
                     "Prints only the interpreter path on stdout.")
     p.add_argument("name")

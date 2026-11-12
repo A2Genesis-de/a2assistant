@@ -205,7 +205,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     print("\n".join(problems))
     print(f"\n{len(problems)} detached spawn(s) flagged. A child in its own session/group outlives a "
-          "SIGKILLed Hermes. Start long-lived children with hermes_cli.process_identity.spawn_owned "
+          "SIGKILLed A2Assistant. Start long-lived children with hermes_cli.process_identity.spawn_owned "
           "(or hand the group to own_process_groups), or mark a child that must outlive its owner / "
           f"is awaited with a group-killing timeout with `{MARKER} — <why>` (same line or the line above).")
     return 1

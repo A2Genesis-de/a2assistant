@@ -140,7 +140,7 @@ test('a real protocol readiness timeout is classified as a stalled dial', async 
     await vi.advanceTimersByTimeAsync(15_001)
     const error = await outcome
     expect(error).toBeInstanceOf(Error)
-    expect(error.message).toBe('Hermes gateway protocol readiness timed out')
+    expect(error.message).toBe('A2Assistant gateway protocol readiness timed out')
     expect(client.connectionState).toBe('closed')
     expect(isStalledDialError(error)).toBe(true)
   } finally {

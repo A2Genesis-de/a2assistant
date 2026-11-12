@@ -420,7 +420,7 @@ describe('ToolsetConfigPanel', () => {
           {
             name: 'Lightpanda',
             badge: 'local',
-            tag: 'Zig headless browser spawned by Hermes, text-only (no screenshots)',
+            tag: 'Zig headless browser spawned by A2Assistant, text-only (no screenshots)',
             env_vars: [],
             post_setup: 'lightpanda',
             requires_nous_auth: false,
@@ -468,7 +468,7 @@ describe('ToolsetConfigPanel', () => {
           {
             name: 'Lightpanda',
             badge: 'local',
-            tag: 'Zig headless browser spawned by Hermes, text-only (no screenshots)',
+            tag: 'Zig headless browser spawned by A2Assistant, text-only (no screenshots)',
             env_vars: [],
             post_setup: 'lightpanda',
             requires_nous_auth: false,
@@ -627,7 +627,7 @@ describe('ToolsetConfigPanel', () => {
             {
               name: 'Lightpanda',
               badge: 'free',
-              tag: 'Zig headless browser spawned by Hermes, text-only (no screenshots)',
+              tag: 'Zig headless browser spawned by A2Assistant, text-only (no screenshots)',
               env_vars: [],
               post_setup: 'lightpanda',
               requires_nous_auth: false,
@@ -655,7 +655,7 @@ describe('ToolsetConfigPanel', () => {
             {
               name: 'Lightpanda',
               badge: 'free',
-              tag: 'Zig headless browser spawned by Hermes, text-only (no screenshots)',
+              tag: 'Zig headless browser spawned by A2Assistant, text-only (no screenshots)',
               env_vars: [],
               post_setup: 'lightpanda',
               requires_nous_auth: false,

@@ -491,7 +491,7 @@ DANGEROUS_PATTERNS = [
     (r'\bsc(?:\.exe)?\s+(?:stop|delete)\b', "stop/delete service (sc)"),
     # Windows-form credential paths; the POSIX ~/.ssh patterns never match drive-letter or backslash spellings.
     (r'\busers[\\/][^\\/\s]+[\\/]\.ssh\b', "access to SSH keys (Windows path)"),
-    (r'\bappdata[\\/](?:local|roaming)[\\/]hermes[^\n]*\.env\b', "access to Hermes secrets (Windows path)"),
+    (r'\bappdata[\\/](?:local|roaming)[\\/]hermes[^\n]*\.env\b', "access to A2Assistant secrets (Windows path)"),
     # ── end of Windows tier
     (r'\bchmod\s+(-[^\s]*\s+)*(777|666|o\+[rwx]*w|a\+[rwx]*w)\b', "world/other-writable permissions"),
     (r'\bchmod\s+--recursive\b.*(777|666|o\+[rwx]*w|a\+[rwx]*w)', "recursive world/other-writable (long flag)"),
@@ -642,14 +642,14 @@ DANGEROUS_PATTERNS = [
     # write_file/patch deny so the terminal side is not an open door.
     # In-place edit of a Hermes-managed security file (~/.hermes/config.yaml or .env). sed -i bypasses the
     # redirection/tee patterns above because it mutates the file directly. See #14639.
-    (rf'\bsed\s+-[^\s]*i.*(?:{_HERMES_CONFIG_PATH}|{_HERMES_ENV_PATH})', "in-place edit of Hermes config/env"),
-    (rf'\bsed\s+--in-place\b.*(?:{_HERMES_CONFIG_PATH}|{_HERMES_ENV_PATH})', "in-place edit of Hermes config/env (long flag)"),
+    (rf'\bsed\s+-[^\s]*i.*(?:{_HERMES_CONFIG_PATH}|{_HERMES_ENV_PATH})', "in-place edit of A2Assistant config/env"),
+    (rf'\bsed\s+--in-place\b.*(?:{_HERMES_CONFIG_PATH}|{_HERMES_ENV_PATH})', "in-place edit of A2Assistant config/env (long flag)"),
     # perl/ruby -i: the flag may be its own token after other flags (`-p -i -e`), combined (`-pi`), or carry a backup
     # suffix (`-i.bak`), so match any flag token containing `i` anywhere; `perl -e '...'` (no -i) does not trip.
     # perl -i and ruby -i perform the same in-place mutation as sed -i but are not caught by the -e/-c
     # script-execution pattern above (which targets code evaluation, not file mutation). Pairs the sed -i
     # coverage from #14639.
-    (rf'\b(?:perl|ruby)\b.*(?:^|\s)-[^\s]*i\b.*(?:{_HERMES_CONFIG_PATH}|{_HERMES_ENV_PATH})', "in-place edit of Hermes config/env (perl/ruby)"),
+    (rf'\b(?:perl|ruby)\b.*(?:^|\s)-[^\s]*i\b.*(?:{_HERMES_CONFIG_PATH}|{_HERMES_ENV_PATH})', "in-place edit of A2Assistant config/env (perl/ruby)"),
     # Interpreter heredocs are handled by _execution_flag_findings(); only shell heredocs stay
     # regex-based. `bash <<'EOF'` runs arbitrary commands without triggering the `bash -c` path.
     (rf'\b(?:{_SHELL_NAMES_RE})\s+<<', "shell execution via heredoc"),

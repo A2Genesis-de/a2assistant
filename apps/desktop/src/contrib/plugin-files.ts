@@ -70,7 +70,7 @@ export interface PluginFiles {
   trash: (folder: string, path: string) => Promise<PluginFilesResult>
 }
 
-const unavailable = { ok: false as const, error: 'unavailable', message: 'This Hermes Desktop build has no plugin file access.' }
+const unavailable = { ok: false as const, error: 'unavailable', message: 'This A2Assistant Desktop build has no plugin file access.' }
 
 const bridge = () => (typeof window === 'undefined' ? undefined : window.hermesDesktop?.pluginFiles)
 

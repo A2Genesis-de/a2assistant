@@ -96,7 +96,7 @@ def test_a_yuanbao_home_gets_the_plugin_once_with_the_labs_notice(tmp_path):
     assert lcm.migrate_home(home, install=install, say=said.append) == ["yuanbao"]
     assert lcm.migrate_home(home, install=install, say=said.append) == []
     assert calls == ["yuanbao"]
-    assert "Yuanbao is now a Hermes Labs plugin: built by Nous Research, not supported" in said[0]
+    assert "Yuanbao is now an A2Assistant Labs plugin: built by Nous Research, not supported" in said[0]
     # The yb_* tools lived only in hermes-yuanbao: every other platform keeps them off.
     from hermes_cli.config import read_user_config_raw
     known = read_user_config_raw(home / "config.yaml")["known_plugin_toolsets"]

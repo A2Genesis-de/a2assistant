@@ -149,9 +149,9 @@ def test_the_opening_plays_the_greeting_and_name_card_until_the_name_card_was_sh
 
 
 @pytest.mark.parametrize("locale, opens_with, asks", [
-    ("de", "Hallo, ich bin Hermes.", "Wie darf ich Sie nennen?"),
-    ("zh_TW", "你好，我是 Hermes。我們", "我該怎麼稱呼你？"),
-    ("ja-JP", "こんにちは、Hermes です。", "なんとお呼びすればいいですか？"),
+    ("de", "Hallo, ich bin A2Assistant.", "Wie darf ich Sie nennen?"),
+    ("zh_TW", "你好，我是 A2Assistant。我們", "我該怎麼稱呼你？"),
+    ("ja-JP", "こんにちは、A2Assistant です。", "なんとお呼びすればいいですか？"),
     ("tlh", GREETING, "What should I call you?"),
     (None, GREETING, "What should I call you?"),
 ])

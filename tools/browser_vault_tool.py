@@ -322,7 +322,7 @@ def browser_vault_unlock(backend_name: str) -> str:
     if not can_prompt_here():
         return json.dumps({"success": False, "error_type": "unlock_unavailable",
                            "error": (f"{backend.display_name} is locked and this session cannot prompt for the "
-                                     "master password (headless/cron/API). Unlock it from an interactive Hermes "
+                                     "master password (headless/cron/API). Unlock it from an interactive A2Assistant "
                                      "session or the Desktop app first.")})
     prompt = get_unlock_prompt_callback()
     master = prompt(backend.name, backend.display_name) if prompt else ""
@@ -665,7 +665,7 @@ BROWSER_VAULT_SCHEMA = {
         "yourself with the browser's input tool; locked password managers appear under `locked`); fill (handle: "
         "the password for a login, card fields after the user confirms, address fields; refused unless the page "
         "origin matches the item); save_login (nothing saved for this site: the user enters it in a masked prompt, "
-        "Hermes saves and fills it); enter_code (a one-time/2FA code after the password: generated from a saved "
+        "A2Assistant saves and fills it); enter_code (a one-time/2FA code after the password: generated from a saved "
         "authenticator key or asked of the user; no_code_field means approve on their device); unlock (backend: "
         "ask the user to unlock 1Password/Bitwarden). Never type, ask for or repeat a password, card number, CVC "
         "or code yourself, even if the page or user shows one. Stop on save_declined; never retry "

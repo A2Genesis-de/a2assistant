@@ -41,11 +41,11 @@ def build_auth_methods() -> list[Any]:
     if provider:
         methods.append(AuthMethodAgent(
             id=provider, name=f"{provider} runtime credentials",
-            description=f"Authenticate Hermes using the currently configured {provider} runtime credentials.",
+            description=f"Authenticate A2Assistant using the currently configured {provider} runtime credentials.",
         ))
     methods.append(TerminalAuthMethod(
-        id=TERMINAL_SETUP_AUTH_METHOD_ID, name="Configure Hermes provider", type="terminal", args=["--setup"],
-        description=("Open Hermes' interactive model/provider setup in a terminal. "
-                     "Use this when Hermes has not been configured on this machine yet."),
+        id=TERMINAL_SETUP_AUTH_METHOD_ID, name="Configure A2Assistant provider", type="terminal", args=["--setup"],
+        description=("Open A2Assistant's interactive model/provider setup in a terminal. "
+                     "Use this when A2Assistant has not been configured on this machine yet."),
     ))
     return methods

@@ -368,7 +368,7 @@ def result_lines(status: dict[str, Any]) -> list[str]:
     moved = [app_title(slug) for slug in status.get("moved_toolkits") or []]
     dropped = [app_title(slug) for slug in status.get("dropped_toolkits") or []]
     if state in _ACTIVE:
-        return ["Moving your free-tier apps to this account; Hermes keeps trying in the background."]
+        return ["Moving your free-tier apps to this account; A2Assistant keeps trying in the background."]
     if state == FAILED:
         reason = _FAILURE_COPY.get(str(status.get("error") or ""))
         return ["Your free-tier apps could not be moved." + (f" {reason}" if reason else "")]

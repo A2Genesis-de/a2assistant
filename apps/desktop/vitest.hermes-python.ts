@@ -27,6 +27,6 @@ export default function setup(): void {
     }
   } catch (error: unknown) {
     // Electron tests that need no Python still run; only the contracts above fail, naming HERMES_PYTHON.
-    console.warn(`vitest: could not resolve the Hermes test interpreter: ${String(error)}`)
+    console.warn(`vitest: could not resolve the A2Assistant test interpreter: ${String(error)}`)
   }
 }

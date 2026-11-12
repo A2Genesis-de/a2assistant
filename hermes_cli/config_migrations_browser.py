@@ -82,9 +82,9 @@ def _config_decided(key: str, current: Any) -> bool:
 # ``browser-use`` meant the built-in tools, on whatever browser the value named.
 _BACKEND_REASONS = {
     "browser-use": "browser_exec (Browser Use mode) is the only browser now",
-    "agent-browser": "agent-browser left Hermes; browser_exec is the browser now",
+    "agent-browser": "agent-browser left A2Assistant; browser_exec is the browser now",
     "camofox": "Camofox is now the camofox plugin (`hermes plugins install camofox`)",
-    "local": "browser_exec launches Hermes's packaged Chromium itself (browser.cloud_provider: local)",
+    "local": "browser_exec launches A2Assistant's packaged Chromium itself (browser.cloud_provider: local)",
     **dict.fromkeys(("browserbase", "firecrawl", "nous"),
                     "a cloud browser is chosen with browser.cloud_provider (`hermes tools` → Browser Automation)"),
 }
@@ -115,7 +115,7 @@ def move_agent_browser_env(home, browser: dict) -> tuple[list[str], list[str]]:
         if key == "user_data_dir" and new != value:
             # Resolved against this process's cwd, which need not be where Hermes ran before.
             pinned.append(f"pinned browser.user_data_dir to {new}: {name}={value} was relative to the directory "
-                          f"Hermes ran in; check that the browser logins are there")
+                          f"A2Assistant ran in; check that the browser logins are there")
     return moved, pinned
 
 

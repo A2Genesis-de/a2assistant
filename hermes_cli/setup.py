@@ -88,12 +88,12 @@ def is_interactive_stdin() -> bool:
 def print_noninteractive_setup_guidance(reason: str | None = None) -> None:
     """Print guidance for headless/non-interactive setup flows."""
     print()
-    print(color("☤ Hermes Setup — Non-interactive mode", Colors.CYAN, Colors.BOLD))
+    print(color("☤ A2Assistant Setup — Non-interactive mode", Colors.CYAN, Colors.BOLD))
     print()
     if reason:
         print_info(reason)
     _info("The interactive wizard cannot be used here.", None,
-          "Configure Hermes using environment variables or config commands:",
+          "Configure A2Assistant using environment variables or config commands:",
           "  hermes config set model.provider custom",
           "  hermes config set model.base_url http://localhost:8080/v1",
           "  hermes config set model.default your-model-name", None,
@@ -539,7 +539,7 @@ def setup_telemetry(config: dict):
           "counts, update and install results and timing (with a fixed-list reason",
           "and the stage when one fails; a fresh install is noted on this machine and",
           "counted only once you opt in), crashes,",
-          "startup and reply speed, messaging-platform health, how Hermes gets used",
+          "startup and reply speed, messaging-platform health, how A2Assistant gets used",
           "(agent accuracy and efficiency, active time per surface, which features and",
           "settings are used or switched off, provider setup outcomes), and coarse",
           "machine facts (RAM range, GPU type, version age and channel, updates behind,",
@@ -709,9 +709,9 @@ def _run_setup_wizard_impl(args):
     from hermes_cli.auth import get_active_provider
     is_existing = bool(get_env_value("OPENROUTER_API_KEY") or get_env_value("OPENAI_BASE_URL")
                        or get_active_provider() is not None)
-    _print_banner("│             ☤ Hermes Agent Setup Wizard                │",
+    _print_banner("│             ☤ A2Assistant Setup Wizard                │",
                   "├─────────────────────────────────────────────────────────┤",
-                  "│  Let's configure your Hermes Agent installation.       │",
+                  "│  Let's configure your A2Assistant installation.       │",
                   "│  Press Ctrl+C at any time to exit.                     │")
     imported_from = ""
     if is_existing:
@@ -723,7 +723,7 @@ def _run_setup_wizard_impl(args):
             _record_setup_completed(config)
             return
         print_header("Reconfigure", gap=True)
-        print_success("You already have Hermes configured.")
+        print_success("You already have A2Assistant configured.")
         _info("Running the full wizard — each prompt shows your current value.",
               "Press Enter to keep it, or type a new value to change it.", "",
               "Tip: jump straight to a section with 'hermes setup model|terminal|",
@@ -737,7 +737,7 @@ def _run_setup_wizard_impl(args):
         # outside this dict (the import from another process), so reload it.
         imported_from = offer_agent_import(hermes_home)
         config = load_config()
-        setup_mode = prompt_choice("How would you like to set up Hermes?", [label for label, _ in _FIRST_TIME_MODES], 0)
+        setup_mode = prompt_choice("How would you like to set up A2Assistant?", [label for label, _ in _FIRST_TIME_MODES], 0)
         label, runner = _FIRST_TIME_MODES[setup_mode]
         if runner is not None:
             from hermes_cli import setup_quick

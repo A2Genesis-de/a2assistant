@@ -29,7 +29,7 @@ from agent.browser_page_backend import BrowserPageBackend
 PreviewCallback = Callable[[dict], Any]
 
 _UNAVAILABLE = ("The in-app browser page could not complete the secure vault operation. Keep this chat and its "
-                "login page open in an updated Hermes Desktop, then retry.")
+                "login page open in an updated A2Assistant Desktop, then retry.")
 
 
 def _unavailable() -> dict:

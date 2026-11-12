@@ -322,6 +322,6 @@ def hold_channel_release_behind_runtime(git_cmd, target_ref: str, channel: str) 
     # "newer", not "ahead": the release may sit beside HEAD's line rather than behind it (#140729).
     print(f"→ This build is newer than the {channel} release {target_ref[:12]}: that release predates the "
           "gateway runtime your sessions use, so there is nothing to update to yet.")
-    print(f"  Hermes stays on {head[:12]} until a newer {channel} release ships. "
+    print(f"  A2Assistant stays on {head[:12]} until a newer {channel} release ships. "
           "To follow every commit instead: `hermes update --set-channel main`.")
     return head

@@ -53,7 +53,7 @@ describe('hermes:pluginFiles:request', () => {
     expect(await call('hermes:pluginFiles:grants', 'plexus')).toEqual([])
   })
 
-  it('the Hermes home is refused even when the user picks it', async () => {
+  it('the A2Assistant home is refused even when the user picks it', async () => {
     showOpenDialog.mockResolvedValueOnce({ canceled: false, filePaths: [hermesHome] })
 
     expect(await call('hermes:pluginFiles:request', 'plexus')).toMatchObject({ ok: false, error: 'protected' })

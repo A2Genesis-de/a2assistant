@@ -199,7 +199,7 @@ describe('Linux runtime --no-sandbox relaunch', () => {
       const saved = { ...process.env }
       const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'hermes-appimage-relaunch-'))
       const report = path.join(dir, 'report')
-      const image = path.join(dir, 'Hermes.AppImage')
+      const image = path.join(dir, 'A2Assistant.AppImage')
       const shortDir = '/run/user/1000/hermes-desktop'
       const events: string[] = []
 

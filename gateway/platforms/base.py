@@ -2153,7 +2153,7 @@ class BasePlatformAdapter(ABC):
             self._set_fatal_error(
                 "lock_dir_unusable",
                 f"{resource_desc} lock cannot be taken: the gateway lock directory {exc.filename} is not "
-                f"usable by this user (likely created by an elevated Hermes). To repair, "
+                f"usable by this user (likely created by an elevated A2Assistant). To repair, "
                 f"{unusable_dir_remedy(exc.filename)}; the gateway retries on its own.",
                 retryable=True)
             return False

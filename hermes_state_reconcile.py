@@ -331,7 +331,7 @@ def _reserving(home: Path):
             stack.enter_context(exclusive_maintenance([home], purpose=BROWSE_RECONCILE_PURPOSE))
         except OSError as exc:
             raise DeclarativeDriftError(
-                f'Session store is behind this Hermes version, but its gateway.lock cannot be used '
+                f'Session store is behind this A2Assistant version, but its gateway.lock cannot be used '
                 f'({exc}); nothing was changed.') from exc
         yield
 
@@ -418,7 +418,7 @@ def reconcile_drift_for_browse(path: Path) -> bool:
         restart = 'hermes gateway restart' if holder else _owning_gateway_restart(home)
         who = f' ({holder})' if holder else ''
         return DeclarativeDriftError(
-            f"Session store for profile '{label}' is behind this Hermes version ({drift}), and a "
+            f"Session store for profile '{label}' is behind this A2Assistant version ({drift}), and a "
             f'running gateway owns it{who}, so browsing will not write to it. Restart that gateway '
             f'(`{restart}`) to bring the store up to date.', owned=True)
 
@@ -429,7 +429,7 @@ def reconcile_drift_for_browse(path: Path) -> bool:
         # Otherwise no gateway owns the store: never tell the user to restart one that is not
         # running. The repair path has no time limit.
         return DeclarativeDriftError(
-            f"Session store for profile '{label}' is behind this Hermes version ({reason}) and is too "
+            f"Session store for profile '{label}' is behind this A2Assistant version ({reason}) and is too "
             f'large to verify and update within {BROWSE_RECONCILE_BUDGET_S:.0f}s while browsing. Your '
             f'history is untouched: nothing was changed and the list was not cleared. Run '
             f'`{_repair_command(home)}` to bring it up to date (it has no time limit), then reload.')
@@ -463,7 +463,7 @@ def reconcile_drift_for_browse(path: Path) -> bool:
                         f'({reason}); nothing was changed. Retry in a moment; the list was not cleared.')
                 def not_writable(why):
                     return DeclarativeDriftError(
-                        f"Session store for profile '{label}' is behind this Hermes version ({reason}), "
+                        f"Session store for profile '{label}' is behind this A2Assistant version ({reason}), "
                         f'but {why} is not writable by this user, so browsing cannot add the missing '
                         f'tables/columns; nothing was changed. Fix the permissions, then reload.')
                 # The shared column reconciler logs a readonly ALTER failure and continues, so check
@@ -479,18 +479,18 @@ def reconcile_drift_for_browse(path: Path) -> bool:
                     raise
                 except DeclarativeDriftError as exc:
                     raise DeclarativeDriftError(
-                        f"Session store for profile '{label}' is behind this Hermes version and could not "
+                        f"Session store for profile '{label}' is behind this A2Assistant version and could not "
                         f'be caught up ({exc}); nothing was changed. Run `hermes sessions repair` for that '
                         'profile.') from exc
         except BrowseBudgetExceeded as exc:
             raise too_slow() from exc
         except _SiblingStillBusy as exc:
             raise DeclarativeDriftError(
-                f"Session store for profile '{label}' is being brought up to date by another Hermes "
+                f"Session store for profile '{label}' is being brought up to date by another A2Assistant "
                 f'process ({exc}). Retry in a moment; the list was not cleared.') from exc
     if after := schema_drift_reason(path):
         raise DeclarativeDriftError(
-            f"Session store for profile '{label}' is behind this Hermes version and could not be "
+            f"Session store for profile '{label}' is behind this A2Assistant version and could not be "
             f'caught up ({after}). Run `hermes sessions repair` for that profile.')
     logging.getLogger(__name__).warning(
         'state.db at %s lagged SCHEMA_SQL (%s); added the missing tables/columns for browsing', path, reason)

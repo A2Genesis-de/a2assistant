@@ -91,28 +91,28 @@ def _format_missing_scopes(missing_scopes: list[str]) -> str:
     return (
         "Token is valid but missing required Google Workspace scopes:\n"
         f"{bullets}\n"
-        "Run the Google Workspace setup again from this same Hermes profile to refresh consent."
+        "Run the Google Workspace setup again from this same A2Assistant profile to refresh consent."
     )
 
 
 def install_deps():
     """Sync Hermes' declared Google extra, ready for the next process."""
     if pm is None:
-        print("ERROR: Run this script in the Hermes environment; use hermes setup first.")
+        print("ERROR: Run this script in the A2Assistant environment; use hermes setup first.")
         return False
     try:
         pm.sync_venv(["google"], explicit=True)
     except Exception as exc:
         print(f"ERROR: Failed to install Google dependencies: {exc}")
         return False
-    print("Google dependencies synced. Restart Hermes, then rerun setup to continue OAuth.")
+    print("Google dependencies synced. Restart A2Assistant, then rerun setup to continue OAuth.")
     return True
 
 
 def _ensure_deps():
     """Let PM check imports and stop if activation needs a new process."""
     if pm is None:
-        print("ERROR: Run this script in the Hermes environment; use hermes setup first.")
+        print("ERROR: Run this script in the A2Assistant environment; use hermes setup first.")
         sys.exit(1)
     try:
         pm.ensure_import("google")
@@ -415,7 +415,7 @@ def revoke():
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Google Workspace OAuth setup for Hermes")
+    parser = argparse.ArgumentParser(description="Google Workspace OAuth setup for A2Assistant")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--check", action="store_true", help="Check if auth is valid (exit 0=yes, 1=no)")
     group.add_argument("--check-live", action="store_true", help="Check auth with a real API call (detects disabled_client)")

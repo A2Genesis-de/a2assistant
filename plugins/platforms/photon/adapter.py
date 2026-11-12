@@ -1642,7 +1642,7 @@ def _standalone_token_from_record(port: int) -> tuple[Optional[str], int, str]:
         stale_hint = (f" A stale sidecar runtime record was found (pid {record.get('pid')} is not running)"
                       " — the gateway appears to be down.")
     return None, port, (
-        "Photon standalone send requires a running sidecar. Start the Hermes gateway (which spawns "
+        "Photon standalone send requires a running sidecar. Start the A2Assistant gateway (which spawns "
         f"the sidecar and records its address in <hermes-home>/{_RUNTIME_RECORD_NAME}), "
         "or set PHOTON_SIDECAR_TOKEN in this process's environment." + stale_hint)
 
@@ -1722,7 +1722,7 @@ def register(ctx) -> None:
         # DM GUIDs are adapter-native ids (mirrors the react handler).
         target_ref_syntax_fn=regex_stripped_parser(_SEND_DM_GUID_RE),
         name="photon", label="iMessage via Photon", adapter_factory=lambda cfg: PhotonAdapter(cfg),
-        dashboard_description="Use Hermes through iMessage via Photon's managed Spectrum platform.",
+        dashboard_description="Use A2Assistant through iMessage via Photon's managed Spectrum platform.",
         docs_url="https://hermes-agent.nousresearch.com/docs/user-guide/messaging/photon",
         check_fn=check_requirements, validate_config=validate_config, is_connected=is_connected,
         required_env=["PHOTON_PROJECT_ID", "PHOTON_PROJECT_SECRET"],

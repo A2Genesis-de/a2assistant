@@ -76,7 +76,7 @@ def _codex_device_code_start_error(resp: Any) -> str:
     if "device" in lower and ("authori" in lower or "enable" in lower):
         message = (
             "OpenAI rejected the device-code login request. Your OpenAI "
-            "account may need device-code authorization enabled before Hermes "
+            "account may need device-code authorization enabled before A2Assistant "
             "can start this dashboard login. Enable device-code authorization "
             "in OpenAI, then return here and click Login again."
         )
@@ -665,7 +665,7 @@ def _oauth_provider_disconnect_hint(provider: dict[str, Any], status: dict[str, 
     if provider.get("flow") == "external" and provider.get("id") != "anthropic":
         if _oauth_provider_disconnect_command(provider):
             # Fallback wording for surfaces without the one-click "run in terminal" path.
-            return "Managed outside Hermes — run the disconnect command to remove it."
+            return "Managed outside A2Assistant — run the disconnect command to remove it."
         return "Managed by that provider's CLI; remove it there."
     if status.get("source") == "env_var":
         return "Remove the API key from Settings → Keys instead."

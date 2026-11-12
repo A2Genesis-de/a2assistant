@@ -391,7 +391,7 @@ try {
     if (!state.requiredBridgeMethods) failures.push('required browser Desktop bridge methods are missing')
     if (state.rootError) failures.push('renderer reached its root error boundary')
     if (!allowGatewayFailure && state.desktopBootFailed)
-      failures.push('Desktop could not connect to the Hermes gateway')
+      failures.push('Desktop could not connect to the A2Assistant gateway')
     failures.push(...startupScreenFailures(state.startupTitles, { allowGatewayFailure }))
     // The gateway serves the page and the live socket: it speaks the canonical contract (native_dial)
     // and never carries the session token.

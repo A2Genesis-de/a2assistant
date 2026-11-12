@@ -32,9 +32,9 @@ def _ensure_browser_use_cli() -> None:
     from tools.browser_use_cli import _find_cli
 
     if _find_cli() is not None:
-        _print_success("    browser_exec ready (browser-harness, bundled with Hermes)")
+        _print_success("    browser_exec ready (browser-harness, bundled with A2Assistant)")
     else:
-        _print_warning("    browser-harness is missing from Hermes's Python environment")
+        _print_warning("    browser-harness is missing from A2Assistant's Python environment")
         _print_info("    Re-sync it with: hermes update")
 
 
@@ -50,7 +50,7 @@ def _post_setup_lightpanda() -> None:
         _print_warning("    lightpanda binary not found on PATH, ~/.lightpanda or ~/.local/bin")
         _print_info(f"    {LIGHTPANDA_INSTALL_HINT}")
         if os.name == "nt":
-            _print_info("    Lightpanda has no native Windows build; run Hermes under WSL2.")
+            _print_info("    Lightpanda has no native Windows build; run A2Assistant under WSL2.")
 
 
 def _post_setup_chromium() -> None:
@@ -123,7 +123,7 @@ def _post_setup_python(spec: dict) -> None:
         _print_warning(f"    {label} install failed: {exc}")
         _info_lines("Retry with: hermes tools")
         return
-    _print_success(f"    {label} dependencies ready. Restart Hermes to use them.")
+    _print_success(f"    {label} dependencies ready. Restart A2Assistant to use them.")
     _info_lines(*spec["on_install"], *spec["always"])
 
 

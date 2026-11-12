@@ -233,7 +233,7 @@ def project_plugins_warning(policy):
             return None
     except OSError:  # an unlistable folder skips the optional notice, never the session
         return None
-    return (f'project plugins in {folder} are not loaded: the gateway that runs Hermes sessions does not '
+    return (f'project plugins in {folder} are not loaded: the gateway that runs A2Assistant sessions does not '
             'load ./.hermes/plugins, so HERMES_ENABLE_PROJECT_PLUGINS has no effect here.')
 
 

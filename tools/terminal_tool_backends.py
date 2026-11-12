@@ -243,7 +243,7 @@ def _build_plugin_env(*, env_type, image, cwd, timeout, cc, task_id, **_):
             # sandbox nothing here could use or clean up.
             raise ValueError(
                 f"terminal.backend is {env_type}, a plugin that runs in the plugin host (plugins.isolation: host), "
-                f"and the host cannot hand its environment to Hermes, so commands cannot run in it. Set "
+                f"and the host cannot hand its environment to A2Assistant, so commands cannot run in it. Set "
                 f"plugins.isolation: in_process to use this backend.")
         env_obj = provider.create_environment(cwd=cwd, timeout=timeout, task_id=task_id, image=image,
                                               container_config=cc)

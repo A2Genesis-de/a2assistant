@@ -1695,7 +1695,7 @@ def resolve_provider(
         pass  # boto3 not installed
     from hermes_constants import display_hermes_home
     raise AuthError(
-        "Hermes is not connected to any AI provider yet. Run `hermes model` to pick one, type `/login` in chat, "
+        "A2Assistant is not connected to any AI provider yet. Run `hermes model` to pick one, type `/login` in chat, "
         f"or add a key with `hermes auth add <provider>`. (Advanced: put an API key such as OPENROUTER_API_KEY in "
         f"{display_hermes_home()}/.env.)",
         code="no_provider_configured")
@@ -1821,7 +1821,7 @@ def _resolve_nous_access_token(
 
     with _provider_state_transaction("nous") as (auth_store, state, state_source_path):
         if not state:
-            raise _nous_err("Hermes is not logged into Nous Portal.", "nous_auth_missing", relogin=True)
+            raise _nous_err("A2Assistant is not logged into Nous Portal.", "nous_auth_missing", relogin=True)
         portal_base_url = _nous_portal_base_url(state)
         client_id = str(state.get("client_id") or DEFAULT_NOUS_CLIENT_ID)
         verify = _resolve_verify(insecure=insecure, ca_bundle=ca_bundle, auth_state=state)
@@ -2184,9 +2184,9 @@ def _get_azure_foundry_auth_status() -> dict[str, Any]:
                     "azure-identity is installed; live credential validation "
                     "is skipped here. Run `hermes doctor` to verify token acquisition."
                 ) if installed else (
-                    "azure-identity not installed. From the Hermes environment, run: "
+                    "azure-identity not installed. From the A2Assistant environment, run: "
                     f"{install_hint('azure-identity')}. "
-                    "Then restart Hermes."))
+                    "Then restart A2Assistant."))
         except Exception as exc:
             info["logged_in"] = False
             info["error"] = f"azure-identity check failed: {exc}"
@@ -2418,6 +2418,6 @@ def logout_command(args) -> None:
     if not should_reset_config:
         print("Model provider configuration was unchanged.")
     elif os.getenv("OPENROUTER_API_KEY"):
-        print("Hermes will use OpenRouter for inference.")
+        print("A2Assistant will use OpenRouter for inference.")
     else:
-        print("Run `hermes model` or configure an API key to use Hermes.")
+        print("Run `hermes model` or configure an API key to use A2Assistant.")

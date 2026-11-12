@@ -417,7 +417,7 @@ def _format_privileged_intents_guidance(*, needs_members: bool) -> str:
     lines = [
         "Discord rejected the connection because privileged Gateway Intents "
         "are not enabled for this bot in the Developer Portal.",
-        "Hermes is requesting:",
+        "A2Assistant is requesting:",
         "  - Message Content Intent (required to read message text)",
     ]
     if needs_members:
@@ -5505,7 +5505,7 @@ class DiscordAdapter(DiscordAuthorizationMixin, DiscordMediaMixin, DiscordThread
         )
         try:
             with attempt:
-                await edit(name=cleaned, reason="Hermes semantic session title")
+                await edit(name=cleaned, reason="A2Assistant semantic session title")
             logger.info(
                 "[%s] Renamed Discord thread %s from %r to %r",
                 self.name, thread_id, current_name, cleaned,
@@ -5541,7 +5541,7 @@ class DiscordAdapter(DiscordAuthorizationMixin, DiscordMediaMixin, DiscordThread
             )
             return None
         thread_name = (name or "handoff").strip()[:80] or "handoff"
-        reason = "Hermes session handoff"
+        reason = "A2Assistant session handoff"
         try:
             create = getattr(parent, "create_thread", None)
             if create is not None:

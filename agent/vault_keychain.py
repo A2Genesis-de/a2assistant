@@ -19,7 +19,7 @@ from contextlib import suppress
 from pathlib import Path
 from typing import Optional
 
-SERVICE = "Hermes Agent vault key"
+SERVICE = "A2Assistant vault key"
 
 # keyring backends that are not an OS credential store: ``fail``/``null`` are what keyring picks on
 # a headless Linux box with no Secret Service, and keyrings.alt's plaintext/encrypted-file keyrings

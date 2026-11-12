@@ -89,7 +89,7 @@ test.each(['viewer', 'peer'] as const)('%s disconnect rejects an unfinished publ
   server.on('connection', (socket: FixtureSocket) => { peer = socket })
   const client = new HermesGateway()
   const opened = transportOpened(client)
-  const rejected = expect(client.connect(publicUrl(server))).rejects.toThrow('Hermes gateway connection closed before protocol readiness')
+  const rejected = expect(client.connect(publicUrl(server))).rejects.toThrow('A2Assistant gateway connection closed before protocol readiness')
 
   try {
     await opened

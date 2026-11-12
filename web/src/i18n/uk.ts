@@ -50,7 +50,7 @@ export const uk: Translations = {
   },
 
   app: {
-    brand: "Hermes Agent",
+    brand: "A2Assistant",
     brandShort: "HA",
     closeNavigation: "Закрити навігацію",
     closeModelTools: "Закрити модель та інструменти",
@@ -97,7 +97,7 @@ export const uk: Translations = {
     activeProvider: "Активний провайдер пам'яті",
     noProvider: "немає — лише вбудована",
     builtinLayer: "Вбудований шар",
-    builtinNote: "MEMORY.md і USER.md — власна пам'ять Hermes, незалежна від зовнішніх провайдерів. Типово обидва файли завантажуються в сесії; перемикачі конфігурації (memory.memory_enabled / memory.user_profile_enabled) вимикають кожен із них. Зовнішній провайдер доповнює їх, але ніколи не замінює.",
+    builtinNote: "MEMORY.md і USER.md — власна пам'ять A2Assistant, незалежна від зовнішніх провайдерів. Типово обидва файли завантажуються в сесії; перемикачі конфігурації (memory.memory_enabled / memory.user_profile_enabled) вимикають кожен із них. Зовнішній провайдер доповнює їх, але ніколи не замінює.",
   },
 
   status: {
@@ -129,8 +129,8 @@ export const uk: Translations = {
     starting: "Запускається",
     startedInBackground: "Запущено у фоні — перевірте журнали для прогресу",
     stopped: "Зупинено",
-    updateHermes: "Оновити Hermes",
-    updatingHermes: "Оновлення Hermes…",
+    updateHermes: "Оновити A2Assistant",
+    updatingHermes: "Оновлення A2Assistant…",
     waitingForOutput: "Очікування виводу…",
   },
 
@@ -343,7 +343,7 @@ export const uk: Translations = {
       "Збережено — перезапустіть шлюз, щоб застосувати зміну.",
     forceReinstall: "Примусово перевстановити (спершу видалити наявну теку)",
     headline:
-      "Знаходьте, встановлюйте, вмикайте та оновлюйте плагіни Hermes (паритет з `hermes plugins`).",
+      "Знаходьте, встановлюйте, вмикайте та оновлюйте плагіни A2Assistant (паритет з `hermes plugins`).",
     identifierLabel: "Git URL або owner/repo",
     inactive: "неактивний",
     installBtn: "Встановити",
@@ -464,7 +464,7 @@ export const uk: Translations = {
     showValue: "Показати справжнє значення",
     hideValue: "Сховати значення",
     customTitle: "Власні ключі",
-    customHint: "Довільні змінні середовища, збережені у вашому .env, які Hermes не розпізнає. Використовуйте їх для впровадження змінних середовища для навичок, серверів MCP або власних інструментів.",
+    customHint: "Довільні змінні середовища, збережені у вашому .env, які A2Assistant не розпізнає. Використовуйте їх для впровадження змінних середовища для навичок, серверів MCP або власних інструментів.",
     customConfigured: "Задано власних ключів: {count}",
     addCustomKey: "Додати власний ключ",
     customKeyName: "Назва змінної",
@@ -529,11 +529,11 @@ export const uk: Translations = {
   achievements: {
     hero: {
       kicker: "Agentic Gamerscore",
-      title: "Hermes Achievements",
+      title: "A2Assistant Achievements",
       subtitle:
-        "Колекційні значки Hermes, отримані з реальної історії сеансів. Відомі, але ще не виконані досягнення показані як Виявлені; Секретні досягнення залишаються прихованими, доки не з'явиться перший відповідний сигнал.",
+        "Колекційні значки A2Assistant, отримані з реальної історії сеансів. Відомі, але ще не виконані досягнення показані як Виявлені; Секретні досягнення залишаються прихованими, доки не з'явиться перший відповідний сигнал.",
       scan_subtitle:
-        "Сканування історії сеансів Hermes. Перше сканування на великих історіях може тривати 5–10 секунд.",
+        "Сканування історії сеансів A2Assistant. Перше сканування на великих історіях може тривати 5–10 секунд.",
     },
     actions: {
       rescan: "Повторне сканування",
@@ -548,7 +548,7 @@ export const uk: Translations = {
       highest_tier: "Найвищий рівень",
       highest_tier_hint: "Copper → Silver → Gold → Diamond → Olympian",
       latest: "Останнє",
-      latest_hint_empty: "запускайте Hermes частіше",
+      latest_hint_empty: "запускайте A2Assistant частіше",
       none_yet: "Поки немає",
     },
     state: {
@@ -579,10 +579,10 @@ export const uk: Translations = {
       tiers_header: "Рівні",
       secret_header: "Секретні досягнення",
       secret_body:
-        "Секрети приховують свій точний тригер. Щойно Hermes побачить пов'язаний сигнал, картка стає Виявленою та показує свою умову.",
+        "Секрети приховують свій точний тригер. Щойно A2Assistant побачить пов'язаний сигнал, картка стає Виявленою та показує свою умову.",
       scan_status_header: "Стан сканування",
       scan_status_body:
-        "Hermes одноразово сканує локальну історію, а потім картки з'являться автоматично. Якщо це триває кілька секунд — нічого не зависло.",
+        "A2Assistant одноразово сканує локальну історію, а потім картки з'являться автоматично. Якщо це триває кілька секунд — нічого не зависло.",
       what_scanned_header: "Що сканується",
       what_scanned_body:
         "Сеанси, виклики інструментів, метадані моделей, помилки, досягнення та локальний стан розблокування.",

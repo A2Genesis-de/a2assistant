@@ -158,4 +158,4 @@ def _strip_hermes_owned_pythonpath(env: dict) -> None:
     else:
         env.pop("PYTHONPATH", None)
     if stripped:
-        logger.debug("Stripped Hermes-owned entries from PYTHONPATH: %s", stripped)
+        logger.debug("Stripped A2Assistant-owned entries from PYTHONPATH: %s", stripped)

@@ -104,7 +104,7 @@ HOST_INTERPRETER_KILL_REJECTION = (
     "Blocked: this command kills every process whose image/name matches the Python "
     "interpreter, which is the process hosting this gateway (and this command). "
     "Stop only the process you own instead: process(action=\"kill\", session_id=\"proc_…\") "
-    "for a background job Hermes started, or kill/taskkill by its explicit PID."
+    "for a background job A2Assistant started, or kill/taskkill by its explicit PID."
 )
 
 

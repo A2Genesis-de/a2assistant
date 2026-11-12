@@ -7,7 +7,7 @@ def build_worktree_parser(subparsers) -> None:
     """Attach the ``worktree`` subcommand to ``subparsers``."""
     worktree_parser = subparsers.add_parser(
         "worktree", help="Audit and reclaim accumulated git worktrees and merged branches",
-        description="Audit, reclaim and restore the .worktrees/ trees Hermes sessions "
+        description="Audit, reclaim and restore the .worktrees/ trees A2Assistant sessions "
             "accumulate. Idle trees with uncommitted changes or unpushed commits are "
             "archived to refs/hermes/archive/<tree> before removal "
             "(worktrees.archive_dirty); `restore` brings one back. In-use trees are "

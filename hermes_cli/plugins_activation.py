@@ -278,7 +278,7 @@ def _gateway_present() -> bool:
 
 
 _RESTART_LINES = {"gateway": "  hermes gateway restart",
-                  "backend": "  quit and reopen the Hermes desktop app (or restart hermes dashboard)"}
+                  "backend": "  quit and reopen the A2Assistant desktop app (or restart hermes dashboard)"}
 
 
 def dependency_restart_hint(missing: list[str], processes: list[str]) -> str:

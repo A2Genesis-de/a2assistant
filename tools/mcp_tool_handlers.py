@@ -41,7 +41,7 @@ _STDIO_DIED_AGAIN_MSG = (
     "cleanly — do NOT retry this tool; ask the user to check the server's command and its stderr log.")
 _STDIO_OUTCOME_UNCERTAIN_MSG = (
     "MCP server '{s}' lost its stdio subprocess after the tool call began. The operation may have completed, so "
-    "Hermes did not replay it. Do NOT retry automatically; inspect the external state first.")
+    "A2Assistant did not replay it. Do NOT retry automatically; inspect the external state first.")
 _SESSION_OUTCOME_UNCERTAIN_MSG = (
     "The MCP transport session to '{s}' expired while this write-capable call was in flight, so the outcome is "
     "UNKNOWN — the operation may or may not have taken effect server-side. It was NOT automatically retried to "

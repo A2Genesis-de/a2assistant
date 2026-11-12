@@ -259,13 +259,13 @@ def format_nous_portal_entitlement_message(
             return None
     if account_info is None:
         return (
-            f"Hermes could not verify your Nous Portal entitlement, so {capability} is unavailable. "
+            f"A2Assistant could not verify your Nous Portal entitlement, so {capability} is unavailable. "
             f"Run `hermes model` to refresh your login, or check billing at {billing_url}."
         )
     if not account_info.logged_in:
         if account_info.inference_credential_present:
             return (
-                f"Nous inference credentials are configured, but Hermes cannot verify your Nous Portal "
+                f"Nous inference credentials are configured, but A2Assistant cannot verify your Nous Portal "
                 f"paid access for {capability}. Log in with `hermes model` to enable Portal-managed "
                 f"features. Billing and credits are managed at {billing_url}."
             )
@@ -274,7 +274,7 @@ def format_nous_portal_entitlement_message(
             f"Billing and credits are managed at {billing_url}."
         )
     if account_info.paid_service_access is None:
-        detail = f"Hermes could not verify your Nous Portal paid access, so {capability} is unavailable."
+        detail = f"A2Assistant could not verify your Nous Portal paid access, so {capability} is unavailable."
         if account_info.error:
             detail += f" Account lookup failed: {account_info.error}."
         if include_refresh_hint:
@@ -284,13 +284,13 @@ def format_nous_portal_entitlement_message(
     reason = access.reason if access else None
     if reason == "account_missing":
         return (
-            f"Hermes could not find a Nous Portal account or organisation for this login, so {capability} "
+            f"A2Assistant could not find a Nous Portal account or organisation for this login, so {capability} "
             f"is unavailable. Run `hermes model` to authenticate again; if the problem persists, contact Nous support."
         )
     if reason == "no_usable_credits" or account_info.paid_service_access is False:
         message = _no_paid_access_message(account_info, capability, billing_url, in_chat=in_chat)
         if include_refresh_hint and not account_info.fresh:
-            message += " If you recently bought credits, run `hermes model` to refresh Hermes."
+            message += " If you recently bought credits, run `hermes model` to refresh A2Assistant."
         return message
     return (
         f"Your Nous Portal account does not currently have paid service access, "

@@ -359,7 +359,7 @@ test(
     child.stdout.emit('data', 'hermes: finishing an interrupted source update...\n')
     await assert.rejects(
       wait,
-      /Timed out waiting for Hermes backend port announcement .* while an update completion was in progress/
+      /Timed out waiting for A2Assistant backend port announcement .* while an update completion was in progress/
     )
   },
   10_000

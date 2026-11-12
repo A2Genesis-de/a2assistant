@@ -140,7 +140,7 @@ def cmd_show(name: str) -> None:
         audit = audit_plugin_dir(Path(dir_path), manifest)
         runs_in = ("plugin host" if isolation_mode() == ISOLATION_HOST and audit.host_ready
                    else "refused (plugins.isolation: host)" if isolation_mode() == ISOLATION_HOST
-                   else "Hermes process")
+                   else "A2Assistant process")
         console.print(f"[dim]Runs in:[/dim] {runs_in} [dim]— {audit.summary()}[/dim]")
     from hermes_cli.plugin_provider_requests import requires_auth_notice
     if notice := requires_auth_notice(manifest):

@@ -108,7 +108,7 @@ def _check_relay_plugins(should_fix: bool, f: Finding) -> None:
         check_ok("NeMo Relay is not available on this platform")
         return
     except Exception as exc:
-        check_warn("Relay plugin configuration could not be read", "(Hermes runs without Relay plugins)")
+        check_warn("Relay plugin configuration could not be read", "(A2Assistant runs without Relay plugins)")
         _relay_info_lines(cause for cause in (exc, exc.__cause__) if cause is not None)
         f.manual_issues.append("Fix the Relay plugin configuration shown under NeMo Relay Plugins.")
         return
@@ -116,13 +116,13 @@ def _check_relay_plugins(should_fix: bool, f: Finding) -> None:
         check_ok("No Relay plugin files found")
         return
     if sources.errors:
-        check_warn("Relay will reject this plugin configuration", "(Hermes runs without Relay plugins)")
+        check_warn("Relay will reject this plugin configuration", "(A2Assistant runs without Relay plugins)")
         f.manual_issues.append("Fix the Relay plugin configuration shown under NeMo Relay Plugins.")
     else:
         # Validation cannot load dynamic plugins, so Relay reports what it cannot confirm as a warning.
         report = check_warn if sources.warnings else check_ok
         if sources.enabled:
-            report("Relay plugins enabled", "(applies to every profile a Hermes process hosts)")
+            report("Relay plugins enabled", "(applies to every profile an A2Assistant process hosts)")
         else:
             report("Relay plugin files found, nothing enabled")
     _relay_info_lines((*sources.config_paths, *sources.errors, *sources.warnings))

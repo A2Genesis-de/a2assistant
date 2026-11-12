@@ -96,7 +96,7 @@ it.each(Object.keys(CANONICAL_GROUP_LOCALES) as Array<keyof typeof CANONICAL_GRO
       const joined = code === 'peer_target_unsupported' ? words.peerJoinChanged : words.peerJoinFailed.replace('{reason}', words[key])
 
       if (key !== 'peerSetupGeneric') {
-        expect(peerJoinText(new PeerJoinError(code), 'Hermes · Mac Mini', words), `${locale} ${code}`).toBe(joined.replace('{name}', 'Hermes · Mac Mini'))
+        expect(peerJoinText(new PeerJoinError(code), 'A2Assistant · Mac Mini', words), `${locale} ${code}`).toBe(joined.replace('{name}', 'A2Assistant · Mac Mini'))
       }
     }
 
