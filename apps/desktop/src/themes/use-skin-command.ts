@@ -8,7 +8,7 @@ import { useTheme } from './context'
 // "the Desktop default" everywhere else (boot, backend sync, setTheme).
 const ALIASES: Record<string, string> = {
   ares: 'ember',
-  default: 'nous',
+  default: 'a2',
   gold: 'classic',
   hermes: 'classic',
   'nous-light': 'nous'
