@@ -9,10 +9,14 @@ enum Outcome: Int32 {
 }
 
 struct Request {
-    let reason: String
-    let scopeLabel: String
+    let title: String
+    let details: String
+    let approveLabel: String
+    let denyLabel: String
+    let placeholder: String
+    let wrongPasswordNotice: String
     let timeoutSeconds: Double
-    let iconPath: String
+    let appPath: String
     let printsPassword: Bool
 }
 
@@ -28,10 +32,14 @@ func parseRequest() -> Request {
         }
     }
     return Request(
-        reason: values["--reason"] ?? "",
-        scopeLabel: values["--scope-label"] ?? "",
+        title: values["--title"] ?? "",
+        details: values["--details"] ?? "",
+        approveLabel: values["--approve"] ?? "OK",
+        denyLabel: values["--deny"] ?? "Cancel",
+        placeholder: (values["--placeholder"] ?? "").replacingOccurrences(of: "{user}", with: NSFullUserName()),
+        wrongPasswordNotice: values["--wrong-password"] ?? "",
         timeoutSeconds: Double(values["--timeout"] ?? "") ?? 120,
-        iconPath: values["--icon"] ?? "",
+        appPath: values["--app"] ?? "",
         printsPassword: printsPassword
     )
 }
@@ -48,16 +56,15 @@ func passwordIsValid(_ password: String) -> Bool {
 
 func makeAlert(for request: Request, notice: String?) -> (NSAlert, NSSecureTextField) {
     let alert = NSAlert()
-    alert.messageText = "A2Assistant bittet um Freigabe"
-    let details = "\(request.reason)\n\nBereich: \(request.scopeLabel)\nGilt 10 Minuten und läuft dann automatisch ab."
-    alert.informativeText = notice.map { "\($0)\n\n\(details)" } ?? details
-    alert.addButton(withTitle: "Freigeben")
-    alert.addButton(withTitle: "Ablehnen")
-    if let icon = NSImage(contentsOfFile: request.iconPath) {
-        alert.icon = icon
+    alert.messageText = request.title
+    alert.informativeText = notice.map { "\($0)\n\n\(request.details)" } ?? request.details
+    alert.addButton(withTitle: request.approveLabel)
+    alert.addButton(withTitle: request.denyLabel)
+    if FileManager.default.fileExists(atPath: request.appPath) {
+        alert.icon = NSWorkspace.shared.icon(forFile: request.appPath)
     }
     let field = NSSecureTextField(frame: NSRect(x: 0, y: 0, width: 300, height: 24))
-    field.placeholderString = "Passwort von \(NSFullUserName())"
+    field.placeholderString = request.placeholder
     alert.accessoryView = field
     alert.window.initialFirstResponder = field
     alert.window.level = .floating
@@ -87,6 +94,6 @@ for _ in 0..<3 {
         }
         exit(Outcome.approved.rawValue)
     }
-    notice = "Das Passwort war falsch."
+    notice = request.wrongPasswordNotice
 }
 exit(Outcome.failed.rawValue)

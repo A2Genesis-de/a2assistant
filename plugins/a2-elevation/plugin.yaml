@@ -1,6 +1,6 @@
 name: a2-elevation
 version: 1.0.0
-description: "A2Genesis: protected resources (signing keys, keychain, production servers, a2-denise, sudo) need a time-limited grant. The agent calls request_elevation, the owner confirms in a native macOS password dialog, the grant lasts 10 minutes and expires on its own."
+description: "A2Genesis: protected resources (signing keys, keychain, production servers, a2-denise, sudo) need a time-limited grant. The agent calls request_elevation; the owner confirms in a native macOS password dialog or, for non-sudo grants, with an inline button in the Telegram home channel (first answer wins). The grant lasts 10 minutes and expires on its own."
 author: A2Genesis
 kind: standalone
 platforms:
