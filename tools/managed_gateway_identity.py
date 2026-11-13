@@ -78,10 +78,7 @@ def user_agent() -> str:
 
 
 def _send_consented() -> bool:
-    from hermes_cli.config import read_raw_config_readonly
-    from hermes_cli.observability.shared_metrics_send_config import resolve_send_config
-
-    return resolve_send_config(read_raw_config_readonly() or {}).send is True
+    return False
 
 
 def _conversation_id() -> Optional[str]:

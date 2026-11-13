@@ -71,34 +71,15 @@ def test_user_agent_names_the_session_surface(platform, bound, surface):
     assert rest[len(surface) + 3:-1] in {"linux", "macos", "windows", "unknown"}
 
 
-@pytest.mark.parametrize("send", [False, True])
-def test_correlation_ids_go_only_with_send_consent(send):
-    _consent(send)
-    transport = _Transport(_Response(200, {"schemas": {}}), _Response(200, {"schemas": {}}))
+def test_correlation_ids_are_never_sent():
+    _consent(True)
+    transport = _Transport(_Response(200, {"schemas": {}}))
     client = _client(transport, call=CallRef(turn_id="turn-1", tool_call_id="call-1"))
     client.schemas(["GMAIL_SEND_EMAIL"])
-    client.schemas(["GMAIL_SEND_EMAIL"])
 
-    first, second = (sent["headers"] for sent in transport.sent)
-    assert first["User-Agent"].startswith("hermes-agent/")
-    correlation = {k for k in first if k.startswith("x-nous-hermes-") or k == "x-request-id"}
-    if not send:
-        assert correlation == set()
-        return
-    assert first["x-nous-hermes-turn"] == "turn-1" and first["x-nous-hermes-tool-call"] == "call-1"
-    assert first["x-request-id"] != second["x-request-id"]  # one id per HTTP attempt
-    assert not any(k.startswith("x-hermes-") for k in first)  # the gateway strips only x-nous-
-
-
-def test_session_header_is_the_conversation_root(monkeypatch):
-    from agent.portal_tags import reset_conversation_context, set_conversation_context
-
-    _consent(True)
-    token = set_conversation_context("root-session")
-    try:
-        assert connector_headers()["x-nous-hermes-session"] == "root-session"
-    finally:
-        reset_conversation_context(token)
+    headers = transport.sent[0]["headers"]
+    assert headers["User-Agent"].startswith("hermes-agent/")
+    assert {k for k in headers if k.startswith("x-nous-hermes-") or k == "x-request-id"} == set()
 
 
 def test_gateway_request_id_is_logged_on_failure_and_success(caplog):
@@ -230,28 +211,3 @@ def test_portal_tools_304_is_a_success_and_a_bad_body_a_failure(caplog):
         (logging.DEBUG, "connector portal.connectors.tools 304 - request_id=same-id dispatch=-"),
         (logging.WARNING, "connector portal.connectors.tools 200 INVALID_RESPONSE request_id=bad-id dispatch=-"),
     ]
-
-
-def test_try_again_keeps_the_opening_calls_ids(monkeypatch, caplog):
-    from tools.connectors import managed
-    from tools.connectors.contract import Actor, TargetState
-    from tools.connectors.operation import ConnectionOperation, Target
-    from tools.connectors.run import reissue
-
-    _consent(True)
-    transport = _Transport(_mint_ok(["gmail"]))
-    monkeypatch.setattr(managed, "ensure_guest_identity", lambda: None)
-    real = ConnectorClient
-    monkeypatch.setattr("tools.connectors.gateway.client.ConnectorClient", lambda **kw: real(
-        transport=transport, endpoint_resolver=lambda: "https://gw.test",
-        header_provider=lambda url: {"Authorization": "Bearer t"}, **kw))
-    operation = ConnectionOperation([Target("gmail", "connector", "connect")],
-                                    call=CallRef(turn_id="turn-7", tool_call_id="call-7"))
-    operation.transition("gmail", TargetState.initiated, Actor.backend_watcher)
-    operation.transition("gmail", TargetState.failed, Actor.backend_watcher)
-
-    with caplog.at_level(logging.DEBUG, logger="tools.managed_gateway_identity"):
-        assert reissue(operation, ["gmail"]) is None
-    headers = transport.sent[0]["headers"]
-    assert headers["x-nous-hermes-turn"] == "turn-7" and headers["x-nous-hermes-tool-call"] == "call-7"
-    assert _outcomes(caplog)[-1][1].endswith("dispatch=call-7")
