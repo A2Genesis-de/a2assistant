@@ -53,9 +53,6 @@ def _truncate(text: str, width: int) -> str:
 
 
 def _ident_col(style: str) -> tuple:
-    # overflow="fold" keeps the full slug visible (wraps instead of ellipsis-truncating):
-    # browse.sh slugs end in a `-XXXXXX` hash that is part of the identifier users must
-    # copy into `hermes skills install`.
     return "Identifier", {"style": style, "overflow": "fold", "no_wrap": False}
 
 
