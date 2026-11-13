@@ -15,18 +15,18 @@ import hermes_yaml as yaml
 from starlette.testclient import TestClient
 
 _TOKEN = "a" * 43
-_KEY = "gsk_voice_relay_test"
+_KEY = "sk-voice-relay-test"
 
 
 @pytest.fixture
 def voice_config(tmp_path, monkeypatch):
     """GET /api/audio/voice-config on ``web_server.app`` serving *surface*, for a profile whose STT
-    resolves client-direct (Groq, with its key)."""
+    resolves client-direct (OpenAI, with its key)."""
     home = tmp_path / ".hermes"
     home.mkdir()
     (home / "config.yaml").write_text(
-        yaml.safe_dump({"stt": {"provider": "groq"}}), encoding="utf-8")
-    monkeypatch.setenv("GROQ_API_KEY", _KEY)
+        yaml.safe_dump({"stt": {"provider": "openai"}}), encoding="utf-8")
+    monkeypatch.setenv("VOICE_TOOLS_OPENAI_KEY", _KEY)
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("HERMES_HOME", str(home))

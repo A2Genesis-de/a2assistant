@@ -502,14 +502,14 @@ def test_settings_skills_plugins_transitions_only_count_moves_from_and_back_to_d
         "memory": {"memory_enabled": False}, "compression": {"enabled": "false"}, "curator": {"enabled": True},
         "display": {"show_reasoning": False, "skin": "mono"},  # a value change on a non-bool: never a row
         "skills": {"disabled": ["my-private-skill", "arxiv"], "platform_disabled": {"telegram": ["totally-custom"]}},
-        "plugins": {"disabled": ["disk-cleanup", "telegram", "some-private-plugin"]},
+        "plugins": {"disabled": ["a2-elevation", "telegram", "some-private-plugin"]},
     }
     got = set(disabled_metrics.config_transitions(old, new))
     assert got == {
         ("memory", "memory.memory_enabled", "disabled"), ("compression", "compression.enabled", "disabled"),
         ("setting", "display.show_reasoning", "disabled"),
         ("skill", "arxiv", "disabled"), ("skill", "custom", "disabled"),
-        ("plugin", "disk-cleanup", "disabled"), ("platform", "telegram", "disabled"),
+        ("plugin", "a2-elevation", "disabled"), ("platform", "telegram", "disabled"),
         ("plugin", "custom", "disabled"),
     }
     back = set(disabled_metrics.config_transitions(new, old))
