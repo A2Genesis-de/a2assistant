@@ -359,36 +359,6 @@ describe('createGatewayEventHandler', () => {
     })
   })
 
-  describe('billing.step_up.verification', () => {
-    beforeEach(() => {
-      openExternalUrlMock.mockClear()
-    })
-
-    it('renders the verification link + code and opens the browser', () => {
-      const ctx = buildCtx([])
-      const onEvent = createGatewayEventHandler(ctx)
-
-      onEvent({
-        payload: { user_code: 'WXYZ-9999', verification_url: 'https://portal.example/device?code=WXYZ' },
-        type: 'billing.step_up.verification'
-      } as any)
-
-      const printed = (ctx.system.sys as ReturnType<typeof vi.fn>).mock.calls.map(c => c[0]).join('\n')
-      expect(printed).toContain('https://portal.example/device?code=WXYZ')
-      expect(printed).toContain('WXYZ-9999')
-      expect(openExternalUrlMock).toHaveBeenCalledWith('https://portal.example/device?code=WXYZ')
-    })
-
-    it('no-ops on a missing verification_url (never opens a browser)', () => {
-      const ctx = buildCtx([])
-      const onEvent = createGatewayEventHandler(ctx)
-
-      onEvent({ payload: { verification_url: '' }, type: 'billing.step_up.verification' } as any)
-
-      expect(openExternalUrlMock).not.toHaveBeenCalled()
-    })
-  })
-
   it('echoes the canonical bootstrap verdict so a refused gateway is never a silent retry loop', () => {
     const appended: Msg[] = []
     const onEvent = createGatewayEventHandler(buildCtx(appended))

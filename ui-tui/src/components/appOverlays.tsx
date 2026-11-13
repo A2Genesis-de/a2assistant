@@ -10,9 +10,7 @@ import { NATIVE_MODE } from '../config/env.js'
 
 import { ActiveSessionSwitcher } from './activeSessionSwitcher.js'
 import { FloatBox } from './appChrome.js'
-import { BillingOverlay } from './billingOverlay.js'
 import { ConnectionSetupOverlay } from './connectionSetupOverlay.js'
-import { ConnectorsOverlay } from './connectorsOverlay.js'
 import { SecretPrompt, SudoPrompt, VaultCodePrompt, VaultSaveLoginPrompt, VaultUnlockPrompt } from './maskedPrompt.js'
 import { ModelPicker } from './modelPicker.js'
 import { OverlayHint } from './overlayControls.js'
@@ -22,7 +20,6 @@ import { PluginsHub } from './pluginsHub.js'
 import { ApprovalPrompt, ClarifyPrompt, ConfirmPrompt } from './prompts.js'
 import { RewindBrowse } from './rewindBrowse.js'
 import { SkillsHub } from './skillsHub.js'
-import { SubscriptionOverlay } from './subscriptionOverlay.js'
 import { WidgetGrid, type WidgetGridWidget } from './widgetGrid.js'
 
 const COMPLETION_WINDOW = 16
@@ -96,38 +93,6 @@ export function PromptZone({
           req={overlay.approval}
           t={theme}
         />
-      </PromptCell>
-    )
-  }
-
-  if (overlay.billing) {
-    const current = overlay.billing
-
-    const onPatch = (next: Partial<typeof current>) =>
-      patchOverlayState(prev => (prev.billing ? { ...prev, billing: { ...prev.billing, ...next } } : prev))
-
-    const onClose = () => patchOverlayState({ billing: null })
-
-    return (
-      <PromptCell cols={cols} id="billing">
-        <BillingOverlay onClose={onClose} onPatch={onPatch} overlay={current} t={theme} />
-      </PromptCell>
-    )
-  }
-
-  if (overlay.subscription) {
-    const current = overlay.subscription
-
-    const onPatch = (next: Partial<typeof current>) =>
-      patchOverlayState(prev =>
-        prev.subscription ? { ...prev, subscription: { ...prev.subscription, ...next } } : prev
-      )
-
-    const onClose = () => patchOverlayState({ subscription: null })
-
-    return (
-      <PromptCell cols={cols} id="subscription">
-        <SubscriptionOverlay onClose={onClose} onPatch={onPatch} overlay={current} t={theme} />
       </PromptCell>
     )
   }
@@ -386,22 +351,6 @@ export function FloatingOverlays({
       render: width => (
         <FloatBox color={theme.color.border}>
           <PluginsHub gw={gw} maxWidth={width} onClose={() => patchOverlayState({ pluginsHub: false })} t={theme} />
-        </FloatBox>
-      )
-    })
-  }
-
-  if (overlay.connectors) {
-    widgets.push({
-      id: 'connectors',
-      render: width => (
-        <FloatBox color={theme.color.border}>
-          <ConnectorsOverlay
-            gw={gw}
-            maxWidth={width}
-            onClose={() => patchOverlayState({ connectors: false })}
-            t={theme}
-          />
         </FloatBox>
       )
     })

@@ -21,11 +21,9 @@ const buildOverlayState = (): OverlayState => ({
   agents: false,
   agentsInitialHistoryIndex: 0,
   approval: null,
-  billing: null,
   clarify: null,
   confirm: null,
   connection: null,
-  connectors: false,
   ambient: [],
   widget: null,
   journey: false,
@@ -40,7 +38,6 @@ const buildOverlayState = (): OverlayState => ({
   vaultUnlock: null,
   sessions: false,
   skillsHub: false,
-  subscription: null,
   sudo: null
 })
 
@@ -50,11 +47,9 @@ export const $overlayState = atom<OverlayState>(buildOverlayState())
 const BLOCKING_KEYS = [
   'agents',
   'approval',
-  'billing',
   'clarify',
   'confirm',
   'connection',
-  'connectors',
   'journey',
   'modelPicker',
   'pager',
@@ -64,7 +59,6 @@ const BLOCKING_KEYS = [
   'secret',
   'sessions',
   'skillsHub',
-  'subscription',
   'sudo',
   'vaultCode',
   'vaultSaveLogin',
@@ -90,15 +84,15 @@ export const $isBlocked = computed($overlayState, overlay => BLOCKING_KEYS.some(
  *   subtree) so it can anchor the full-screen absolute `Overlay`
  *   (`components/overlay.tsx`) against the whole terminal.
  * - The FloatingOverlays set — `modelPicker`, `pager`, `petPicker`,
- *   `sessions`, `skillsHub`, `pluginsHub`, `connectors` — but ONLY when the rule sits at
+ *   `sessions`, `skillsHub`, `pluginsHub` — but ONLY when the rule sits at
  *   the top.  That panel is `position="absolute" bottom="100%"` inside
  *   ComposerPane's relative Box (`appOverlays.tsx:387`), so it grows UPWARD
  *   over the `at="top"` rule and never reaches the `at="bottom"` one.
  *
  * NOT occluding (deliberately excluded):
  *
- * - The PromptZone flow states — `approval`, `billing`, `subscription`,
- *   `confirm`, `clarify`, `sudo`, `secret` (`appOverlays.tsx:58-162`).  They
+ * - The PromptZone flow states — `approval`, `confirm`, `clarify`, `sudo`,
+ *   `secret` (`appOverlays.tsx:58-162`).  They
  *   render in NORMAL FLOW above ComposerPane (`appLayout.tsx:553-568`): they
  *   push content down, they do not cover it.  The rule stays on screen and
  *   its clock must keep running.
@@ -127,7 +121,6 @@ export const $isBlocked = computed($overlayState, overlay => BLOCKING_KEYS.some(
  */
 export const hasFloatingPanel = (overlay: OverlayState): boolean =>
   Boolean(
-    overlay.connectors ||
     overlay.modelPicker ||
     overlay.pager ||
     overlay.petPicker ||
@@ -181,7 +174,6 @@ export const resetFlowOverlays = () =>
     agentsInitialHistoryIndex: $overlayState.get().agentsInitialHistoryIndex,
     ambient: $overlayState.get().ambient,
     connection: $overlayState.get().connection,
-    connectors: $overlayState.get().connectors,
     widget: $overlayState.get().widget,
     journey: $overlayState.get().journey,
     modelPicker: $overlayState.get().modelPicker,

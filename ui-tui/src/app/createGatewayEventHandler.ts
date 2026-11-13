@@ -12,14 +12,13 @@ import type {
   SessionInfo,
   SessionMostRecentResponse
 } from '@hermes/shared/gateway-types'
-import type { UsageLimit } from '@hermes/shared/plan-usage'
 
 import { STARTUP_IMAGE, STARTUP_QUERY } from '../config/env.js'
 import { STREAM_BATCH_MS } from '../config/timing.js'
 import { buildSetupRequiredSections, setupRequiredTitle } from '../content/setup.js'
 import { usageFromTick } from '../domain/usage.js'
 import { t } from '../i18n/runtime.js'
-import { billingDialogCopy, usageLimitDialog } from '../lib/billingDialog.js'
+import { billingDialogCopy } from '../lib/billingDialog.js'
 import { type ImageAttachment, stageImagePath } from '../lib/imageAttachments.js'
 import { isTodoDone } from '../lib/liveProgress.js'
 import { openExternalUrl } from '../lib/openExternalUrl.js'
@@ -33,7 +32,6 @@ import type { Msg, SubagentProgress } from '../types.js'
 
 import { applyConnectionRequest, applyConnectionUpdate } from './connectionOperationStore.js'
 import { applyDelegationStatus, getDelegationState } from './delegationStore.js'
-import { createBillingVerificationPresenter, createFreeTierChallengePresenter } from './gatewayBrowserLinks.js'
 import {
   fenceLifecycleEvent,
   isGenericErrorEvent,
@@ -52,8 +50,7 @@ import { forgetServerRequest } from './serverRequestStore.js'
 import { noteCanonicalCompletion } from './slash/canonicalSessionCommands.js'
 import {
   mutateCanonicalSession,
-  openModelConfirmation,
-  switchCanonicalModel
+  openModelConfirmation
 } from './slash/canonicalSessionControls.js'
 import { loadSlashCatalog, refreshSlashCatalogOnSkillsChange } from './slashCatalog.js'
 import { reportStartupLatency } from './startupLatency.js'
@@ -703,23 +700,14 @@ function applySessionInfo(payload: unknown, { appendMessage, setHistoryItems, se
   setHistoryItems(prev => prev.map(m => (m.kind === 'intro' ? { ...m, info } : m)))
 }
 
-/** Billing wall (out of credits / payment required) or a window plan's limit (`error_surface.usage_limit`). */
+/** Billing wall (out of credits / payment required). */
 function confirmBillingWall(
   payload: Extract<AnyGatewayEvent, { type: 'message.complete' }>['payload'],
   ctx: GatewayEventHandlerContext
 ): void {
   const { submitRef } = ctx.submission
 
-  const surface = payload?.error_surface as { code?: string; usage_limit?: UsageLimit | null } | null | undefined
-
-  const usageLimit = surface?.usage_limit
-
-  if (usageLimit) {
-    return confirmUsageLimit(usageLimit, ctx)
-  }
-
-  // A window plan's limit is not an empty wallet: its sentence is in the transcript already.
-  if (!payload?.billing || surface?.code === 'usage_window') {
+  if (!payload?.billing) {
     return
   }
 
@@ -732,76 +720,13 @@ function confirmBillingWall(
       confirmLabel: copy.confirmLabel,
       detail: copy.detail,
       onConfirm: () => {
-        if (block.is_nous) {
-          submitRef.current('/topup')
-        } else if (block.billing_url) {
+        if (block.billing_url) {
           openExternalUrl(block.billing_url)
         } else {
           submitRef.current('/model')
         }
       },
       title: copy.title
-    }
-  })
-}
-
-/** A window plan's limit: one ask, switch to the plan's recommended model (this session) and re-send,
- *  or dismiss. The sentence is already in the transcript. */
-function confirmUsageLimit(usageLimit: UsageLimit, ctx: GatewayEventHandlerContext): void {
-  const { gw, rpc } = ctx.gateway
-  const { sys } = ctx.system
-  const { submitRef } = ctx.submission
-  const dialog = usageLimitDialog(usageLimit)
-
-  patchOverlayState({
-    confirm: {
-      cancelLabel: dialog.cancelLabel,
-      confirmLabel: dialog.confirmLabel,
-      detail: dialog.detail,
-      onConfirm: () => {
-        if (!dialog.switchValue) {
-          submitRef.current('/topup')
-
-          return
-        }
-
-        const sid = getUiState().sid
-
-        // The owner refuses `config.set model`: a pick is the session-scoped `session.mutate`.
-        if (gw.isCanonical && sid) {
-          void switchCanonicalModel(gw, sid, dialog.switchValue, sys, () => submitRef.current('/retry')).catch(
-            (e: unknown) => sys(`error: ${rpcErrorMessage(e)}`)
-          )
-
-          return
-        }
-
-        // Switch first; re-send only once it landed (or was queued for the next turn).
-        void rpc<{ deferred?: boolean; value?: string }>('config.set', {
-          key: 'model',
-          session_id: sid,
-          value: dialog.switchValue
-        })
-          .then(r => {
-            // `/retry` targets the active chat: never rewind one the user opened meanwhile.
-            if (getUiState().sid !== sid) {
-              return
-            }
-
-            if (!r?.value) {
-              return sys('error: model switch failed')
-            }
-
-            sys(`model → ${r.value}`)
-            patchUiState(state => ({
-              ...state,
-              info: state.info ? { ...state.info, model: r.value! } : state.info
-            }))
-            submitRef.current('/retry')
-          })
-          .catch((e: unknown) => sys(`error: ${rpcErrorMessage(e)}`))
-      },
-      title: dialog.title
     }
   })
 }
@@ -834,8 +759,6 @@ export function createGatewayEventHandler(ctx: GatewayEventHandlerContext): (ev:
   // an abandoned-prompt record, so the tool.complete and message.complete
   // paths can't both persist the same prompt twice.
   const persistedAbandonedClarify = new Set<string>()
-  const showChallenge = createFreeTierChallengePresenter(sys, openExternalUrl)
-  const showBillingVerification = createBillingVerificationPresenter(sys, openExternalUrl)
 
   // When a clarify prompt is dismissed without an answer (the backend request
   // timed out and returned no answer), the live ClarifyPrompt overlay is
@@ -1232,11 +1155,6 @@ export function createGatewayEventHandler(ctx: GatewayEventHandlerContext): (ev:
 
         return
 
-      case 'free_tier.challenge':
-        showChallenge(ev.payload)
-
-        return
-
       case 'session.info':
         applySessionInfo(ev.payload, { appendMessage, setHistoryItems, setStatus })
 
@@ -1364,11 +1282,6 @@ export function createGatewayEventHandler(ctx: GatewayEventHandlerContext): (ev:
         // Key-matched clear only — a stale/late clear must not wipe a newer
         // notice (turnController guards the key match).
         turnController.clearNotice(ev.payload?.key)
-
-        return
-
-      case 'billing.step_up.verification':
-        showBillingVerification(ev.payload)
 
         return
       case 'gateway.stderr': {

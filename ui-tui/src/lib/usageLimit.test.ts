@@ -9,8 +9,6 @@ import {
 } from '@hermes/shared/plan-usage'
 import { describe, expect, it } from 'vitest'
 
-import { usageLimitDialog } from './billingDialog.js'
-
 const NOW = 1_000_000_000_000
 const HOUR = 3_600_000
 
@@ -118,45 +116,6 @@ describe('blockingGauge / planBlocks (the one rule, agent/plan_limits.py twin)',
     expect(formatResetsIn(NOW + 5 * HOUR, NOW)).toBe('5h')
     expect(formatResetsIn(NOW + 48 * HOUR, NOW)).toBe('2d')
     expect(formatResetsIn(null, NOW)).toBe('')
-  })
-})
-
-describe('usageLimitDialog', () => {
-  const limit = {
-    credits: { action: 'add_credits' },
-    gauge_id: 'day',
-    limit_name: 'daily',
-    message: "You've hit your daily limit · resets 15:56",
-    scope: 'all',
-    suggestions: [{ label: 'Model Free', model: 'example/model-free:free', note: 'free', provider: 'nous' }]
-  }
-
-  it('offers the recommended model for this session and names the credits way on', () => {
-    const dialog = usageLimitDialog(limit as never)
-
-    expect(dialog.title).toBe('Limit reached')
-    expect(dialog.confirmLabel).toBe('Switch to Model Free (free)')
-    expect(dialog.switchValue).toBe('example/model-free:free --provider nous --session')
-    expect(dialog.detail).toBe("You've hit your daily limit · resets 15:56\nOr add credits with /topup.")
-  })
-
-  it('names the Keep going setting when a balance is waiting', () => {
-    const dialog = usageLimitDialog({ ...limit, credits: { action: 'use_credits' } } as never)
-
-    expect(dialog.detail.endsWith('Or turn on Keep going in /topup to use your credits.')).toBe(true)
-  })
-
-  it('names both steps when Keep going is off and there is no balance', () => {
-    const dialog = usageLimitDialog({ ...limit, credits: { action: 'add_credits_and_keep_going' } } as never)
-
-    expect(dialog.detail.endsWith('Or add credits and turn on Keep going in /topup.')).toBe(true)
-  })
-
-  it('without a model to offer, the confirm opens /topup', () => {
-    const dialog = usageLimitDialog({ ...limit, suggestions: [] } as never)
-
-    expect(dialog.confirmLabel).toBe('Open /topup')
-    expect(dialog.switchValue).toBeNull()
   })
 })
 

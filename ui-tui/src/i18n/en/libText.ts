@@ -59,24 +59,13 @@ export const libTextEn = {
     // lib/billingDialog.ts — the out-of-credits confirm dialog.
     billingDialog: {
       dismiss: 'Dismiss',
-      topUp: 'Top up',
-      nousDetail: 'Your Nous credit balance is exhausted — top up to keep going.',
-      nousTitle: 'Out of Nous credits',
       yourProvider: 'your provider',
       openBillingPage: 'Open billing page',
       switchProvider: 'Switch provider',
       /** {0} = provider label */
       providerDetail: (label: string) => `${label} reports your credits or billing are exhausted.`,
       /** {0} = provider label */
-      providerTitle: (label: string) => `Out of credits · ${label}`,
-      // A usage-window plan's limit (usageLimitDialog).
-      limitTitle: 'Limit reached',
-      limitOpenTopup: 'Open /topup',
-      /** {0} = model label (with its note) */
-      limitSwitchTo: (label: string) => `Switch to ${label}`,
-      limitCreditsAdd: 'Or add credits with /topup.',
-      limitCreditsBoth: 'Or add credits and turn on Keep going in /topup.',
-      limitCreditsUse: 'Or turn on Keep going in /topup to use your credits.'
+      providerTitle: (label: string) => `Out of credits · ${label}`
     },
 
     // lib/subagentTree.ts — the `d2 · 7 agents · 124 tools · 2m 14s` summary chip.

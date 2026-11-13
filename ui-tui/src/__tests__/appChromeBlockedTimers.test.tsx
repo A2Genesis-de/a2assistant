@@ -369,12 +369,10 @@ describe('status-chrome timers track the current overlay model', () => {
   const nonOccluding: Array<[string, Partial<OverlayState>]> = [
     ['agents', { agents: true }],
     ['approval', { approval: { command: 'ls', requestId: 'a-1' } as OverlayState['approval'] }],
-    ['billing', { billing: { kind: 'credits' } as OverlayState['billing'] }],
     ['clarify', { clarify: { questions: [{ choices: null, qid: 'q0', question: 'which?' }], requestId: 'c-1' } }],
     ['confirm', { confirm: { onConfirm: () => {}, prompt: 'sure?' } as OverlayState['confirm'] }],
     ['journey', { journey: true }],
     ['secret', { secret: { envVar: 'TOKEN', prompt: 'token?' } as OverlayState['secret'] }],
-    ['subscription', { subscription: { kind: 'expired' } as OverlayState['subscription'] }],
     ['sudo', { sudo: { requestId: 'sudo-1' } as OverlayState['sudo'] }]
   ]
 

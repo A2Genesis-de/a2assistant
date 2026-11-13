@@ -37,7 +37,7 @@ describe('libText catalog swap', () => {
     expect(after.confirmLabel).toBe('Open billing page')
 
     resetLocale()
-    expect(billingDialogCopy({ is_nous: true } as never).cancelLabel).toBe('Dismiss')
+    expect(billingDialogCopy({ provider_label: 'Acme' } as never).cancelLabel).toBe('Dismiss')
   })
 
   it('plural leaves are chosen in code, so a pack can override each form', () => {

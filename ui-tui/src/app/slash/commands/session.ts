@@ -1,4 +1,3 @@
-import { stripAnsi } from '@hermes/shared/ansi'
 import { compactNumber } from '@hermes/shared/format'
 import type {
   BackgroundStartResponse,
@@ -12,11 +11,9 @@ import type {
 } from '@hermes/shared/gateway-types'
 import { sessionScopedModelArg, TUI_SESSION_MODEL_FLAG } from '@hermes/shared/slash-input'
 
-import { usageBarsText } from '../../../components/overlayPrimitives.js'
 import { introMsg, toTranscriptMessages } from '../../../domain/messages.js'
 import { t } from '../../../i18n/runtime.js'
 import { formatVoiceRecordKey, parseVoiceRecordKey } from '../../../lib/platform.js'
-import type { PanelSection } from '../../../types.js'
 import { applyConfiguredTuiTheme } from '../../createGatewayEventHandler.js'
 import { DEFAULT_INDICATOR_STYLE, INDICATOR_STYLES, type IndicatorStyle } from '../../interfaces.js'
 import { patchOverlayState } from '../../overlayStore.js'
@@ -820,7 +817,7 @@ export const sessionCommands: SlashCommand[] = [
   },
 
   {
-    help: 'session usage + Nous credits',
+    help: 'session usage',
     name: 'usage',
     run: (_arg, ctx) => {
       if (ctx.sid && ctx.gateway.gw?.isCanonical) {
@@ -829,7 +826,6 @@ export const sessionCommands: SlashCommand[] = [
         return canonicalUsage(ctx)
       }
 
-      // health: allow CC -- /usage: appends the plan allowance bars from billing.state for usage-window plans only; this handler was over target on main
       ctx.gateway.rpc<SessionUsageResponse>('session.usage', { session_id: ctx.sid }).then(r => {
         if (ctx.stale()) {
           return
@@ -843,78 +839,13 @@ export const sessionCommands: SlashCommand[] = [
           })
         }
 
-        // Nous balance block is agent-independent (a portal fetch), so it shows
-        // even with zero API calls or on a resumed session. Prefer the shared
-        // dollar usage model (two-bar view, dollars-only); fall back to the
-        // legacy text lines only when the model is unavailable.
-        const usageModel = r?.usage
-        const barLines = usageBarsText(usageModel)
-        let showedBalance = false
-
-        if (usageModel?.available && (barLines.length || usageModel.status === 'free')) {
-          const sections: PanelSection[] = []
-
-          const plan =
-            usageModel.plan_name ?? (usageModel.status === 'free' ? t('slashCmd.session.usage.freePlan') : null)
-
-          if (plan) {
-            sections.push({
-              text: usageModel.renews_display
-                ? t('slashCmd.session.usage.planRenews', plan, usageModel.renews_display)
-                : t('slashCmd.session.usage.plan', plan)
-            })
-          }
-
-          if (barLines.length) {
-            sections.push({ text: barLines.join('\n') })
-          }
-
-          if (usageModel.status === 'free') {
-            sections.push({ text: t('slashCmd.session.usage.freeNote') })
-          } else if (usageModel.status === 'low') {
-            sections.push({
-              text: t(
-                'slashCmd.session.usage.lowNote',
-                usageModel.total_spendable_display ?? t('slashCmd.session.usage.lowBalanceFallback')
-              )
-            })
-          }
-
-          ctx.transcript.panel(t('slashCmd.session.usage.balanceTitle'), sections)
-          showedBalance = true
-        } else {
-          const creditsLines = r?.credits_lines ?? []
-
-          if (creditsLines.length && r?.credits_usage_window) {
-            // Usage-window plan: plain stacked bar lines (a panel would re-wrap them).
-            const windowLines = creditsLines
-              .map(line => stripAnsi(String(line)).trimEnd())
-              .filter(line => line.length > 0)
-
-            for (const line of windowLines) {
-              sys(line)
-            }
-
-            showedBalance = windowLines.length > 0
-          } else if (creditsLines.length) {
-            ctx.transcript.panel(t('slashCmd.session.usage.nousBalanceTitle'), [{ text: creditsLines.join('\n') }])
-            showedBalance = true
-          }
-        }
-
         if (!r?.calls) {
-          if (!showedBalance) {
-            sys(t('slashCmd.session.usage.noCalls'))
-          }
-
-          sys(t('slashCmd.session.usage.cta'))
+          sys(t('slashCmd.session.usage.noCalls'))
 
           return
         }
 
         ctx.transcript.panel(t('slashCmd.session.usage.usageTitle'), usageTotalsSections(r))
-
-        sys(t('slashCmd.session.usage.cta'))
       })
     }
   }
