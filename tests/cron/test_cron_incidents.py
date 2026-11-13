@@ -32,7 +32,7 @@ def _job(**overrides):
         "enabled": True,
         "state": "scheduled",
         "schedule": {"kind": "interval", "minutes": 5, "display": "every 5m"},
-        "deliver": "slack:alerts",
+        "deliver": "telegram:-1001004",
         "model": "test-model",
         "provider": None,
         "provider_snapshot": "openrouter",
@@ -50,7 +50,7 @@ def _tick_failing(job, tmp_path, deliveries, error="boom unrelated", *, settle=F
     alerted once the ping has left the process (``drain_delivery_queue.send``)."""
 
     (tmp_path / "config.yaml").write_text(
-        "platforms:\n  slack:\n    enabled: true\n    token: xoxb-test\n"
+        "platforms:\n  telegram:\n    enabled: true\n    token: 123456789:AAtest-token-value-ABCDEFGHIJ\n"
     )
 
     def fake_deliver(execution_id, jb, content, **kwargs):

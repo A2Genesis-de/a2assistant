@@ -139,8 +139,8 @@ def test_quota_hold_parks_past_window_survives_stale_rearm_and_clears_on_model_r
     cadence+grace). The marker clears once a run reaches the model."""
     # A real (non-local) lane: the alert rides the durable delivery queue, whose enqueue is the seam.
     (tmp_cron_home / "config.yaml").write_text(
-        "platforms:\n  slack:\n    enabled: true\n    token: xoxb-test\n", encoding="utf-8")
-    job = create_job("portfolio triage", "every 30m", deliver="slack:alerts")
+        "platforms:\n  telegram:\n    enabled: true\n    token: 123456789:AAtest-token-value-ABCDEFGHIJ\n", encoding="utf-8")
+    job = create_job("portfolio triage", "every 30m", deliver="telegram:-1001004")
     job_id = job["id"]
     now = datetime.now(UTC)
     deliveries: list = []

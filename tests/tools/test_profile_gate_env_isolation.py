@@ -1,6 +1,6 @@
 """A child spawned FOR another profile never inherits this process's authorization gates (#113270).
 
-``DISCORD_ALLOWED_CHANNELS`` / ``TELEGRAM_GROUP_ALLOWED_CHATS`` / ``GATEWAY_ALLOW_ALL_USERS``-class names
+``TELEGRAM_ALLOWED_USERS`` / ``TELEGRAM_GROUP_ALLOWED_CHATS`` / ``GATEWAY_ALLOW_ALL_USERS``-class names
 decide WHO may talk to the agent. They are not credentials (no secret scrub sees them), a unit-file
 ``Environment=`` or operator export never appears in the launch ``.env`` (no name list sees them), and
 the target profile's own ``.env`` rarely defines them (its dotenv load never overwrites them) — so a
@@ -17,11 +17,10 @@ import pytest
 from tools.environments.local import served_profile_child_env
 
 # Gates injected outside any dotenv — the shape a name-list scrub cannot see. Mix of allowlist,
-# deny list, allow-all opt-in, bot policy, channel scoping and a plugin adapter's gate.
+# allow-all opt-in and channel scoping.
 _GATES = {
-    "DISCORD_ALLOWED_CHANNELS": "111", "DISCORD_ALLOWED_ROLES": "r1", "DISCORD_IGNORED_CHANNELS": "222",
-    "DISCORD_ALLOW_BOTS": "all", "TELEGRAM_GROUP_ALLOWED_CHATS": "-100", "SLACK_ALLOWED_CHANNELS": "C1",
-    "WHATSAPP_GROUP_ALLOW_FROM": "+1555", "GATEWAY_ALLOW_ALL_USERS": "true",
+    "TELEGRAM_ALLOWED_USERS": "111", "TELEGRAM_GROUP_ALLOWED_USERS": "222", "TELEGRAM_ALLOW_ALL_USERS": "true",
+    "TELEGRAM_GROUP_ALLOWED_CHATS": "-100", "GATEWAY_ALLOWED_USERS": "333", "GATEWAY_ALLOW_ALL_USERS": "true",
 }
 _PROBE = f"import json,os;print(json.dumps({{k:os.environ.get(k) for k in {sorted(_GATES)!r}}}))"
 

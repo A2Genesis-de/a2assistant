@@ -582,7 +582,7 @@ def test_oauth_block_passes_and_a_token_url_in_code_is_only_a_warning(tmp_path):
     ({"token_url": "http://[::1]:8080/token"}, "must use https"),
     ({"client_secret_env": "OPENROUTER_API_KEY"}, "A2Assistant uses itself"),  # would be POSTed to token_url
     ({"client_id_env": "TELEGRAM_BOT_TOKEN"}, "A2Assistant uses itself"),
-    ({"client_secret_env": "MATRIX_PASSWORD"}, "A2Assistant uses itself"),  # platform secrets too
+    ({"client_secret_env": "TELEGRAM_WEBHOOK_SECRET"}, "A2Assistant uses itself"),  # platform secrets too
     ({"id": 123}, "id"),
     ({"authorize_url": "https://accounts.example.com/o/oauth2/auth#consent"}, "authorize_url"),
     ({"token_url": "https://[oauth2.example.com/token"}, "token_url"),

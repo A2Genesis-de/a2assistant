@@ -863,20 +863,15 @@ _FALLBACK_AGE = {
 # Dashboard surface for per-task, per-platform notification toggles. The
 # backend endpoints read the live GatewayConfig, so tests set env vars
 # (BOT_TOKEN + HOME_CHANNEL) to simulate a user who has run /sethome on
-# telegram and discord.
+# telegram.
 
 @pytest.fixture
 def with_home_channels(monkeypatch):
-    """Simulate a user with home channels set on telegram and discord."""
+    """Simulate a user with a home channel set on telegram."""
     monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "abc:fake")
     monkeypatch.setenv("TELEGRAM_HOME_CHANNEL", "1234567")
     monkeypatch.setenv("TELEGRAM_HOME_CHANNEL_THREAD_ID", "42")
     monkeypatch.setenv("TELEGRAM_HOME_CHANNEL_NAME", "Main TG")
-    monkeypatch.setenv("DISCORD_BOT_TOKEN", "disc_fake")
-    monkeypatch.setenv("DISCORD_HOME_CHANNEL", "9999999")
-    monkeypatch.setenv("DISCORD_HOME_CHANNEL_NAME", "Main Discord")
-    # Slack has a token but NO home — should be excluded from the list.
-    monkeypatch.setenv("SLACK_BOT_TOKEN", "slack_fake")
 
 def test_home_channels_lists_only_platforms_with_home(client, with_home_channels):
     """GET /home-channels returns entries only for platforms where the
@@ -884,9 +879,7 @@ def test_home_channels_lists_only_platforms_with_home(client, with_home_channels
     r = client.get("/api/plugins/kanban/home-channels")
     assert r.status_code == 200
     platforms = {h["platform"] for h in r.json()["home_channels"]}
-    assert platforms == {"telegram", "discord"}, (
-        f"slack has a token but no home — must not appear. got {platforms}"
-    )
+    assert platforms == {"telegram"}, platforms
     for h in r.json()["home_channels"]:
         assert h["subscribed"] is False
 

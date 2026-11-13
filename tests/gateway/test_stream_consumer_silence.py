@@ -200,17 +200,8 @@ def _draft_adapter():
     return adapter
 
 
-def _native_adapter():
-    from tests.gateway.test_stream_consumer_wecom_native import _make_native_streaming_adapter
-
-    adapter = _make_native_streaming_adapter()
-    adapter.answer_copies = lambda: sum(1 for f in adapter.frames if f["finalize"] and f["text"] == ANSWER)
-    adapter.marker_shown = lambda: any("NO_REPLY" in f["text"] for f in adapter.frames)
-    return adapter
-
-
 @pytest.mark.asyncio
-@pytest.mark.parametrize("make_adapter", [_draft_adapter, _native_adapter], ids=["draft", "native"])
+@pytest.mark.parametrize("make_adapter", [_draft_adapter], ids=["draft"])
 @pytest.mark.parametrize("final_text", [ANSWER, "NO_REPLY"], ids=["reply-final", "marker-final"])
 async def test_marker_after_reply_on_draft_and_native_transports(make_adapter, final_text):
     """Draft and native transports: a reply final after the held-back marker is

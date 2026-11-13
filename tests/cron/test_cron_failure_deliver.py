@@ -50,7 +50,7 @@ def run_env(monkeypatch, tmp_path):
     home = tmp_path / "hermes-home"
     home.mkdir()
     (home / "config.yaml").write_text(
-        "platforms:\n  slack:\n    enabled: true\n    token: xoxb-test\n"
+        "platforms:\n  telegram:\n    enabled: true\n    token: 123456789:AAtest-token-value-ABCDEFGHIJ\n"
     )
     monkeypatch.setenv("HERMES_HOME", str(home))
 
@@ -66,12 +66,12 @@ def run_env(monkeypatch, tmp_path):
     import gateway.platform_registry as reg
     import hermes_cli.plugins as hp
 
-    entry = reg.platform_registry.get("slack")
+    entry = reg.platform_registry.get("telegram")
     if entry is None:
         hp.discover_plugins()
-        entry = reg.platform_registry.get("slack")
+        entry = reg.platform_registry.get("telegram")
     if entry is None:
-        pytest.skip("slack platform entry not registered")
+        pytest.skip("telegram platform entry not registered")
     monkeypatch.setattr(entry, "standalone_sender_fn", fake_sender)
     monkeypatch.setattr(hp, "discover_plugins", lambda *a, **k: None)
 
@@ -143,10 +143,10 @@ class TestFailureDeliverRouting:
         the job's deliver targets."""
         monkeypatch.setattr(s, "run_job", _failing_run_job())
 
-        s.run_one_job({"id": "j1", "name": "scout", "deliver": "slack:D0MAIN"})
+        s.run_one_job({"id": "j1", "name": "scout", "deliver": "telegram:-1001001"})
 
         run_env["drain"](for_failure=True)
-        assert [c["chat_id"] for c in run_env["send"]] == ["D0MAIN"]
+        assert [c["chat_id"] for c in run_env["send"]] == ["-1001001"]
         assert "failed" in run_env["send"][0]["message"].lower()
 
     def test_failure_deliver_local_is_silent_but_state_is_recorded(
@@ -158,7 +158,7 @@ class TestFailureDeliverRouting:
 
         s.run_one_job({
             "id": "j2", "name": "scout",
-            "deliver": "slack:D0MAIN", "failure_deliver": "local",
+            "deliver": "telegram:-1001001", "failure_deliver": "local",
         })
 
         assert run_env["send"] == []
@@ -178,11 +178,11 @@ class TestFailureDeliverRouting:
 
         s.run_one_job({
             "id": "j3", "name": "scout",
-            "deliver": "slack:D0MAIN", "failure_deliver": "slack:D0ALERTS",
+            "deliver": "telegram:-1001001", "failure_deliver": "telegram:-1001002",
         })
 
         run_env["drain"](for_failure=True)
-        assert [c["chat_id"] for c in run_env["send"]] == ["D0ALERTS"]
+        assert [c["chat_id"] for c in run_env["send"]] == ["-1001002"]
         assert "failed" in run_env["send"][0]["message"].lower()
 
     def test_success_ignores_failure_deliver(self, run_env, monkeypatch):
@@ -192,12 +192,12 @@ class TestFailureDeliverRouting:
 
         ok = s.run_one_job({
             "id": "j4", "name": "scout",
-            "deliver": "slack:D0MAIN", "failure_deliver": "slack:D0ALERTS",
+            "deliver": "telegram:-1001001", "failure_deliver": "telegram:-1001002",
         })
 
         assert ok is True
         run_env["drain"](for_failure=False)
-        assert [c["chat_id"] for c in run_env["send"]] == ["D0MAIN"]
+        assert [c["chat_id"] for c in run_env["send"]] == ["-1001001"]
         assert "all good, here is the brief" in run_env["send"][0]["message"]
 
 
@@ -220,11 +220,11 @@ class TestEscapedExceptionPath:
 
         ok = s.run_one_job({
             "id": "j5", "name": "scout",
-            "deliver": "slack:D0MAIN", "failure_deliver": "slack:D0ALERTS",
+            "deliver": "telegram:-1001001", "failure_deliver": "telegram:-1001002",
         })
 
         assert ok is False
-        assert [c["chat_id"] for c in run_env["send"]] == ["D0ALERTS"]
+        assert [c["chat_id"] for c in run_env["send"]] == ["-1001002"]
 
     def test_escaped_failure_with_failure_deliver_local_is_silent(
         self, run_env, monkeypatch
@@ -233,7 +233,7 @@ class TestEscapedExceptionPath:
 
         ok = s.run_one_job({
             "id": "j6", "name": "scout",
-            "deliver": "slack:D0MAIN", "failure_deliver": "local",
+            "deliver": "telegram:-1001001", "failure_deliver": "local",
         })
 
         assert ok is False
@@ -249,28 +249,28 @@ class TestResolutionGrammar:
     normalization/expansion path, not a parallel one."""
 
     def test_for_failure_resolves_failure_deliver_value(self):
-        job = {"deliver": "local", "failure_deliver": "slack:D0ALERTS"}
+        job = {"deliver": "local", "failure_deliver": "telegram:-1001002"}
         targets = _resolve_delivery_targets(job, for_failure=True)
         assert [(t["platform"], t["chat_id"]) for t in targets] == [
-            ("slack", "D0ALERTS")
+            ("telegram", "-1001002")
         ]
 
     def test_for_failure_falls_back_to_deliver_when_unset(self):
-        job = {"deliver": "slack:D0MAIN"}
+        job = {"deliver": "telegram:-1001001"}
         targets = _resolve_delivery_targets(job, for_failure=True)
         assert [(t["platform"], t["chat_id"]) for t in targets] == [
-            ("slack", "D0MAIN")
+            ("telegram", "-1001001")
         ]
 
     def test_success_resolution_never_reads_failure_deliver(self):
-        job = {"deliver": "slack:D0MAIN", "failure_deliver": "slack:D0ALERTS"}
+        job = {"deliver": "telegram:-1001001", "failure_deliver": "telegram:-1001002"}
         targets = _resolve_delivery_targets(job)
         assert [(t["platform"], t["chat_id"]) for t in targets] == [
-            ("slack", "D0MAIN")
+            ("telegram", "-1001001")
         ]
 
     def test_local_yields_zero_failure_targets(self):
-        job = {"deliver": "slack:D0MAIN", "failure_deliver": "local"}
+        job = {"deliver": "telegram:-1001001", "failure_deliver": "local"}
         assert _resolve_delivery_targets(job, for_failure=True) == []
 
     def test_comma_list_and_thread_grammar(self):
@@ -278,20 +278,20 @@ class TestResolutionGrammar:
         supports work identically for failure_deliver."""
         job = {
             "deliver": "local",
-            "failure_deliver": "slack:D0ALERTS,telegram:-1001:17",
+            "failure_deliver": "telegram:-1001002,telegram:-1001:17",
         }
         targets = _resolve_delivery_targets(job, for_failure=True)
         assert [(t["platform"], t["chat_id"], t.get("thread_id")) for t in targets] == [
-            ("slack", "D0ALERTS", None),
+            ("telegram", "-1001002", None),
             ("telegram", "-1001", "17"),
         ]
 
     def test_legacy_list_value_is_flattened_like_deliver(self):
         """Same list/tuple tolerance _normalize_deliver_value grants deliver."""
-        job = {"deliver": "local", "failure_deliver": ["slack:D0ALERTS"]}
+        job = {"deliver": "local", "failure_deliver": ["telegram:-1001002"]}
         targets = _resolve_delivery_targets(job, for_failure=True)
         assert [(t["platform"], t["chat_id"]) for t in targets] == [
-            ("slack", "D0ALERTS")
+            ("telegram", "-1001002")
         ]
 
 
@@ -307,7 +307,7 @@ class TestToolSurface:
             action="create",
             prompt="scan",
             schedule="every 1h",
-            deliver="slack:D0MAIN",
+            deliver="telegram:-1001001",
             failure_deliver="local",
         ))
         assert result["success"] is True
@@ -332,10 +332,10 @@ class TestToolSurface:
             action="create",
             prompt="scan",
             schedule="every 1h",
-            failure_deliver=["slack", "telegram"],
+            failure_deliver=["telegram", "local"],
         ))
         assert result["success"] is True
-        assert get_job(result["job_id"])["failure_deliver"] == "slack,telegram"
+        assert get_job(result["job_id"])["failure_deliver"] == "telegram,local"
 
     def test_create_rejects_bad_bot_chat_profile_same_as_deliver(self, cron_env):
         from tools.cronjob_tools import cronjob
@@ -359,10 +359,10 @@ class TestToolSurface:
 
         job = create_job(prompt="scan", schedule="every 1h")
         result = json.loads(cronjob(
-            action="update", job_id=job["id"], failure_deliver="slack:D0ALERTS",
+            action="update", job_id=job["id"], failure_deliver="telegram:-1001002",
         ))
         assert result["success"] is True
-        assert get_job(job["id"])["failure_deliver"] == "slack:D0ALERTS"
+        assert get_job(job["id"])["failure_deliver"] == "telegram:-1001002"
 
         # '' clears — job falls back to deliver on failures again.
         result = json.loads(cronjob(
@@ -397,7 +397,7 @@ class TestOutcomeBookkeeping:
 
         s.run_one_job({
             "id": "b1a", "name": "scout",
-            "deliver": "slack:D0MAIN", "failure_deliver": "local",
+            "deliver": "telegram:-1001001", "failure_deliver": "local",
         })
 
         assert run_env["send"] == []
@@ -420,14 +420,14 @@ class TestOutcomeBookkeeping:
 
         s.run_one_job({
             "id": "b1b", "name": "scout",
-            "deliver": "origin", "failure_deliver": "slack:D0OPS",
+            "deliver": "origin", "failure_deliver": "telegram:-1001003",
         })
 
         run_env["transport"]["success"] = transport_success
         assert self._outcome(run_env) == "queued"
         assert alerted == [], "admission alone must NOT mark incident alerted"
         run_env["drain"](for_failure=True)
-        assert [c["chat_id"] for c in run_env["send"]] == ["D0OPS"]
+        assert [c["chat_id"] for c in run_env["send"]] == ["-1001003"]
         assert "failed" in run_env["send"][0]["message"].lower()
         assert self._outcome(run_env) == ("delivered" if transport_success else "failed")
         assert alerted == (["inc-b1"] if transport_success else []), (
@@ -441,12 +441,12 @@ class TestOutcomeBookkeeping:
 
         s.run_one_job({
             "id": "b1c", "name": "scout",
-            "deliver": "slack:D0MAIN", "failure_deliver": "local",
+            "deliver": "telegram:-1001001", "failure_deliver": "local",
         })
 
         assert self._outcome(run_env) == "queued"
         run_env["drain"](for_failure=False)
-        assert [c["chat_id"] for c in run_env["send"]] == ["D0MAIN"]
+        assert [c["chat_id"] for c in run_env["send"]] == ["-1001001"]
         assert self._outcome(run_env) == "delivered"
 
 
@@ -495,9 +495,9 @@ class TestPreflightAndDashboardLanes:
         from hermes_cli.web_routers.cron import _normalize_dashboard_cron_updates
 
         out = _normalize_dashboard_cron_updates(
-            {"failure_deliver": "  slack:D0ALERTS  "}, tmp_path
+            {"failure_deliver": "  telegram:-1001002  "}, tmp_path
         )
-        assert out["failure_deliver"] == "slack:D0ALERTS"
+        assert out["failure_deliver"] == "telegram:-1001002"
 
         cleared = _normalize_dashboard_cron_updates(
             {"failure_deliver": ""}, tmp_path

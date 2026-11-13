@@ -469,14 +469,14 @@ class TestSecretRedactionInDisplay:
 class TestSchemaValidation:
     """#34067 / #112003 / #114107: only a WRONG-PREFIX path under a known section is provably a typo
     and refused before anything is written (headline case
-    ``gateway.discord.gateway_restart_notification``, correct path
-    ``discord.gateway_restart_notification``). Every other unknown path — unseeded runtime-read keys
+    ``gateway.telegram.gateway_restart_notification``, correct path
+    ``telegram.gateway_restart_notification``). Every other unknown path — unseeded runtime-read keys
     and same-section misspellings alike — is written with a post-write notice, because
     DEFAULT_CONFIG is not a complete registry of what the runtime reads.
     """
 
     @pytest.mark.parametrize("key,suggestion", [
-        ("gateway.discord.gateway_restart_notification", "discord.gateway_restart_notification"),
+        ("gateway.telegram.gateway_restart_notification", "telegram.gateway_restart_notification"),
         # The stray middle segment ``gateway`` fuzzy-matches the sibling ``agent.gateway_timeout``;
         # the structural wrong-prefix match must win so the path is refused, not written with
         # a misleading did-you-mean.
@@ -558,7 +558,7 @@ class TestValidateConfigKey:
 
     @pytest.mark.parametrize("key", [
         "agent.max_turns",
-        "discord.gateway_restart_notification",
+        "telegram.gateway_restart_notification",
         "mcp_servers.foo.command",
         "providers.openrouter.api_key",
         "gateway.platforms.my_platform.extra.token",
@@ -573,8 +573,8 @@ class TestValidateConfigKey:
         assert is_known, f"Expected {key!r} to validate as known"
 
     @pytest.mark.parametrize("key,expected_in_suggestion", [
-        ("gateway.discord.gateway_restart_notification", "discord.gateway_restart_notification"),
-        ("disco", "discord"),
+        ("gateway.telegram.gateway_restart_notification", "telegram.gateway_restart_notification"),
+        ("telegr", "telegram"),
         ("agent.max_turn", "agent.max_turns"),
         # A typo of an _EXTRA_KNOWN_ROOT_KEYS root points at the real root, not a near-miss.
         ("platform_toolset.cli", "platform_toolsets.cli"),

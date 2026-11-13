@@ -40,7 +40,7 @@ async def test_a_phone_apps_own_label_resumes_writable_and_a_webui_row_stays_rea
     store, desktop = await _owner(tmp_path, monkeypatch, {'gui': []})
     db = store._db
     for sid, source, user_id in (('phone-mobile', 'mobile', None), ('phone-ios', 'ios', 'basic:admin'),
-                                 ('webui-row', 'webui', None), ('teams-row', 'teams', None),
+                                 ('webui-row', 'webui', None), ('telegram-row', 'telegram', None),
                                  ('curator-row', 'curator', None)):
         db.create_session(sid, source=source, model='m', cwd=str(tmp_path), user_id=user_id)
         db.append_message(sid, role='user', content='hi from ' + sid)
@@ -50,7 +50,7 @@ async def test_a_phone_apps_own_label_resumes_writable_and_a_webui_row_stays_rea
     Platform._add_pseudo_member('mobile')
     from hermes_cli.sessions_adopt import adoptable_sessions
     offered = {row['id'] for row in adoptable_sessions(db.db_path)}
-    assert {'phone-mobile', 'phone-ios'} <= offered and not offered & {'webui-row', 'teams-row', 'curator-row'}
+    assert {'phone-mobile', 'phone-ios'} <= offered and not offered & {'webui-row', 'telegram-row', 'curator-row'}
     for i, sid in enumerate(('phone-mobile', 'phone-ios')):
         if sid == 'phone-mobile':
             # A metadata read first opens a read-only view; the resume then adopts it in place.
@@ -66,7 +66,7 @@ async def test_a_phone_apps_own_label_resumes_writable_and_a_webui_row_stays_rea
         again = await desktop.dispatch({'id': 20 + i, 'method': 'session.resume', 'params': {'session_id': sid}})
         assert again.get('result', {}).get('session_id') == sid, again
     # A foreign writer's rows, a bundled plugin platform's label and automation stay read-only.
-    for i, sid in enumerate(('webui-row', 'teams-row', 'curator-row')):
+    for i, sid in enumerate(('webui-row', 'telegram-row', 'curator-row')):
         await desktop.dispatch({'id': 30 + i, 'method': 'session.resume', 'params': {'session_id': sid}})
         sent = await desktop.dispatch({'id': 40 + i, 'method': 'prompt.submit',
                                        'params': {'session_id': sid, 'text': 'go on', 'submission_id': 's-' + sid}})
