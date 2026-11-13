@@ -94,80 +94,6 @@ class TestReadSelection:
 
 
 # ---------------------------------------------------------------------------
-# Image generation (FAL)
-# ---------------------------------------------------------------------------
-
-
-class TestImageFalStrictSelection:
-    def test_nous_selection_routes_managed_even_with_fal_key(self):
-        from tools import image_generation_tool as it
-
-        with patch.object(it, "read_selection", return_value="nous"), \
-             patch.object(it, "fal_key_is_configured", return_value=True), \
-             patch.object(it, "resolve_managed_tool_gateway", return_value=MANAGED) as gw:
-            assert it._resolve_managed_fal_gateway() is MANAGED
-        gw.assert_called_once_with("fal-queue")
-
-    def test_nous_selection_unentitled_raises_selection_error(self):
-        from tools import image_generation_tool as it
-
-        with patch.object(it, "read_selection", return_value="nous"), \
-             patch.object(it, "fal_key_is_configured", return_value=True), \
-             patch.object(it, "resolve_managed_tool_gateway", return_value=None):
-            with pytest.raises(ValueError) as exc:
-                it._resolve_managed_fal_gateway()
-        assert "image_gen is configured to use nous" in str(exc.value)
-        assert "hermes tools" in str(exc.value)
-
-    def test_fal_selection_missing_key_errors_without_managed_call(self):
-        from tools import image_generation_tool as it
-
-        with patch.object(it, "read_selection", return_value="fal"), \
-             patch.object(it, "fal_key_is_configured", return_value=False), \
-             patch.object(it, "resolve_managed_tool_gateway") as gw:
-            with pytest.raises(ValueError) as exc:
-                it._resolve_managed_fal_gateway()
-        gw.assert_not_called()
-        assert "FAL_KEY" in str(exc.value)
-        assert "image_gen is configured to use fal" in str(exc.value)
-        assert "hermes tools" in str(exc.value)
-
-    def test_fal_selection_with_key_routes_direct(self):
-        from tools import image_generation_tool as it
-
-        with patch.object(it, "read_selection", return_value="fal"), \
-             patch.object(it, "fal_key_is_configured", return_value=True), \
-             patch.object(it, "resolve_managed_tool_gateway") as gw:
-            assert it._resolve_managed_fal_gateway() is None
-        gw.assert_not_called()
-
-    def test_never_configured_autodetect_direct_when_key_present(self):
-        from tools import image_generation_tool as it
-
-        with patch.object(it, "read_selection", return_value=None), \
-             patch.object(it, "fal_key_is_configured", return_value=True):
-            assert it._resolve_managed_fal_gateway() is None
-
-    def test_never_configured_autodetect_managed_when_no_key(self):
-        from tools import image_generation_tool as it
-
-        with patch.object(it, "read_selection", return_value=None), \
-             patch.object(it, "fal_key_is_configured", return_value=False), \
-             patch.object(it, "resolve_managed_tool_gateway", return_value=MANAGED):
-            assert it._resolve_managed_fal_gateway() is MANAGED
-
-    def test_check_fal_api_key_reflects_selection(self):
-        from tools import image_generation_tool as it
-
-        with patch.object(it, "read_selection", return_value="fal"), \
-             patch.object(it, "fal_key_is_configured", return_value=False), \
-             patch.object(it, "resolve_managed_tool_gateway", return_value=MANAGED):
-            # Broken vendor selection reports unavailable even though the
-            # managed gateway would resolve.
-            assert it.check_fal_api_key() is False
-
-
-# ---------------------------------------------------------------------------
 # STT (OpenAI audio resolver — previously ignored the stored intent entirely)
 # ---------------------------------------------------------------------------
 
@@ -229,15 +155,6 @@ class TestWriteProviderConfig:
         _write_provider_config(provider, config, managed_feature=None)
         assert config["web"]["backend"] == "keenable"
         assert "use_gateway" not in config["web"]
-
-    def test_managed_image_row_persists_nous_provider(self):
-        from hermes_cli.tools_config import _write_provider_config
-
-        config = {}
-        provider = {"name": "Nous Subscription", "imagegen_backend": "fal"}
-        _write_provider_config(provider, config, managed_feature="image_gen")
-        assert config["image_gen"]["provider"] == "nous"
-        assert "use_gateway" not in config["image_gen"]
 
     def test_plugin_injected_byok_row_clears_stale_use_gateway(self):
         """Plugin-injected rows are not in TOOL_CATEGORIES' hardcoded

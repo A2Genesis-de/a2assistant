@@ -14,7 +14,7 @@ from hermes_cli.colors import Colors, color
 from hermes_cli.config import cfg_get, get_env_value, load_config, save_config, save_env_value
 from hermes_cli.nous_account import format_nous_portal_entitlement_message
 from hermes_cli.nous_subscription import MANAGED_FEATURE_COVERAGE_CATEGORY, NousSubscriptionFeatures
-from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER, fal_key_is_configured
+from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER
 from tools.transcription_common import STT_MODEL_CATALOG
 from utils import base_url_hostname, is_truthy_value
 
@@ -232,8 +232,8 @@ def _toolset_needs_configuration_prompt(ts_key: str, config: dict, *, force_fres
         if not isinstance(section, dict):
             return True
         return selection_key not in section
-    if ts_key == "image_gen":  # in-tree FAL backend OR any available plugin image gen provider satisfies
-        return not fal_key_is_configured() and not _any_plugin_provider_available("agent.image_gen_registry")
+    if ts_key == "image_gen":
+        return not _any_plugin_provider_available("agent.image_gen_registry")
 
     return not _toolset_has_keys(ts_key, config, force_fresh=force_fresh)
 
@@ -362,18 +362,6 @@ def _managed_provider_active(provider: dict, config: dict, managed_feature: str,
     feature = get_nous_subscription_features(config, force_fresh=force_fresh).features.get(managed_feature)
     if feature is None:
         return False
-    if managed_feature == "image_gen":
-        gen_cfg = config.get(managed_feature, {})
-        if isinstance(gen_cfg, dict):
-            configured_provider = gen_cfg.get("provider")
-            if configured_provider not in {None, "", "fal", NOUS_MANAGED_PROVIDER}:
-                return False
-            if (
-                configured_provider != NOUS_MANAGED_PROVIDER
-                and gen_cfg.get("use_gateway") is not None
-                and not is_truthy_value(gen_cfg.get("use_gateway"), default=False)):
-                return False
-        return feature.managed_by_nous
     if _has_marker(provider, "web_backend"):
         # Search and extract pick their route separately: the managed row serves whichever one
         # resolves to the gateway (a ``nous`` override, or the shared ``nous`` selection).
@@ -396,15 +384,6 @@ def _browser_provider_active(provider: dict, config: dict) -> bool:
     return True
 
 
-def _imagegen_backend_active(provider: dict, config: dict) -> bool:
-    image_cfg = config.get("image_gen", {})
-    return (
-        isinstance(image_cfg, dict)
-        and provider["imagegen_backend"] == "fal"
-        and image_cfg.get("provider") in {None, "", "fal"}
-        and not is_truthy_value(image_cfg.get("use_gateway"), default=False))
-
-
 # Non-managed active checks, evaluated in order; the first marker the row carries decides (see ``_has_marker``).
 # Default stt.provider is "local" — an unset key means Local Whisper.
 _ACTIVE_CHECKS: tuple[tuple[str, Callable[[dict, dict], bool]], ...] = (
@@ -412,15 +391,12 @@ _ACTIVE_CHECKS: tuple[tuple[str, Callable[[dict, dict], bool]], ...] = (
     ("stt_provider", lambda p, c: (cfg_get(c, "stt", "provider") or "local") == p["stt_provider"]),
     ("browser_provider", _browser_provider_active),
     ("web_backend", _web_backend_active),
-    ("computer_use_backend", lambda p, c: cfg_get(c, "computer_use", "backend") == p["computer_use_backend"]),
-    ("imagegen_backend", _imagegen_backend_active))
+    ("computer_use_backend", lambda p, c: cfg_get(c, "computer_use", "backend") == p["computer_use_backend"]))
 
 
 def _is_provider_active(provider: dict, config: dict, *, force_fresh: bool = False) -> bool:
     """Check if a provider entry matches the currently active config."""
     managed_feature = provider.get("managed_nous_feature")
-    # Managed entries fall through to the managed branch, which also checks use_gateway — otherwise a
-    # managed FAL pick and a direct-key FAL pick would both report active.
     plugin_name = provider.get("image_gen_plugin_name")
     if plugin_name and not managed_feature:
         gen_cfg = config.get("image_gen", {})
@@ -450,37 +426,9 @@ def _detect_active_provider_index(providers: list, config: dict, *, force_fresh:
     return 0
 
 
-def _fal_model_catalog(config: dict):
-    """Lazy-load the FAL model catalog."""
-    from tools.image_generation_catalog import FAL_MODELS, DEFAULT_MODEL
-    return FAL_MODELS, DEFAULT_MODEL
-
-
-def _managed_image_catalog(config: dict):
-    """The managed row's union catalog (FAL + Krea + Portal), minus the gateways this account cannot use.
-
-    A free-pool account is funded for FAL only, so its picker never offers a Krea or Portal model it
-    would be denied at generation time; a logged-out or paid account sees everything."""
-    from hermes_cli.tools_config import get_nous_subscription_features
-    from tools.image_generation_managed import managed_image_catalog
-
-    acct = get_nous_subscription_features(config).account_info
-    pool_only = bool(acct and acct.logged_in and acct.paid_service_access is not True)
-    return managed_image_catalog(
-        include_krea=not pool_only or acct.tool_gateway_entitled_for("krea"), include_portal=not pool_only)
-
-
-# Per-backend model catalog (config_key = top-level config.yaml section, catalog_fn(config) -> ({model_id:
-# metadata}, default_model)); a TOOL_CATEGORIES row tagged `imagegen_backend: "<name>"` selects the catalog at
-# picker time. "nous" is the single managed row: one catalog spanning the FAL, Krea and Portal gateways.
-IMAGEGEN_BACKENDS = {
-    "fal": {"display": "FAL.ai", "config_key": "image_gen", "catalog_fn": _fal_model_catalog},
-    "nous": {"display": "Nous Subscription", "config_key": "image_gen", "catalog_fn": _managed_image_catalog}}
-
-
 def _plugin_model_catalog(registry_module: str, plugin_name: str):
-    """``(catalog_dict, default_model_id)`` for a plugin provider; ``catalog_dict`` is shaped like the legacy
-    ``FAL_MODELS`` table so the picker path is shared. ``({}, None)`` if unregistered or no models."""
+    """``(catalog_dict, default_model_id)`` for a plugin provider (``{model_id: row}``); ``({}, None)`` if
+    unregistered or no models."""
     registry = _plugin_registry(registry_module)
     try:  # a missing registry / unknown provider surfaces as AttributeError here — same ({}, None) outcome
         provider = registry.get_provider(plugin_name)
@@ -497,7 +445,7 @@ _plugin_image_gen_catalog = partial(_plugin_model_catalog, "agent.image_gen_regi
 def _pick_model_from_catalog(
     catalog: dict, default_model, cfg_key: str, display: str, config: dict,
 ) -> None:
-    """Column-aligned model picker shared by the FAL and plugin image gen flows.
+    """Column-aligned model picker for plugin image gen catalogs.
     Writes the choice to ``config[cfg_key]["model"]``. The current model is listed first so the cursor
     lands on it; a saved model belonging to another provider (shared config key) or a drifted catalog
     default never indexes the catalog. Safe when stdin is not a TTY — curses_radiolist keeps the current
@@ -538,41 +486,10 @@ def _pick_model_from_catalog(
     _print_success(f"  Model set to: {chosen}")
 
 
-def _configure_imagegen_model(backend_name: str, config: dict) -> None:
-    """Prompt for a model of an in-tree imagegen backend (``IMAGEGEN_BACKENDS``)."""
-    backend = IMAGEGEN_BACKENDS.get(backend_name)
-    if not backend:
-        return
-    catalog, default_model = backend["catalog_fn"](config)
-    _pick_model_from_catalog(catalog, default_model, backend["config_key"], backend["display"], config)
-
-
 def _configure_imagegen_model_for_plugin(plugin_name: str, config: dict) -> None:
     """Prompt for a model from a plugin-registered image gen catalog."""
     catalog, default_model = _plugin_image_gen_catalog(plugin_name)
     _pick_model_from_catalog(catalog, default_model, "image_gen", plugin_name, config)
-
-
-def _configure_xai_imagine_storage(section_name: str, config: dict) -> None:
-    """Prompt for xAI Imagine stored public URL behavior."""
-    from hermes_cli.tools_config import _cfg_section, _prompt_choice
-
-    storage_cfg = _cfg_section(_cfg_section(_cfg_section(config, section_name), "xai"), "storage")
-    _print_warning(
-        "  xAI Imagine can store generated media and create reusable public URLs. "
-        "xAI may bill for stored files and public URL hosting.")
-    choices = ["Enable public URLs without automatic expiry (recommended)", "Disable stored public URLs",
-               "Enable public URLs for 2 days"]
-    idx = _prompt_choice("  Stored public URLs:", choices, default=0)
-    if idx == 1:
-        storage_cfg["enabled"] = False
-        _print_success("  xAI stored public URLs disabled")
-        return
-    storage_cfg["enabled"] = True
-    storage_cfg["public_url"] = True
-    storage_cfg["expires_after"] = 2 * 24 * 60 * 60 if idx == 2 else None
-    _print_success("  xAI stored public URLs enabled for 2 days" if idx == 2
-                   else "  xAI stored public URLs enabled without automatic expiry")
 
 
 def _select_into(config: dict, section: str, key: str, vendor, managed) -> dict:
@@ -586,17 +503,13 @@ def _select_into(config: dict, section: str, key: str, vendor, managed) -> dict:
     return cfg
 
 
-def _select_plugin_gen_provider(section: str, plugin_name: str, config: dict, *, use_gateway: bool = False) -> None:
-    """Persist a plugin-backed image/video gen provider selection (``nous`` for a Nous-managed pick, else the
+def _select_plugin_image_gen_provider(plugin_name: str, config: dict, *, use_gateway: bool = False) -> None:
+    """Persist a plugin-backed image gen provider selection (``nous`` for a Nous-managed pick, else the
     plugin name) and run its model picker."""
-    cfg = _select_into(config, section, "provider", plugin_name, use_gateway)
-    _print_success(f"  {section}.provider set to: {cfg['provider']}")
+    cfg = _select_into(config, "image_gen", "provider", plugin_name, use_gateway)
+    _print_success(f"  image_gen.provider set to: {cfg['provider']}")
     _configure_imagegen_model_for_plugin(plugin_name, config)
-    if plugin_name == "xai":
-        _configure_xai_imagine_storage(section, config)
 
-
-_select_plugin_image_gen_provider = partial(_select_plugin_gen_provider, "image_gen")
 
 def _configure_stt_model(stt_provider: str, config: dict) -> None:
     """Prompt for the STT model after a provider pick (static catalog)."""
@@ -616,7 +529,7 @@ def _configure_stt_model(stt_provider: str, config: dict) -> None:
 # Provider-row marker key -> config section it selects into.
 _PROVIDER_MARKER_SECTIONS = {
     "tts_provider": "tts", "stt_provider": "stt", "browser_provider": "browser", "web_backend": "web",
-    "image_gen_plugin_name": "image_gen", "imagegen_backend": "image_gen",
+    "image_gen_plugin_name": "image_gen",
 }
 
 
@@ -690,15 +603,11 @@ def apply_provider_selection(ts_key: str, provider_name: str, config: dict) -> N
     managed_feature = provider.get("managed_nous_feature")
     _write_provider_config(provider, config, managed_feature=managed_feature)
 
-    # Plugin image/video gen backends record the provider name in their own section (model choice is a separate
-    # GUI flow); managed picks store "nous". The in-tree FAL BYOK row always persists an explicit
-    # ``image_gen.provider: fal`` so a deliberate pick is distinguishable from a never-configured install.
-    selections = [
-        ("image_gen", provider.get("image_gen_plugin_name")),
-        ("image_gen", "fal" if provider.get("imagegen_backend") and not managed_feature else None)]
-    for section_key, vendor in selections:
-        if vendor:
-            _select_into(config, section_key, "provider", vendor, managed_feature)
+    # Plugin image gen backends record the provider name in their own section (model choice is a separate
+    # GUI flow).
+    image_plugin = provider.get("image_gen_plugin_name")
+    if image_plugin:
+        _select_into(config, "image_gen", "provider", image_plugin, managed_feature)
 
 
 def _nous_provider_gate(provider: dict, config: dict, managed_feature, *, force_fresh: bool) -> bool:
@@ -731,17 +640,11 @@ def _nous_provider_gate(provider: dict, config: dict, managed_feature, *, force_
 
 
 def _finish_provider_selection(provider: dict, config: dict, managed_feature) -> None:
-    """Model pickers that follow a provider pick: plugin image gen, in-tree FAL, STT."""
+    """Model pickers that follow a provider pick: plugin image gen, STT."""
     plugin_name = provider.get("image_gen_plugin_name")
     if plugin_name:
         _select_plugin_image_gen_provider(plugin_name, config, use_gateway=bool(managed_feature))
         return
-    backend = provider.get("imagegen_backend")
-    if backend:
-        _configure_imagegen_model(backend, config)
-        # "nous" for the managed row (the picked model id chooses the FAL / Krea / Portal gateway at run time),
-        # "fal" for BYOK, drop legacy use_gateway — never clobber a managed pick back onto direct keys.
-        _select_into(config, "image_gen", "provider", "fal", managed_feature)
     # STT rows prompt for a model after the pick (skipped for managed rows — the gateway pins it).
     if provider.get("stt_provider") and not managed_feature:
         _configure_stt_model(provider["stt_provider"], config)

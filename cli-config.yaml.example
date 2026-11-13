@@ -1520,7 +1520,7 @@ platform_toolsets:
 #   browser      - browser_exec, browser_cdp, browser_dialog, browser_vault
 #                  (local Chromium, or a cloud browser with its API key)
 #   vision       - vision_analyze  (requires OPENROUTER_API_KEY)
-#   image_gen    - image_generate  (requires FAL_KEY)
+#   image_gen    - image_generate  (requires image_gen.provider, e.g. openai)
 #   skills       - skills_list, skill_view
 #   skills_hub   - skill_hub (search/install/manage from online registries — user-driven only)
 #   todo         - todo (in-memory task planning, no deps)
@@ -1546,7 +1546,7 @@ platform_toolsets:
 #   file         - File operations: read, write, patch, search
 #   browser      - Browser automation over CDP (browser_exec drives a real Chromium)
 #   vision       - Image analysis (vision_analyze)
-#   image_gen    - Image generation with FLUX (image_generate)
+#   image_gen    - Image generation (image_generate)
 #   skills       - Load skill documents (skills_list, skill_view)
 #   todo         - Task planning and tracking for multi-step work
 #   memory       - Persistent memory across sessions (personal notes + user profile)
@@ -1732,15 +1732,15 @@ stt:
 #                      # client: always desktop-streamed PCM (detection stays
 #                      #         on the backend).
 
-# Image generation. Each provider plugin reads its own ``image_gen.<name>``
-# block; deepinfra discovers models live from
-# api.deepinfra.com/v1/openai/models filtered by the ``image-gen`` tag —
-# no model id is hardcoded, so retired models disappear automatically.
+# Image generation. The plugin named by ``image_gen.provider`` reads its own
+# ``image_gen.<name>`` block; ``openai`` serves OpenAI or any OpenAI-compatible
+# images endpoint.
 # image_gen:
-#   provider: "deepinfra"
-#   deepinfra:
-#     # Leave `model` blank for the first live `image-gen`-tagged result.
-#     model: ""
+#   provider: "openai"
+#   openai:
+#     base_url: "https://api.openai.com/v1"   # or an OpenAI-compatible endpoint
+#     key_env: "OPENAI_API_KEY"                # env var holding the key
+#     model: "gpt-image-2-medium"
 
 # =============================================================================
 # Response Pacing (Messaging Platforms)

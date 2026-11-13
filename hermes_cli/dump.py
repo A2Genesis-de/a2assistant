@@ -232,7 +232,7 @@ _API_KEYS = [
     ("OPENROUTER_API_KEY", "openrouter"), ("OPENAI_API_KEY", "openai"),
     ("ANTHROPIC_API_KEY", "anthropic"), ("ANTHROPIC_TOKEN", "anthropic_token"),
     ("NOUS_API_KEY", "nous"), ("GOOGLE_API_KEY", "google/gemini"), ("GEMINI_API_KEY", "gemini"),
-    ("MINIMAX_API_KEY", "minimax"), ("FIRECRAWL_API_KEY", "firecrawl"), ("FAL_KEY", "fal"),
+    ("MINIMAX_API_KEY", "minimax"), ("FIRECRAWL_API_KEY", "firecrawl"),
     ("GITHUB_TOKEN", "github"),
 ]
 

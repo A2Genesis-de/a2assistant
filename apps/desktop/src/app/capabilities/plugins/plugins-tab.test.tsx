@@ -187,8 +187,8 @@ describe('PluginsTab', () => {
     $agentPlugins.set([
       {
         description: '',
-        key: 'image_gen/fal',
-        name: 'fal',
+        key: 'image_gen/openai',
+        name: 'openai',
         source: 'bundled',
         status: 'enabled',
         version: ''

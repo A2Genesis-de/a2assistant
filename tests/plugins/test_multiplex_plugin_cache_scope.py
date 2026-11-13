@@ -50,53 +50,11 @@ def scoped(home: Path):
         reset_hermes_home_override(t_home)
 
 
-class _Resp:
-    def __init__(self, payload, status=200):
-        self._payload, self.status_code = payload, status
-
-    def read(self):
-        return json.dumps(self._payload).encode()
-
-    def json(self):
-        return self._payload
-
-    def raise_for_status(self):
-        if self.status_code >= 400:
-            raise RuntimeError(f"HTTP {self.status_code}")
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, *_exc):
-        return False
-
-
 def _router():
     from providers import get_provider_profile
 
     profile = get_provider_profile("router")
     return profile, sys.modules[type(profile).__module__]
-
-
-def test_credentialed_catalog_probe_failure_is_not_cached_across_keys(monkeypatch):
-    """A 401 under one key must not pin a sibling profile (same base URL, valid key) to the empty
-    catalog for the TTL."""
-    import requests
-
-    import plugins.image_gen.openrouter as orp
-
-    def fake_get(url, headers=None, timeout=None, **_kw):
-        if (headers or {}).get("Authorization") == "Bearer good-key":
-            return _Resp({"data": [{"id": "google/gemini-image"}]})
-        return _Resp({"error": "unauthorized"}, status=401)
-
-    monkeypatch.setattr(requests, "get", fake_get)
-    orp._CATALOG_CACHE.clear()
-    try:
-        assert orp._fetch_image_api_catalog("https://openrouter.ai/api/v1", "bad-key") == frozenset()
-        assert "google/gemini-image" in orp._fetch_image_api_catalog("https://openrouter.ai/api/v1", "good-key")
-    finally:
-        orp._CATALOG_CACHE.clear()
 
 
 def test_memory_provider_skill_prune_only_touches_the_active_home(homes, monkeypatch):

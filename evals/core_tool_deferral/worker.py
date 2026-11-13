@@ -31,7 +31,6 @@ if not os.environ.get("OPENROUTER_API_KEY"):
 for var in list(os.environ):
     if var.endswith(("_API_KEY", "_TOKEN")) and var != "OPENROUTER_API_KEY":
         os.environ.pop(var, None)
-os.environ.pop("FAL_KEY", None)
 os.environ.pop("HERMES_PROFILE", None)
 
 from sandbox import isolate_host

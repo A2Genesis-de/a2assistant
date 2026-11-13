@@ -55,23 +55,23 @@ def multiplex_scope():
 # ---------------------------------------------------------------------------
 
 class TestImageGenFamily:
-    def test_deepinfra_scoped_key_wins(self, multiplex_scope, monkeypatch):
-        monkeypatch.delenv("DEEPINFRA_API_KEY", raising=False)
-        multiplex_scope({"DEEPINFRA_API_KEY": "scoped-key"})
+    def test_openai_scoped_key_wins(self, multiplex_scope, monkeypatch):
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        multiplex_scope({"OPENAI_API_KEY": "scoped-key"})
 
-        from plugins.image_gen.deepinfra import DeepInfraImageGenProvider
+        from plugins.image_gen.openai import OpenAIImageGenProvider
 
-        assert DeepInfraImageGenProvider().is_available() is True
+        assert OpenAIImageGenProvider().is_available() is True
 
-    def test_deepinfra_scoped_miss_does_not_borrow_environ(
+    def test_openai_scoped_miss_does_not_borrow_environ(
         self, multiplex_scope, monkeypatch
     ):
-        monkeypatch.setenv("DEEPINFRA_API_KEY", "env-other-profile")
+        monkeypatch.setenv("OPENAI_API_KEY", "env-other-profile")
         multiplex_scope({})
 
-        from plugins.image_gen.deepinfra import DeepInfraImageGenProvider
+        from plugins.image_gen.openai import OpenAIImageGenProvider
 
-        assert DeepInfraImageGenProvider().is_available() is False
+        assert OpenAIImageGenProvider().is_available() is False
 
 
 # ---------------------------------------------------------------------------

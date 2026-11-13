@@ -55,16 +55,14 @@ def _voice_provider_status(kind: str, provider: str, rows: dict, default: tuple)
     return (f"{kind} ({label} — not installed)", False, hint)
 
 
-def _first_available_plugin_provider(registry: str, skip: str | None = None):
+def _first_available_plugin_provider(registry: str):
     """display_name of the first plugin-registered provider in ``agent.<registry>`` that reports
-    available (fail-soft: any error means none), skipping ``skip``."""
+    available (fail-soft: any error means none)."""
     try:
         import importlib
         from hermes_cli.plugins import _ensure_plugins_discovered
         _ensure_plugins_discovered()
         for provider in importlib.import_module(f"agent.{registry}").list_providers():
-            if provider.name == skip:
-                continue
             try:
                 if provider.is_available():
                     return provider.display_name
@@ -108,16 +106,11 @@ def _browser_row(config, feats):
 
 
 def _image_gen_row(config, feats):
-    # FAL (direct or via Nous), or any plugin-registered provider (OpenAI, etc.)
-    if feats.image_gen.managed_by_nous:
-        return ("Image Generation (Nous subscription)", True, None)
-    if feats.image_gen.available:
-        return ("Image Generation", True, None)
-    # Probe plugin-registered providers so OpenAI-only setups don't show as "missing FAL_KEY".
-    backend = _first_available_plugin_provider("image_gen_registry", skip="fal")
+    # Any plugin-registered provider (OpenAI or an OpenAI-compatible endpoint)
+    backend = _first_available_plugin_provider("image_gen_registry")
     if backend:
         return (f"Image Generation ({backend})", True, None)
-    return ("Image Generation", False, "FAL_KEY or OPENAI_API_KEY")
+    return ("Image Generation", False, "image_gen.provider (e.g. openai)")
 
 
 def _tts_row(config, feats):

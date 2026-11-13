@@ -69,7 +69,7 @@ def _portable_config_schema(plugin_dir: Path) -> Any:
 
 def secret_env_name(plugin_id: str, key: str, spec: Mapping[str, Any]) -> str:
     """``.env`` variable a ``type: secret`` field is stored under: the manifest's ``env:`` or
-    ``<PLUGIN_ID>_<KEY>`` upper-snaked (``image_gen/fal`` + ``api_key`` → ``IMAGE_GEN_FAL_API_KEY``)."""
+    ``<PLUGIN_ID>_<KEY>`` upper-snaked (``image_gen/openai`` + ``api_key`` → ``IMAGE_GEN_OPENAI_API_KEY``)."""
     declared = str(spec.get("env") or "").strip()
     if declared:
         return declared

@@ -619,7 +619,7 @@ from hermes_cli.config_version_stamp import (
 # Env vars introduced per config version; migration only mentions vars new since the user's
 # previous version.
 ENV_VARS_BY_VERSION: dict[int, list[str]] = {
-    3: ["FIRECRAWL_API_KEY", "FAL_KEY"],
+    3: ["FIRECRAWL_API_KEY"],
     4: ["VOICE_TOOLS_OPENAI_KEY"],
     5: ["WHATSAPP_ENABLED", "WHATSAPP_MODE", "WHATSAPP_ALLOWED_USERS",
         "SLACK_BOT_TOKEN", "SLACK_APP_TOKEN", "SLACK_ALLOWED_USERS"]}
@@ -862,7 +862,7 @@ _ENV_CONFIG_KEYS = frozenset({
     'FIRECRAWL_GATEWAY_URL', 'TOOL_GATEWAY_URL', 'CONNECTOR_GATEWAY_URL',
     'TOOL_GATEWAY_DOMAIN', 'TOOL_GATEWAY_SCHEME',
     'TOOL_GATEWAY_USER_TOKEN', 'API_SERVER_KEY',
-    'FAL_KEY', 'TELEGRAM_BOT_TOKEN', 'DISCORD_BOT_TOKEN',
+    'TELEGRAM_BOT_TOKEN', 'DISCORD_BOT_TOKEN',
     'TERMINAL_SSH_HOST', 'TERMINAL_SSH_USER', 'TERMINAL_SSH_KEY',
     'SUDO_PASSWORD', 'SLACK_BOT_TOKEN', 'SLACK_APP_TOKEN',
     'GITHUB_TOKEN'})
@@ -2845,7 +2845,7 @@ _SECRET_CONFIG_KEYS = frozenset({
     "api_key", "apikey", "key", "token", "access_token", "refresh_token", "id_token",
     "secret", "client_secret", "password", "passwd", "authorization",
     "private_key", "bearer", "jwt"})
-# Env-map shapes (``mcp_servers.<s>.env.FOO_API_KEY``, ``FAL_KEY``, ``AWS_SECRET_ACCESS_KEY``) and
+# Env-map shapes (``mcp_servers.<s>.env.FOO_API_KEY``, ``AWS_SECRET_ACCESS_KEY``) and
 # the suffixes ``_is_env_config_key`` routes to .env. Suffix-only so ``token_count`` stays visible.
 _SECRET_CONFIG_KEY_SUFFIXES = ("_api_key", "_token", "_secret", "_password", "_key", "_access_key")
 # .env-routed keys are credentials by default; these suffixes name the non-secret exceptions

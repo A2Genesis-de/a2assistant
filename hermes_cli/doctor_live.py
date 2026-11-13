@@ -20,7 +20,6 @@ DEFAULT_PROBE_TIMEOUT = 10.0
 # Metadata-only endpoints (none spend generation credits): name -> (url, env var, auth scheme).
 _KEYED_PROBES = {
     "Firecrawl": ("https://api.firecrawl.dev/v2/team/credit-usage", "FIRECRAWL_API_KEY", "Bearer"),
-    "FAL": ("https://fal.ai/api/models?page=1", "FAL_KEY", "Key"),
 }
 # TTS/STT providers that never touch the network (nothing to probe).
 _LOCAL_AUDIO_PROVIDERS = {"", "local", "local_command", "kittentts", "piper"}

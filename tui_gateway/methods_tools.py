@@ -1880,7 +1880,7 @@ def _plugins_settings(rid, params):
     row = next((r for r in _plugin_rows() if r["key"] == canonical), None)
     # A Desktop half applies its own preferences (a status-bar chip on/off) without polling.
     events = _tools_mod("hermes_cli.plugin_events")
-    if events._PLUGIN_ID_RE.match(canonical):  # category keys (``image_gen/fal``) form no event name
+    if events._PLUGIN_ID_RE.match(canonical):  # category keys (``image_gen/openai``) form no event name
         events.broadcast_plugin_event(canonical, "settings.changed", {"written": written})
     # A secret the form just stored may feed the plugin's MCP server env (``${MESHY_API_KEY}``): bounce
     # only servers whose resolved launch inputs changed, off the RPC thread (an npx start takes seconds).

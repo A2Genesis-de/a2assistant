@@ -26,8 +26,8 @@ from hermes_cli.tools_config_providers import (
     _plugin_image_gen_providers, _plugin_web_search_providers, _plugin_browser_providers,
     _plugin_tts_providers, web_provider_capabilities, _visible_providers, provider_readiness_status,
     _toolset_needs_configuration_prompt, _configure_tool_category, _is_provider_active,
-    _detect_active_provider_index, IMAGEGEN_BACKENDS, _plugin_image_gen_catalog,
-    _configure_imagegen_model, _configure_imagegen_model_for_plugin,
+    _detect_active_provider_index, _plugin_image_gen_catalog,
+    _configure_imagegen_model_for_plugin,
     _select_plugin_image_gen_provider, STT_MODEL_CATALOG, _configure_stt_model,
     _write_provider_config, apply_provider_selection, _configure_provider, _reconfigure_provider,
     _configure_vision_backend, _configure_vision_provider_model, _configure_simple_requirements)
@@ -265,15 +265,8 @@ TOOL_CATEGORIES = {
     },
     "image_gen": {
         "name": "Image Generation", "icon": "🎨",
-        # Provider rows (FAL, OpenAI, OpenAI Codex, xAI, Krea, …) come from plugins.image_gen.<vendor> via
-        # _plugin_image_gen_providers(). Only the managed "Nous Subscription" row lives here: ONE row for the
-        # FAL, Krea and Portal gateways, whose union catalog is `imagegen_backend: "nous"`; the stored model id
-        # picks the gateway at run time (tools/image_generation_managed.py).
-        "providers": [
-            _row("Nous Subscription", "subscription",
-                 "Managed image generation (FAL, Krea 3 and Krea 2, Nous Portal models) billed to your subscription", **_NOUS,
-                 managed_nous_feature="image_gen", override_env_vars=["FAL_KEY"], imagegen_backend="nous"),
-        ],
+        # Provider rows come from plugins.image_gen.<vendor> via _plugin_image_gen_providers().
+        "providers": [],
     },
     "browser": {
         "name": "Browser Automation", "icon": "🌐",

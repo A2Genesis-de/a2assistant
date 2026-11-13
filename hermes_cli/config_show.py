@@ -35,8 +35,7 @@ def _show_managed_banner() -> None:
 _SHOW_CONFIG_API_KEYS = (
     ("OPENROUTER_API_KEY", "OpenRouter"),
     ("VOICE_TOOLS_OPENAI_KEY", "OpenAI (STT/TTS)"),
-    ("FIRECRAWL_API_KEY", "Firecrawl"),
-    ("FAL_KEY", "FAL"))
+    ("FIRECRAWL_API_KEY", "Firecrawl"))
 
 
 def _show_model_section(config: dict[str, Any]) -> None:

@@ -128,22 +128,17 @@ _MODEL_CATALOG_TOOLSETS = {"image_gen": "image_gen"}
 def _resolve_toolset_model_plugin(ts_key: str, provider_row: dict) -> Optional[str]:
     """Map a provider picker row to its model-catalog plugin name.
 
-    Plugin-backed rows carry ``image_gen_plugin_name``;
-    a managed image row's ``imagegen_backend`` names its catalog plugin.
+    Plugin-backed rows carry ``image_gen_plugin_name``.
     """
     if ts_key == "image_gen":
-        return provider_row.get("image_gen_plugin_name") or provider_row.get("imagegen_backend")
+        return provider_row.get("image_gen_plugin_name")
     return None
 
 
 def _toolset_model_catalog(ts_key: str, plugin_name: str, config: dict):
-    """Return ``(catalog_dict, default_model)`` for a toolset's plugin backend or, for an image row's
-    ``imagegen_backend`` (``fal``, the managed ``nous`` union), that backend's catalog."""
-    from hermes_cli.tools_config import IMAGEGEN_BACKENDS, _plugin_image_gen_catalog
+    """Return ``(catalog_dict, default_model)`` for a toolset's plugin backend."""
+    from hermes_cli.tools_config import _plugin_image_gen_catalog
 
-    backend = IMAGEGEN_BACKENDS.get(plugin_name)
-    if backend:
-        return backend["catalog_fn"](config)
     return _plugin_image_gen_catalog(plugin_name)
 
 

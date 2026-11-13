@@ -1,159 +1,18 @@
 #!/usr/bin/env python3
-"""Image generation via FAL.ai (model picked in ``hermes tools``, persisted to ``image_gen.model``).
-
-``_build_fal_payload()`` / ``_build_fal_edit_payload()`` translate unified inputs into the
-``FAL_MODELS`` payload filtered to its ``supports`` whitelist so models never receive rejected
-keys. Clarity upscaling is strictly per-call opt-in: default-on degraded text/CJK/faces.
-"""
+"""``image_generate``: dispatches to the image gen provider plugin selected by ``image_gen.provider``
+(``plugins/image_gen/<name>/``) and renders the tool schema from that provider's capabilities."""
 
 import json
 import logging
 import os
-import datetime
-import threading
-import uuid
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
-# Imported lazily by _load_fal_client() (~64 ms on every CLI cold start); a test-monkeypatched
-# value short-circuits the loader.
-fal_client: Any = None
-
-
-def _load_fal_client() -> Any:
-    """Lazily import fal_client into the module global (idempotent; keeps a test-installed mock)."""
-    global fal_client
-    if fal_client is None:
-        from tools.fal_common import import_fal_client
-        fal_client = import_fal_client()
-    return fal_client
-
-
-from tools.debug_helpers import DebugSession
-from tools.fal_common import (
-    _ManagedFalSyncClient, _extract_http_status, _managed_fal_billing_error,
-    _normalize_fal_queue_url_format, submit_managed_fal_with_rate_limit_retry, wait_fal_queue_result,
-)
-from tools.image_generation_catalog import (
-    DEFAULT_ASPECT_RATIO, DEFAULT_MODEL, FAL_MODELS, UPSCALER_CREATIVITY, UPSCALER_DEFAULT_PROMPT,
-    UPSCALER_FACTOR, UPSCALER_GUIDANCE_SCALE, UPSCALER_MODEL, UPSCALER_NEGATIVE_PROMPT,
-    UPSCALER_NUM_INFERENCE_STEPS, UPSCALER_RESEMBLANCE, UPSCALER_SAFETY_CHECKER, VALID_ASPECT_RATIOS,
-)
-from tools.managed_tool_gateway import resolve_managed_tool_gateway
-from tools.tool_backend_helpers import (
-    NOUS_MANAGED_PROVIDER, fal_key_is_configured, managed_nous_tools_enabled,
-    nous_tool_gateway_unavailable_message, read_selection, selection_error)
+from agent.image_gen_provider import DEFAULT_ASPECT_RATIO, VALID_ASPECT_RATIOS
 
 logger = logging.getLogger(__name__)
 
-_debug = DebugSession("image_tools", env_var="IMAGE_TOOLS_DEBUG")
-_managed_fal_client = None
-_managed_fal_client_config = None
-_managed_fal_client_lock = threading.Lock()
 
-
-# --- Managed FAL gateway (Nous Subscription) ---
-def _resolve_managed_fal_gateway():
-    """Managed gateway config for the stored `hermes tools` selection, or ``None`` for direct FAL.
-
-    ``"nous"`` (or legacy ``use_gateway: true``) → managed ONLY (unreachable = selection-naming
-    error, never a silent FAL_KEY fallback). Other stored provider → direct ONLY (missing FAL_KEY
-    = error naming the selection). Never configured → autodetect: direct if FAL_KEY, else managed.
-    """
-    selected = read_selection("image_gen")
-    if selected == NOUS_MANAGED_PROVIDER:
-        gateway = resolve_managed_tool_gateway("fal-queue")
-        if gateway is None:
-            raise ValueError(selection_error(
-                "image_gen", NOUS_MANAGED_PROVIDER,
-                "the Nous Tool Gateway is not available (not entitled or unreachable)"))
-        return gateway
-    if selected is not None:
-        if fal_key_is_configured():
-            return None
-        raise ValueError(selection_error("image_gen", selected, "FAL_KEY is not set"))
-    # Never-configured category: legacy credential autodetect (do NOT persist).
-    return None if fal_key_is_configured() else resolve_managed_tool_gateway("fal-queue")
-
-
-def _get_managed_fal_client(managed_gateway):
-    """Reuse the managed FAL client so its internal httpx.Client is not leaked per call."""
-    global _managed_fal_client, _managed_fal_client_config
-    client_config = (managed_gateway.gateway_origin.rstrip("/"), managed_gateway.nous_user_token)
-    with _managed_fal_client_lock:
-        if _managed_fal_client is None or _managed_fal_client_config != client_config:
-            # Resolved on this module so monkeypatching ``image_generation_tool.fal_client`` still applies.
-            _managed_fal_client = _ManagedFalSyncClient(
-                _load_fal_client(), key=managed_gateway.nous_user_token,
-                queue_run_origin=managed_gateway.gateway_origin)
-            _managed_fal_client_config = client_config
-        return _managed_fal_client
-
-
-class ImageGenerationInterrupted(Exception):
-    """Raised when the user interrupts while a FAL job is in flight."""
-
-
-def _wait_fal_result(handler, *, poll_seconds: float = 0.5):
-    """Interrupt-aware ``wait_fal_queue_result``: the wait blocks 30-60s, hiding user interrupts.
-
-    The get runs on a daemon worker; the interrupt bit is polled between join slices and on
-    interrupt the worker is abandoned (remote job keeps running).
-    """
-    from tools.interrupt import is_interrupted
-    result_box: list = []
-    error_box: list = []
-    def _get():
-        try:
-            result_box.append(wait_fal_queue_result(handler))
-        except BaseException as exc:
-            error_box.append(exc)
-    worker = threading.Thread(target=_get, daemon=True, name="fal-result-wait")
-    worker.start()
-    while worker.is_alive():
-        if is_interrupted():
-            raise ImageGenerationInterrupted(
-                "Image generation interrupted by user — abandoned the in-flight FAL job.")
-        worker.join(timeout=poll_seconds)
-    if error_box:
-        raise error_box[0]
-    return result_box[0] if result_box else None
-
-
-def _submit_fal_request(model: str, arguments: dict[str, Any]):
-    """Submit a FAL request using direct credentials or the managed queue gateway."""
-    _load_fal_client()
-    request_headers = {"x-idempotency-key": str(uuid.uuid4())}
-    managed_gateway = _resolve_managed_fal_gateway()
-    if managed_gateway is None:
-        return fal_client.submit(model, arguments=arguments, headers=request_headers)
-    try:
-        return submit_managed_fal_with_rate_limit_retry(
-            lambda headers: _get_managed_fal_client(managed_gateway).submit(
-                model, arguments=arguments, headers=headers),
-            what="image model", name=model)
-    except Exception as exc:
-        # A managed-gateway 4xx usually means the portal doesn't proxy this model
-        # (allowlist miss, billing gate): give remediation instead of a raw httpx error.
-        status = _extract_http_status(exc)
-        if status is not None and 400 <= status < 500:
-            billing = _managed_fal_billing_error(exc, "model")
-            if billing is not None:
-                raise ValueError(
-                    f"Nous Subscription gateway rejected model '{model}' (HTTP {status}): {billing}") from exc
-            gateway_message = ""
-            if status in {401, 402, 403}:
-                gateway_message = "\n\n" + nous_tool_gateway_unavailable_message(
-                    "managed FAL image generation", force_fresh=True)
-            raise ValueError(
-                f"Nous Subscription gateway rejected model '{model}' (HTTP {status}). This model "
-                f"may not yet be enabled on the Nous Portal's FAL proxy. Either:\n"
-                f"  • Set FAL_KEY in your environment to use FAL.ai directly, or\n"
-                f"  • Pick a different model via `hermes tools` → Image Generation."
-                f"{gateway_message}") from exc
-        raise
-
-
-# --- Config readers, model resolution + payload construction ---
+# --- Config readers ---
 def _read_image_gen_key(key: str) -> Optional[str]:
     """Return the stripped ``image_gen.<key>`` string from config.yaml, or None."""
     try:
@@ -174,113 +33,8 @@ def _read_configured_image_model():
 
 
 def _read_configured_image_provider():
-    """``image_gen.provider`` from config.yaml, or None (unset keeps the in-tree FAL fallback even
-    when other providers are registered; ``"fal"`` routes via ``plugins/image_gen/fal/``).
-
-    We only consult the plugin registry when this is explicitly set — an unset value keeps users on the
-    in-tree FAL fallback even when other providers happen to be registered (e.g. a user has OPENAI_API_KEY
-    set for other features but never asked for OpenAI image gen). ``"fal"`` explicitly routes through
-    ``plugins/image_gen/fal/`` (which delegates back into this module's pipeline via call-time indirection —
-    see issue #26241).
-    """
+    """``image_gen.provider`` from config.yaml, or None (no image backend selected)."""
     return _read_image_gen_key("provider")
-
-
-def _plugin_provider_name() -> Optional[str]:
-    """Configured provider that must go through the plugin registry; None for unset/fal/nous."""
-    configured = _read_configured_image_provider()
-    if not configured or configured in ("fal", NOUS_MANAGED_PROVIDER):
-        return None
-    return configured
-
-
-def _resolve_fal_model() -> tuple:
-    """Return ``(model_id, meta)`` for the configured FAL model, falling back to DEFAULT_MODEL (warned) when unknown."""
-    # FAL_IMAGE_MODEL is an undocumented escape hatch (backward-compat for tests/scripts).
-    model_id = _read_image_gen_key("model") or os.getenv("FAL_IMAGE_MODEL", "").strip()
-    if model_id and model_id not in FAL_MODELS:
-        logger.warning("Unknown FAL model '%s' in config; falling back to %s", model_id, DEFAULT_MODEL)
-        model_id = None
-    model_id = model_id or DEFAULT_MODEL
-    return model_id, FAL_MODELS[model_id]
-
-
-_SIZE_KEY_BY_STYLE = {"image_size_preset": "image_size", "gpt_literal": "image_size",
-                      "aspect_ratio": "aspect_ratio"}
-
-
-def _build_payload(model_id, prompt, aspect_ratio, seed, overrides, image_urls=None) -> dict[str, Any]:
-    """Text-to-image / edit payload (``image_urls`` selects edit mode): defaults + native size
-    spec + overrides, filtered to the model whitelist.
-
-    Edit endpoints mostly auto-infer size, so the size key is sent only when ``edit_supports``
-    lists it. ``prompt`` (and the source-image key on edits) survive a whitelist gap: every FAL
-    endpoint requires them, so a catalog mistake can't send a broken request.
-    """
-    meta = FAL_MODELS[model_id]
-    edit = image_urls is not None
-    supports = (meta.get("edit_supports") or set()) if edit else meta["supports"]
-    sizes = meta["sizes"]
-    aspect = (aspect_ratio or DEFAULT_ASPECT_RATIO).lower().strip()
-    if aspect not in sizes:
-        aspect = DEFAULT_ASPECT_RATIO
-    payload: dict[str, Any] = dict(meta.get("defaults", {}))
-    payload["prompt"] = (prompt or "").strip()
-    required = {"prompt"}
-    if edit:  # a few edit endpoints (Kling Image v3) take a singular `image_url` string instead of the list
-        image_param = meta.get("edit_image_param") or "image_urls"
-        payload[image_param] = next(iter(image_urls)) if image_param != "image_urls" else list(image_urls)
-        required.add(image_param)
-    size_key = _SIZE_KEY_BY_STYLE.get(meta["size_style"])
-    if size_key is None and not edit:
-        raise ValueError(f"Unknown size_style: {meta['size_style']!r}")
-    if size_key is not None and (not edit or size_key in supports):
-        payload[size_key] = sizes[aspect]
-    if isinstance(seed, int):
-        payload["seed"] = seed
-    payload.update({k: v for k, v in (overrides or {}).items() if v is not None})
-    return {k: v for k, v in payload.items() if k in supports or k in required}
-
-
-def _build_fal_payload(model_id, prompt, aspect_ratio=DEFAULT_ASPECT_RATIO, seed=None, overrides=None):
-    """FAL text-to-image payload for ``model_id`` from unified inputs."""
-    return _build_payload(model_id, prompt, aspect_ratio, seed, overrides)
-
-
-def _build_fal_edit_payload(model_id, prompt, image_urls, aspect_ratio=DEFAULT_ASPECT_RATIO,
-                            seed=None, overrides=None):
-    """FAL *edit* (image-to-image) payload: ``image_urls`` + prompt, filtered to ``edit_supports``."""
-    return _build_payload(model_id, prompt, aspect_ratio, seed, overrides, image_urls=image_urls)
-
-
-# --- Upscaler ---
-def _upscale_image(image_url: str, original_prompt: str) -> Optional[dict[str, Any]]:
-    """Upscale via FAL's Clarity Upscaler; None on failure (caller keeps the original)."""
-    try:
-        logger.info("Upscaling image with Clarity Upscaler...")
-        handler = _submit_fal_request(UPSCALER_MODEL, arguments={
-            "image_url": image_url, "prompt": f"{UPSCALER_DEFAULT_PROMPT}, {original_prompt}",
-            "upscale_factor": UPSCALER_FACTOR, "negative_prompt": UPSCALER_NEGATIVE_PROMPT,
-            "creativity": UPSCALER_CREATIVITY, "resemblance": UPSCALER_RESEMBLANCE,
-            "guidance_scale": UPSCALER_GUIDANCE_SCALE,
-            "num_inference_steps": UPSCALER_NUM_INFERENCE_STEPS,
-            "enable_safety_checker": UPSCALER_SAFETY_CHECKER})
-        result = _wait_fal_result(handler)
-        if result and "image" in result:
-            up = result["image"]
-            logger.info("Image upscaled successfully to %sx%s",
-                        up.get("width", "unknown"), up.get("height", "unknown"))
-            return {
-                "url": up["url"], "width": up.get("width", 0), "height": up.get("height", 0),
-                "upscaled": True, "upscale_factor": UPSCALER_FACTOR}
-        logger.error("Upscaler returned invalid response")
-        return None
-    except ImageGenerationInterrupted:
-        # A user interrupt must not degrade into a silent "use original" fallback.
-        raise
-    except Exception as e:
-        logger.error("Error upscaling image: %s", e, exc_info=True)
-        return None
 
 
 # --- Artifact path hinting for non-local terminal backends ---
@@ -361,215 +115,6 @@ def _postprocess_image_generate_result(raw: str, task_id: str | None = None) -> 
     return json.dumps(payload, ensure_ascii=False)
 
 
-# --- Tool entry point ---
-def _format_images(images: list, should_upscale: bool, prompt: str) -> list:
-    """Normalize FAL result images, optionally chaining the upscaler (falls back to the original on failure)."""
-    formatted = []
-    for img in images:
-        if not (isinstance(img, dict) and "url" in img):
-            continue
-        if should_upscale:
-            upscaled = _upscale_image(img["url"], prompt.strip())
-            if upscaled:
-                formatted.append(upscaled)
-                continue
-            logger.warning("Using original image as fallback (upscale failed)")
-        formatted.append({
-            "url": img["url"], "width": img.get("width", 0), "height": img.get("height", 0),
-            "upscaled": False})
-    return formatted
-
-
-# The managed FAL gateway answers HTTP 413 above ~4.5 MB of request body (probed: 4.0 MB of base64
-# passes, 4.5 MB fails), so inlined sources share this budget and are downscaled to fit it.
-_FAL_INLINE_BUDGET = 3_500_000
-
-
-def _inline_fal_sources(sources: list) -> list:
-    """FAL only fetches URLs, so local paths become ``data:`` URLs through the guarded resolver
-    (credential-read guard, image sniff) on every terminal backend; then fit the gateway budget."""
-    from model_tools import _run_async
-    from tools.image_source import ImageResolutionError, resolve_local_source_to_data_url
-    try:
-        urls = [_run_async(resolve_local_source_to_data_url(s, None)) for s in sources]
-    except ImageResolutionError as exc:
-        raise ValueError(f"Could not read source image: {exc}") from exc
-    inline = [u for u in urls if u.startswith("data:")]
-    if sum(map(len, inline)) <= _FAL_INLINE_BUDGET:
-        return urls
-    share = _FAL_INLINE_BUDGET // len(inline)
-    return [_shrink_data_url(u, share) if u.startswith("data:") and len(u) > share else u for u in urls]
-
-
-def _shrink_data_url(url: str, budget: int) -> str:
-    """Re-encode a ``data:`` image (JPEG unless it has alpha), shrinking the long edge until it fits."""
-    import base64
-    import io
-    from PIL import Image, ImageOps
-    try:
-        img = Image.open(io.BytesIO(base64.b64decode(url.partition(",")[2])))
-        img.load()
-    except (OSError, ValueError, Image.DecompressionBombError):
-        return url  # not a raster Pillow reads (e.g. SVG): send as-is and let FAL report it
-    img = ImageOps.exif_transpose(img)  # re-encoding drops EXIF, so bake the orientation into the pixels
-    has_alpha = "A" in img.getbands() or "transparency" in img.info  # palette PNGs carry alpha in info
-    fmt, mime = ("PNG", "image/png") if has_alpha else ("JPEG", "image/jpeg")
-    img = img.convert("RGBA") if has_alpha else img.convert("RGB")
-    side = max(img.size)
-    while True:
-        frame = img.copy()
-        frame.thumbnail((side, side))
-        buf = io.BytesIO()
-        frame.save(buf, fmt, quality=90)
-        out = f"data:{mime};base64,{base64.b64encode(buf.getvalue()).decode('ascii')}"
-        if len(out) <= budget or side <= 256:
-            logger.info("Downscaled FAL source image to %s (%d bytes inline)", frame.size, len(out))
-            return out
-        side = int(side * 0.75)
-
-
-def _prepare_fal_request(model_id, meta, prompt, aspect_ratio, seed, overrides, source_images):
-    """Validate inputs and return ``(endpoint, arguments)``; raises ValueError with the user-facing message."""
-    if not isinstance(prompt, str) or not prompt.strip():
-        raise ValueError("Prompt is required and must be a non-empty string")
-    # A stored-but-broken selection raises the selection-naming error from
-    # _resolve_managed_fal_gateway(); only never-configured reports "no backend at all".
-    if not (fal_key_is_configured() or _resolve_managed_fal_gateway()):
-        raise ValueError(_build_no_backend_setup_message())
-    edit_endpoint, display = meta.get("edit_endpoint"), meta.get("display", model_id)
-    # Fail clearly rather than silently dropping sources and producing an unrelated picture.
-    if source_images and not edit_endpoint:
-        raise ValueError(
-            f"Model '{display}' ({model_id}) is not capable of image-to-image / editing. "
-            f"Provide a text-only prompt (omit image_url), or switch to an edit-capable model "
-            f"via `hermes tools` → Image Generation.")
-    aspect_lc = (aspect_ratio or DEFAULT_ASPECT_RATIO).lower().strip()
-    if aspect_lc not in VALID_ASPECT_RATIOS:
-        logger.warning("Invalid aspect_ratio '%s', defaulting to '%s'", aspect_ratio, DEFAULT_ASPECT_RATIO)
-        aspect_lc = DEFAULT_ASPECT_RATIO
-    if source_images:
-        # Clamp reference count to the model's declared cap.
-        max_refs = int(meta.get("max_reference_images") or 1)
-        clamped_sources = _inline_fal_sources(source_images[:max_refs] if max_refs > 0 else source_images)
-        arguments = _build_fal_edit_payload(
-            model_id, prompt, clamped_sources, aspect_lc, seed=seed, overrides=overrides)
-        logger.info("Editing image with %s (%s) — %d source image(s), prompt: %s",
-                    display, edit_endpoint, len(clamped_sources), prompt[:80])
-        return edit_endpoint, arguments
-    arguments = _build_fal_payload(model_id, prompt, aspect_lc, seed=seed, overrides=overrides)
-    logger.info("Generating image with %s (%s) — prompt: %s", display, model_id, prompt[:80])
-    return model_id, arguments
-
-
-def image_generate_tool(
-    prompt: str, aspect_ratio: str = DEFAULT_ASPECT_RATIO,
-    num_inference_steps: Optional[int] = None, guidance_scale: Optional[float] = None,
-    num_images: Optional[int] = None, output_format: Optional[str] = None,
-    seed: Optional[int] = None, image_url: Optional[str] = None,
-    reference_image_urls: Optional[list] = None, upscale: Optional[bool] = None,
-    fal_model: Optional[str] = None) -> str:
-    """Generate (or, with source images + an ``edit_endpoint`` model, edit) an image via FAL.
-
-    Extra kwargs are overrides filtered per-model via ``supports`` / ``edit_supports`` (dropped
-    silently so callers survive model switches). Returns JSON ``{"success", "image", "modality",
-    "error", "error_type"}``.
-    """
-    if fal_model in FAL_MODELS:
-        model_id, meta = fal_model, FAL_MODELS[fal_model]
-    else:
-        model_id, meta = _resolve_fal_model()
-    refs = reference_image_urls if isinstance(reference_image_urls, (list, tuple)) else []
-    source_images = [c.strip() for c in (image_url, *refs) if isinstance(c, str) and c.strip()]
-    use_edit = bool(source_images) and bool(meta.get("edit_endpoint"))
-    modality = "image" if use_edit else "text"
-    overrides: dict[str, Any] = {
-        "num_inference_steps": num_inference_steps, "guidance_scale": guidance_scale,
-        "num_images": num_images, "output_format": output_format}
-    debug_call_data = {
-        "model": model_id,
-        "parameters": {"prompt": prompt, "aspect_ratio": aspect_ratio, **overrides, "seed": seed,
-                       "modality": modality, "source_images": len(source_images)},
-        "error": None, "success": False, "images_generated": 0, "generation_time": 0}
-    start_time = datetime.datetime.now()
-
-    def finish(generation_time: float, response: dict[str, Any]) -> str:
-        debug_call_data["generation_time"] = generation_time
-        _debug.log_call("image_generate_tool", debug_call_data)
-        _debug.save()
-        return json.dumps(response, indent=2, ensure_ascii=False)
-    try:
-        endpoint, arguments = _prepare_fal_request(
-            model_id, meta, prompt, aspect_ratio, seed,
-            {k: v for k, v in overrides.items() if v is not None}, source_images)
-        result = _wait_fal_result(_submit_fal_request(endpoint, arguments=arguments))
-        generation_time = (datetime.datetime.now() - start_time).total_seconds()
-        if not result or "images" not in result:
-            raise ValueError("Invalid response from FAL.ai API — no images returned")
-        images = result.get("images", [])
-        if not images:
-            raise ValueError("No images were generated")
-        # Explicit ``upscale`` wins, including for edits; the catalog default never upscales
-        # edits (Clarity is a text-to-image pass and must not silently alter compositions).
-        if upscale is not None:
-            should_upscale = bool(upscale)
-        else:
-            should_upscale = bool(meta.get("upscale", False)) and not use_edit
-        formatted_images = _format_images(images, should_upscale, prompt)
-        if not formatted_images:
-            raise ValueError("No valid image URLs returned from API")
-        upscaled_count = sum(1 for img in formatted_images if img.get("upscaled"))
-        logger.info("Generated %s image(s) in %.1fs (%s upscaled) via %s [%s]",
-                    len(formatted_images), generation_time, upscaled_count, endpoint, modality)
-        debug_call_data["success"] = True
-        debug_call_data["images_generated"] = len(formatted_images)
-        return finish(generation_time, {
-            "success": True,
-            "image": formatted_images[0]["url"],
-            "modality": modality,
-            "upscaled": bool(formatted_images[0].get("upscaled"))})
-    except Exception as e:
-        error_msg = f"Error generating image: {e!s}"
-        logger.error("%s", error_msg, exc_info=True)
-        debug_call_data["error"] = error_msg
-        generation_time = (datetime.datetime.now() - start_time).total_seconds()
-        return finish(generation_time,
-                      {"success": False, "image": None, "error": str(e), "error_type": type(e).__name__})
-
-
-def check_fal_api_key() -> bool:
-    """True if the selected FAL backend (never configured: any FAL backend) is available.
-
-    A stored-but-broken selection reports False here (registry gating); the naming error
-    surfaces at call time from ``_resolve_managed_fal_gateway``.
-    """
-    try:
-        gateway = _resolve_managed_fal_gateway()
-    except ValueError:
-        return False
-    return bool(gateway) or fal_key_is_configured()
-
-
-def _build_no_backend_setup_message() -> str:
-    """Actionable no-backend error: FAL_KEY signup, managed-gateway status, plugin alternative."""
-    managed = managed_nous_tools_enabled()
-    lines = ["Image generation is unavailable in this environment.", "", "Missing requirements:"]
-    if managed:
-        lines.append("  - FAL_KEY is not set and the managed FAL gateway is unreachable")
-    else:
-        lines.append("  - FAL_KEY environment variable is not set")
-        if gateway_message := nous_tool_gateway_unavailable_message("managed FAL image generation"):
-            lines.append(f"  - {gateway_message}")
-    lines += ["", "To enable image generation, do one of:",
-              "  1. Get a free API key at https://fal.ai and set FAL_KEY=<your-key> "
-              "(then restart the session)"]
-    if managed:
-        lines.append("  2. Sign in to a Nous account that has the managed FAL gateway enabled "
-                     "(`hermes setup`)")
-    lines.append("  3. Configure a different image_gen provider via `hermes tools` → Image Generation "
-                 "(run `hermes plugins list` to see installed backends)")
-    return "\n".join(lines)
-
-
 def _get_plugin_provider(name: str, *, force: bool = False):
     """Discover plugins (local import: importing this module must not trigger discovery) and return the named provider."""
     from agent.image_gen_registry import get_provider
@@ -582,18 +127,10 @@ def _get_plugin_provider(name: str, *, force: bool = False):
 
 
 def check_image_generation_requirements() -> bool:
-    """True if FAL or the explicitly configured image backend is available."""
-    try:
-        if check_fal_api_key():
-            # Lazy import doubles as the SDK presence check: ImportError falls through to plugins.
-            _load_fal_client()
-            return True
-    except ImportError:
-        pass
-    configured = _plugin_provider_name()
+    """True if the configured image gen provider is registered and available."""
+    configured = _read_configured_image_provider()
     if configured is None:
         return False
-    # Probe only the selected plugin: a cloud key alone must not opt a user into a paid backend.
     provider = _get_plugin_provider(configured)
     return bool(provider and provider.is_available())
 
@@ -636,7 +173,7 @@ IMAGE_GENERATE_SCHEMA = {
 }
 
 
-# --- Plugin provider dispatch + managed-mode Krea routing ---
+# --- Plugin provider dispatch ---
 def _provider_error(error: str, error_type: str) -> str:
     """JSON error envelope shared by every provider-dispatch failure path."""
     return json.dumps({"success": False, "image": None, "error": error, "error_type": error_type})
@@ -685,16 +222,17 @@ def _dispatch_to_plugin_provider(
     prompt: str, aspect_ratio: str, image_url: Optional[str] = None,
     reference_image_urls: Optional[list] = None, upscale: Optional[bool] = None,
     controls: Optional[dict[str, Any]] = None):
-    """JSON result from the selected plugin provider, or ``None`` to fall through to in-tree FAL
-    (provider unset / ``"fal"`` / ``"nous"``). Providers without ``upscale`` ignore it via ``**kwargs``."""
-    configured = _plugin_provider_name()
+    """JSON result from the selected plugin provider. Providers without ``upscale`` ignore it via ``**kwargs``."""
+    configured = _read_configured_image_provider()
     if configured is None:
-        return None
+        return _provider_error(
+            "Image generation has no backend: set image_gen.provider via `hermes tools` → Image Generation "
+            "(run `hermes plugins list` to see installed backends).", "provider_not_configured")
     try:
         provider = _get_plugin_provider(configured)
     except Exception as exc:
-        logger.debug("image_gen plugin dispatch skipped: %s", exc)
-        return None
+        logger.debug("image_gen plugin lookup failed: %s", exc)
+        provider = None
     if provider is None:
         # Long-lived sessions may have discovered plugins before a bundled backend
         # was patched in or config changed: retry once with a forced refresh.
@@ -730,64 +268,6 @@ def _dispatch_to_plugin_provider(
     return _provider_result(result, "Provider returned a non-dict result")
 
 
-def _normalize_krea_model(model_id: Optional[str]) -> Optional[str]:
-    """Return ``model_id`` when it is one of the Krea plugin's model ids, else ``None``."""
-    from plugins.image_gen.krea import KREA_MODEL_IDS
-
-    candidate = model_id.strip() if isinstance(model_id, str) else None
-    return candidate if candidate in KREA_MODEL_IDS else None
-
-
-def _managed_model_plugin() -> Optional[tuple]:
-    """``(plugin_name, model_id)`` when the stored selection routes to the Krea or Portal gateway
-    (rule: :func:`tools.image_generation_managed.managed_route`), else ``None`` for the FAL path."""
-    from tools.image_generation_managed import KREA, PORTAL, managed_route
-
-    model_id = _read_configured_image_model()
-    return {KREA: ("krea", model_id), PORTAL: ("nous", model_id)}.get(
-        managed_route(_read_configured_image_provider(), model_id))
-
-
-def _maybe_route_managed_model(
-    prompt: str, aspect_ratio: str, image_url: Optional[str] = None,
-    reference_image_urls: Optional[list] = None, upscale: Optional[bool] = None,
-    controls: Optional[dict[str, Any]] = None) -> Optional[str]:
-    """JSON result from the Krea or Portal gateway the stored model belongs to, or ``None`` to fall
-    through to FAL.
-
-    A Krea model with no reachable Krea gateway falls through (direct/BYO users keep their
-    pipeline); a Portal model never does — falling through would silently bill a FAL default.
-    """
-    target = _managed_model_plugin()
-    if target is None:
-        return None
-    plugin_name, model_id = target
-    try:
-        if plugin_name == "krea":
-            from plugins.image_gen.krea import _resolve_managed_krea_gateway
-            if _resolve_managed_krea_gateway() is None:
-                return None
-        provider = _get_plugin_provider(plugin_name)
-    except Exception as exc:
-        logger.debug("Managed %s routing unavailable: %s", plugin_name, exc)
-        provider = None
-    if provider is None:
-        if plugin_name == "krea":
-            return None
-        return _provider_error(
-            f"image_gen.model='{model_id}' is a Nous Portal model but the Portal image backend is not "
-            f"available. Pick another model via `hermes tools` → Image Generation.", "provider_not_registered")
-    kwargs: dict[str, Any] = {"prompt": prompt, "aspect_ratio": aspect_ratio, "model": model_id}
-    try:
-        _add_provider_kwargs(kwargs, image_url, reference_image_urls, upscale,
-                             controls=_declared_controls(provider, controls))
-        result = provider.generate(**kwargs)
-    except Exception as exc:
-        logger.warning("Managed %s routing failed: %s", plugin_name, exc)
-        return _provider_error(f"Managed {provider.display_name} generation error: {exc}", "provider_exception")
-    return _provider_result(result, f"{provider.display_name} provider returned a non-dict result")
-
-
 def _confine_source_images(image_url, reference_image_urls, task_id, *, permitted: tuple = ("image",)):
     """Resolve path-like sources to ``data:`` URLs under a non-local terminal backend.
 
@@ -821,53 +301,16 @@ def _handle_image_generate(args, **kw):
     aspect_ratio = args.get("aspect_ratio", DEFAULT_ASPECT_RATIO)
     upscale = args.get("upscale")
     task_id = kw.get("task_id")
-    # Confinement chokepoint BEFORE any dispatch: every route receives sandbox-confined bytes.
+    # Confinement chokepoint BEFORE dispatch: the provider receives sandbox-confined bytes.
     image_url, reference_image_urls, confine_error = _confine_source_images(
         args.get("image_url"), args.get("reference_image_urls"), task_id)
     if confine_error is not None:
         return confine_error
-    # Order matters: explicit plugin provider, then the model-driven managed gateways (Krea /
-    # Portal — only under the "nous"/unset selection, so BYO/direct FAL stays untouched), then FAL.
-    sources = dict(image_url=image_url, reference_image_urls=reference_image_urls,
-                   upscale=upscale if isinstance(upscale, bool) else None)
     controls = {name: args[name] for name in _CREATIVE_CONTROL_PARAMS if name in args}
-    raw = _dispatch_to_plugin_provider(prompt, aspect_ratio, controls=controls or None, **sources)
-    if raw is None:
-        raw = _maybe_route_managed_model(prompt, aspect_ratio, controls=controls or None, **sources)
-        if raw is not None:
-            raw = _fall_back_to_fal(raw, prompt, aspect_ratio, sources)
-    if raw is None:
-        raw = image_generate_tool(prompt, aspect_ratio, **sources)
+    raw = _dispatch_to_plugin_provider(
+        prompt, aspect_ratio, image_url=image_url, reference_image_urls=reference_image_urls,
+        upscale=upscale if isinstance(upscale, bool) else None, controls=controls or None)
     return _postprocess_image_generate_result(raw, task_id=task_id)
-
-
-def _fall_back_to_fal(raw: str, prompt: str, aspect_ratio: str, sources: dict[str, Any]) -> str:
-    """Rerun a managed Krea request on FAL's default model when Krea refused it before creating a job.
-
-    Only the Krea plugin marks a failure ``fallback_eligible``, and only when the submit provably never
-    created a job: a job that exists has already been authorized for billing and may still complete.
-    Source images never fall back; FAL would route them to an edit endpoint with different semantics."""
-    try:
-        result = json.loads(raw)
-    except ValueError:
-        return raw
-    if not isinstance(result, dict) or result.get("success") or not result.get("fallback_eligible"):
-        return raw
-    if sources.get("image_url") or sources.get("reference_image_urls"):
-        return raw
-    from plugins.image_gen.krea import fallback_to_fal_enabled
-    if not fallback_to_fal_enabled():
-        return raw
-    logger.warning("Managed Krea refused the request before starting a job; falling back to FAL: %s", result.get("error"))
-    fal_result = json.loads(image_generate_tool(prompt, aspect_ratio, upscale=sources.get("upscale"), fal_model=DEFAULT_MODEL))
-    note = (f"Krea was unavailable, so this image was generated on FAL ({DEFAULT_MODEL}) instead."
-            if fal_result.get("success") else
-            f"Krea was unavailable and the fallback to FAL ({DEFAULT_MODEL}) also failed.")
-    if fal_result.get("upscaled"):
-        note += f" The upscale ran on FAL's {UPSCALER_MODEL}, not Krea Enhance."
-    fal_result.update(
-        provider="fal", model=DEFAULT_MODEL, fallback_from="krea", fallback_reason=result.get("error"), note=note)
-    return json.dumps(fal_result)
 
 
 # --- Dynamic schema — reflect the active backend's image-to-image capability ---
@@ -877,57 +320,39 @@ _NO_CAPABILITIES = {"modalities": ["text"], "max_reference_images": 0, "supports
 
 
 def _active_image_capabilities() -> dict[str, Any]:
-    """Best-effort capabilities of the active backend/model; never raises.
+    """Best-effort capabilities of the configured provider/model; never raises.
 
-    Mirrors runtime dispatch: a Krea or Portal model id under the managed selection asks that
-    plugin, a set ``image_gen.provider`` asks that plugin, else the FAL catalog.
-    Fail-closed: an undeclared capability is advertised as absent.
+    Fail-closed: an undeclared capability (or no configured provider) is advertised as absent.
     """
     info: dict[str, Any] = dict(_NO_CAPABILITIES)
-    configured_provider = _read_configured_image_provider()
-    managed = _managed_model_plugin()
-    if managed is not None:
-        plugin_name = managed[0]
-    elif configured_provider and configured_provider != "fal":
-        plugin_name = configured_provider
-    else:
-        plugin_name = None
-    if plugin_name:
-        try:
-            provider = _get_plugin_provider(plugin_name)
-            if provider is not None:
-                try:
-                    caps = provider.capabilities() or {}
-                except Exception:
-                    caps = {}
-                info["provider"] = provider.display_name
-                info["model"] = _read_configured_image_model() or (provider.default_model() or "")
-                if caps.get("modalities"):
-                    info["modalities"] = list(caps["modalities"])
-                if caps.get("max_reference_images"):
-                    info["max_reference_images"] = int(caps["max_reference_images"])
-                # Plugins opt in explicitly; absent = no upscale param.
-                info["supports_upscale"] = bool(caps.get("supports_upscale"))
-                if caps.get("creative_controls"):
-                    info["creative_controls"] = list(caps["creative_controls"])
-                if caps.get("source_image_role") == "style":
-                    info["source_image_role"] = "style"
-                return info
-        except Exception:
-            pass
-    # In-tree FAL path (provider unset or == "fal"); _resolve_fal_model() never raises.
-    model_id, meta = _resolve_fal_model()
-    can_edit = bool(meta.get("edit_endpoint"))
-    info["provider"] = "FAL.ai"
-    info["model"] = meta.get("display", model_id)
-    info["modalities"] = ["text", "image"] if can_edit else ["text"]
-    info["max_reference_images"] = int(meta.get("max_reference_images") or 1) if can_edit else 0
-    # Clarity is available on request for ANY catalog model (``upscale`` is only the default).
-    info["supports_upscale"] = True
+    plugin_name = _read_configured_image_provider()
+    if not plugin_name:
+        return info
+    try:
+        provider = _get_plugin_provider(plugin_name)
+    except Exception:
+        return info
+    if provider is None:
+        return info
+    try:
+        caps = provider.capabilities() or {}
+    except Exception:
+        caps = {}
+    info["provider"] = provider.display_name
+    info["model"] = _read_configured_image_model() or (provider.default_model() or "")
+    if caps.get("modalities"):
+        info["modalities"] = list(caps["modalities"])
+    if caps.get("max_reference_images"):
+        info["max_reference_images"] = int(caps["max_reference_images"])
+    # Plugins opt in explicitly; absent = no upscale param.
+    info["supports_upscale"] = bool(caps.get("supports_upscale"))
+    if caps.get("creative_controls"):
+        info["creative_controls"] = list(caps["creative_controls"])
+    if caps.get("source_image_role") == "style":
+        info["source_image_role"] = "style"
     return info
 
 
-# Param snippets assembled per-capability by _build_dynamic_image_schema.
 _IMAGE_URL_PARAM = {
     "type": "string",
     "description": (
@@ -937,7 +362,7 @@ _IMAGE_URL_PARAM = {
     ),
 }
 
-# Creative-control vocabulary (Krea 2 and Krea 3 today); a provider advertises the names it honors
+# Creative-control vocabulary; a provider advertises the names it honors
 # via ``capabilities()["creative_controls"]`` and only those reach the schema and its ``generate()``.
 _CREATIVE_CONTROL_PARAMS = {
     "creativity": {
@@ -1049,6 +474,6 @@ def _build_dynamic_image_schema() -> dict[str, Any]:
 registry.register(
     name="image_generate", toolset="image_gen", schema=IMAGE_GENERATE_SCHEMA,
     handler=_handle_image_generate, check_fn=check_image_generation_requirements, requires_env=[],
-    is_async=False,   # sync fal_client API to avoid "Event loop is closed" in gateway
+    is_async=False,
     emoji="🎨", dynamic_schema_overrides=_build_dynamic_image_schema,
 )

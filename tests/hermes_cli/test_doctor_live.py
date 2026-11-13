@@ -56,7 +56,7 @@ def _args(live: bool = True) -> argparse.Namespace:
 @pytest.fixture(autouse=True)
 def _clean_env(monkeypatch):
     """Strip backend credentials so each test opts in explicitly."""
-    for var in ("FIRECRAWL_API_KEY", "FAL_KEY", "OPENAI_API_KEY"):
+    for var in ("FIRECRAWL_API_KEY", "OPENAI_API_KEY"):
         monkeypatch.delenv(var, raising=False)
     # Default: empty config, no MCP servers, local tts/stt.
     monkeypatch.setattr("hermes_cli.config.load_config_readonly", dict)
@@ -297,7 +297,8 @@ class TestLaunchBrowserProbe:
 class TestFailureIsolation:
     def test_one_probe_raising_does_not_stop_others(self, monkeypatch):
         monkeypatch.setenv("FIRECRAWL_API_KEY", "fc-test")
-        monkeypatch.setenv("FAL_KEY", "fal-test")
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+        monkeypatch.setattr("hermes_cli.config.load_config_readonly", lambda: {"tts": {"provider": "openai"}})
 
         def _get(url, headers=None, timeout=None):
             if "firecrawl" in url:
@@ -308,7 +309,7 @@ class TestFailureIsolation:
         issues: list[str] = []
         results = {r.name: r for r in run_live_checks(issues)}
         assert results["Firecrawl"].status == "fail"
-        assert results["FAL"].status == "pass"
+        assert results["TTS"].status == "pass"
 
     def test_mcp_probe_failure_isolated_per_server(self, monkeypatch):
         monkeypatch.setattr(

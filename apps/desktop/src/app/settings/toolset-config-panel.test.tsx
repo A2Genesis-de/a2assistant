@@ -147,7 +147,7 @@ beforeEach(() => {
     current: null,
     default: null
   })
-  selectToolsetModel.mockResolvedValue({ ok: true, name: 'image_gen', model: 'z-image-turbo' })
+  selectToolsetModel.mockResolvedValue({ ok: true, name: 'image_gen', model: 'gpt-image-2-low' })
   selectToolsetProvider.mockResolvedValue({ ok: true, name: 'tts', provider: 'OpenAI TTS' })
   setEnvVar.mockResolvedValue({ ok: true })
   deleteEnvVar.mockResolvedValue({ ok: true })
@@ -299,12 +299,12 @@ describe('ToolsetConfigPanel', () => {
     getToolsetConfig.mockResolvedValue(
       config({
         name: 'image_gen',
-        active_provider: 'FAL.ai',
+        active_provider: 'OpenAI',
         providers: [
           {
-            name: 'FAL.ai',
+            name: 'OpenAI',
             badge: 'paid',
-            tag: 'Multi-model image generation',
+            tag: 'GPT Image text-to-image & editing',
             env_vars: [],
             post_setup: null,
             requires_nous_auth: false,
@@ -316,26 +316,26 @@ describe('ToolsetConfigPanel', () => {
     getToolsetModels.mockResolvedValue({
       name: 'image_gen',
       has_models: true,
-      provider: 'FAL.ai',
-      plugin: 'fal',
+      provider: 'OpenAI',
+      plugin: 'openai',
       models: [
-        { id: 'z-image-turbo', display: 'Z-Image Turbo', speed: 'fast', strengths: 'cheap drafts', price: '$0.005' },
-        { id: 'flux-2-pro', display: 'FLUX 2 Pro', speed: 'slow', strengths: 'quality', price: '$0.05' }
+        { id: 'gpt-image-2-low', display: 'GPT Image 2 (Low)', speed: 'fast', strengths: 'cheap drafts', price: '$0.005' },
+        { id: 'gpt-image-2-high', display: 'GPT Image 2 (High)', speed: 'slow', strengths: 'quality', price: '$0.05' }
       ],
-      current: 'z-image-turbo',
-      default: 'z-image-turbo'
+      current: 'gpt-image-2-low',
+      default: 'gpt-image-2-low'
     })
 
     render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="image_gen" />)
 
     // Both catalog rows render with their picker metadata.
-    expect(await screen.findByText('Z-Image Turbo')).toBeTruthy()
-    expect(screen.getByText('FLUX 2 Pro')).toBeTruthy()
-    expect(getToolsetModels).toHaveBeenCalledWith('image_gen', 'FAL.ai')
+    expect(await screen.findByText('GPT Image 2 (Low)')).toBeTruthy()
+    expect(screen.getByText('GPT Image 2 (High)')).toBeTruthy()
+    expect(getToolsetModels).toHaveBeenCalledWith('image_gen', 'OpenAI')
 
     // Picking a different model persists via the model endpoint.
-    fireEvent.click(screen.getByRole('button', { name: /FLUX 2 Pro/ }))
-    await waitFor(() => expect(selectToolsetModel).toHaveBeenCalledWith('image_gen', 'flux-2-pro', 'FAL.ai'))
+    fireEvent.click(screen.getByRole('button', { name: /GPT Image 2 \(High\)/ }))
+    await waitFor(() => expect(selectToolsetModel).toHaveBeenCalledWith('image_gen', 'gpt-image-2-high', 'OpenAI'))
   })
 
   it('saves an API key for a provider env var', async () => {
