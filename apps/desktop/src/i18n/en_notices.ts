@@ -9,14 +9,7 @@ export const enNotices = {
       `Software rendering active — remote display detected (${reason}). GPU acceleration is disabled to prevent flickering.`
   },
   butterbar: {
-    goTo: (index, total) => `Show notice ${index} of ${total}`,
-    legal: {
-      before: 'Use of A2Assistant is subject to our ',
-      terms: 'Terms of Service',
-      between: ' and ',
-      privacy: 'Privacy Policy',
-      after: '.'
-    }
+    goTo: (index, total) => `Show notice ${index} of ${total}`
   },
   promptNotices: {
     legacySendUnconfirmed:

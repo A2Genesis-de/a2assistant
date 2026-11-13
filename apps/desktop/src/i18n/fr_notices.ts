@@ -9,14 +9,7 @@ export const frNotices = {
       `Rendu logiciel actif — affichage distant détecté (${reason}). L'accélération GPU est désactivée pour éviter les scintillements.`
   },
   butterbar: {
-    goTo: (index, total) => `Afficher l'avis ${index} sur ${total}`,
-    legal: {
-      before: "L'utilisation de A2Assistant est soumise à nos ",
-      terms: "Conditions d'utilisation",
-      between: ' et à notre ',
-      privacy: 'Politique de confidentialité',
-      after: '.'
-    }
+    goTo: (index, total) => `Afficher l'avis ${index} sur ${total}`
   },
   promptNotices: {
     legacySendUnconfirmed:
@@ -39,10 +32,8 @@ export const frNotices = {
     action: 'Empêcher la veille pendant le travail'
   },
   billingBlock: {
-    titleNous: 'Plus de crédits Nous',
     titleProvider: provider => `Plus de crédits — ${provider}`,
     fallbackMessage: 'Votre compte est à court de crédits. Ajoutez-en pour continuer.',
-    openBilling: 'Ouvrir la facturation',
     addCredits: 'Ajouter des crédits',
     dismiss: 'Fermer'
   }

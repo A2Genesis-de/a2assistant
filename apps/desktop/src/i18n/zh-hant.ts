@@ -81,15 +81,7 @@ export const zhHantOverrides = {
     back: '返回結果'
   },
   connectors: {
-    directory: {
-      suggested: '推薦',
-      allApps: '全部應用程式',
-      receiptConnected: apps => `已連接：${apps}`,
-      receiptNone: '未連接新的應用程式',
-      receiptTimedOut: '10 分鐘後已關閉',
-      finishInBrowser: '請在瀏覽器中完成',
-      signInFailed: '連接失敗，點擊重試'
-    }
+
   },
   skillDeepLink: {
     installTitle: (name: string) => `安裝「${name}」？`,
@@ -179,15 +171,7 @@ export const zhHantOverrides = {
   desktop: zhHantChat.desktop,
   errors: zhHantDiagnostics.errors,
   tips: zhHantChat.tips,
-  ui: zhHantCommon.ui,
-  freeTier: {
-    offer: {
-      heading: '繼續使用 A2Assistant',
-      body: '你正在使用免費額度。繼續使用 A2Assistant 的話，你會開始遇到限制。登入免費的 Nous 帳戶，即可獲得更多額度。',
-      signIn: '登入',
-      notNow: '暫不'
-    }
-  }
+  ui: zhHantCommon.ui
 } satisfies TranslationOverrides
 
 export const zhHant = defineLocale(zhHantOverrides)

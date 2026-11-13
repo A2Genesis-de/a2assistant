@@ -15,36 +15,6 @@ export const arSettings = {
   },
   settings: {
     memoryLayers: arMemoryLayers,
-    // Window plans (Nous subscription with included usage). Other billing strings: overlay-gaps.json.
-    billing: {
-      keepGoingOnCredits: {
-        title: 'الاستمرار بالرصيد',
-        description: 'استخدم رصيدك عند نفاد الاستخدام المضمّن. عند الإيقاف: ينتظر A2Assistant إعادة التعيين.',
-        approveInBrowser: 'وافق على الإنفاق عن بُعد في متصفحك لتغيير هذا. يُطبَّق فور الموافقة.',
-        openAgain: 'الفتح مرة أخرى',
-        cancel: 'إلغاء',
-        approvedRetry: 'تمت الموافقة على الإنفاق عن بُعد، لكن لم يُحفظ التغيير.',
-        tryAgain: 'إعادة المحاولة'
-      },
-      state: {
-        usage: {
-          window: {
-            today: 'اليوم',
-            week: 'هذا الأسبوع',
-            month: 'هذا الشهر',
-            topTier: 'النماذج الكبيرة (شهريًا)',
-            barLabel: title => `المستخدم من الاستخدام المضمّن: ${title}`,
-            captionPaused: 'متوقف مؤقتًا: فشل دفع الاشتراك',
-            captionPausedOther: 'متوقف مؤقتًا: راجع الفوترة في البوابة',
-            captionTopTierUsedUp: 'نفدت الحصة الشهرية، ويغطي الرصيد الباقي',
-            captionTopTierUsedUpKeepGoingOff: 'نفدت الحصة الشهرية، ولا تزال النماذج المضمّنة الأخرى تعمل',
-            captionResetsIn: duration => `يُعاد التعيين خلال ${duration}`,
-            captionIncluded: 'الاستخدام المضمّن',
-            valueUsed: percent => `${percent} مستخدم`
-          }
-        }
-      }
-    },
     subpages: {
       appearanceTheme: 'السمة',
       appearanceTypography: 'الخطوط والتحجيم',
@@ -92,9 +62,7 @@ export const arSettings = {
       vaultCredentials: 'بيانات الاعتماد المحفوظة',
       vaultSources: 'مديرو كلمات المرور',
       appUpdates: 'الإصدار والتحديثات',
-      uninstall: 'إلغاء التثبيت',
-      billingOverview: 'نظرة عامة',
-      billingPlans: 'الخطط'
+      uninstall: 'إلغاء التثبيت'
     },
     closeSettings: 'إغلاق الإعدادات',
     exportConfig: 'تصدير الإعدادات',

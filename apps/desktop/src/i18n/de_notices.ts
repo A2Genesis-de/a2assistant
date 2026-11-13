@@ -9,14 +9,7 @@ export const deNotices = {
       `Software-Rendering aktiv — Remote-Display erkannt (${reason}). GPU-Beschleunigung ist deaktiviert, um Flackern zu verhindern.`
   },
   butterbar: {
-    goTo: (index, total) => `Hinweis ${index} von ${total} anzeigen`,
-    legal: {
-      before: 'Die Nutzung von A2Assistant unterliegt unseren ',
-      terms: 'Nutzungsbedingungen',
-      between: ' und unserer ',
-      privacy: 'Datenschutzerklärung',
-      after: '.'
-    }
+    goTo: (index, total) => `Hinweis ${index} von ${total} anzeigen`
   },
   promptNotices: {
     legacySendUnconfirmed:
@@ -39,10 +32,8 @@ export const deNotices = {
     action: 'Während der Arbeit wach halten'
   },
   billingBlock: {
-    titleNous: 'Keine Nous-Credits mehr',
     titleProvider: provider => `Keine Credits mehr — ${provider}`,
     fallbackMessage: 'Auf Ihrem Konto sind keine Credits mehr übrig. Fügen Sie Credits hinzu, um fortzufahren.',
-    openBilling: 'Billing öffnen',
     addCredits: 'Credits hinzufügen',
     dismiss: 'Schließen'
   }

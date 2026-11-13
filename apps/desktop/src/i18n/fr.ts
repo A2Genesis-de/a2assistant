@@ -4,7 +4,6 @@ import { defineFieldCopy } from '@/app/settings/field-copy'
 import { defineLocale, type TranslationOverrides } from './define-locale'
 import { frBoot } from './fr_boot'
 import { frClarify } from './fr_clarify'
-import { frConnectorAccounts } from './fr_connector_accounts'
 import { frConnectorCard } from './fr_connector_card'
 import { frCronControl } from './fr_cron_control'
 import { frErrorCodes } from './fr_error_codes'
@@ -45,37 +44,21 @@ export const frOverrides = {
     residencyLocal: 'Sur cet appareil',
     segment: {
       all: 'Tous',
-      available: 'Disponibles',
-      connected: 'Connectés',
-      off: 'Désactivés'
+      available: 'Disponibles'
     },
     group: {
-      connected: 'Connectés',
-      connectedNote: "Connexions en échec d'abord.",
-      available: 'Disponibles',
-      off: 'Désactivés',
-      offNote: 'Les connexions sont conservées.'
+      available: 'Disponibles'
     },
     card: {
-      kindManaged: 'Géré',
       kindCatalog: 'MCP · Catalogue',
       kindCustom: 'MCP · Personnalisé',
       kindPlugin: (plugin: string) => `MCP · Plugin ${plugin}`,
       inCatalog: 'Dans le catalogue A2Assistant',
-      hostedTwin: 'Version gérée disponible',
-      alsoLocal: 'Fonctionne aussi sur cet appareil',
       open: (name: string) => `Ouvrir ${name}`,
       turnServerOn: (name: string) => `Activer ${name}`,
       turnServerOff: (name: string) => `Désactiver ${name}`,
       state: {
-        accessExpired: 'Accès expiré',
         available: 'Disponible',
-        connected: 'Connecté',
-        connecting: 'Connexion',
-        connectionUnknown: 'État inconnu',
-        couldNotConnect: 'Connexion impossible',
-        offByYourOrganisation: 'Désactivé par votre organisation',
-        offForYou: 'Désactivé pour vous',
         serverConnecting: 'Connexion…',
         serverError: 'Erreur',
         serverNeedsAuth: 'Authentification requise',
@@ -85,23 +68,15 @@ export const frOverrides = {
       },
       fact: {
         tools: (count: number) => `${count} outil${count > 1 ? 's' : ''}`,
-        toolsOff: (count: number) => `${count} outil${count > 1 ? 's' : ''} désactivé${count > 1 ? 's' : ''}`,
         toolsOn: (count: number) => `${count} outil${count > 1 ? 's' : ''} activé${count > 1 ? 's' : ''}`,
         toolsSomeOn: (total: number, on: number) => `${total} outils, ${on} activé${on > 1 ? 's' : ''}`
       },
       verb: {
         authenticate: "S'authentifier",
-        connect: 'Connecter',
         install: 'Installer',
-        openLogs: 'Ouvrir les journaux',
-        reconnect: 'Reconnecter',
-        stopWaiting: "Arrêter l'attente",
-        tryAgain: 'Réessayer',
-        turnBackOn: 'Réactiver'
+        openLogs: 'Ouvrir les journaux'
       },
       reason: {
-        finishSignIn: 'Terminez la connexion dans votre navigateur.',
-        reconnect: 'Reconnectez-vous pour que cette application continue de fonctionner.',
         serverError: 'Le serveur a refusé la connexion.',
         serverNeedsAuth: 'Connectez-vous pour que ce serveur puisse répondre.'
       }
@@ -112,23 +87,12 @@ export const frOverrides = {
       noMatchTitle: 'Aucune application correspondante',
       noMatchBody: 'Aucun résultat. Indiquez à A2Assistant votre propre serveur MCP pour l’ajouter.',
       clearSearch: 'Effacer la recherche',
-      hostedFailedTitle: 'Impossible de joindre les applications hébergées.',
-      hostedFailedBody:
-        'Les serveurs de cet ordinateur ne sont pas affectés et fonctionnent toujours. Rien n’a été désactivé.',
       retry: 'Réessayer',
       matchesElsewhere: (count: number) =>
         `${count} autre${count > 1 ? 's' : ''} résultat${count > 1 ? 's' : ''} dans d’autres groupes.`,
       showAllMatches: 'Afficher tous les résultats',
       segmentNoMatch: (segment: string) => `Aucun résultat dans ${segment} : tous les résultats sont affichés.`,
-      freeTierNote: 'Les connexions restent sur cet ordinateur jusqu’à ce que vous vous connectiez.',
-      signInLine: 'Connectez-vous à Nous pour utiliser les applications gérées.',
-      signIn: 'Se connecter',
-      managedUnavailable: 'Les applications gérées ne sont pas encore disponibles pour ce compte.',
-      writeFailed: 'Cette modification n’a pas été enregistrée.',
-      refreshFailed: 'La liste des outils n’a pas été actualisée.',
-      disconnectNoAccount: 'A2Assistant n’a aucun compte à déconnecter ici. Actualisez la page et réessayez.',
-      disconnectRefused:
-        'Nous ne peut pas supprimer cette connexion pour le moment. Désactivez plutôt l’application avec l’interrupteur, ou réessayez plus tard.'
+      signIn: 'Se connecter'
     },
     add: {
       action: 'Ajouter le vôtre',
@@ -165,35 +129,18 @@ export const frOverrides = {
     },
     dialog: {
       disconnect: 'Déconnecter',
-      disconnectTitle: (name: string) => `Déconnecter ${name} ?`,
-      disconnectBody: "A2Assistant cesse d'agir avec ce compte. Vous pouvez vous reconnecter à tout moment.",
       menuRefreshTools: 'Actualiser les outils',
       moreActions: "Plus d'actions",
       removeServerTitle: (name: string) => `Supprimer ${name} ?`,
       removeServerBody: "L'entrée est retirée de mcp.json sur cet ordinateur. Rien d'autre n'est supprimé.",
-      appSwitch: (name: string) => `A2Assistant peut utiliser ${name}`,
-      waysTitle: (name: string) => `Où ${name} s'exécute`,
-      wayNotConnected: (name: string) => `Pas encore connecté. Connectez-vous à ${name} dans votre navigateur.`,
-      wayHosted: 'Géré',
-      bothOn: (name: string) => `Les deux sont activés : A2Assistant voit donc chaque outil ${name} en double.`,
-      turnOffLocal: 'Désactiver le serveur local',
       providedByPlugin: (plugin: string) => `Fourni par le plugin ${plugin}`,
       openPlugins: "Ouvrir l'onglet Plugins",
-      nousLine: 'Les applications Nous suivent votre compte, pas le profil.',
-      rulesReadOnly: 'Les règles ne peuvent pas être modifiées pour le moment.',
-      rulesAppOff: (name: string) => `Activez ${name} pour modifier ses outils.`,
-      rulesSignIn: 'Connectez-vous pour modifier ce que A2Assistant peut faire ici.',
-      orgNote: (count: number) => `Votre organisation a désactivé ${count} outil${count > 1 ? 's' : ''}.`,
-      orgLink: "Ouvrir l'administration des connecteurs",
-      connectEnded: "La connexion n'a pas abouti.",
-      connectOpenAgain: 'Rouvrir le lien',
       tokensPerCall: 'jetons par appel',
       usesPerMonth: 'utilisations sur 30 jours',
       advanced: 'Avancé',
       advancedHint: "l'entrée mcp.json et les journaux"
     },
 
-    accounts: frConnectorAccounts,
 
     tools: {
       title: 'Outils',
@@ -211,7 +158,6 @@ export const frOverrides = {
       showSummary: 'Afficher le résumé',
       facetSwitch: (facet: string) => `Activer ou désactiver les outils ${facet}`,
       moreHints: (count: number) => `+${count}`,
-      staleSignIn: 'Connectez-vous pour lire la dernière liste des outils.',
       searchCountPlaceholder: (count: number) => `Rechercher parmi ${count} outils`,
       toolList: (name: string) => `Outils de ${name}`,
       categorySelect: (count: number) => `${count} catégorie${count > 1 ? 's' : ''}`,
@@ -220,7 +166,6 @@ export const frOverrides = {
       quickReadOnly: 'Lecture seule',
       quickNoDestructive: 'Désactiver les destructifs',
       quickEverythingOn: 'Tout activer',
-      lockedHint: 'désactivé par votre organisation',
       turnToolOn: (tool: string) => `Activer ${tool}`,
       turnToolOff: (tool: string) => `Désactiver ${tool}`,
       showDetails: (tool: string) => `Afficher ce que fait ${tool}`,
@@ -231,28 +176,9 @@ export const frOverrides = {
       needsAuthTitle: (name: string) => `Connectez-vous à ${name} pour lire ses outils.`,
       needsAuthBody: 'La connexion reste sur cet ordinateur. Rien ne le quitte.',
       retry: 'Réessayer',
-      goneTitle: (name: string) => `${name} a quitté le catalogue.`,
-      goneBody: "A2Assistant ne peut plus l'appeler. La ligne reste jusqu'à ce que vous la supprimiez : rien ne disparaît.",
       remove: 'Supprimer',
       offTitle: (name: string) => `${name} est désactivé.`,
       offBody: "Activez-le avec l'interrupteur ci-dessus pour lire les outils qu'il apporte.",
-      signedOutTitle: 'Connectez-vous à Nous pour lire la liste des outils.',
-      signedOutBody: 'Vos serveurs sur cet ordinateur ne sont pas affectés.',
-      conflictTitle: "Quelqu'un a modifié cette règle pendant que vous l'éditiez.",
-      conflictBody: (theyOff: number, theyOn: number) => {
-        const they = [
-          theyOff > 0
-            ? `désactivé ${theyOff} outil${theyOff > 1 ? 's' : ''} que vous avez activé${theyOff > 1 ? 's' : ''}`
-            : '',
-          theyOn > 0
-            ? `laissé activé${theyOn > 1 ? 's' : ''} ${theyOn} outil${theyOn > 1 ? 's' : ''} que vous avez désactivé${theyOn > 1 ? 's' : ''}`
-            : ''
-        ].filter(Boolean)
-
-        return `${they.length > 0 ? `Cette personne a ${they.join(' et ')}. ` : ''}Vos modifications restent à l'écran ; rien n'a été écrit.`
-      },
-      conflictReload: 'Recharger sa version',
-      conflictSave: 'Enregistrer par-dessus sa version',
       saveFailed: "Ces règles d'outils n'ont pas été enregistrées.",
       footerDirty: (off: number, backOn: number) =>
         `${off} outil${off > 1 ? 's' : ''} désactivé${off > 1 ? 's' : ''}, ${backOn === 0 ? 'aucun' : backOn} réactivé${backOn > 1 ? 's' : ''}`,
@@ -715,9 +641,7 @@ export const frOverrides = {
       vaultCredentials: 'Identifiants enregistrés',
       vaultSources: 'Gestionnaires de mots de passe',
       appUpdates: 'Version et mises à jour',
-      uninstall: 'Désinstaller',
-      billingOverview: "Vue d'ensemble",
-      billingPlans: 'Forfaits'
+      uninstall: 'Désinstaller'
     },
     closeSettings: 'Fermer les paramètres',
     exportConfig: 'Exporter la configuration',
@@ -750,7 +674,6 @@ export const frOverrides = {
       archivedChats: 'Conversations archivées',
       sessions: 'Sessions',
       about: 'À propos',
-      billing: 'Facturation',
       notifications: 'Notifications',
       vault: 'Mots de passe et identifiants'
     },
@@ -1861,314 +1784,6 @@ export const frOverrides = {
     },
     model: frModelSettings,
     localModels: frLocalModels,
-    billing: {
-      perMonth: (amount: string) => `${amount}/mois`,
-      creditsPerMonth: (amount: string) => `${amount} crédits/mois`,
-      usageLabel: (label: string) => `Utilisation ${label}`,
-      freeTier: {
-        signIn: 'Se connecter',
-        title: 'Vous utilisez l’offre gratuite Nous',
-        message: 'Connectez-vous avec un compte Nous pour débloquer davantage de modèles et d’outils.',
-        caption:
-          'Fonctionne avec nous/welcome, connecteurs inclus. La connexion conserve vos connecteurs et ajoute les outils qui nécessitent un compte ainsi que tous les autres modèles.',
-        name: 'Nous · offre gratuite',
-        footnote:
-          'L’offre gratuite n’a ni solde ni rien à payer. Le paiement et l’utilisation apparaissent une fois connecté avec un compte Nous.',
-        plan: 'Offre gratuite',
-        model: 'Modèle',
-        connectors: 'Connecteurs',
-        included: 'Inclus'
-      },
-      amountValidation: {
-        reloadTo: 'Recharger jusqu’à',
-        greaterThanThreshold: 'Le montant de recharge doit être supérieur au seuil.',
-        decimal: (label: string) => `${label} : saisissez un montant en dollars avec au plus 2 décimales.`,
-        positive: (label: string) => `${label} : le montant doit être supérieur à 0 $.`,
-        minimum: (label: string, amount: string) => `${label} : le minimum est de ${amount}.`,
-        maximum: (label: string, amount: string) => `${label} : le maximum est de ${amount}.`
-      },
-      stepUp: {
-        openVerification: 'Ouvrir la page de vérification',
-        dismiss: 'Ignorer',
-        waiting: 'En attente du lien de vérification…',
-        verify: 'Vérifier pour continuer',
-        deniedTitle: 'La vérification n’a pas été approuvée',
-        deniedBody: 'La vérification s’est terminée sans autoriser les dépenses à distance pour ce terminal.',
-        successTitle: 'Vérification terminée',
-        successBody: 'Les dépenses à distance sont autorisées pour ce terminal.'
-      },
-      charge: {
-        added: (amount?: string) => (amount ? `${amount} $ ajoutés.` : 'Crédits ajoutés.'),
-        failedTitle: 'Échec du paiement',
-        unconfirmedTitle: 'Résultat du paiement non confirmé',
-        unconfirmedBody: (message: string) =>
-          `${message} Le résultat de votre dernier paiement n’est pas confirmé - vérifiez votre solde/historique avant de réessayer.`,
-        checkTitle: 'Impossible de vérifier le paiement',
-        checkBody: 'Impossible de vérifier le paiement.',
-        untrackedTitle: 'Le paiement n’a pas pu être suivi',
-        untrackedBody: 'Le service de facturation a accepté la demande mais n’a renvoyé aucun identifiant de paiement.',
-        timeoutTitle: 'Toujours en cours après 5 minutes',
-        timeoutBody: 'Le paiement peut encore aboutir. Consultez le portail avant de réessayer.',
-        authenticationRequired:
-          'Votre banque exige une vérification (3DS). Terminez-la sur le portail pour finaliser cet achat.',
-        expired: 'Votre carte a expiré. Mettez-la à jour sur le portail.',
-        declined: 'Votre carte a été refusée. Essayez une autre carte sur le portail.',
-        failedBody: (reason: string) => `Le paiement n’a pas abouti (${reason}).`
-      },
-      title: 'Facturation',
-      preview: 'aperçu',
-      summary: {
-        balance: 'Solde',
-        plan: 'Forfait',
-        autoRefill: 'Recharge auto'
-      },
-      sections: {
-        invoices: 'Factures',
-        plan: 'Forfait',
-        paymentAndCredits: 'Paiement et crédits',
-        usage: 'Utilisation'
-      },
-      usage: {
-        title: 'Utilisation'
-      },
-      buyCredits: {
-        customAmount: 'Montant de crédits personnalisé',
-        title: 'Acheter des crédits maintenant',
-        buyButton: 'Acheter',
-        processing: 'Traitement… vérification du règlement',
-        added: (amount: string) => `${amount} ajoutés. Actualisation du solde.`,
-        retry: 'Réessayer',
-        openPortal: 'Ouvrir le portail'
-      },
-      plan: {
-        title: 'Forfaits',
-        changePlan: 'Changer de forfait',
-        viewPlans: 'Voir les forfaits',
-        backAria: 'Retour à la facturation',
-        current: 'Forfait actuel',
-        scheduled: 'Planifié',
-        empty: 'Aucun forfait n’est disponible pour le moment.',
-        undo: 'Annuler',
-        undoing: 'Annulation…',
-        downgrade: 'Rétrograder',
-        confirmDowngrade: 'Confirmer la rétrogradation',
-        tryAgain: 'Réessayer',
-        checkingChange: 'Vérification de ce changement…',
-        cannotChange: 'Ce changement ne peut pas être effectué ici.',
-        alreadyOn: (name: string) => `Vous avez déjà le forfait ${name} — rien à changer.`,
-        notScheduleable: 'Ce changement ne peut pas être planifié ici.',
-        scheduling: 'Planification…',
-        cancel: 'Annuler',
-        effectScheduled: (targetName: string, effectiveAt: string, creditsDelta?: string) =>
-          `Passage à ${targetName} — effectif ${effectiveAt}. Aucun débit maintenant ; vous conservez votre forfait actuel jusque-là.${creditsDelta ? ` Variation des crédits mensuels : ${creditsDelta}.` : ''}`
-      },
-      keepGoingOnCredits: {
-        title: 'Continuer avec les crédits',
-        description:
-          'Utilise vos crédits quand l’usage inclus est épuisé. Désactivé : A2Assistant attend la réinitialisation.',
-        approveInBrowser:
-          "Approuvez Remote Spending dans votre navigateur pour modifier ce réglage. Il s'applique dès votre approbation.",
-        openAgain: 'Rouvrir',
-        cancel: 'Annuler',
-        approvedRetry: "Remote Spending est approuvé, mais la modification n'a pas été enregistrée.",
-        tryAgain: 'Réessayer'
-      },
-      autoReload: {
-        threshold: 'Seuil',
-        thresholdAria: 'Seuil de recharge automatique',
-        reloadTo: 'Recharger jusqu’à',
-        reloadToAria: 'Montant cible de la recharge automatique',
-        turnOffConfirm: 'Désactiver la recharge automatique ?',
-        turnOff: 'Désactiver',
-        disable: 'Désactiver',
-        updated: 'Recharge automatique mise à jour.',
-        turnedOff: 'Recharge automatique désactivée.',
-        manage: 'Gérer',
-        save: 'Enregistrer',
-        saving: 'Enregistrement…',
-        cancel: 'Annuler'
-      },
-      state: {
-        notice: {
-          loggedOut: {
-            title: 'Connectez votre compte Nous',
-            message:
-              'Connectez-vous avec votre compte Nous pour voir ici votre solde, votre offre et votre utilisation.',
-            action: 'Se connecter'
-          },
-          openPortal: 'Ouvrir le portail ↗',
-          noCard: {
-            title: 'Aucun moyen de paiement enregistré',
-            message:
-              'L’achat de crédits et la recharge automatique restent désactivés tant qu’aucune carte n’est enregistrée. Ajoutez-en une sur le portail.',
-            action: 'Ajouter une carte ↗'
-          }
-        },
-        paymentMethod: {
-          title: 'Moyen de paiement',
-          description: 'Gérez la carte utilisée pour les recharges et les renouvellements d’abonnement.',
-          addAction: 'Ajouter un moyen de paiement',
-          updateAction: 'Mettre à jour',
-          provenance: {
-            autoRefill: 'carte de recharge automatique',
-            customerDefault: 'carte client par défaut',
-            subPin: 'carte d’abonnement',
-            suffix: (label: string) => ` - ${label}`
-          }
-        },
-        buyCredits: {
-          description: 'Un débit unique sur votre carte, ajouté à votre solde dès aujourd’hui.'
-        },
-        autoRefill: {
-          title: 'Recharger quand le solde est bas',
-          genericDescription: 'Maintenez votre solde approvisionné lorsqu’il passe sous votre seuil.',
-          offPill: 'Désactivée',
-          enabledPill: 'Activée',
-          notAvailablePill: '—',
-          manageCaption: 'Gérez la recharge automatique depuis le portail.',
-          turnOnCaption: 'Activez la recharge automatique depuis le portail',
-          chargesDescription: (reloadTo: string, threshold: string) =>
-            `Débite automatiquement ${reloadTo} lorsque votre solde passe sous ${threshold}.`,
-          distinctCardCaption: (cardLabel: string) =>
-            `La recharge automatique débite ${cardLabel} — harmonisez sur le portail`,
-          distinctCardFallback: 'une autre carte',
-          reconcileAction: 'Harmoniser ↗'
-        },
-        usage: {
-          subscriptionCredits: {
-            title: 'Crédits d’abonnement',
-            barLabel: 'Crédits d’abonnement restants',
-            captionResets: (date: string) => `Réinitialisation ${date}`,
-            valueOf: (remaining: string, monthly: string) => `${remaining} sur ${monthly} restants`,
-            valueOver: (remaining: string, monthly: string, over: string) =>
-              `${remaining} sur ${monthly} restants · ${over} de dépassement`
-          },
-          topupCredits: {
-            title: 'Crédits rechargés',
-            caption: 'N’expirent pas'
-          },
-          monthlyCap: {
-            title: 'Plafond de dépenses mensuel',
-            barLabel: 'Plafond de dépenses mensuel utilisé',
-            captionDefault: 'Plafond par défaut',
-            captionSpending: 'Dépenses mensuelles à distance',
-            valueUsed: (spent: string, limit: string) => `${spent} sur ${limit} utilisés`
-          },
-          window: {
-            today: "Aujourd'hui",
-            week: 'Cette semaine',
-            month: 'Ce mois-ci',
-            topTier: 'Grands modèles (mensuel)',
-            barLabel: (title: string) => `${title} : usage inclus consommé`,
-            captionPaused: "En pause : échec du paiement de l'abonnement",
-            captionPausedOther: 'En pause : voir Facturation dans le Portail',
-            captionTopTierUsedUp: 'Quota mensuel épuisé, les crédits couvrent le reste',
-            captionTopTierUsedUpKeepGoingOff: 'Quota mensuel épuisé, les autres modèles inclus fonctionnent toujours',
-            captionResetsIn: (duration: string) => `Réinitialisation dans ${duration}`,
-            captionIncluded: 'Usage inclus',
-            valueUsed: (percent: string) => `${percent} utilisé`
-          }
-        },
-        planCard: {
-          freeTier: 'Gratuit',
-          chooseAction: 'Choisir ↗',
-          adjustPlanAction: 'Ajuster le forfait ↗',
-          unavailableCaption:
-            'Les détails de l’abonnement sont indisponibles ; vous pouvez toujours ouvrir le portail.',
-          downgradeCaption: (tierName: string, when: string) => `Passe à ${tierName} le ${when}.`,
-          cancellationCaption: (when: string) => `Résiliation le ${when}.`,
-          renewsCaption: (date: string) => `Renouvellement ${date}`,
-          noSubscriptionCaption: 'Aucun abonnement actif — les modèles payants consomment les crédits rechargés.'
-        }
-      },
-      errors: {
-        consentRequired: {
-          title: 'Confirmation de la carte requise',
-          message: 'Confirmez cette carte pour les débits du terminal dans le portail'
-        },
-        insufficientScope: {
-          title: 'Les dépenses à distance doivent être approuvées',
-          message:
-            'Cette action nécessite l’autorisation des dépenses à distance. Lancez une recharge pour l’autoriser, puis réessayez.'
-        },
-        remoteSpendingRevoked: {
-          title: 'Les dépenses à distance ont été arrêtées',
-          messageByAdmin: 'Un administrateur a arrêté les dépenses à distance pour ce terminal.',
-          messageBySelf: 'Vous avez arrêté les dépenses à distance pour ce terminal.'
-        },
-        remoteSpendingReconnect: (who: string) =>
-          `${who} Reconnectez-vous depuis Paramètres -> Gateway pour réautoriser cet appareil.`,
-        sessionRevoked: {
-          title: 'Session déconnectée',
-          message: 'Votre session a été déconnectée. Reconnectez-vous depuis Paramètres → Gateway.'
-        },
-        cliBillingDisabled: {
-          title: 'Les dépenses à distance sont désactivées',
-          message:
-            'Les dépenses à distance sont désactivées pour ce compte — un administrateur de facturation peut les activer depuis la page A2Assistant du portail.'
-        },
-        roleRequired: {
-          title: 'Rôle administrateur requis',
-          message:
-            'L’ajout de fonds nécessite un administrateur ou propriétaire de l’organisation. Demandez à un administrateur, ou gérez-le sur le portail.'
-        },
-        idempotencyConflict: {
-          title: 'Lancez une nouvelle recharge',
-          message: '🔴 Cette clé de paiement a déjà été utilisée pour un autre montant. Lancez une nouvelle recharge.'
-        },
-        noPaymentMethod: {
-          title: 'Aucune carte enregistrée',
-          message:
-            '💳 Aucune carte enregistrée pour les débits du terminal. Configurez-en une sur le portail ' +
-            '(les achats ponctuels de crédits n’enregistrent pas de carte réutilisable).'
-        },
-        orgAccessDenied: {
-          title: 'Accès à l’organisation refusé',
-          message: 'Ce jeton n’est lié à aucune organisation que vous pouvez gérer'
-        },
-        monthlyCapExceeded: {
-          title: 'Plafond de dépenses mensuel atteint',
-          messageReached: '🔴 Plafond de dépenses mensuel atteint.',
-          messageHeadroom: (remaining: string) =>
-            `🔴 Plafond de dépenses mensuel atteint — marge restante : ${remaining} $.`
-        },
-        rateLimited: {
-          title: 'Trop de paiements pour le moment',
-          message: (mins: number) =>
-            mins > 0
-              ? `🟡 Trop de paiements pour le moment (réessayez dans ~${mins} min). Il ne s’agit pas d’un échec de paiement.`
-              : '🟡 Trop de paiements pour le moment. Il ne s’agit pas d’un échec de paiement.'
-        },
-        stripeUnavailable: {
-          title: 'Stripe rencontre des difficultés',
-          message: (mins: number) =>
-            mins > 0
-              ? `Stripe rencontre des difficultés — réessayez dans ~${mins} min`
-              : 'Stripe rencontre des difficultés — réessayez sous peu'
-        },
-        upgradeCapExceeded: {
-          title: 'Limite quotidienne de changements de forfait atteinte',
-          message: 'Limite quotidienne de changements de forfait atteinte — réessayez demain'
-        },
-        endpointUnavailable: {
-          title: 'Point de terminaison de facturation indisponible',
-          message:
-            'Le point de terminaison de facturation a renvoyé une réponse non JSON (il n’est peut-être pas disponible sur ce déploiement).'
-        },
-        timeout: {
-          title: 'Délai de la requête de facturation dépassé',
-          message: 'Délai de la requête de facturation dépassé.'
-        },
-        transport: {
-          title: 'Échec de la connexion de facturation',
-          message: 'La requête de facturation a échoué avant d’atteindre le gateway.'
-        },
-        default: {
-          title: 'Échec de la requête de facturation',
-          message: 'La requête de facturation a échoué.'
-        }
-      }
-    },
     providers: {
       connectAccount: 'Connecter un compte',
       haveApiKey: 'Vous avez une clé API ?',
@@ -3766,8 +3381,6 @@ export const frOverrides = {
       '/palette': 'Ouvrir la palette de commandes floue (aussi Ctrl+P)',
       '/usage':
         'Afficher l’utilisation des jetons et les limites de débit ; `reset` utilise une réinitialisation de limite Codex en réserve',
-      '/subscription': 'Voir votre forfait Nous et le modifier dans le navigateur',
-      '/topup': 'Afficher votre solde Nous et gérer la facturation sur le portail',
       '/platform': 'Suspendre, reprendre ou lister une plateforme de gateway en échec',
       '/version': 'Afficher la version de A2Assistant',
       '/debug': 'Téléverser un rapport de débogage (infos système + journaux) et obtenir des liens partageables',
@@ -4260,78 +3873,6 @@ export const frOverrides = {
     openLogs: 'Ouvrir les journaux'
   },
   onboarding: frOnboarding,
-  freeTier: {
-    providerRowTitle: 'Nous · offre gratuite',
-    providerRowPitch: 'Connectez-vous avec un compte Nous pour débloquer davantage de modèles et outils.',
-    readyTitle: 'A2Assistant est prêt.',
-    readyCaption: 'Gratuit · connecteurs inclus',
-    begin: 'Commencer',
-    signInInstead: 'Se connecter plutôt avec un compte Nous',
-    otherProviders: 'Autres fournisseurs',
-    stripTitle: "L'inférence Nous gratuite et les connecteurs sont maintenant disponibles.",
-    stripBody: 'Ouvrez le sélecteur de modèle pour les essayer ou connectez-vous avec un compte Nous.',
-    openModelPicker: 'Ouvrir le sélecteur de modèle',
-    dismiss: 'Fermer',
-    providerName: 'Nous',
-    statusLabel: model => `Nous · ${model}`,
-    signIn: 'Se connecter',
-    signInHeading: 'Connectez-vous avec un compte Nous pour débloquer davantage de modèles et outils.',
-    settingUp: "Configuration de l'inférence gratuite…",
-    finishInBrowser: 'Terminez dans votre navigateur',
-    doNotShare: 'Ne partagez pas ce code.',
-    openPageAgain: 'Rouvrir la page',
-    waiting: 'En attente de la connexion…',
-    finishingHeading: 'Finalisation de la connexion…',
-    finishingBody: 'Autorisation accordée dans le navigateur. Récupération des jetons de votre compte.',
-    signedInAsLabel: 'Connecté en tant que',
-    signedIn: 'Connecté.',
-    completedBody: "Votre compte donne maintenant accès à l'inférence et aux outils.",
-    reconnect: 'Reconnecter',
-    openConnectors: 'Ouvrir les connecteurs',
-    defaultModel: 'Modèle par défaut',
-    change: 'Modifier',
-    done: 'Terminé',
-    notNow: 'Pas maintenant',
-    tryAgain: 'Réessayer',
-    didNotComplete: "La connexion n'a pas abouti",
-    timedOutHeading: 'Délai de connexion dépassé',
-    timedOutBody: "Le code n'a pas été utilisé à temps. Vous restez sur l'offre gratuite.",
-    errorBody: "La connexion n'a pas abouti ; relancez-la.",
-    busyHeading: 'Presque terminé',
-    busyBody: wait =>
-      `A2Assistant n'a pas pu terminer votre connexion car le service Nous est occupé. Réessayez dans ${wait}. Votre session reste disponible entre-temps.`,
-    unreachableBody:
-      "A2Assistant n'a pas pu joindre le service Nous pour terminer votre connexion. Vérifiez votre connexion Internet et réessayez. Votre session reste disponible.",
-    alreadySignedInHeading: 'Déjà connecté.',
-    alreadySignedInBody: 'Cette installation A2Assistant est déjà connectée à un compte Nous.',
-    offer: {
-      heading: 'Continuez avec A2Assistant',
-      body: 'Vous utilisez le quota gratuit. Si vous continuez à utiliser A2Assistant, vous allez commencer à atteindre des limites. Connectez-vous avec un compte Nous gratuit pour obtenir un quota plus important.',
-      signIn: 'Se connecter',
-      notNow: 'Pas maintenant'
-    },
-    setupFailed: {
-      gateClosed:
-        'Cette version de A2Assistant ne peut pas démarrer sans compte Nous. Connectez-vous ou créez-en un gratuitement en une minute.',
-      paused:
-        "L'utilisation de A2Assistant sans connexion est momentanément suspendue. A2Assistant continuera à vérifier. La connexion est gratuite et vous permet de continuer immédiatement.",
-      rateLimited: wait =>
-        `Beaucoup de personnes démarrent en ce moment ; A2Assistant réessaiera dans ${wait}. La connexion est gratuite et évite l'attente.`,
-      unreachable:
-        "A2Assistant n'a pas pu joindre le service Nous. Vérifiez votre connexion Internet, puis appuyez sur Réessayer. Vous pouvez aussi connecter un autre fournisseur.",
-      serverError:
-        'Le service Nous a rencontré un problème. Réessayez dans un instant ou connectez un autre fournisseur.',
-      powRequired:
-        "Le serveur Nous a demandé une preuve de travail qui n'est pas encore gérée par votre Agent. Connectez-vous ou créez un compte Nous gratuit pour continuer.",
-      locked:
-        'Cette session ne peut pas continuer sans connexion. Connectez-vous ou créez un compte Nous gratuit pour poursuivre.',
-      generic:
-        "A2Assistant n'a pas pu configurer l'accès gratuit sans connexion. Connectez-vous gratuitement ou choisissez un autre fournisseur.",
-      signInBelow: 'La connexion est gratuite. Choisissez Nous ci-dessous.',
-      tryAgain: 'Réessayer',
-      retrying: 'Nouvelle tentative…'
-    }
-  },
   modelPicker: {
     title: 'Changer de modèle',
     current: 'actuel :',
@@ -4488,7 +4029,6 @@ export const frOverrides = {
       toggleTerminal: 'Terminal',
       toggleTokensPerSecond: 'Tokens par seconde',
       toggleVersion: 'Version et mises à jour',
-      toggleFreeTier: 'Offre gratuite',
       toggleWorkspace: 'Espace de travail',
       cacheHitRateTitle:
         'Taux de cache des prompts pour cette session — les tokens en cache coûtent moins cher, un taux élevé est donc plus économique',
@@ -4900,38 +4440,6 @@ export const frOverrides = {
         disk_full: {
           title: 'Votre disque est plein',
           body: "A2Assistant n'a pas pu enregistrer cette conversation. Libérez de l'espace, puis réessayez."
-        },
-        free_tier_disabled: {
-          title: 'Connectez-vous pour continuer',
-          body: 'Connectez-vous avec un compte Nous gratuit pour continuer.'
-        },
-        free_tier_rate_limited: {
-          title: 'Quota gratuit épuisé',
-          body: 'Il sera bientôt renouvelé. Connectez-vous avec un compte Nous gratuit pour obtenir un quota plus élevé.'
-        },
-        free_tier_at_capacity: {
-          title: 'Offre gratuite très sollicitée',
-          body: 'Connectez-vous gratuitement pour éviter la file, ou réessayez un peu plus tard.'
-        },
-        free_tier_model_not_free: {
-          title: 'Ce modèle nécessite une connexion',
-          body: 'A2Assistant utilise le modèle gratuit pour le moment. Connectez-vous avec un compte Nous gratuit pour accéder à plus de modèles.'
-        },
-        free_tier_route: {
-          title: 'Modèle gratuit injoignable',
-          body: 'Connectez-vous avec un compte Nous gratuit ou vérifiez le paramètre NOUS_INFERENCE_BASE_URL.'
-        },
-        free_tier_outage: {
-          title: 'Modèle gratuit en difficulté',
-          body: 'Renvoyez votre message dans une minute.'
-        },
-        free_tier_refused: {
-          title: 'Connectez-vous pour continuer',
-          body: 'La connexion avec un compte Nous est gratuite.'
-        },
-        usage_window: {
-          title: 'Usage inclus épuisé',
-          body: 'L’usage inclus de votre forfait est épuisé jusqu’à la réinitialisation. Ajoutez des crédits dans /topup pour continuer.'
         }
       },
       errorAuthKinds: {
@@ -4961,11 +4469,6 @@ export const frOverrides = {
       errorGenericProvider: "Le service d'IA",
       errorToastTitle: "A2Assistant n'a pas pu terminer la réponse",
       errorRetry: 'Réessayer',
-      errorSwitchToModel: (model, note) => (note ? `Passer à ${model} (${note})` : `Passer à ${model}`),
-      errorSwitchModelFailed: 'Impossible de changer de modèle',
-      errorUseCredits: 'Activer Continuer avec les crédits',
-      errorUseCreditsFailed: 'Impossible d’activer Continuer avec les crédits',
-      errorAddCredits: 'Ajouter des crédits',
       errorOpenBillingSettings: 'Ouvrir les réglages de facturation',
       errorRetryScheduled: (time: string, wait: string) => `Nouvel essai à ${time} — dans ${wait}`,
       errorRetryScheduledCancel: 'Annuler',
@@ -4978,7 +4481,6 @@ export const frOverrides = {
       errorOpenHermesFolderFailed: "Impossible d'ouvrir le dossier A2Assistant",
       errorUpdateApiKey: 'Mettre à jour la clé API',
       errorSignInAgain: provider => `Se reconnecter à ${provider}`,
-      errorSignInFreeTier: 'Se connecter avec un compte Nous',
       errorOauthExpired: provider =>
         `Votre connexion à ${provider} a expiré ou a été révoquée. Reconnectez-vous pour continuer la conversation.`,
       errorOpenLogs: 'Ouvrir les journaux',

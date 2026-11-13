@@ -9,14 +9,7 @@ export const ruNotices = {
       `Включён программный рендеринг — обнаружен удалённый дисплей (${reason}). GPU-ускорение отключено, чтобы избежать мерцания.`
   },
   butterbar: {
-    goTo: (index, total) => `Показать уведомление ${index} из ${total}`,
-    legal: {
-      before: 'Использование A2Assistant регулируется нашими ',
-      terms: 'Условиями обслуживания',
-      between: ' и ',
-      privacy: 'Политикой конфиденциальности',
-      after: '.'
-    }
+    goTo: (index, total) => `Показать уведомление ${index} из ${total}`
   },
   promptNotices: {
     legacySendUnconfirmed:
@@ -39,10 +32,8 @@ export const ruNotices = {
     action: 'Не засыпать во время работы'
   },
   billingBlock: {
-    titleNous: 'Кредиты Nous закончились',
     titleProvider: provider => `Кредиты закончились — ${provider}`,
     fallbackMessage: 'В вашем аккаунте закончились кредиты. Пополните баланс, чтобы продолжить.',
-    openBilling: 'Открыть биллинг',
     addCredits: 'Пополнить кредиты',
     dismiss: 'Скрыть'
   }

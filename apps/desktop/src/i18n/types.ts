@@ -15,7 +15,7 @@ import type { BootTranslations } from './types_boot'
 import type { CatalogTranslations } from './types_catalog'
 import type { CatalogInstallTranslations } from './types_catalog_install'
 import type { ClarifyCopy } from './types_clarify'
-import type { ConnectorAccountsTranslations, ConnectorCardTranslations } from './types_connectors'
+import type { ConnectorCardTranslations } from './types_connectors'
 import type { CronControlCopy } from './types_cron_control'
 import type { GatewayGroupOpenCopy, SkillDeepLinkCopy } from './types_deep_links'
 import type { ExternalOpenFailedCopy } from './types_external_open'
@@ -111,36 +111,20 @@ export interface Translations extends NoticeTranslations {
     segment: {
       all: string
       available: string
-      connected: string
-      off: string
     }
     group: {
-      connected: string
-      connectedNote: string
       available: string
-      off: string
-      offNote: string
     }
     card: {
-      kindManaged: string
       kindCatalog: string
       kindCustom: string
       kindPlugin: (plugin: string) => string
       inCatalog: string
-      hostedTwin: string
-      alsoLocal: string
       open: (name: string) => string
       turnServerOn: (name: string) => string
       turnServerOff: (name: string) => string
       state: {
-        accessExpired: string
         available: string
-        connected: string
-        connecting: string
-        connectionUnknown: string
-        couldNotConnect: string
-        offByYourOrganisation: string
-        offForYou: string
         serverConnecting: string
         serverError: string
         serverNeedsAuth: string
@@ -150,23 +134,15 @@ export interface Translations extends NoticeTranslations {
       }
       fact: {
         tools: (count: number) => string
-        toolsOff: (count: number) => string
         toolsOn: (count: number) => string
         toolsSomeOn: (total: number, on: number) => string
       }
       verb: {
         authenticate: string
-        connect: string
         install: string
         openLogs: string
-        reconnect: string
-        stopWaiting: string
-        tryAgain: string
-        turnBackOn: string
       }
       reason: {
-        finishSignIn: string
-        reconnect: string
         serverError: string
         serverNeedsAuth: string
       }
@@ -177,20 +153,11 @@ export interface Translations extends NoticeTranslations {
       noMatchTitle: string
       noMatchBody: string
       clearSearch: string
-      hostedFailedTitle: string
-      hostedFailedBody: string
       retry: string
       matchesElsewhere: (count: number) => string
       showAllMatches: string
       segmentNoMatch: (segment: string) => string
-      freeTierNote: string
-      signInLine: string
       signIn: string
-      managedUnavailable: string
-      writeFailed: string
-      refreshFailed: string
-      disconnectNoAccount: string
-      disconnectRefused: string
     }
     add: {
       action: string
@@ -227,34 +194,17 @@ export interface Translations extends NoticeTranslations {
     }
     dialog: {
       disconnect: string
-      disconnectTitle: (name: string) => string
-      disconnectBody: string
       menuRefreshTools: string
       moreActions: string
       removeServerTitle: (name: string) => string
       removeServerBody: string
-      appSwitch: (name: string) => string
-      waysTitle: (name: string) => string
-      wayNotConnected: (name: string) => string
-      wayHosted: string
-      bothOn: (name: string) => string
-      turnOffLocal: string
       providedByPlugin: (plugin: string) => string
       openPlugins: string
-      nousLine: string
-      rulesReadOnly: string
-      rulesAppOff: (name: string) => string
-      rulesSignIn: string
-      orgNote: (count: number) => string
-      orgLink: string
-      connectEnded: string
-      connectOpenAgain: string
       tokensPerCall: string
       usesPerMonth: string
       advanced: string
       advancedHint: string
     }
-    accounts: ConnectorAccountsTranslations
     tools: {
       title: string
       notInstalledBody: string
@@ -271,7 +221,6 @@ export interface Translations extends NoticeTranslations {
       showSummary: string
       facetSwitch: (facet: string) => string
       moreHints: (count: number) => string
-      staleSignIn: string
       searchCountPlaceholder: (count: number) => string
       toolList: (name: string) => string
       categorySelect: (count: number) => string
@@ -280,7 +229,6 @@ export interface Translations extends NoticeTranslations {
       quickReadOnly: string
       quickNoDestructive: string
       quickEverythingOn: string
-      lockedHint: string
       turnToolOn: (tool: string) => string
       turnToolOff: (tool: string) => string
       showDetails: (tool: string) => string
@@ -291,17 +239,9 @@ export interface Translations extends NoticeTranslations {
       needsAuthTitle: (name: string) => string
       needsAuthBody: string
       retry: string
-      goneTitle: (name: string) => string
-      goneBody: string
       remove: string
       offTitle: (name: string) => string
       offBody: string
-      signedOutTitle: string
-      signedOutBody: string
-      conflictTitle: string
-      conflictBody: (theyOff: number, theyOn: number) => string
-      conflictReload: string
-      conflictSave: string
       saveFailed: string
       footerDirty: (off: number, backOn: number) => string
       discard: string
@@ -604,7 +544,6 @@ export interface Translations extends NoticeTranslations {
       archivedChats: string
       sessions: string
       about: string
-      billing: string
       notifications: string
       vault: string
       plugins: string
@@ -1388,243 +1327,6 @@ export interface Translations extends NoticeTranslations {
       deleteConfirm: (model: string) => string
       deleted: (model: string) => string
       deleteFailed: string
-    }
-    billing: {
-      perMonth: (amount: string) => string
-      creditsPerMonth: (amount: string) => string
-      usageLabel: (label: string) => string
-      freeTier: {
-        signIn: string
-        title: string
-        message: string
-        caption: string
-        name: string
-        footnote: string
-        plan: string
-        model: string
-        connectors: string
-        included: string
-      }
-      amountValidation: {
-        reloadTo: string
-        greaterThanThreshold: string
-        decimal: (label: string) => string
-        positive: (label: string) => string
-        minimum: (label: string, amount: string) => string
-        maximum: (label: string, amount: string) => string
-      }
-      stepUp: {
-        openVerification: string
-        dismiss: string
-        waiting: string
-        verify: string
-        deniedTitle: string
-        deniedBody: string
-        successTitle: string
-        successBody: string
-      }
-      charge: {
-        added: (amount: string) => string
-        failedTitle: string
-        unconfirmedTitle: string
-        unconfirmedBody: (message: string) => string
-        checkTitle: string
-        checkBody: string
-        untrackedTitle: string
-        untrackedBody: string
-        timeoutTitle: string
-        timeoutBody: string
-        authenticationRequired: string
-        expired: string
-        declined: string
-        failedBody: (reason: string) => string
-      }
-      title: string
-      preview: string
-      summary: {
-        balance: string
-        plan: string
-        autoRefill: string
-      }
-      sections: {
-        invoices: string
-
-        plan: string
-        paymentAndCredits: string
-        usage: string
-      }
-      usage: {
-        title: string
-      }
-      buyCredits: {
-        customAmount: string
-        title: string
-        buyButton: string
-        processing: string
-        added: (amount: string) => string
-        retry: string
-        openPortal: string
-      }
-      plan: {
-        title: string
-        changePlan: string
-        viewPlans: string
-        backAria: string
-        current: string
-        scheduled: string
-        empty: string
-        undo: string
-        undoing: string
-        downgrade: string
-        confirmDowngrade: string
-        tryAgain: string
-        checkingChange: string
-        cannotChange: string
-        alreadyOn: (name: string) => string
-        notScheduleable: string
-        scheduling: string
-        cancel: string
-        effectScheduled: (targetName: string, effectiveAt: string, creditsDelta: string) => string
-      }
-      keepGoingOnCredits: {
-        title: string
-        description: string
-        /** Shown under the switch while the Remote Spending approval is open in the browser. */
-        approveInBrowser: string
-        openAgain: string
-        cancel: string
-        /** Approved, but the change was still refused: shown with a Try again button. */
-        approvedRetry: string
-        tryAgain: string
-      }
-      autoReload: {
-        threshold: string
-        thresholdAria: string
-        reloadTo: string
-        reloadToAria: string
-        turnOffConfirm: string
-        turnOff: string
-        disable: string
-        updated: string
-        turnedOff: string
-        manage: string
-        save: string
-        saving: string
-        cancel: string
-      }
-      state: {
-        notice: {
-          loggedOut: { title: string; message: string; action: string }
-          openPortal: string
-          noCard: { title: string; message: string; action: string }
-        }
-        paymentMethod: {
-          title: string
-          description: string
-          addAction: string
-          updateAction: string
-          provenance: {
-            autoRefill: string
-            customerDefault: string
-            subPin: string
-            suffix: (label: string) => string
-          }
-        }
-        buyCredits: {
-          description: string
-        }
-        autoRefill: {
-          title: string
-          genericDescription: string
-          offPill: string
-          enabledPill: string
-          notAvailablePill: string
-          manageCaption: string
-          turnOnCaption: string
-          chargesDescription: (reloadTo: string, threshold: string) => string
-          distinctCardCaption: (cardLabel: string) => string
-          distinctCardFallback: string
-          reconcileAction: string
-        }
-        usage: {
-          subscriptionCredits: {
-            title: string
-            barLabel: string
-            captionResets: (date: string) => string
-            valueOf: (remaining: string, monthly: string) => string
-            valueOver: (remaining: string, monthly: string, over: string) => string
-          }
-          topupCredits: {
-            title: string
-            caption: string
-          }
-          monthlyCap: {
-            title: string
-            barLabel: string
-            captionDefault: string
-            captionSpending: string
-            valueUsed: (spent: string, limit: string) => string
-          }
-          window: {
-            today: string
-            week: string
-            month: string
-            topTier: string
-            barLabel: (title: string) => string
-            captionPaused: string
-            captionPausedOther: string
-            captionTopTierUsedUp: string
-            captionTopTierUsedUpKeepGoingOff: string
-            captionResetsIn: (duration: string) => string
-            captionIncluded: string
-            valueUsed: (percent: string) => string
-          }
-        }
-        planCard: {
-          freeTier: string
-          chooseAction: string
-          adjustPlanAction: string
-          unavailableCaption: string
-          downgradeCaption: (tierName: string, when: string) => string
-          cancellationCaption: (when: string) => string
-          renewsCaption: (date: string) => string
-          noSubscriptionCaption: string
-        }
-      }
-      errors: {
-        consentRequired: { title: string; message: string }
-        insufficientScope: { title: string; message: string }
-        remoteSpendingRevoked: {
-          title: string
-          messageByAdmin: string
-          messageBySelf: string
-        }
-        remoteSpendingReconnect: (who: string) => string
-        sessionRevoked: { title: string; message: string }
-        cliBillingDisabled: { title: string; message: string }
-        roleRequired: { title: string; message: string }
-        idempotencyConflict: { title: string; message: string }
-        noPaymentMethod: { title: string; message: string }
-        orgAccessDenied: { title: string; message: string }
-        monthlyCapExceeded: {
-          title: string
-          messageReached: string
-          messageHeadroom: (remaining: string) => string
-        }
-        rateLimited: {
-          title: string
-          message: (mins: number) => string
-        }
-        stripeUnavailable: {
-          title: string
-          message: (mins: number) => string
-        }
-        upgradeCapExceeded: { title: string; message: string }
-        endpointUnavailable: { title: string; message: string }
-        timeout: { title: string; message: string }
-        transport: { title: string; message: string }
-        default: { title: string; message: string }
-      }
     }
     providers: {
       connectAccount: string
@@ -3279,83 +2981,6 @@ export interface Translations extends NoticeTranslations {
 
   onboarding: OnboardingTranslations
 
-  freeTier: {
-    /** Settings › Providers row title while the Nous identity is the free tier. */
-    providerRowTitle: string
-    /** The featured row's pitch while the identity is the free tier: what signing in adds. */
-    providerRowPitch: string
-    // First-launch introduction (ready screen + composer strip).
-    readyTitle: string
-    readyCaption: string
-    begin: string
-    signInInstead: string
-    otherProviders: string
-    stripTitle: string
-    stripBody: string
-    openModelPicker: string
-    dismiss: string
-    // Statusbar chip.
-    /** The status-bar chip's label: the provider name alone; the model id and the sign-in follow it. */
-    providerName: string
-    statusLabel: (model: string) => string
-    // Sign-in dialog.
-    signIn: string
-    signInHeading: string
-    settingUp: string
-    finishInBrowser: string
-    doNotShare: string
-    openPageAgain: string
-    waiting: string
-    finishingHeading: string
-    finishingBody: string
-    /** Over the account email on the completed screen. */
-    signedInAsLabel: string
-    signedIn: string
-    completedBody: string
-    /** The free tier's apps: reconnect the ones that did not move; open Connectors to check. */
-    reconnect: string
-    openConnectors: string
-    defaultModel: string
-    change: string
-    done: string
-    notNow: string
-    tryAgain: string
-    didNotComplete: string
-    timedOutHeading: string
-    timedOutBody: string
-    errorBody: string
-    /** The account service asked for a short wait mid sign-in (a busy account, a rate limit, the ops pause). */
-    busyHeading: string
-    busyBody: (wait: string) => string
-    /** The account service could not be reached or errored mid sign-in. */
-    unreachableBody: string
-    alreadySignedInHeading: string
-    alreadySignedInBody: string
-    /** The "keep going" offer the backend times after a finished task (repeats, backing off). */
-    offer: {
-      heading: string
-      body: string
-      signIn: string
-      notNow: string
-    }
-    // First-launch set-up failure notice: the free tier could not be created at boot.
-    // One sentence per backend code (`hermes_cli/anon_auth.py::ANON_*`); the copy never says
-    // the free MODEL is off — what is unavailable is using Hermes without signing in.
-    setupFailed: {
-      gateClosed: string
-      paused: string
-      rateLimited: (wait: string) => string
-      unreachable: string
-      serverError: string
-      powRequired: string
-      locked: string
-      generic: string
-      /** The sign-in door, when the account service is reachable: the Nous row sits right below. */
-      signInBelow: string
-      tryAgain: string
-      retrying: string
-    }
-  }
 
   modelPicker: {
     title: string
@@ -3517,12 +3142,9 @@ export interface Translations extends NoticeTranslations {
       toggleTerminal: string
       toggleTokensPerSecond: string
       toggleVersion: string
-      toggleFreeTier: string
       toggleWorkspace: string
       cacheHitRateTitle: string
       tokensPerSecondTitle: string
-      togglePlanUsage: string
-      planUsageTitle: (used: string, resetsIn: string) => string
       agents: string
       closeAgents: string
       openAgents: string
@@ -3881,14 +3503,6 @@ export interface Translations extends NoticeTranslations {
       errorStartNewSession: string
       errorSwitchProvider: string
       errorChooseModel: string
-      /** usage_window: one click to the plan's recommended model; `note` is "free" / "included". */
-      errorSwitchToModel: (model: string, note: string) => string
-      errorSwitchModelFailed: string
-      /** usage_window: turn on Keep going on credits, then re-run the turn. */
-      errorUseCredits: string
-      errorUseCreditsFailed: string
-      /** usage_window with no balance: opens Settings → Billing to add credits. */
-      errorAddCredits: string
       /** Error card button: opens Settings → Billing in-app (Keep going, buy credits). */
       errorOpenBillingSettings: string
       /** Error card body when a Nous account is out of credits (its button opens Settings → Billing). */
@@ -3900,8 +3514,6 @@ export interface Translations extends NoticeTranslations {
       /** One-click recovery for an expired/revoked OAuth grant: re-runs that
        *  provider's sign-in flow (auth layer, authKind 'oauth'). */
       errorSignInAgain: (provider: string) => string
-      /** Free-tier refusals: opens the free sign-in dialog (signing in is free and lifts the refusal). */
-      errorSignInFreeTier: string
       /** Explains WHY the turn failed for an OAuth 401 — the raw body
        *  ("HTTP 401: User not found.") doesn't say "sign in again". */
       errorOauthExpired: (provider: string) => string

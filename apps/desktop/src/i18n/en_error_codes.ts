@@ -143,39 +143,5 @@ export const enErrorCodes: ThreadCopy['errorCodes'] = {
   disk_full: {
     title: 'Your disk is full',
     body: "A2Assistant couldn't save this conversation. Free up space, then retry."
-  },
-  // Nous free tier. The body is normally the backend's own sentence (it names the wait
-  // and the way forward); these bodies stand in for an older backend that sent none.
-  free_tier_disabled: {
-    title: 'Sign in to keep chatting',
-    body: "Sign in with a Nous account to keep chatting, it's free."
-  },
-  free_tier_rate_limited: {
-    title: 'Free allowance used up',
-    body: "It refreshes shortly. Sign in with a Nous account for a bigger allowance, it's free."
-  },
-  free_tier_at_capacity: {
-    title: 'Free tier is busy',
-    body: "Sign in to skip the queue, it's free, or try again in a little while."
-  },
-  free_tier_model_not_free: {
-    title: 'This model needs a sign-in',
-    body: "A2Assistant uses the free model for now. Sign in with a Nous account for more models, it's free."
-  },
-  free_tier_route: {
-    title: "Can't reach the free model",
-    body: "Sign in with a Nous account, it's free, or check the NOUS_INFERENCE_BASE_URL setting."
-  },
-  free_tier_outage: {
-    title: 'Free model is having trouble',
-    body: 'Try sending your message again in a minute.'
-  },
-  free_tier_refused: {
-    title: 'Sign in to keep chatting',
-    body: 'Signing in with a Nous account is free.'
-  },
-  usage_window: {
-    title: 'Included usage used up',
-    body: "Your plan's included usage is used up until it resets. Add credits in /topup to keep going."
   }
 }

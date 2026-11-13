@@ -228,36 +228,6 @@ export const jaOverrides = {
 
   settings: {
     memoryLayers: jaMemoryLayers,
-    // Window plans (Nous subscription with included usage). Other billing strings: overlay-gaps.json.
-    billing: {
-      keepGoingOnCredits: {
-        title: 'クレジットで続行',
-        description: '含まれる利用量を使い切ったらクレジットを使います。オフ: A2Assistant はリセットを待ちます。',
-        approveInBrowser: '変更するにはブラウザでリモート支出を承認してください。承認するとすぐに適用されます。',
-        openAgain: 'もう一度開く',
-        cancel: 'キャンセル',
-        approvedRetry: 'リモート支出は承認されましたが、変更を保存できませんでした。',
-        tryAgain: '再試行'
-      },
-      state: {
-        usage: {
-          window: {
-            today: '今日',
-            week: '今週',
-            month: '今月',
-            topTier: '大型モデル（月間）',
-            barLabel: title => `${title}の含まれる利用量の使用率`,
-            captionPaused: '一時停止中: サブスクリプションの支払いに失敗しました',
-            captionPausedOther: '一時停止中: ポータルの請求をご確認ください',
-            captionTopTierUsedUp: '月間の枠を使い切りました。残りはクレジットで支払われます',
-            captionTopTierUsedUpKeepGoingOff: '月間の枠を使い切りました。他の含まれるモデルは引き続き使えます',
-            captionResetsIn: duration => `${duration}後にリセット`,
-            captionIncluded: '含まれる利用量',
-            valueUsed: percent => `${percent} 使用`
-          }
-        }
-      }
-    },
     uninstallSection: {
       dangerZone: '危険ゾーン',
       checkingInstalled: 'インストール内容を確認中…',
@@ -337,9 +307,7 @@ export const jaOverrides = {
       vaultCredentials: '保存済みの認証情報',
       vaultSources: 'パスワードマネージャー',
       appUpdates: 'バージョンと更新',
-      uninstall: 'アンインストール',
-      billingOverview: '概要',
-      billingPlans: 'プラン'
+      uninstall: 'アンインストール'
     },
     plugins: jaPluginSettings.plugins,
     closeSettings: '設定を閉じる',
@@ -365,7 +333,6 @@ export const jaOverrides = {
       archivedChats: 'アーカイブ済みチャット',
       sessions: 'セッション',
       about: '情報',
-      billing: '請求',
       notifications: '通知',
       vault: 'パスワードとログイン',
       plugins: 'プラグイン'
@@ -2328,8 +2295,6 @@ export const jaOverrides = {
       '/browser': 'エージェントのブラウザーを管理 [connect|disconnect|status]',
       '/palette': 'コマンドパレットを開く',
       '/usage': 'このセッションのトークン使用量を表示',
-      '/subscription': 'Nous のプランを確認し、ブラウザーで変更',
-      '/topup': 'Nous の残高を表示し、請求を管理',
       '/platform': '問題のあるゲートウェイプラットフォームを一時停止、再開、一覧表示',
       '/version': 'A2Assistant のバージョンを表示',
       '/debug': 'デバッグレポートを作成',
@@ -3309,10 +3274,6 @@ export const jaOverrides = {
           title: provider => `${provider} との接続を検証できません`,
           body: provider =>
             `プロキシまたは古い証明書ストアが ${provider} への安全な接続をブロックしました。修正方法はセットアップガイドを参照してください。`
-        },
-        usage_window: {
-          title: '含まれる利用量を使い切りました',
-          body: 'プランに含まれる利用量はリセットまで使い切りました。続けるには /topup でクレジットを追加してください。'
         }
       },
       errorAuthKinds: {
@@ -3338,11 +3299,6 @@ export const jaOverrides = {
       errorRetryAtResetShort: time => `${time} に再試行`,
       errorRateLimitResetBody: (provider, time) => `${provider} のレート制限に達しました。${time} にリセットされます。`,
       errorRetry: '再試行',
-      errorSwitchToModel: (model, note) => (note ? `${model} に切り替え（${note}）` : `${model} に切り替え`),
-      errorSwitchModelFailed: 'モデルを切り替えられませんでした',
-      errorUseCredits: 'クレジットで続行を有効にする',
-      errorUseCreditsFailed: 'クレジットで続行を有効にできませんでした',
-      errorAddCredits: 'クレジットを追加',
       errorOpenBillingSettings: '請求設定を開く',
       errorRetryScheduled: (time, wait) => `${time} に再試行 — 残り ${wait}`,
       errorRetryScheduledCancel: 'キャンセル',
@@ -3734,14 +3690,6 @@ export const jaOverrides = {
       title: 'サイドバー',
       description: 'モバイルサイドバーを表示します。',
       toggle: open => `サイドバーを${open ? '表示' : '非表示'}`
-    }
-  },
-  freeTier: {
-    offer: {
-      heading: 'A2Assistant を使い続ける',
-      body: '現在は無料枠をご利用中です。A2Assistant を使い続けると、いずれ上限に達します。無料の Nous アカウントでサインインすると、より多くの利用枠が使えます。',
-      signIn: 'サインイン',
-      notNow: '今はしない'
     }
   }
 } satisfies TranslationOverrides

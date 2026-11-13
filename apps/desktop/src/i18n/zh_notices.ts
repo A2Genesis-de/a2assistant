@@ -8,14 +8,7 @@ export const zhNotices = {
     message: reason => `软件渲染已启用 — 检测到远程显示（${reason}）。为防止画面闪烁，已禁用 GPU 加速。`
   },
   butterbar: {
-    goTo: (index, total) => `显示第 ${index} 条通知，共 ${total} 条`,
-    legal: {
-      before: '使用 A2Assistant 即表示受我们的',
-      terms: '服务条款',
-      between: '和',
-      privacy: '隐私政策',
-      after: '约束。'
-    }
+    goTo: (index, total) => `显示第 ${index} 条通知，共 ${total} 条`
   },
   promptNotices: {
     legacySendUnconfirmed: '此服务器无法确认这条消息之前的发送，它可能已经运行过。再次发送前请先查看对话。',
@@ -33,10 +26,8 @@ export const zhNotices = {
     action: '运行期间保持唤醒'
   },
   billingBlock: {
-    titleNous: 'Nous 额度已用尽',
     titleProvider: provider => `额度已用尽 — ${provider}`,
     fallbackMessage: '您的账户额度已用尽。请充值以继续使用。',
-    openBilling: '打开账单',
     addCredits: '添加额度',
     dismiss: '忽略'
   }

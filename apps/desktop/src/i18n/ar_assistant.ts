@@ -166,34 +166,6 @@ export const arAssistant = {
           title: 'القرص ممتلئ',
           body: 'تعذّر على A2Assistant حفظ هذه المحادثة. حرّر بعض المساحة، ثم أعد المحاولة.'
         },
-        free_tier_disabled: {
-          title: 'سجّل الدخول لمتابعة المحادثة',
-          body: 'سجّل الدخول بحساب Nous لمتابعة المحادثة، فهو مجاني.'
-        },
-        free_tier_rate_limited: {
-          title: 'نفدت الحصة المجانية',
-          body: 'تتجدد قريبًا. سجّل الدخول بحساب Nous للحصول على حصة أكبر، فهو مجاني.'
-        },
-        free_tier_at_capacity: {
-          title: 'الفئة المجانية مزدحمة',
-          body: 'سجّل الدخول لتتجاوز الانتظار، فهو مجاني، أو حاول مجددًا بعد قليل.'
-        },
-        free_tier_model_not_free: {
-          title: 'هذا النموذج يتطلب تسجيل الدخول',
-          body: 'يستخدم A2Assistant النموذج المجاني حاليًا. سجّل الدخول بحساب Nous للوصول إلى نماذج أكثر، فهو مجاني.'
-        },
-        free_tier_route: {
-          title: 'تعذّر الوصول إلى النموذج المجاني',
-          body: 'سجّل الدخول بحساب Nous، فهو مجاني، أو تحقّق من إعداد NOUS_INFERENCE_BASE_URL.'
-        },
-        free_tier_outage: {
-          title: 'النموذج المجاني يواجه مشكلة',
-          body: 'حاول إرسال رسالتك مجددًا بعد دقيقة.'
-        },
-        free_tier_refused: {
-          title: 'سجّل الدخول لمتابعة المحادثة',
-          body: 'تسجيل الدخول بحساب Nous مجاني.'
-        },
         cron_session_read_only: {
           title: 'هذه المحادثة تابعة لمهمة مجدولة',
           body: 'إنها تشغّل تلك المهمة فقط، لذا لم تُنفَّذ رسالتك. ابدأ محادثة جديدة لإرسالها.'
@@ -201,10 +173,6 @@ export const arAssistant = {
         session_read_only: {
           title: 'هذه المحادثة للقراءة فقط',
           body: 'إنها سجلّ محفوظ يستطيع A2Assistant عرضه لكن لا يستطيع متابعته، لذا لم تُنفَّذ رسالتك. ابدأ محادثة جديدة لإرسالها.'
-        },
-        usage_window: {
-          title: 'نفد الاستخدام المضمّن',
-          body: 'نفد الاستخدام المضمّن في خطتك حتى إعادة التعيين. أضف رصيدًا عبر /topup للمتابعة.'
         },
         workspace_unavailable: {
           title: 'مجلد هذه المحادثة غير موجود',
@@ -244,11 +212,6 @@ export const arAssistant = {
       errorRetryAtResetShort: time => `إعادة المحاولة عند ${time}`,
       errorRateLimitResetBody: (provider, time) => `بلغت حد الطلبات في ${provider}. يُعاد ضبطه عند ${time}.`,
       errorRetry: 'إعادة المحاولة',
-      errorSwitchToModel: (model, note) => (note ? `التبديل إلى ${model} (${note})` : `التبديل إلى ${model}`),
-      errorSwitchModelFailed: 'تعذر تبديل النموذج',
-      errorUseCredits: 'تفعيل الاستمرار بالرصيد',
-      errorUseCreditsFailed: 'تعذر تفعيل الاستمرار بالرصيد',
-      errorAddCredits: 'إضافة رصيد',
       errorOpenBillingSettings: 'فتح إعدادات الفوترة',
       errorRetryScheduled: (time, wait) => `ستتم إعادة المحاولة عند ${time} — بعد ${wait}`,
       errorRetryScheduledCancel: 'إلغاء',

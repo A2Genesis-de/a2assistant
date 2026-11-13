@@ -2,15 +2,7 @@ import type { TranslationOverrides } from './define-locale'
 
 export const jaConnectors = {
   connectors: {
-    directory: {
-      suggested: 'おすすめ',
-      allApps: 'すべてのアプリ',
-      receiptConnected: apps => `接続済み: ${apps}`,
-      receiptNone: '新しく接続したアプリはありません',
-      receiptTimedOut: '10 分後に閉じました',
-      finishInBrowser: 'ブラウザーで完了してください',
-      signInFailed: '接続できませんでした。クリックして再試行'
-    }
+
   },
   sessionImport: {
     title: '別のアプリから続ける',

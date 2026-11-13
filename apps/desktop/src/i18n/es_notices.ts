@@ -9,14 +9,7 @@ export const esNotices = {
       `Renderizado por software activo — se detectó una pantalla remota (${reason}). Se desactivó la aceleración por GPU para evitar parpadeos.`
   },
   butterbar: {
-    goTo: (index, total) => `Mostrar aviso ${index} de ${total}`,
-    legal: {
-      before: 'El uso de A2Assistant está sujeto a nuestros ',
-      terms: 'Términos del servicio',
-      between: ' y a nuestra ',
-      privacy: 'Política de privacidad',
-      after: '.'
-    }
+    goTo: (index, total) => `Mostrar aviso ${index} de ${total}`
   },
   promptNotices: {
     legacySendUnconfirmed:
@@ -39,10 +32,8 @@ export const esNotices = {
     action: 'Mantener activo mientras trabaja'
   },
   billingBlock: {
-    titleNous: 'Sin créditos de Nous',
     titleProvider: provider => `Sin créditos — ${provider}`,
     fallbackMessage: 'Tu cuenta se quedó sin créditos. Añade créditos para continuar.',
-    openBilling: 'Abrir facturación',
     addCredits: 'Añadir créditos',
     dismiss: 'Descartar'
   }

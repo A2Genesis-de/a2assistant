@@ -11,9 +11,7 @@ export interface OnboardingTranslations {
   otherProviders: string
   haveApiKey: string
   chooseLater: string
-  recommended: string
   connected: string
-  featuredPitch: string
   fireworksPitch: string
   localModelsTitle: string
   localModelsPitch: string
@@ -53,8 +51,6 @@ export interface OnboardingTranslations {
   reopenVerification: string
   copy: string
   defaultModel: string
-  freeTier: string
-  pro: string
   free: string
   price: (input: string, output: string) => string
   change: string

@@ -13,9 +13,7 @@ export const ruOnboarding: TranslationOverrides['onboarding'] = {
   otherProviders: 'Другие провайдеры',
   haveApiKey: 'У меня есть API-ключ',
   chooseLater: 'Выберу провайдера позже',
-  recommended: 'Рекомендуется',
   connected: 'Подключено',
-  featuredPitch: 'Одна подписка, 300+ передовых моделей — рекомендуемый способ запускать A2Assistant',
   fireworksPitch: 'Прямой API моделей — передовые модели на хостинге Fireworks',
   openRouterPitch: 'Один ключ, сотни моделей — надёжный вариант по умолчанию',
   apiKeyOptions: {
@@ -69,8 +67,6 @@ export const ruOnboarding: TranslationOverrides['onboarding'] = {
   reopenVerification: 'Открыть страницу подтверждения снова',
   copy: 'Копировать',
   defaultModel: 'Модель по умолчанию',
-  freeTier: 'Бесплатный тариф',
-  pro: 'Pro',
   free: 'Free',
   price: (input, output) => `${input} вход / ${output} выход за Mtok`,
   change: 'Изменить',

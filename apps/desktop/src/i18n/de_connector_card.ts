@@ -30,16 +30,5 @@ export const deConnectorCard: TranslationOverrides['connectors'] = {
   openInBrowser: 'Im Browser öffnen',
   setupCancel: 'Abbrechen',
   authorizedToolsUnavailable: 'Autorisiert. Tools nicht verfügbar.',
-  required: 'Erforderlich',
-  namedAccount: (app: string, alias: string) => `A2Assistant hat dieses ${app}-Konto ${alias} genannt.`,
-  renameAccount: 'Umbenennen',
-  directory: {
-    suggested: 'Vorgeschlagen',
-    allApps: 'Alle Apps',
-    receiptConnected: apps => `Verbunden: ${apps}`,
-    receiptNone: 'Keine neuen Apps verbunden',
-    receiptTimedOut: 'Nach 10 Minuten geschlossen',
-    finishInBrowser: 'Im Browser abschließen',
-    signInFailed: 'Verbindung fehlgeschlagen. Zum Wiederholen klicken'
-  }
+  required: 'Erforderlich'
 }

@@ -63,14 +63,7 @@ export const zhHantBoot = {
     message: reason => `軟體繪圖已啟用 — 偵測到遠端顯示（${reason}）。為防止畫面閃爍，已停用 GPU 加速。`
   },
   butterbar: {
-    goTo: (index, total) => `顯示第 ${index} 則通知，共 ${total} 則`,
-    legal: {
-      before: '使用 A2Assistant 即表示受我們的',
-      terms: '服務條款',
-      between: '和',
-      privacy: '隱私權政策',
-      after: '約束。'
-    }
+    goTo: (index, total) => `顯示第 ${index} 則通知，共 ${total} 則`
   },
   promptNotices: {
     legacySendUnconfirmed: '此伺服器無法確認這則訊息先前的傳送，它可能已經執行過。再次傳送前請先查看對話。',
@@ -287,9 +280,7 @@ export const zhHantBoot = {
     otherProviders: '其他提供方',
     haveApiKey: '我有 API 金鑰',
     chooseLater: '稍後再選擇提供方',
-    recommended: '建議',
     connected: '已連線',
-    featuredPitch: '一個訂閱，300+ 前沿模型 — 執行 A2Assistant 的建議方式',
     fireworksPitch: '直接模型 API — Fireworks 託管的前沿模型',
     localModelsTitle: '本地執行模型',
     localModelsPitch: '無需帳號——下載模型，在本機執行',
@@ -338,8 +329,6 @@ export const zhHantBoot = {
     reopenVerification: '重新開啟驗證頁面',
     copy: '複製',
     defaultModel: '預設模型',
-    freeTier: '免費層',
-    pro: 'Pro',
     free: '免費',
     price: (input, output) => `${input} 輸入 / ${output} 輸出 每 Mtok`,
     change: '變更',

@@ -479,9 +479,7 @@ export const zhOverrides = {
       vaultCredentials: '已保存的凭据',
       vaultSources: '密码管理器',
       appUpdates: '版本与更新',
-      uninstall: '卸载',
-      billingOverview: '概览',
-      billingPlans: '套餐'
+      uninstall: '卸载'
     },
     closeSettings: '关闭设置',
     exportConfig: '导出配置',
@@ -513,7 +511,6 @@ export const zhOverrides = {
       archivedChats: '已归档对话',
       sessions: '会话',
       about: '关于',
-      billing: '账单',
       notifications: '通知',
       vault: '密码与登录',
       plugins: '插件'
@@ -1538,253 +1535,6 @@ export const zhOverrides = {
     },
     model: zhModelSettings,
     localModels: zhLocalModels,
-    billing: {
-      perMonth: amount => `${amount}/月`,
-      creditsPerMonth: amount => `${amount} 额度/月`,
-      usageLabel: label => `${label}用量`,
-      freeTier: {
-        signIn: '登录',
-        title: '你正在使用 Nous 免费服务',
-        message: '登录 Nous 账户以解锁更多模型和工具。',
-        caption: '使用 nous/welcome，包含连接器。登录后会保留连接器，并增加需要账户的工具和其他所有模型。',
-        name: 'Nous · 免费服务',
-        footnote: '免费服务没有余额，无需支付。登录 Nous 账户后才会显示支付与用量。',
-        plan: '免费服务',
-        model: '模型',
-        connectors: '连接器',
-        included: '已包含'
-      },
-      amountValidation: {
-        reloadTo: '充值金额',
-        greaterThanThreshold: '充值金额必须大于阈值。',
-        decimal: label => `${label}：请输入最多含两位小数的美元金额。`,
-        positive: label => `${label}：金额必须大于 $0。`,
-        minimum: (label, amount) => `${label}：最低金额为 ${amount}。`,
-        maximum: (label, amount) => `${label}：最高金额为 ${amount}。`
-      },
-      stepUp: {
-        openVerification: '打开验证页面',
-        dismiss: '关闭',
-        waiting: '正在等待验证链接…',
-        verify: '验证以继续',
-        deniedTitle: '验证未获批准',
-        deniedBody: '验证已结束，但未允许此终端进行远程支出。',
-        successTitle: '验证完成',
-        successBody: '此终端已获准进行远程支出。'
-      },
-      charge: {
-        added: amount => (amount ? `已添加 $${amount}。` : '已添加额度。'),
-        failedTitle: '扣款失败',
-        unconfirmedTitle: '扣款结果尚未确认',
-        unconfirmedBody: message => `${message} 上次扣款结果尚未确认，请在重试前检查余额和历史记录。`,
-        checkTitle: '无法检查扣款',
-        checkBody: '无法检查扣款。',
-        untrackedTitle: '无法跟踪扣款',
-        untrackedBody: '账单服务已接受请求，但未返回扣款标识。',
-        timeoutTitle: '5 分钟后仍在处理',
-        timeoutBody: '扣款仍可能结算，请在重试前检查门户。',
-        authenticationRequired: '银行要求验证（3DS）。请在门户完成验证以完成本次购买。',
-        expired: '银行卡已过期。请在门户中更新。',
-        declined: '银行卡被拒绝。请在门户中尝试另一张卡。',
-        failedBody: reason => `扣款未成功（${reason}）。`
-      },
-      title: '账单',
-      preview: '预览',
-      summary: { balance: '余额', plan: '套餐', autoRefill: '自动充值' },
-      sections: {
-        invoices: '发票',
-        plan: '套餐',
-        paymentAndCredits: '支付与额度',
-        usage: '用量'
-      },
-      usage: { title: '用量' },
-      buyCredits: {
-        customAmount: '自定义充值金额',
-        title: '立即购买额度',
-        buyButton: '购买',
-        processing: '处理中…正在确认结算',
-        added: amount => `已添加 ${amount}，正在刷新余额。`,
-        retry: '重试',
-        openPortal: '打开门户'
-      },
-      plan: {
-        title: '套餐',
-        changePlan: '更改套餐',
-        viewPlans: '查看套餐',
-        backAria: '返回账单',
-        current: '当前套餐',
-        scheduled: '已安排',
-        empty: '目前没有可切换的套餐。',
-        undo: '撤销',
-        undoing: '正在撤销…',
-        downgrade: '降级',
-        confirmDowngrade: '确认降级',
-        tryAgain: '重试',
-        checkingChange: '正在检查此变更…',
-        cannotChange: '无法在此进行该变更。',
-        alreadyOn: name => `你已使用 ${name}，无需更改。`,
-        notScheduleable: '无法在此安排该变更。',
-        scheduling: '正在安排…',
-        cancel: '取消',
-        effectScheduled: (targetName, effectiveAt, creditsDelta) =>
-          `更改为 ${targetName}，于 ${effectiveAt} 生效。现在不扣费；在此之前保留当前套餐。${creditsDelta ? `每月额度变化：${creditsDelta}。` : ''}`
-      },
-      keepGoingOnCredits: {
-        title: '用额度继续',
-        description: '包含的用量用完后，使用你的额度。关闭时，A2Assistant 等待重置。',
-        approveInBrowser: '请在浏览器中批准 Remote Spending 以更改此设置。批准后立即生效。',
-        openAgain: '再次打开',
-        cancel: '取消',
-        approvedRetry: 'Remote Spending 已批准，但更改未保存。',
-        tryAgain: '重试'
-      },
-      autoReload: {
-        threshold: '阈值',
-        thresholdAria: '自动充值阈值',
-        reloadTo: '充值金额',
-        reloadToAria: '自动充值金额',
-        turnOffConfirm: '关闭自动充值？',
-        turnOff: '关闭',
-        disable: '禁用',
-        updated: '自动充值已更新。',
-        turnedOff: '自动充值已关闭。',
-        manage: '管理',
-        save: '保存',
-        saving: '正在保存…',
-        cancel: '取消'
-      },
-      state: {
-        notice: {
-          loggedOut: {
-            title: '连接你的 Nous 账户',
-            message: '登录你的 Nous 账户，即可在此查看余额、套餐和用量。',
-            action: '登录'
-          },
-          openPortal: '打开门户 ↗',
-          noCard: {
-            title: '尚未添加支付方式',
-            message: '添加银行卡后才能购买额度和使用自动充值。请在门户中添加。',
-            action: '添加银行卡 ↗'
-          }
-        },
-        paymentMethod: {
-          title: '支付方式',
-          description: '管理用于充值和订阅续费的银行卡。',
-          addAction: '添加支付方式',
-          updateAction: '更新',
-          provenance: {
-            autoRefill: '自动充值卡',
-            customerDefault: '账户默认卡',
-            subPin: '订阅卡',
-            suffix: label => ` - ${label}`
-          }
-        },
-        buyCredits: { description: '从银行卡一次性扣款，今天即可计入余额。' },
-        autoRefill: {
-          title: '余额不足时充值',
-          genericDescription: '余额低于阈值时自动补充额度。',
-          offPill: '已关闭',
-          enabledPill: '已启用',
-          notAvailablePill: '—',
-          manageCaption: '在门户中管理自动充值。',
-          turnOnCaption: '在门户中开启自动充值',
-          chargesDescription: (reloadTo, threshold) => `余额低于 ${threshold} 时自动扣款 ${reloadTo}。`,
-          distinctCardCaption: cardLabel => `自动充值使用 ${cardLabel} 扣款，请在门户中核对`,
-          distinctCardFallback: '另一张银行卡',
-          reconcileAction: '核对 ↗'
-        },
-        usage: {
-          subscriptionCredits: {
-            title: '订阅额度',
-            barLabel: '剩余订阅额度',
-            captionResets: date => `于 ${date} 重置`,
-            valueOf: (remaining, monthly) => `${monthly} 中剩余 ${remaining}`,
-            valueOver: (remaining, monthly, over) => `${monthly} 中剩余 ${remaining} · 超出 ${over}`
-          },
-          topupCredits: { title: '充值额度', caption: '不会过期' },
-          monthlyCap: {
-            title: '每月支出上限',
-            barLabel: '已用每月支出限额',
-            captionDefault: '默认上限',
-            captionSpending: '每月远程支出',
-            valueUsed: (spent, limit) => `${limit} 中已用 ${spent}`
-          },
-          window: {
-            today: '今天',
-            week: '本周',
-            month: '本月',
-            topTier: '大型模型（每月）',
-            barLabel: title => `${title}已用包含用量`,
-            captionPaused: '已暂停：订阅付款失败',
-            captionPausedOther: '已暂停：请在 Portal 的账单页查看',
-            captionTopTierUsedUp: '每月额度已用完，剩余部分由你的额度支付',
-            captionTopTierUsedUpKeepGoingOff: '每月额度已用完，其他包含的模型仍可使用',
-            captionResetsIn: duration => `${duration}后重置`,
-            captionIncluded: '包含用量',
-            valueUsed: percent => `已用 ${percent}`
-          }
-        },
-        planCard: {
-          freeTier: '免费',
-          chooseAction: '选择 ↗',
-          adjustPlanAction: '调整套餐 ↗',
-          unavailableCaption: '订阅详情暂不可用，仍可打开门户。',
-          downgradeCaption: (tierName, when) => `于 ${when} 更改为 ${tierName}。`,
-          cancellationCaption: when => `于 ${when} 取消。`,
-          renewsCaption: date => `于 ${date} 续费`,
-          noSubscriptionCaption: '没有有效订阅，付费模型会扣除充值额度。'
-        }
-      },
-      errors: {
-        consentRequired: { title: '需要确认银行卡', message: '请在门户中确认此卡可用于终端扣款' },
-        insufficientScope: {
-          title: '需要批准远程支出',
-          message: '此操作需要远程支出权限。请发起一次充值以授权，然后重试。'
-        },
-        remoteSpendingRevoked: {
-          title: '远程支出已停止',
-          messageByAdmin: '管理员已停止此终端的远程支出。',
-          messageBySelf: '你已停止此终端的远程支出。'
-        },
-        remoteSpendingReconnect: who => `${who} 请从“设置 → 网关”重新连接以重新授权此设备。`,
-        sessionRevoked: { title: '会话已登出', message: '你的会话已登出。请从“设置 → 网关”重新登录。' },
-        cliBillingDisabled: {
-          title: '远程支出已关闭',
-          message: '此账户的远程支出已关闭，账单管理员可在门户的 A2Assistant 页面开启。'
-        },
-        roleRequired: {
-          title: '需要管理员权限',
-          message: '添加资金需要组织管理员或所有者权限。请联系管理员，或在门户中管理。'
-        },
-        idempotencyConflict: { title: '请发起新的充值', message: '🔴 此扣款标识已用于另一金额。请发起新的充值。' },
-        noPaymentMethod: {
-          title: '没有已保存的银行卡',
-          message: '💳 尚未保存用于终端扣款的银行卡。请在门户中设置（一次性购买额度不会保存可重复使用的卡）。'
-        },
-        orgAccessDenied: { title: '组织访问被拒绝', message: '此令牌未绑定到你可管理的组织' },
-        monthlyCapExceeded: {
-          title: '已达每月支出上限',
-          messageReached: '🔴 已达每月支出上限。',
-          messageHeadroom: remaining => `🔴 已达每月支出上限，剩余额度为 $${remaining}。`
-        },
-        rateLimited: {
-          title: '当前扣款请求过多',
-          message: mins => `🟡 当前扣款请求过多${mins > 0 ? `（请约 ${mins} 分钟后重试）` : ''}。这不是支付失败。`
-        },
-        stripeUnavailable: {
-          title: 'Stripe 遇到问题',
-          message: mins => (mins > 0 ? `Stripe 遇到问题，请约 ${mins} 分钟后重试` : 'Stripe 遇到问题，请稍后重试')
-        },
-        upgradeCapExceeded: { title: '已达每日套餐变更次数上限', message: '已达每日套餐变更次数上限，请明天重试' },
-        endpointUnavailable: {
-          title: '账单端点不可用',
-          message: '账单端点返回了非 JSON 响应（此部署可能不支持该端点）。'
-        },
-        timeout: { title: '账单请求超时', message: '账单请求超时。' },
-        transport: { title: '账单连接失败', message: '账单请求在到达网关前失败。' },
-        default: { title: '账单请求失败', message: '账单请求失败。' }
-      }
-    },
     providers: {
       connectAccount: '连接账号',
       haveApiKey: '改用 API 密钥？',
@@ -3214,8 +2964,6 @@ export const zhOverrides = {
       '/browser': '管理智能体浏览器 [connect|disconnect|status]',
       '/palette': '打开模糊搜索命令面板（也可使用 Ctrl+P）',
       '/usage': '显示 Token 用量与速率限制；`reset` 可兑换保留的 Codex 限额重置',
-      '/subscription': '查看你的 Nous 方案，并在浏览器中更改',
-      '/topup': '显示你的 Nous 余额，并在 Portal 管理账务',
       '/platform': '暂停、恢复或列出故障的网关平台',
       '/version': '显示 A2Assistant 版本',
       '/debug': '上传调试报告（系统信息与日志），并获取可分享链接',
@@ -3688,54 +3436,6 @@ export const zhOverrides = {
 
   onboarding: zhOnboarding,
 
-  // Not yet translated — English fallbacks so the free-tier surfaces stay
-  // readable until a zh pass lands.
-  freeTier: {
-    providerRowTitle: 'Nous · 免费层',
-    providerRowPitch: '登录 Nous 账户以解锁更多模型和工具。',
-    readyTitle: 'A2Assistant 已就绪。',
-    readyCaption: '免费 · 含连接器',
-    begin: '开始',
-    signInInstead: '改为登录 Nous 账户',
-    otherProviders: '其他提供方',
-    stripTitle: '免费的 Nous 推理和连接器现已可用。',
-    stripBody: '打开模型选择器试用，或登录 Nous 账户。',
-    openModelPicker: '打开模型选择器',
-    dismiss: '关闭',
-    providerName: 'Nous',
-    statusLabel: model => `Nous · ${model}`,
-    signIn: '登录',
-    signInHeading: '登录 Nous 账户以解锁更多模型和工具。',
-    settingUp: '正在设置免费推理…',
-    finishInBrowser: '在浏览器中完成',
-    doNotShare: '请勿分享此代码。',
-    openPageAgain: '重新打开页面',
-    waiting: '等待登录…',
-    finishingHeading: '正在完成登录…',
-    finishingBody: '已在浏览器中批准。正在获取账户令牌。',
-    signedInAsLabel: '已登录为',
-    signedIn: '已登录。',
-    completedBody: '现在由你的账户提供推理和工具。',
-    reconnect: '重新连接',
-    openConnectors: '打开连接器',
-    defaultModel: '默认模型',
-    change: '更改',
-    done: '完成',
-    notNow: '暂不',
-    tryAgain: '重试',
-    didNotComplete: '登录未完成',
-    timedOutHeading: '登录超时',
-    timedOutBody: '代码未在有效期内使用。你仍在免费层。',
-    errorBody: '登录未完成；请重试。',
-    alreadySignedInHeading: '已登录。',
-    alreadySignedInBody: '此 A2Assistant 已登录 Nous 账户。',
-    offer: {
-      heading: '继续使用 A2Assistant',
-      body: '你正在使用免费额度。继续使用 A2Assistant 的话，你会开始遇到限制。登录免费的 Nous 账户，即可获得更多额度。',
-      signIn: '登录',
-      notNow: '暂不'
-    }
-  },
 
   modelPicker: {
     title: '切换模型',
@@ -3893,7 +3593,6 @@ export const zhOverrides = {
       toggleTerminal: '终端',
       toggleTokensPerSecond: '每秒 token 数',
       toggleVersion: '版本与更新',
-      toggleFreeTier: 'Free tier',
       toggleWorkspace: '工作区',
       cacheHitRateTitle: '本会话的提示缓存命中率 — 缓存 token 更便宜，越高越省',
       tokensPerSecondTitle: '每秒输出 token 数，取最近 10 次模型调用的平均值',
@@ -4239,10 +3938,6 @@ export const zhOverrides = {
         ssl_cert_verification: {
           title: provider => `无法验证 ${provider} 的连接`,
           body: provider => `代理或过时的证书存储阻止了与 ${provider} 的安全连接。设置指南介绍了修复方法。`
-        },
-        usage_window: {
-          title: '包含用量已用完',
-          body: '你的方案包含的用量已用完，将在重置后恢复。在 /topup 中添加额度即可继续。'
         }
       },
       errorAuthKinds: {
@@ -4268,11 +3963,6 @@ export const zhOverrides = {
       errorRetryAtResetShort: time => `于 ${time} 重试`,
       errorRateLimitResetBody: (provider, time) => `你已达到 ${provider} 的速率限制，将于 ${time} 重置。`,
       errorRetry: '重试',
-      errorSwitchToModel: (model, note) => (note ? `切换到 ${model}（${note}）` : `切换到 ${model}`),
-      errorSwitchModelFailed: '无法切换模型',
-      errorUseCredits: '开启用额度继续',
-      errorUseCreditsFailed: '无法开启用额度继续',
-      errorAddCredits: '添加额度',
       errorOpenBillingSettings: '打开账单设置',
       errorRetryScheduled: (time, wait) => `将于 ${time} 重试 — 还剩 ${wait}`,
       errorRetryScheduledCancel: '取消',

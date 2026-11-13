@@ -319,10 +319,7 @@ export const deA2Gaps = {
       compressions: count => `Komprimierungen: ${count}`,
       messagingDegraded: name => `${name} ausgefallen`,
       messagingStopped: 'Messenger gestoppt',
-      planUsageTitle: (used, resetsIn) =>
-        `${used} Ihres Tarifkontingents verbraucht${resetsIn ? ` · wird in ${resetsIn} zurückgesetzt` : ''} · Abrechnung öffnen`,
-      releaseAvailable: tag => `Version ${tag} ist verfügbar.`,
-      togglePlanUsage: 'Tarifnutzung'
+      releaseAvailable: tag => `Version ${tag} ist verfügbar.`
     }
   },
   skillDeepLink: {

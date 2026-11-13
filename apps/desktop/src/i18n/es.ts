@@ -4,7 +4,6 @@ import { defineFieldCopy } from '@/app/settings/field-copy'
 import { defineLocale, type TranslationOverrides } from './define-locale'
 import { esBoot } from './es_boot'
 import { esClarify } from './es_clarify'
-import { esConnectorAccounts } from './es_connector_accounts'
 import { esConnectorCard } from './es_connector_card'
 import { esCronControl } from './es_cron_control'
 import { esErrorCodes } from './es_error_codes'
@@ -45,37 +44,21 @@ export const esOverrides = {
     residencyLocal: 'En este dispositivo',
     segment: {
       all: 'Todos',
-      available: 'Disponibles',
-      connected: 'Conectados',
-      off: 'Desactivados'
+      available: 'Disponibles'
     },
     group: {
-      connected: 'Conectados',
-      connectedNote: 'Primero las conexiones con fallos.',
-      available: 'Disponibles',
-      off: 'Desactivados',
-      offNote: 'Los inicios de sesión se conservan.'
+      available: 'Disponibles'
     },
     card: {
-      kindManaged: 'Administrado',
       kindCatalog: 'MCP · Catálogo',
       kindCustom: 'MCP · Personalizado',
       kindPlugin: (plugin: string) => `MCP · Plugin ${plugin}`,
       inCatalog: 'En el catálogo de A2Assistant',
-      hostedTwin: 'Versión administrada disponible',
-      alsoLocal: 'También se ejecuta en este dispositivo',
       open: (name: string) => `Abrir ${name}`,
       turnServerOn: (name: string) => `Activar ${name}`,
       turnServerOff: (name: string) => `Desactivar ${name}`,
       state: {
-        accessExpired: 'Acceso caducado',
         available: 'Disponible',
-        connected: 'Conectado',
-        connecting: 'Conectando',
-        connectionUnknown: 'Estado desconocido',
-        couldNotConnect: 'No se pudo conectar',
-        offByYourOrganisation: 'Desactivado por tu organización',
-        offForYou: 'Desactivado para ti',
         serverConnecting: 'Conectando…',
         serverError: 'Error',
         serverNeedsAuth: 'Requiere autenticación',
@@ -85,24 +68,15 @@ export const esOverrides = {
       },
       fact: {
         tools: (count: number) => `${count} herramienta${count === 1 ? '' : 's'}`,
-        toolsOff: (count: number) =>
-          `${count} herramienta${count === 1 ? '' : 's'} desactivada${count === 1 ? '' : 's'}`,
         toolsOn: (count: number) => `${count} herramienta${count === 1 ? '' : 's'} activada${count === 1 ? '' : 's'}`,
         toolsSomeOn: (total: number, on: number) => `${total} herramientas, ${on} activada${on === 1 ? '' : 's'}`
       },
       verb: {
         authenticate: 'Autenticar',
-        connect: 'Conectar',
         install: 'Instalar',
-        openLogs: 'Abrir registros',
-        reconnect: 'Volver a conectar',
-        stopWaiting: 'Dejar de esperar',
-        tryAgain: 'Reintentar',
-        turnBackOn: 'Volver a activar'
+        openLogs: 'Abrir registros'
       },
       reason: {
-        finishSignIn: 'Termina de iniciar sesión en tu navegador.',
-        reconnect: 'Vuelve a conectar para que esta app siga funcionando.',
         serverError: 'El servidor rechazó la conexión.',
         serverNeedsAuth: 'Inicia sesión para que este servidor pueda responder.'
       }
@@ -113,22 +87,11 @@ export const esOverrides = {
       noMatchTitle: 'No hay apps que coincidan',
       noMatchBody: 'No hay coincidencias. Indica a A2Assistant tu propio servidor MCP para añadirlo.',
       clearSearch: 'Borrar la búsqueda',
-      hostedFailedTitle: 'No se pudo acceder a las apps alojadas.',
-      hostedFailedBody: 'Los servidores de este equipo no se ven afectados y siguen funcionando. No se desactivó nada.',
       retry: 'Reintentar',
       matchesElsewhere: (count: number) => `${count} coincidencia${count === 1 ? '' : 's'} más en otros grupos.`,
       showAllMatches: 'Mostrar todas las coincidencias',
       segmentNoMatch: (segment: string) => `No hay coincidencias en ${segment}, así que se muestran todas.`,
-      freeTierNote: 'Las conexiones se quedan en este equipo hasta que inicies sesión.',
-      signInLine: 'Inicia sesión en Nous para usar las apps administradas.',
-      signIn: 'Iniciar sesión',
-      managedUnavailable: 'Las apps administradas aún no están disponibles para esta cuenta.',
-      writeFailed: 'No se guardó ese cambio.',
-      refreshFailed: 'No se actualizó la lista de herramientas.',
-      disconnectNoAccount:
-        'A2Assistant no tiene ninguna cuenta que desconectar aquí. Actualiza la página e inténtalo de nuevo.',
-      disconnectRefused:
-        'Nous no pudo quitar este inicio de sesión ahora. Desactiva la app con el interruptor o inténtalo más tarde.'
+      signIn: 'Iniciar sesión'
     },
     add: {
       action: 'Añadir el tuyo',
@@ -165,35 +128,18 @@ export const esOverrides = {
     },
     dialog: {
       disconnect: 'Desconectar',
-      disconnectTitle: (name: string) => `¿Desconectar ${name}?`,
-      disconnectBody: 'A2Assistant deja de actuar con esta cuenta. Puedes volver a conectarla cuando quieras.',
       menuRefreshTools: 'Actualizar herramientas',
       moreActions: 'Más acciones',
       removeServerTitle: (name: string) => `¿Quitar ${name}?`,
       removeServerBody: 'La entrada se quita de mcp.json en este equipo. No se elimina nada más.',
-      appSwitch: (name: string) => `A2Assistant puede usar ${name}`,
-      waysTitle: (name: string) => `Dónde se ejecuta ${name}`,
-      wayNotConnected: (name: string) => `Aún no está conectado. Inicia sesión en ${name} desde tu navegador.`,
-      wayHosted: 'Administrado',
-      bothOn: (name: string) => `Ambos están activados, así que A2Assistant ve cada herramienta de ${name} dos veces.`,
-      turnOffLocal: 'Desactivar el servidor local',
       providedByPlugin: (plugin: string) => `Proporcionado por el plugin ${plugin}`,
       openPlugins: 'Abrir la pestaña Plugins',
-      nousLine: 'Las apps de Nous siguen a tu cuenta, no al perfil.',
-      rulesReadOnly: 'Las reglas no se pueden cambiar ahora.',
-      rulesAppOff: (name: string) => `Activa ${name} para cambiar sus herramientas.`,
-      rulesSignIn: 'Inicia sesión para cambiar lo que A2Assistant puede hacer aquí.',
-      orgNote: (count: number) => `Tu organización desactivó ${count} herramienta${count === 1 ? '' : 's'}.`,
-      orgLink: 'Abrir la administración de conectores',
-      connectEnded: 'El inicio de sesión no terminó.',
-      connectOpenAgain: 'Abrir el enlace de nuevo',
       tokensPerCall: 'tokens por llamada',
       usesPerMonth: 'usos en 30 días',
       advanced: 'Avanzado',
       advancedHint: 'la entrada de mcp.json y los registros'
     },
 
-    accounts: esConnectorAccounts,
 
     tools: {
       title: 'Herramientas',
@@ -212,7 +158,6 @@ export const esOverrides = {
       showSummary: 'Mostrar resumen',
       facetSwitch: (facet: string) => `Activar o desactivar las herramientas de ${facet}`,
       moreHints: (count: number) => `+${count}`,
-      staleSignIn: 'Inicia sesión para leer la lista de herramientas más reciente.',
       searchCountPlaceholder: (count: number) => `Buscar entre ${count} herramientas`,
       toolList: (name: string) => `Herramientas de ${name}`,
       categorySelect: (count: number) => `${count} categoría${count === 1 ? '' : 's'}`,
@@ -221,7 +166,6 @@ export const esOverrides = {
       quickReadOnly: 'Solo lectura',
       quickNoDestructive: 'Desactivar las destructivas',
       quickEverythingOn: 'Todo activado',
-      lockedHint: 'desactivada por tu organización',
       turnToolOn: (tool: string) => `Activar ${tool}`,
       turnToolOff: (tool: string) => `Desactivar ${tool}`,
       showDetails: (tool: string) => `Mostrar qué hace ${tool}`,
@@ -232,28 +176,9 @@ export const esOverrides = {
       needsAuthTitle: (name: string) => `Inicia sesión en ${name} para leer sus herramientas.`,
       needsAuthBody: 'El inicio de sesión se queda en este equipo. Nada sale de él.',
       retry: 'Reintentar',
-      goneTitle: (name: string) => `${name} salió del catálogo.`,
-      goneBody: 'A2Assistant ya no puede llamarlo. La fila se queda hasta que la quites, así que nada desaparece.',
       remove: 'Quitar',
       offTitle: (name: string) => `${name} está desactivado.`,
       offBody: 'Actívalo con el interruptor de arriba para leer las herramientas que incluye.',
-      signedOutTitle: 'Inicia sesión en Nous para leer la lista de herramientas.',
-      signedOutBody: 'Tus servidores en este equipo no se ven afectados.',
-      conflictTitle: 'Alguien cambió esta regla mientras la editabas.',
-      conflictBody: (theyOff: number, theyOn: number) => {
-        const they = [
-          theyOff > 0
-            ? `desactivó ${theyOff} herramienta${theyOff === 1 ? '' : 's'} que tienes activada${theyOff === 1 ? '' : 's'}`
-            : '',
-          theyOn > 0
-            ? `dejó activada${theyOn === 1 ? '' : 's'} ${theyOn} herramienta${theyOn === 1 ? '' : 's'} que desactivaste`
-            : ''
-        ].filter(Boolean)
-
-        return `${they.length > 0 ? `Esa persona ${they.join(' y ')}. ` : ''}Tus cambios siguen en pantalla; no se escribió nada.`
-      },
-      conflictReload: 'Recargar su versión',
-      conflictSave: 'Guardar sobre su versión',
       saveFailed: 'No se guardaron esas reglas de herramientas.',
       footerDirty: (off: number, backOn: number) =>
         `${off} herramienta${off === 1 ? '' : 's'} desactivada${off === 1 ? '' : 's'}, ${backOn === 0 ? 'ninguna' : backOn} reactivada${backOn === 1 ? '' : 's'}`,
@@ -718,9 +643,7 @@ export const esOverrides = {
       vaultCredentials: 'Credenciales guardadas',
       vaultSources: 'Gestores de contraseñas',
       appUpdates: 'Versión y actualizaciones',
-      uninstall: 'Desinstalar',
-      billingOverview: 'Resumen',
-      billingPlans: 'Planes'
+      uninstall: 'Desinstalar'
     },
     closeSettings: 'Cerrar configuración',
     exportConfig: 'Exportar configuración',
@@ -753,7 +676,6 @@ export const esOverrides = {
       archivedChats: 'Chats archivados',
       sessions: 'Sesiones',
       about: 'Acerca de',
-      billing: 'Facturación',
       notifications: 'Notificaciones',
       vault: 'Contraseñas e inicios de sesión'
     },
@@ -1850,309 +1772,6 @@ export const esOverrides = {
     },
     model: esModelSettings,
     localModels: esLocalModels,
-    billing: {
-      perMonth: (amount: string) => `${amount}/mes`,
-      creditsPerMonth: (amount: string) => `${amount} créditos/mes`,
-      usageLabel: (label: string) => `Uso de ${label}`,
-      freeTier: {
-        signIn: 'Iniciar sesión',
-        title: 'Estás en el plan gratuito de Nous',
-        message: 'Inicia sesión con una cuenta de Nous para desbloquear más modelos y herramientas.',
-        caption:
-          'Funciona con nous/welcome, con conectores incluidos. Al iniciar sesión conservas tus conectores y se añaden las herramientas que requieren cuenta y todos los demás modelos.',
-        name: 'Nous · plan gratuito',
-        footnote:
-          'El plan gratuito no tiene saldo ni nada que pagar. El pago y el uso aparecen al iniciar sesión con una cuenta de Nous.',
-        plan: 'Plan gratuito',
-        model: 'Modelo',
-        connectors: 'Conectores',
-        included: 'Incluidos'
-      },
-      amountValidation: {
-        reloadTo: 'Recargar hasta',
-        greaterThanThreshold: 'El importe de recarga debe ser mayor que el umbral.',
-        decimal: (label: string) => `${label}: introduce un importe en dólares con 2 decimales como máximo.`,
-        positive: (label: string) => `${label}: el importe debe ser mayor que 0 $.`,
-        minimum: (label: string, amount: string) => `${label}: el mínimo es ${amount}.`,
-        maximum: (label: string, amount: string) => `${label}: el máximo es ${amount}.`
-      },
-      stepUp: {
-        openVerification: 'Abrir la página de verificación',
-        dismiss: 'Descartar',
-        waiting: 'Esperando el enlace de verificación…',
-        verify: 'Verifica para continuar',
-        deniedTitle: 'La verificación no se aprobó',
-        deniedBody: 'La verificación terminó sin permitir el gasto remoto para este terminal.',
-        successTitle: 'Verificación completada',
-        successBody: 'El gasto remoto está permitido para este terminal.'
-      },
-      charge: {
-        added: (amount?: string) => (amount ? `Se añadieron ${amount} $.` : 'Créditos añadidos.'),
-        failedTitle: 'Falló el cargo',
-        unconfirmedTitle: 'Resultado del cargo sin confirmar',
-        unconfirmedBody: (message: string) =>
-          `${message} El resultado de tu último cargo no está confirmado: revisa tu saldo/historial antes de reintentarlo.`,
-        checkTitle: 'No se pudo comprobar el cargo',
-        checkBody: 'No se pudo comprobar el cargo.',
-        untrackedTitle: 'No se pudo seguir el cargo',
-        untrackedBody: 'El servicio de facturación aceptó la solicitud, pero no devolvió un ID de cargo.',
-        timeoutTitle: 'Sigue procesándose tras 5 minutos',
-        timeoutBody: 'Es posible que el cargo todavía se complete. Revisa el portal antes de reintentarlo.',
-        authenticationRequired:
-          'Tu banco requiere verificación (3DS). Complétala en el portal para terminar esta compra.',
-        expired: 'Tu tarjeta ha caducado. Actualízala en el portal.',
-        declined: 'Tu tarjeta fue rechazada. Prueba otra tarjeta en el portal.',
-        failedBody: (reason: string) => `El cargo no se completó (${reason}).`
-      },
-      title: 'Facturación',
-      preview: 'vista previa',
-      summary: {
-        balance: 'Saldo',
-        plan: 'Plan',
-        autoRefill: 'Recarga automática'
-      },
-      sections: {
-        invoices: 'Facturas',
-        plan: 'Plan',
-        paymentAndCredits: 'Pago y créditos',
-        usage: 'Uso'
-      },
-      usage: {
-        title: 'Uso'
-      },
-      buyCredits: {
-        customAmount: 'Importe de créditos personalizado',
-        title: 'Comprar créditos ahora',
-        buyButton: 'Comprar',
-        processing: 'Procesando… comprobando la liquidación',
-        added: (amount: string) => `Se añadieron ${amount}. El saldo se está actualizando.`,
-        retry: 'Reintentar',
-        openPortal: 'Abrir el portal'
-      },
-      plan: {
-        title: 'Planes',
-        changePlan: 'Cambiar de plan',
-        viewPlans: 'Ver planes',
-        backAria: 'Volver a facturación',
-        current: 'Plan actual',
-        scheduled: 'Programado',
-        empty: 'Ahora mismo no hay planes disponibles a los que cambiar.',
-        undo: 'Deshacer',
-        undoing: 'Deshaciendo…',
-        downgrade: 'Bajar de plan',
-        confirmDowngrade: 'Confirmar el cambio a un plan inferior',
-        tryAgain: 'Volver a intentarlo',
-        checkingChange: 'Comprobando este cambio…',
-        cannotChange: 'Ese cambio no se puede hacer aquí.',
-        alreadyOn: (name: string) => `Ya tienes el plan ${name}; no hay nada que cambiar.`,
-        notScheduleable: 'Este cambio no se puede programar aquí.',
-        scheduling: 'Programando…',
-        cancel: 'Cancelar',
-        effectScheduled: (targetName: string, effectiveAt: string, creditsDelta?: string) =>
-          `Cambio a ${targetName}: entra en vigor ${effectiveAt}. No se cobra nada ahora; conservas tu plan actual hasta entonces.${creditsDelta ? ` Cambio de créditos mensuales: ${creditsDelta}.` : ''}`
-      },
-      keepGoingOnCredits: {
-        title: 'Seguir con créditos',
-        description: 'Usa tus créditos cuando se agote el uso incluido. Desactivado: A2Assistant espera al reinicio.',
-        approveInBrowser: 'Aprueba Remote Spending en tu navegador para cambiar esto. Se aplica en cuanto lo apruebes.',
-        openAgain: 'Abrir de nuevo',
-        cancel: 'Cancelar',
-        approvedRetry: 'Remote Spending está aprobado, pero el cambio no se guardó.',
-        tryAgain: 'Reintentar'
-      },
-      autoReload: {
-        threshold: 'Umbral',
-        thresholdAria: 'Umbral de recarga automática',
-        reloadTo: 'Recargar hasta',
-        reloadToAria: 'Importe objetivo de la recarga automática',
-        turnOffConfirm: '¿Desactivar la recarga automática?',
-        turnOff: 'Desactivar',
-        disable: 'Desactivar',
-        updated: 'Recarga automática actualizada.',
-        turnedOff: 'Recarga automática desactivada.',
-        manage: 'Gestionar',
-        save: 'Guardar',
-        saving: 'Guardando…',
-        cancel: 'Cancelar'
-      },
-      state: {
-        notice: {
-          loggedOut: {
-            title: 'Conecta tu cuenta de Nous',
-            message: 'Inicia sesión con tu cuenta de Nous para ver aquí tu saldo, plan y uso.',
-            action: 'Iniciar sesión'
-          },
-          openPortal: 'Abrir el portal ↗',
-          noCard: {
-            title: 'No hay ningún método de pago registrado',
-            message:
-              'La compra de créditos y la recarga automática siguen desactivadas hasta que registres una tarjeta. Añade una en el portal.',
-            action: 'Añadir tarjeta ↗'
-          }
-        },
-        paymentMethod: {
-          title: 'Método de pago',
-          description: 'Gestiona la tarjeta que se usa para recargas y renovaciones de la suscripción.',
-          addAction: 'Añadir método de pago',
-          updateAction: 'Actualizar',
-          provenance: {
-            autoRefill: 'tarjeta de recarga automática',
-            customerDefault: 'predeterminada del cliente',
-            subPin: 'tarjeta de la suscripción',
-            suffix: (label: string) => ` - ${label}`
-          }
-        },
-        buyCredits: {
-          description: 'Un único cargo en tu tarjeta que se añade hoy a tu saldo.'
-        },
-        autoRefill: {
-          title: 'Recargar cuando quede poco saldo',
-          genericDescription: 'Mantén tu saldo recargado cuando baje de tu umbral.',
-          offPill: 'Desactivada',
-          enabledPill: 'Activada',
-          notAvailablePill: '—',
-          manageCaption: 'Gestiona la recarga automática desde el portal.',
-          turnOnCaption: 'Activa la recarga automática desde el portal',
-          chargesDescription: (reloadTo: string, threshold: string) =>
-            `Cobra ${reloadTo} automáticamente cuando tu saldo baja de ${threshold}.`,
-          distinctCardCaption: (cardLabel: string) =>
-            `La recarga automática cobra a ${cardLabel}: concílialo en el portal`,
-          distinctCardFallback: 'otra tarjeta',
-          reconcileAction: 'Conciliar ↗'
-        },
-        usage: {
-          subscriptionCredits: {
-            title: 'Créditos de la suscripción',
-            barLabel: 'Créditos de la suscripción restantes',
-            captionResets: (date: string) => `Se restablece ${date}`,
-            valueOf: (remaining: string, monthly: string) => `Quedan ${remaining} de ${monthly}`,
-            valueOver: (remaining: string, monthly: string, over: string) =>
-              `Quedan ${remaining} de ${monthly} · ${over} de exceso`
-          },
-          topupCredits: {
-            title: 'Créditos de recarga',
-            caption: 'No caducan'
-          },
-          monthlyCap: {
-            title: 'Límite de gasto mensual',
-            barLabel: 'Límite de gasto mensual usado',
-            captionDefault: 'Límite predeterminado',
-            captionSpending: 'Gasto remoto mensual',
-            valueUsed: (spent: string, limit: string) => `${spent} de ${limit} usados`
-          },
-          window: {
-            today: 'Hoy',
-            week: 'Esta semana',
-            month: 'Este mes',
-            topTier: 'Modelos grandes (mensual)',
-            barLabel: (title: string) => `${title}: uso incluido consumido`,
-            captionPaused: 'En pausa: falló el pago de la suscripción',
-            captionPausedOther: 'En pausa: consulta Facturación en el Portal',
-            captionTopTierUsedUp: 'Cuota mensual agotada, los créditos cubren el resto',
-            captionTopTierUsedUpKeepGoingOff: 'Cuota mensual agotada, los demás modelos incluidos siguen funcionando',
-            captionResetsIn: (duration: string) => `Se restablece en ${duration}`,
-            captionIncluded: 'Uso incluido',
-            valueUsed: (percent: string) => `${percent} usado`
-          }
-        },
-        planCard: {
-          freeTier: 'Gratis',
-          chooseAction: 'Elegir ↗',
-          adjustPlanAction: 'Ajustar plan ↗',
-          unavailableCaption: 'Los detalles de la suscripción no están disponibles; aún puedes abrir el portal.',
-          downgradeCaption: (tierName: string, when: string) => `Cambia a ${tierName} el ${when}.`,
-          cancellationCaption: (when: string) => `Se cancela el ${when}.`,
-          renewsCaption: (date: string) => `Se renueva ${date}`,
-          noSubscriptionCaption: 'No hay suscripción activa: los modelos de pago consumen créditos de recarga.'
-        }
-      },
-      errors: {
-        consentRequired: {
-          title: 'Hace falta confirmar la tarjeta',
-          message: 'Confirma esta tarjeta para los cargos del terminal en el portal'
-        },
-        insufficientScope: {
-          title: 'El gasto remoto necesita aprobación',
-          message: 'Esto requiere permitir el gasto remoto. Inicia una recarga para permitirlo y vuelve a intentarlo.'
-        },
-        remoteSpendingRevoked: {
-          title: 'Se detuvo el gasto remoto',
-          messageByAdmin: 'Un administrador detuvo el gasto remoto para este terminal.',
-          messageBySelf: 'Detuviste el gasto remoto para este terminal.'
-        },
-        remoteSpendingReconnect: (who: string) =>
-          `${who} Vuelve a conectarte desde Configuración -> Gateway para autorizar de nuevo este dispositivo.`,
-        sessionRevoked: {
-          title: 'Sesión cerrada',
-          message: 'Se cerró tu sesión. Vuelve a iniciar sesión desde Configuración → Gateway.'
-        },
-        cliBillingDisabled: {
-          title: 'El gasto remoto está desactivado',
-          message:
-            'El gasto remoto está desactivado para esta cuenta; un administrador de facturación puede activarlo desde la página de A2Assistant del portal.'
-        },
-        roleRequired: {
-          title: 'Se requiere rol de administrador',
-          message:
-            'Para añadir fondos hace falta un administrador o propietario de la organización. Pide ayuda a un administrador o gestiónalo en el portal.'
-        },
-        idempotencyConflict: {
-          title: 'Inicia una nueva recarga',
-          message: '🔴 Esa clave de cargo ya se usó para otro importe. Inicia una nueva recarga.'
-        },
-        noPaymentMethod: {
-          title: 'No hay tarjeta guardada',
-          message:
-            '💳 Todavía no hay una tarjeta guardada para cargos del terminal. Configura una en el portal ' +
-            '(las compras únicas de créditos no guardan una tarjeta reutilizable).'
-        },
-        orgAccessDenied: {
-          title: 'Acceso a la organización denegado',
-          message: 'Este token no está vinculado a una organización que puedas gestionar'
-        },
-        monthlyCapExceeded: {
-          title: 'Se alcanzó el límite de gasto mensual',
-          messageReached: '🔴 Se alcanzó el límite de gasto mensual.',
-          messageHeadroom: (remaining: string) =>
-            `🔴 Se alcanzó el límite de gasto mensual: quedan ${remaining} $ de margen.`
-        },
-        rateLimited: {
-          title: 'Demasiados cargos ahora mismo',
-          message: (mins: number) =>
-            mins > 0
-              ? `🟡 Demasiados cargos ahora mismo (reinténtalo en ~${mins} min). No es un fallo de pago.`
-              : '🟡 Demasiados cargos ahora mismo. No es un fallo de pago.'
-        },
-        stripeUnavailable: {
-          title: 'Stripe tiene problemas',
-          message: (mins: number) =>
-            mins > 0
-              ? `Stripe tiene problemas: reinténtalo en ~${mins} min`
-              : 'Stripe tiene problemas: reinténtalo en breve'
-        },
-        upgradeCapExceeded: {
-          title: 'Se alcanzó el límite diario de cambios de plan',
-          message: 'Se alcanzó el límite diario de cambios de plan: reinténtalo mañana'
-        },
-        endpointUnavailable: {
-          title: 'Endpoint de facturación no disponible',
-          message:
-            'El endpoint de facturación devolvió una respuesta que no es JSON (puede que no esté disponible en este despliegue).'
-        },
-        timeout: {
-          title: 'Se agotó el tiempo de la solicitud de facturación',
-          message: 'Se agotó el tiempo de la solicitud de facturación.'
-        },
-        transport: {
-          title: 'Falló la conexión de facturación',
-          message: 'La solicitud de facturación falló antes de llegar al gateway.'
-        },
-        default: {
-          title: 'Falló la solicitud de facturación',
-          message: 'Falló la solicitud de facturación.'
-        }
-      }
-    },
     providers: {
       connectAccount: 'Conectar una cuenta',
       haveApiKey: '¿Tienes una clave API?',
@@ -3746,8 +3365,6 @@ export const esOverrides = {
       '/palette': 'Abrir la paleta de comandos aproximada (también Ctrl+P)',
       '/usage':
         'Mostrar el uso de tokens y los límites de frecuencia; `reset` canjea un restablecimiento de límite de Codex acumulado',
-      '/subscription': 'Ver tu plan de Nous y cambiarlo en el navegador',
-      '/topup': 'Mostrar tu saldo de Nous y gestionar la facturación en el portal',
       '/platform': 'Pausar, reanudar o listar una plataforma del gateway que falla',
       '/version': 'Mostrar la versión de A2Assistant',
       '/debug': 'Subir un informe de depuración (información del sistema + registros) y obtener enlaces para compartir',
@@ -4240,78 +3857,6 @@ export const esOverrides = {
     openLogs: 'Abrir registros'
   },
   onboarding: esOnboarding,
-  freeTier: {
-    providerRowTitle: 'Nous · plan gratuito',
-    providerRowPitch: 'Inicia sesión con una cuenta de Nous para desbloquear más modelos y herramientas.',
-    readyTitle: 'A2Assistant está listo.',
-    readyCaption: 'Gratis · conectores incluidos',
-    begin: 'Empezar',
-    signInInstead: 'Iniciar sesión con una cuenta de Nous',
-    otherProviders: 'Otros proveedores',
-    stripTitle: 'Ya están disponibles la inferencia y los conectores gratuitos de Nous.',
-    stripBody: 'Abre el selector de modelos para probarlos o inicia sesión con una cuenta de Nous.',
-    openModelPicker: 'Abrir selector de modelos',
-    dismiss: 'Descartar',
-    providerName: 'Nous',
-    statusLabel: (model: string) => `Nous · ${model}`,
-    signIn: 'Iniciar sesión',
-    signInHeading: 'Inicia sesión con una cuenta de Nous para desbloquear más modelos y herramientas.',
-    settingUp: 'Configurando la inferencia gratuita…',
-    finishInBrowser: 'Termina en tu navegador',
-    doNotShare: 'No compartas este código.',
-    openPageAgain: 'Abrir la página de nuevo',
-    waiting: 'Esperando el inicio de sesión…',
-    finishingHeading: 'Terminando el inicio de sesión…',
-    finishingBody: 'Aprobado en el navegador. Obteniendo los tokens de tu cuenta.',
-    signedInAsLabel: 'Sesión iniciada como',
-    signedIn: 'Sesión iniciada.',
-    completedBody: 'Tu cuenta ya incluye inferencia y herramientas.',
-    reconnect: 'Reconectar',
-    openConnectors: 'Abrir Conectores',
-    defaultModel: 'Modelo predeterminado',
-    change: 'Cambiar',
-    done: 'Listo',
-    notNow: 'Ahora no',
-    tryAgain: 'Reintentar',
-    didNotComplete: 'No se completó el inicio de sesión',
-    timedOutHeading: 'Ese enlace de inicio de sesión caducó',
-    timedOutBody: 'Empieza de nuevo cuando quieras. Sigues en el servicio gratuito de Nous.',
-    errorBody: 'No se completó el inicio de sesión. Vuelve a intentarlo cuando quieras.',
-    busyHeading: 'Ya casi está',
-    busyBody: (wait: string) =>
-      `A2Assistant no pudo terminar de iniciar tu sesión porque el servicio de Nous está ocupado. Vuelve a intentarlo en ${wait}. Mientras tanto, tu sesión sigue aquí.`,
-    unreachableBody:
-      'A2Assistant no pudo llegar al servicio de Nous para terminar de iniciar tu sesión. Comprueba tu conexión a internet y vuelve a intentarlo. Tu sesión sigue aquí.',
-    alreadySignedInHeading: 'Ya has iniciado sesión.',
-    alreadySignedInBody: 'Este A2Assistant ya tiene la sesión iniciada en una cuenta de Nous.',
-    offer: {
-      heading: 'Sigue adelante con A2Assistant',
-      body: 'Estás usando el uso gratuito. Si sigues usando A2Assistant, empezarás a encontrarte con límites. Inicia sesión con una cuenta gratuita de Nous para tener un uso mayor.',
-      signIn: 'Iniciar sesión',
-      notNow: 'Ahora no'
-    },
-    setupFailed: {
-      gateClosed:
-        'Esta versión de A2Assistant no puede iniciarse sin una cuenta de Nous. Inicia sesión o crea una: es gratis y solo lleva un minuto.',
-      paused:
-        'El uso de A2Assistant sin iniciar sesión está en pausa por un momento. A2Assistant seguirá comprobándolo. Iniciar sesión es gratis y te permite empezar ahora mismo.',
-      rateLimited: (wait: string) =>
-        `Mucha gente está empezando ahora mismo, así que A2Assistant volverá a intentarlo en ${wait}. Iniciar sesión es gratis y te ahorra la espera.`,
-      unreachable:
-        'A2Assistant no pudo llegar al servicio de Nous. Comprueba tu conexión a internet y pulsa Reintentar. O conecta otro proveedor por ahora.',
-      serverError:
-        'El servicio de Nous tuvo un fallo. Pulsa Reintentar en un momento o conecta otro proveedor por ahora.',
-      powRequired:
-        'El servidor de Nous pidió una prueba de trabajo, pero tu agente todavía no la implementa. Inicia sesión o crea una cuenta gratuita de Nous para continuar.',
-      locked:
-        'Esta sesión no puede continuar sin iniciar sesión. Inicia sesión o crea una cuenta gratuita de Nous para seguir.',
-      generic:
-        'A2Assistant no pudo configurar el acceso gratuito sin iniciar sesión. Iniciar sesión es gratis; también puedes conectar otro proveedor.',
-      signInBelow: 'Iniciar sesión es gratis. Elige Nous abajo.',
-      tryAgain: 'Reintentar',
-      retrying: 'Reintentando…'
-    }
-  },
   modelPicker: {
     title: 'Cambiar modelo',
     current: 'actual:',
@@ -4463,7 +4008,6 @@ export const esOverrides = {
       toggleTerminal: 'Terminal',
       toggleTokensPerSecond: 'Tokens por segundo',
       toggleVersion: 'Versión y actualizaciones',
-      toggleFreeTier: 'Plan gratuito',
       toggleWorkspace: 'Espacio de trabajo',
       cacheHitRateTitle:
         'Tasa de aciertos de la caché de prompts en esta sesión: los tokens en caché cuestan menos, así que cuanto más alta, más barato',
@@ -4876,38 +4420,6 @@ export const esOverrides = {
         disk_full: {
           title: 'Tu disco está lleno',
           body: 'A2Assistant no pudo guardar esta conversación. Libera espacio y reinténtalo.'
-        },
-        free_tier_disabled: {
-          title: 'Inicia sesión para seguir chateando',
-          body: 'Inicia sesión con una cuenta de Nous para seguir chateando; es gratis.'
-        },
-        free_tier_rate_limited: {
-          title: 'Cupo gratuito agotado',
-          body: 'Se renueva en breve. Inicia sesión con una cuenta de Nous para tener un cupo mayor; es gratis.'
-        },
-        free_tier_at_capacity: {
-          title: 'El nivel gratuito está ocupado',
-          body: 'Inicia sesión para saltarte la cola (es gratis) o vuelve a intentarlo dentro de un rato.'
-        },
-        free_tier_model_not_free: {
-          title: 'Este modelo requiere iniciar sesión',
-          body: 'Por ahora A2Assistant usa el modelo gratuito. Inicia sesión con una cuenta de Nous para tener más modelos; es gratis.'
-        },
-        free_tier_route: {
-          title: 'Sin acceso al modelo gratuito',
-          body: 'Inicia sesión con una cuenta de Nous (es gratis) o revisa el ajuste NOUS_INFERENCE_BASE_URL.'
-        },
-        free_tier_outage: {
-          title: 'El modelo gratuito tiene problemas',
-          body: 'Vuelve a enviar el mensaje dentro de un minuto.'
-        },
-        free_tier_refused: {
-          title: 'Inicia sesión para seguir chateando',
-          body: 'Iniciar sesión con una cuenta de Nous es gratis.'
-        },
-        usage_window: {
-          title: 'Uso incluido agotado',
-          body: 'El uso incluido de tu plan está agotado hasta el reinicio. Añade créditos en /topup para seguir.'
         }
       },
       errorAuthKinds: {
@@ -4936,11 +4448,6 @@ export const esOverrides = {
       errorGenericProvider: 'El servicio de IA',
       errorToastTitle: 'A2Assistant no pudo terminar la respuesta',
       errorRetry: 'Reintentar',
-      errorSwitchToModel: (model, note) => (note ? `Cambiar a ${model} (${note})` : `Cambiar a ${model}`),
-      errorSwitchModelFailed: 'No se pudo cambiar de modelo',
-      errorUseCredits: 'Activar Seguir con créditos',
-      errorUseCreditsFailed: 'No se pudo activar Seguir con créditos',
-      errorAddCredits: 'Añadir créditos',
       errorOpenBillingSettings: 'Abrir ajustes de facturación',
       errorRetryScheduled: (time: string, wait: string) => `Reintentando a las ${time}, dentro de ${wait}`,
       errorRetryScheduledCancel: 'Cancelar',
@@ -4953,7 +4460,6 @@ export const esOverrides = {
       errorOpenHermesFolderFailed: 'No se pudo abrir la carpeta de A2Assistant',
       errorUpdateApiKey: 'Actualizar clave API',
       errorSignInAgain: (provider: string) => `Volver a iniciar sesión en ${provider}`,
-      errorSignInFreeTier: 'Iniciar sesión con una cuenta de Nous',
       errorOauthExpired: (provider: string) =>
         `Tu sesión de ${provider} caducó o se revocó. Vuelve a iniciar sesión para seguir chateando.`,
       errorOpenLogs: 'Abrir registros',

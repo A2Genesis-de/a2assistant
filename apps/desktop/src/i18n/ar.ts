@@ -80,15 +80,7 @@ export const arOverrides = {
     back: 'العودة إلى النتائج'
   },
   connectors: {
-    directory: {
-      suggested: 'مقترحة',
-      allApps: 'كل التطبيقات',
-      receiptConnected: apps => `متصلة: ${apps}`,
-      receiptNone: 'لم يتم ربط تطبيقات جديدة',
-      receiptTimedOut: 'أُغلقت بعد 10 دقائق',
-      finishInBrowser: 'أكمل في المتصفح',
-      signInFailed: 'تعذّر الاتصال. انقر لإعادة المحاولة'
-    }
+
   },
   firstRun: arFirstRun,
   externalOpenFailed: arChrome.externalOpenFailed,
@@ -142,15 +134,7 @@ export const arOverrides = {
   desktop: arChat.desktop,
   errors: arDiagnostics.errors,
   tips: arChat.tips,
-  ui: arCommon.ui,
-  freeTier: {
-    offer: {
-      heading: 'واصل مع A2Assistant',
-      body: 'أنت تستخدم الحصة المجانية. إذا واصلت استخدام A2Assistant فستبدأ بمواجهة حدود الاستخدام. سجّل الدخول بحساب Nous مجاني للحصول على حصة أكبر.',
-      signIn: 'تسجيل الدخول',
-      notNow: 'ليس الآن'
-    }
-  }
+  ui: arCommon.ui
 } satisfies TranslationOverrides
 
 export const ar = defineLocale(arOverrides)

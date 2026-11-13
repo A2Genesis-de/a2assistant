@@ -7,7 +7,6 @@ import { enBoot } from './en_boot'
 import { enCatalog } from './en_catalog'
 import { enCatalogInstall } from './en_catalog_install'
 import { enClarify } from './en_clarify'
-import { enConnectorAccounts } from './en_connector_accounts'
 import { enConnectorCard } from './en_connector_card'
 import { enCronControl } from './en_cron_control'
 import { enGatewayGroupOpen, enSkillDeepLink } from './en_deep_links'
@@ -54,39 +53,23 @@ export const en: Translations = {
 
     segment: {
       all: 'All',
-      available: 'Available',
-      connected: 'Connected',
-      off: 'Turned off'
+      available: 'Available'
     },
 
     group: {
-      connected: 'Connected',
-      connectedNote: 'Broken connections first.',
-      available: 'Available',
-      off: 'Turned off',
-      offNote: 'Sign-ins are kept.'
+      available: 'Available'
     },
 
     card: {
-      kindManaged: 'Managed',
       kindCatalog: 'MCP · Catalog',
       kindCustom: 'MCP · Custom',
       kindPlugin: (plugin: string) => `MCP · Plugin ${plugin}`,
       inCatalog: 'In the A2Assistant catalog',
-      hostedTwin: 'Managed version available',
-      alsoLocal: 'Also runs on this device',
       open: (name: string) => `Open ${name}`,
       turnServerOn: (name: string) => `Turn ${name} on`,
       turnServerOff: (name: string) => `Turn ${name} off`,
       state: {
-        accessExpired: 'Access expired',
         available: 'Available',
-        connected: 'Connected',
-        connecting: 'Connecting',
-        connectionUnknown: 'State unknown',
-        couldNotConnect: 'Could not connect',
-        offByYourOrganisation: 'Off by your organisation',
-        offForYou: 'Off for you',
         serverConnecting: 'Connecting…',
         serverError: 'Error',
         serverNeedsAuth: 'Needs authentication',
@@ -96,23 +79,15 @@ export const en: Translations = {
       },
       fact: {
         tools: (count: number) => `${count} tool${count === 1 ? '' : 's'}`,
-        toolsOff: (count: number) => `${count} tool${count === 1 ? '' : 's'} off`,
         toolsOn: (count: number) => `${count} tool${count === 1 ? '' : 's'} on`,
         toolsSomeOn: (total: number, on: number) => `${total} tools, ${on} on`
       },
       verb: {
         authenticate: 'Authenticate',
-        connect: 'Connect',
         install: 'Install',
-        openLogs: 'Open logs',
-        reconnect: 'Reconnect',
-        stopWaiting: 'Stop waiting',
-        tryAgain: 'Try again',
-        turnBackOn: 'Turn back on'
+        openLogs: 'Open logs'
       },
       reason: {
-        finishSignIn: 'Finish the sign-in in your browser.',
-        reconnect: 'Reconnect to keep this app working.',
         serverError: 'The server refused the connection.',
         serverNeedsAuth: 'Sign in to let this server answer.'
       }
@@ -124,21 +99,11 @@ export const en: Translations = {
       noMatchTitle: 'No matching apps',
       noMatchBody: 'Nothing here matches. Point A2Assistant at your own MCP server to add it.',
       clearSearch: 'Clear the search',
-      hostedFailedTitle: 'Could not reach the hosted apps.',
-      hostedFailedBody: 'The servers on this computer are unaffected and still running. Nothing was turned off.',
       retry: 'Retry',
       matchesElsewhere: (count: number) => `${count} more match${count === 1 ? '' : 'es'} in other groups.`,
       showAllMatches: 'Show all matches',
       segmentNoMatch: (segment: string) => `No match in ${segment}, so every match is shown.`,
-      freeTierNote: 'Connections stay on this computer until you sign in.',
-      signInLine: 'Sign in to Nous to use managed apps.',
-      signIn: 'Sign in',
-      managedUnavailable: 'Managed apps are not available for this account yet.',
-      writeFailed: 'That change was not saved.',
-      refreshFailed: 'The tool list was not refreshed.',
-      disconnectNoAccount: 'A2Assistant has no account to disconnect here. Refresh the page and try again.',
-      disconnectRefused:
-        'Nous could not remove this sign-in right now. Turn the app off with the switch instead, or try again later.'
+      signIn: 'Sign in'
     },
 
     add: {
@@ -177,36 +142,18 @@ export const en: Translations = {
 
     dialog: {
       disconnect: 'Disconnect',
-      disconnectTitle: (name: string) => `Disconnect ${name}?`,
-      disconnectBody: 'A2Assistant stops acting as this account. You can connect again at any time.',
       menuRefreshTools: 'Refresh tools',
       moreActions: 'More actions',
       removeServerTitle: (name: string) => `Remove ${name}?`,
       removeServerBody: 'The entry leaves mcp.json on this computer. Nothing else is deleted.',
-      appSwitch: (name: string) => `A2Assistant can use ${name}`,
-      waysTitle: (name: string) => `Where ${name} runs`,
-      wayNotConnected: (name: string) => `Not connected yet. Sign in to ${name} in your browser.`,
-      wayHosted: 'Managed',
-      bothOn: (name: string) => `Both are on, so A2Assistant sees every ${name} tool twice.`,
-      turnOffLocal: 'Turn off the local server',
       providedByPlugin: (plugin: string) => `Provided by plugin ${plugin}`,
       openPlugins: 'Open the Plugins tab',
-      // Verbatim, by decision of the design of record.
-      nousLine: 'Nous apps follow your account, not the profile.',
-      rulesReadOnly: 'Rules cannot be changed right now.',
-      rulesAppOff: (name: string) => `Turn ${name} on to change its tools.`,
-      rulesSignIn: 'Sign in to change what A2Assistant may do here.',
-      orgNote: (count: number) => `Your organisation turned ${count} tools off.`,
-      orgLink: 'Open the connectors admin',
-      connectEnded: 'The sign-in did not finish.',
-      connectOpenAgain: 'Open the link again',
       tokensPerCall: 'tokens per call',
       usesPerMonth: 'uses in 30 days',
       advanced: 'Advanced',
       advancedHint: 'the mcp.json entry and logs'
     },
 
-    accounts: enConnectorAccounts,
 
     tools: {
       title: 'Tools',
@@ -224,7 +171,6 @@ export const en: Translations = {
       showSummary: 'Show summary',
       facetSwitch: (facet: string) => `Turn ${facet} tools on or off`,
       moreHints: (count: number) => `+${count}`,
-      staleSignIn: 'Sign in to read the latest tool list.',
       searchCountPlaceholder: (count: number) => `Search ${count} tools`,
       toolList: (name: string) => `${name} tools`,
       categorySelect: (count: number) => `${count} categories`,
@@ -233,7 +179,6 @@ export const en: Translations = {
       quickReadOnly: 'Read only',
       quickNoDestructive: 'Turn off destructive',
       quickEverythingOn: 'Everything on',
-      lockedHint: 'off by your organisation',
       turnToolOn: (tool: string) => `Turn ${tool} on`,
       turnToolOff: (tool: string) => `Turn ${tool} off`,
       showDetails: (tool: string) => `Show what ${tool} does`,
@@ -244,25 +189,9 @@ export const en: Translations = {
       needsAuthTitle: (name: string) => `Sign in to ${name} to read its tools.`,
       needsAuthBody: 'The sign-in stays on this computer. Nothing leaves it.',
       retry: 'Retry',
-      goneTitle: (name: string) => `${name} left the catalog.`,
-      goneBody: 'A2Assistant cannot call it any more. The row stays until you remove it, so nothing vanishes.',
       remove: 'Remove',
       offTitle: (name: string) => `${name} is off.`,
       offBody: 'Turn it on with the switch above to read the tools it brings.',
-      signedOutTitle: 'Sign in to Nous to read the tool list.',
-      signedOutBody: 'Your servers on this computer are unaffected.',
-      conflictTitle: 'Someone changed this rule while you were editing.',
-      // Two sentences at most, and the second says the work is still here.
-      conflictBody: (theyOff: number, theyOn: number) => {
-        const they = [
-          theyOff > 0 ? `turned off ${theyOff} tool${theyOff === 1 ? '' : 's'} you have on` : '',
-          theyOn > 0 ? `left ${theyOn} tool${theyOn === 1 ? '' : 's'} on that you turned off` : ''
-        ].filter(Boolean)
-
-        return `${they.length > 0 ? `They ${they.join(', and ')}. ` : ''}Your edits stay on screen; nothing was written.`
-      },
-      conflictReload: 'Reload their version',
-      conflictSave: 'Save over their version',
       saveFailed: 'Those tool rules were not saved.',
       footerDirty: (off: number, backOn: number) =>
         `${off} tool${off === 1 ? '' : 's'} off, ${backOn === 0 ? 'none' : backOn} back on`,
@@ -709,9 +638,7 @@ export const en: Translations = {
       vaultCredentials: 'Saved credentials',
       vaultSources: 'Password managers',
       appUpdates: 'Version & updates',
-      uninstall: 'Uninstall',
-      billingOverview: 'Overview',
-      billingPlans: 'Plans'
+      uninstall: 'Uninstall'
     },
     closeSettings: 'Close settings',
     exportConfig: 'Export config',
@@ -743,7 +670,6 @@ export const en: Translations = {
       archivedChats: 'Archived Chats',
       sessions: 'Sessions',
       about: 'About',
-      billing: 'Billing',
       notifications: 'Notifications',
       vault: 'Passwords & Logins',
       plugins: 'Plugins'
@@ -1502,304 +1428,6 @@ export const en: Translations = {
     },
     model: enModelSettings,
     localModels: enLocalModels,
-    billing: {
-      perMonth: amount => `${amount}/mo`,
-      creditsPerMonth: amount => `${amount} credits/mo`,
-      usageLabel: label => `${label} usage`,
-      freeTier: {
-        signIn: 'Sign in',
-        title: "You're on the Nous free tier",
-        message: 'Sign in with a Nous account to unlock more models and tools.',
-        caption:
-          'Runs on nous/welcome with connectors included. Signing in keeps your connectors and adds the tools that need an account and every other model.',
-        name: 'Nous · free tier',
-        footnote:
-          'The free tier has no balance and nothing to pay. Payment and usage appear when you sign in with a Nous account.',
-        plan: 'Free tier',
-        model: 'Model',
-        connectors: 'Connectors',
-        included: 'Included'
-      },
-      amountValidation: {
-        reloadTo: 'Reload-to',
-        greaterThanThreshold: 'Reload-to amount must be greater than the threshold.',
-        decimal: label => `${label}: enter a dollar amount with at most 2 decimal places.`,
-        positive: label => `${label}: amount must be greater than $0.`,
-        minimum: (label, amount) => `${label}: minimum is ${amount}.`,
-        maximum: (label, amount) => `${label}: maximum is ${amount}.`
-      },
-      stepUp: {
-        openVerification: 'Open verification page',
-        dismiss: 'Dismiss',
-        waiting: 'Waiting for verification link…',
-        verify: 'Verify to continue',
-        deniedTitle: 'Verification was not approved',
-        deniedBody: 'Verification finished without allowing Remote Spending for this terminal.',
-        successTitle: 'Verification complete',
-        successBody: 'Remote Spending is allowed for this terminal.'
-      },
-      charge: {
-        added: amount => (amount ? `$${amount} added.` : 'Credits added.'),
-        failedTitle: 'Charge failed',
-        unconfirmedTitle: 'Charge outcome unconfirmed',
-        unconfirmedBody: message =>
-          `${message} Your last charge's outcome is unconfirmed - check your balance/history before retrying.`,
-        checkTitle: 'Could not check charge',
-        checkBody: 'Could not check the charge.',
-        untrackedTitle: 'Charge could not be tracked',
-        untrackedBody: 'The billing service accepted the request but did not return a charge id.',
-        timeoutTitle: 'Still processing after 5 minutes',
-        timeoutBody: 'Charge may still settle. Check the portal before retrying.',
-        authenticationRequired:
-          'Your bank requires verification (3DS). Complete it on the portal to finish this purchase.',
-        expired: 'Your card has expired. Update it on the portal.',
-        declined: 'Your card was declined. Try another card on the portal.',
-        failedBody: reason => `The charge didn't go through (${reason}).`
-      },
-      title: 'Billing',
-      preview: 'preview',
-      summary: {
-        balance: 'Balance',
-        plan: 'Plan',
-        autoRefill: 'Auto-refill'
-      },
-      sections: {
-        invoices: 'Invoices',
-
-        plan: 'Plan',
-        paymentAndCredits: 'Payment & credits',
-        usage: 'Usage'
-      },
-      usage: {
-        title: 'Usage'
-      },
-      buyCredits: {
-        customAmount: 'Custom credit amount',
-        title: 'Buy credits now',
-        buyButton: 'Buy',
-        processing: 'Processing… checking settlement',
-        added: amount => `${amount} added. Balance is refreshing.`,
-        retry: 'Retry',
-        openPortal: 'Open portal'
-      },
-      plan: {
-        title: 'Plans',
-        changePlan: 'Change plan',
-        viewPlans: 'View plans',
-        backAria: 'Back to billing',
-        current: 'Current plan',
-        scheduled: 'Scheduled',
-        empty: 'No plans are available to change to right now.',
-        undo: 'Undo',
-        undoing: 'Undoing…',
-        downgrade: 'Downgrade',
-        confirmDowngrade: 'Confirm downgrade',
-        tryAgain: 'Try again',
-        checkingChange: 'Checking this change…',
-        cannotChange: 'That change cannot be made here.',
-        alreadyOn: name => `You are already on ${name} — nothing to change.`,
-        notScheduleable: 'This change cannot be scheduled here.',
-        scheduling: 'Scheduling…',
-        cancel: 'Cancel',
-        effectScheduled: (targetName, effectiveAt, creditsDelta) =>
-          `Change to ${targetName} — takes effect ${effectiveAt}. No charge now; you keep your current plan until then.${creditsDelta ? ` Monthly credits change: ${creditsDelta}.` : ''}`
-      },
-      keepGoingOnCredits: {
-        title: 'Keep going on credits',
-        description: 'Use your credits when included usage runs out. Off: A2Assistant waits for the reset.',
-        approveInBrowser: 'Approve Remote Spending in your browser to change this. It applies as soon as you approve.',
-        openAgain: 'Open again',
-        cancel: 'Cancel',
-        approvedRetry: "Remote Spending is approved, but the change didn't save.",
-        tryAgain: 'Try again'
-      },
-      autoReload: {
-        threshold: 'Threshold',
-        thresholdAria: 'Auto-refill threshold',
-        reloadTo: 'Reload to',
-        reloadToAria: 'Auto-refill reload-to amount',
-        turnOffConfirm: 'Turn off auto-refill?',
-        turnOff: 'Turn off',
-        disable: 'Disable',
-        updated: 'Auto-refill updated.',
-        turnedOff: 'Auto-refill turned off.',
-        manage: 'Manage',
-        save: 'Save',
-        saving: 'Saving…',
-        cancel: 'Cancel'
-      },
-      state: {
-        notice: {
-          loggedOut: {
-            title: 'Connect your Nous account',
-            message: 'Sign in with your Nous account to see your balance, plan and usage here.',
-            action: 'Sign in'
-          },
-          openPortal: 'Open portal ↗',
-          noCard: {
-            title: 'No payment method on file',
-            message:
-              'Buying top-up credits and auto-refill stay disabled until a card is on file. Add one on the portal.',
-            action: 'Add card ↗'
-          }
-        },
-        paymentMethod: {
-          title: 'Payment method',
-          description: 'Manage the card used for top-ups and subscription renewals.',
-          addAction: 'Add payment method',
-          updateAction: 'Update',
-          provenance: {
-            autoRefill: 'auto-refill card',
-            customerDefault: 'customer default',
-            subPin: 'subscription card',
-            suffix: label => ` - ${label}`
-          }
-        },
-        buyCredits: {
-          description: 'A single charge on your card, added to your balance today.'
-        },
-        autoRefill: {
-          title: 'Refill when low',
-          genericDescription: 'Keep your balance topped up when it drops below your threshold.',
-          offPill: 'Off',
-          enabledPill: 'Enabled',
-          notAvailablePill: '—',
-          manageCaption: 'Manage auto-refill from the portal.',
-          turnOnCaption: 'Turn on auto-refill from the portal',
-          chargesDescription: (reloadTo, threshold) =>
-            `Charges ${reloadTo} automatically when your balance falls below ${threshold}.`,
-          distinctCardCaption: cardLabel => `Auto-refill charges ${cardLabel} — reconcile on the portal`,
-          distinctCardFallback: 'a different card',
-          reconcileAction: 'Reconcile ↗'
-        },
-        usage: {
-          subscriptionCredits: {
-            title: 'Subscription credits',
-            barLabel: 'Subscription credits remaining',
-            captionResets: date => `Resets ${date}`,
-            valueOf: (remaining, monthly) => `${remaining} of ${monthly} left`,
-            valueOver: (remaining, monthly, over) => `${remaining} of ${monthly} left · ${over} over`
-          },
-          topupCredits: {
-            title: 'Top-up credits',
-            caption: 'Does not expire'
-          },
-          monthlyCap: {
-            title: 'Monthly spend cap',
-            barLabel: 'Monthly spend cap used',
-            captionDefault: 'Default ceiling',
-            captionSpending: 'Monthly remote spending',
-            valueUsed: (spent, limit) => `${spent} of ${limit} used`
-          },
-          window: {
-            today: 'Today',
-            week: 'This week',
-            month: 'This month',
-            topTier: 'Large models (monthly)',
-            barLabel: title => `${title} included usage used`,
-            captionPaused: 'Paused: subscription payment failed',
-            captionPausedOther: 'Paused: see Billing in the Portal',
-            captionTopTierUsedUp: 'Monthly allowance used up, credits cover the rest',
-            captionTopTierUsedUpKeepGoingOff: 'Monthly allowance used up, other included models still work',
-            captionResetsIn: duration => `Resets in ${duration}`,
-            captionIncluded: 'Included usage',
-            valueUsed: percent => `${percent} used`
-          }
-        },
-        planCard: {
-          freeTier: 'Free',
-          chooseAction: 'Choose ↗',
-          adjustPlanAction: 'Adjust plan ↗',
-          unavailableCaption: 'Subscription details are unavailable; opening the portal is still available.',
-          downgradeCaption: (tierName, when) => `Changes to ${tierName} on ${when}.`,
-          cancellationCaption: when => `Cancels on ${when}.`,
-          renewsCaption: date => `Renews ${date}`,
-          noSubscriptionCaption: 'No active subscription — paid models draw down top-up credits.'
-        }
-      },
-      errors: {
-        consentRequired: {
-          title: 'Card confirmation needed',
-          message: 'Confirm this card for terminal charges in the portal'
-        },
-        insufficientScope: {
-          title: 'Remote Spending needs approval',
-          message: 'This needs Remote Spending allowed. Start a top-up to allow it, then retry.'
-        },
-        remoteSpendingRevoked: {
-          title: 'Remote spending was stopped',
-          messageByAdmin: 'An admin stopped remote spending for this terminal.',
-          messageBySelf: 'You stopped remote spending for this terminal.'
-        },
-        remoteSpendingReconnect: who => `${who} Reconnect from Settings -> Gateway to re-authorize this device.`,
-        sessionRevoked: {
-          title: 'Session logged out',
-          message: 'Your session was logged out. Sign in again from Settings → Gateway.'
-        },
-        cliBillingDisabled: {
-          title: 'Remote spending is off',
-          message:
-            "Remote spending is off for this account — a billing admin can turn it on from the portal's A2Assistant page."
-        },
-        roleRequired: {
-          title: 'Admin role required',
-          message: 'Adding funds needs an org admin/owner. Ask an admin, or manage on the portal.'
-        },
-        idempotencyConflict: {
-          title: 'Start a fresh top-up',
-          message: '🔴 That charge key was already used for a different amount. Start a fresh top-up.'
-        },
-        noPaymentMethod: {
-          title: 'No saved card',
-          message:
-            '💳 No saved card for terminal charges yet. Set one up on the portal ' +
-            "(one-time credit buys don't save a reusable card)."
-        },
-        orgAccessDenied: {
-          title: 'Org access denied',
-          message: "This token isn't bound to an org you can manage"
-        },
-        monthlyCapExceeded: {
-          title: 'Monthly spend cap reached',
-          messageReached: '🔴 Monthly spend cap reached.',
-          messageHeadroom: remaining => `🔴 Monthly spend cap reached — $${remaining} headroom left.`
-        },
-        rateLimited: {
-          title: 'Too many charges right now',
-          message: mins =>
-            mins > 0
-              ? `🟡 Too many charges right now (try again in ~${mins} min). This isn't a payment failure.`
-              : "🟡 Too many charges right now. This isn't a payment failure."
-        },
-        stripeUnavailable: {
-          title: 'Stripe is having trouble',
-          message: mins =>
-            mins > 0
-              ? `Stripe is having trouble — try again in ~${mins} min`
-              : 'Stripe is having trouble — try again shortly'
-        },
-        upgradeCapExceeded: {
-          title: 'Daily plan-change limit reached',
-          message: 'Daily plan-change limit reached — try again tomorrow'
-        },
-        endpointUnavailable: {
-          title: 'Billing endpoint unavailable',
-          message: 'Billing endpoint returned a non-JSON response (it may not be available on this deployment).'
-        },
-        timeout: {
-          title: 'Billing request timed out',
-          message: 'Billing request timed out.'
-        },
-        transport: {
-          title: 'Billing connection failed',
-          message: 'Billing request failed before reaching the gateway.'
-        },
-        default: {
-          title: 'Billing request failed',
-          message: 'Billing request failed.'
-        }
-      }
-    },
     providers: {
       connectAccount: 'Connect an account',
       haveApiKey: 'Have an API key instead?',
@@ -3315,8 +2943,6 @@ export const en: Translations = {
       '/browser': 'Manage the agent browser [connect|disconnect|status]',
       '/palette': 'Open the fuzzy command palette (also Ctrl+P)',
       '/usage': 'Show token usage and rate limits; `reset` redeems a banked Codex limit reset',
-      '/subscription': 'View your Nous plan and change it in the browser',
-      '/topup': 'Show your Nous balance and manage billing on the portal',
       '/platform': 'Pause, resume, or list a failing gateway platform',
       '/version': 'Show A2Assistant version',
       '/debug': 'Upload debug report (system info + logs) and get shareable links',
@@ -3813,76 +3439,6 @@ export const en: Translations = {
 
   onboarding: enOnboarding,
 
-  freeTier: {
-    providerRowTitle: 'Nous · free tier',
-    providerRowPitch: 'Sign in with a Nous account to unlock more models and tools.',
-    readyTitle: 'A2Assistant is ready.',
-    readyCaption: 'Free · connectors included',
-    begin: 'Begin',
-    signInInstead: 'Sign in with a Nous account instead',
-    otherProviders: 'Other providers',
-    stripTitle: 'Free Nous inference and connectors are now available.',
-    stripBody: 'Open the model picker to try them, or sign in with a Nous account.',
-    openModelPicker: 'Open model picker',
-    dismiss: 'Dismiss',
-    providerName: 'Nous',
-    statusLabel: model => `Nous · ${model}`,
-    signIn: 'Sign in',
-    signInHeading: 'Sign in with a Nous account to unlock more models and tools.',
-    settingUp: 'Setting up free inference…',
-    finishInBrowser: 'Finish in your browser',
-    doNotShare: 'Do not share it.',
-    openPageAgain: 'Open page again',
-    waiting: 'Waiting for sign-in…',
-    finishingHeading: 'Finishing sign-in…',
-    finishingBody: 'Approved in the browser. Collecting your account tokens.',
-    signedInAsLabel: 'Signed in as',
-    signedIn: 'Signed in.',
-    completedBody: 'Your account now carries inference and tools.',
-    reconnect: 'Reconnect',
-    openConnectors: 'Open Connectors',
-    defaultModel: 'Default model',
-    change: 'Change',
-    done: 'Done',
-    notNow: 'Not now',
-    tryAgain: 'Try again',
-    didNotComplete: "Sign-in didn't finish",
-    timedOutHeading: 'That sign-in link has expired',
-    timedOutBody: "Start again whenever you're ready. You're still on the free Nous service.",
-    errorBody: "Sign-in didn't finish. Try again whenever you're ready.",
-    busyHeading: 'Almost there',
-    busyBody: wait =>
-      `A2Assistant couldn't finish signing you in because the Nous service is busy. Try again in ${wait}. Your session is still here in the meantime.`,
-    unreachableBody:
-      "A2Assistant couldn't reach the Nous service to finish signing you in. Check your internet connection and try again. Your session is still here.",
-    alreadySignedInHeading: 'Already signed in.',
-    alreadySignedInBody: 'This A2Assistant is already signed in to a Nous account.',
-    offer: {
-      heading: 'Keep going with A2Assistant',
-      body: "You're on the free allowance. If you keep using A2Assistant, you'll start running into limits. Sign in with a free Nous account for a bigger allowance.",
-      signIn: 'Sign in',
-      notNow: 'Not now'
-    },
-    setupFailed: {
-      gateClosed:
-        "This version of A2Assistant can't start without a Nous account. Sign in or create one, it's free and only takes a minute.",
-      paused:
-        'Using A2Assistant without signing in is paused for a moment. A2Assistant will keep checking. Signing in is free and gets you going right now.',
-      rateLimited: wait =>
-        `Lots of people are getting started right now, so A2Assistant will try again in ${wait}. Signing in is free and skips the wait.`,
-      unreachable:
-        "A2Assistant couldn't reach the Nous service. Check your internet connection, then tap Try again. Or connect another provider for now.",
-      serverError: 'The Nous service had a hiccup. Tap Try again in a moment, or connect another provider for now.',
-      powRequired:
-        "The Nous server asked for a proof of work, but that isn't implemented in your Agent yet. Sign in or create a free Nous account to continue.",
-      locked: "This session can't continue without signing in. Sign in or create a free Nous account to keep going.",
-      generic:
-        "A2Assistant couldn't set up free access without signing in. Signing in is free, or connect another provider.",
-      signInBelow: 'Signing in is free. Pick Nous below.',
-      tryAgain: 'Try again',
-      retrying: 'Trying again…'
-    }
-  },
 
   modelPicker: {
     title: 'Switch model',
@@ -4041,13 +3597,9 @@ export const en: Translations = {
       toggleTerminal: 'Terminal',
       toggleTokensPerSecond: 'Tokens per second',
       toggleVersion: 'Version & updates',
-      toggleFreeTier: 'Free tier',
       toggleWorkspace: 'Workspace',
       cacheHitRateTitle: 'Prompt cache hit rate this session — cached tokens cost less, so higher is cheaper',
       tokensPerSecondTitle: 'Output tokens per second, averaged over the last 10 model calls',
-      togglePlanUsage: 'Plan usage',
-      planUsageTitle: (used, resetsIn) =>
-        `${used} of your plan's usage used${resetsIn ? ` · resets in ${resetsIn}` : ''} · open Billing`,
       agents: 'Agents',
       closeAgents: 'Close agents',
       openAgents: 'Open agents',
@@ -4386,11 +3938,6 @@ export const en: Translations = {
       errorStartNewSession: 'Start new session',
       errorSwitchProvider: 'Switch provider',
       errorChooseModel: 'Choose a model',
-      errorSwitchToModel: (model, note) => (note ? `Switch to ${model} (${note})` : `Switch to ${model}`),
-      errorSwitchModelFailed: 'Could not switch model',
-      errorUseCredits: 'Turn on Keep going on credits',
-      errorUseCreditsFailed: 'Could not turn on Keep going on credits',
-      errorAddCredits: 'Add credits',
       errorOpenBillingSettings: 'Open billing settings',
       errorCompressConversation: 'Compress conversation',
       errorCompressFailed: 'Could not compress the conversation',
@@ -4398,7 +3945,6 @@ export const en: Translations = {
       errorOpenHermesFolderFailed: 'Could not open the A2Assistant folder',
       errorUpdateApiKey: 'Update API key',
       errorSignInAgain: provider => `Sign in to ${provider} again`,
-      errorSignInFreeTier: 'Sign in with a Nous account',
       errorOauthExpired: provider => `Your ${provider} sign-in expired or was revoked. Sign in again to keep chatting.`,
       errorOpenLogs: 'Open logs',
       errorOpenLogsFailed: 'Could not open the logs folder',

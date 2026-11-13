@@ -74,34 +74,6 @@ export const jaErrorCodes: Partial<ThreadCopy['errorCodes']> = {
     title: 'ディスクがいっぱいです',
     body: 'A2Assistant はこの会話を保存できませんでした。空き容量を確保してから再試行してください。'
   },
-  free_tier_disabled: {
-    title: 'サインインしてチャットを続ける',
-    body: 'Nous アカウントでサインインすると、チャットを続けられます。無料です。'
-  },
-  free_tier_rate_limited: {
-    title: '無料枠を使い切りました',
-    body: 'まもなくリセットされます。Nous アカウントでサインインすると、より多くの利用枠を無料で使えます。'
-  },
-  free_tier_at_capacity: {
-    title: '無料枠が混み合っています',
-    body: 'サインインすると待たずに使えます（無料）。または、しばらくしてからもう一度お試しください。'
-  },
-  free_tier_model_not_free: {
-    title: 'このモデルにはサインインが必要です',
-    body: '現在は無料モデルを使用しています。Nous アカウントでサインインすると、より多くのモデルを無料で使えます。'
-  },
-  free_tier_route: {
-    title: '無料モデルに接続できません',
-    body: 'Nous アカウントで無料でサインインするか、NOUS_INFERENCE_BASE_URL の設定を確認してください。'
-  },
-  free_tier_outage: {
-    title: '無料モデルで問題が発生しています',
-    body: '1 分ほどしてからメッセージを再送してください。'
-  },
-  free_tier_refused: {
-    title: 'サインインしてチャットを続ける',
-    body: 'Nous アカウントでのサインインは無料です。'
-  },
   launch_credentials_unavailable: {
     title: 'このチャットの API キーが変更されました',
     body: 'このチャットの開始時の API キーがその後変更または削除されたため、メッセージは送信されませんでした。開いているチャットが自動で別のキーに切り替わることはありません。「新しいセッションを開始」で現在のキーを使ってください。'

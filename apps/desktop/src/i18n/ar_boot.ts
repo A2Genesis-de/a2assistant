@@ -60,14 +60,7 @@ export const arBoot = {
     message: reason => `العرض البرمجي نشط — تم اكتشاف شاشة بعيدة (${reason}). تم تعطيل تسريع GPU لمنع الوميض.`
   },
   butterbar: {
-    goTo: (index, total) => `عرض الإشعار ${index} من ${total}`,
-    legal: {
-      before: 'يخضع استخدام A2Assistant لـ',
-      terms: 'شروط الخدمة',
-      between: ' و',
-      privacy: 'سياسة الخصوصية',
-      after: ' الخاصة بنا.'
-    }
+    goTo: (index, total) => `عرض الإشعار ${index} من ${total}`
   },
   promptNotices: {
     legacySendUnconfirmed:
@@ -276,9 +269,7 @@ export const arBoot = {
     otherProviders: 'مزودون آخرون',
     haveApiKey: 'لديك مفتاح API',
     chooseLater: 'سأختار مزوّدا لاحقا',
-    recommended: 'موصى به',
     connected: 'متصل',
-    featuredPitch: 'اشتراك واحد، أكثر من 300 نموذج متقدم — الطريقة الموصى بها لتشغيل A2Assistant',
     fireworksPitch: 'نماذج مفتوحة سريعة مع استضافة Fireworks.',
     openRouterPitch: 'مفتاح واحد لمئات النماذج — خيار افتراضي جيد',
     apiKeyOptions: {
@@ -339,8 +330,6 @@ export const arBoot = {
     reopenVerification: 'إعادة فتح صفحة التحقق',
     copy: 'نسخ',
     defaultModel: 'النموذج الافتراضي',
-    freeTier: 'الطبقة المجانية',
-    pro: 'مدفوع',
     free: 'مجاني',
     price: (input, output) => `${input} إدخال / ${output} إخراج لكل مليون رمز`,
     change: 'تغيير',

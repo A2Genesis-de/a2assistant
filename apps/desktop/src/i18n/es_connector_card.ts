@@ -30,16 +30,5 @@ export const esConnectorCard: TranslationOverrides['connectors'] = {
   openInBrowser: 'Abrir en el navegador',
   setupCancel: 'Cancelar',
   authorizedToolsUnavailable: 'Autorizado. Herramientas no disponibles.',
-  required: 'Obligatorio',
-  namedAccount: (app: string, alias: string) => `A2Assistant llamó ${alias} a esta cuenta de ${app}.`,
-  renameAccount: 'Cambiar nombre',
-  directory: {
-    suggested: 'Sugeridas',
-    allApps: 'Todas las apps',
-    receiptConnected: apps => `Conectadas: ${apps}`,
-    receiptNone: 'Ninguna app nueva conectada',
-    receiptTimedOut: 'Cerrado tras 10 minutos',
-    finishInBrowser: 'Termina en tu navegador',
-    signInFailed: 'No se pudo conectar. Haz clic para reintentar'
-  }
+  required: 'Obligatorio'
 }
