@@ -270,22 +270,20 @@ def selection_exists(section: str) -> bool:
     return raw is not None and any(str(raw.get(key) or "").strip() for key in extra)
 
 
-# Backends that once shipped in-tree but were removed; a config still pointing at one would
-# otherwise fail silently at the FIRST tool call with a generic "no registered provider has that
-# name". Used by the startup config check and selection_error(); add removals here, never as
-# one-off string checks:  "web": {"<name>": "the <Name> backend was removed in vX (...)"}
-REMOVED_BACKENDS: dict[str, dict[str, str]] = {}
+_REMOVED_WEB_VENDORS = {
+    "brave-free": "Brave Search", "exa": "Exa", "firecrawl": "Firecrawl", "keenable": "Keenable",
+    "openai-native": "OpenAI native web search", "parallel": "Parallel", "perplexity": "Perplexity",
+    "searxng": "SearXNG", "tavily": "Tavily", "xai": "xAI",
+}
+REMOVED_BACKENDS: dict[str, dict[str, str]] = {
+    "web": {
+        name: f"the {label} backend was removed (bundled web search is DuckDuckGo via ddgs; "
+              "other backends come from web provider plugins)"
+        for name, label in _REMOVED_WEB_VENDORS.items()
+    },
+}
 
 
-# Backends that once shipped in-tree but were removed. A config that still points at one otherwise fails
-# silently at the FIRST tool call with a generic "no registered provider has that name" — no migration, no
-# startup notice (reported after the Tavily removal in #99199). Both the startup config check
-# (hermes_cli.config.validate_config_structure) and selection_error() consult this map so the user learns
-# what actually happened and what to do. Declared data, one policy — add future removals here, never as
-# one-off string checks at call sites.
-# Currently empty: the Tavily removal (#99199) that introduced this registry was reverted by the #99731
-# restore. Future backend removals add an entry here, e.g. "web": {"<name>": "the <Name> backend was removed
-# in vX.Y.Z (...)"},
 def removed_backend_note(section: str, name: str) -> Optional[str]:
     """Explanation for a backend that used to ship in-tree, or None. ``name`` tolerates the
     quoted form callers pass to selection_error()."""
