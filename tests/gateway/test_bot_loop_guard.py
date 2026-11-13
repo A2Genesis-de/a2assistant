@@ -214,9 +214,6 @@ def test_budget_is_scoped_by_chat_and_platform(monkeypatch, runner):
 
     assert _inbound(runner, _bot(BOT_A, chat_id=OTHER_GROUP)) is True
     assert _inbound(runner, _bot(BOT_B, chat_id=OTHER_GROUP)) is True
-    monkeypatch.setenv("DISCORD_ALLOW_BOTS", "all")
-    discord_bot = SessionSource(platform=Platform.DISCORD, chat_id=GROUP_CHAT, chat_type="group", user_id=BOT_A, is_bot=True)
-    assert _inbound(runner, discord_bot) is True
 
 
 def test_cooldown_expiry_readmits_with_a_fresh_budget(monkeypatch, runner, clock):

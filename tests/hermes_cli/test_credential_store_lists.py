@@ -1,4 +1,4 @@
-"""The Bitwarden and 1Password secret caches and the Photon sidecar record are covered by every guard
+"""The Bitwarden and 1Password secret caches and the legacy Photon sidecar record are covered by every guard
 over credential stores (profile export, file tools, gateway media delivery, the dashboard Files API,
 backups), at their current location and at the one earlier releases used.
 
@@ -31,10 +31,9 @@ def home(tmp_path, monkeypatch):
 def _current(home: Path) -> tuple[str, ...]:
     from agent.secret_sources import bitwarden as bw
     from agent.secret_sources import onepassword as op
-    from plugins.platforms.photon import adapter as photon
 
     paths = (bw._disk_cache_path(home), bw._encrypted_disk_cache_path(home), op._STORE.disk.path(home),
-             photon._runtime_record_path())
+             home / "photon-sidecar.json")
     return tuple(p.relative_to(home).as_posix() for p in paths)
 
 

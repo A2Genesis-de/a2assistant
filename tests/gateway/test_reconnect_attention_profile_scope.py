@@ -15,6 +15,9 @@ from gateway.config import Platform
 from gateway.run import GatewayRunner
 
 
+_CHAT_A = Platform._add_pseudo_member("chat_a")
+
+
 def _home_with_threshold(root, name, seconds):
     home = root / name
     home.mkdir()
@@ -71,7 +74,7 @@ async def test_secondary_reconnect_loop_escalates_under_own_profile(tmp_path, mo
     monkeypatch.setattr(runner, "_routed_profile_home", lambda name: secondary)
     monkeypatch.setattr(gateway_run, "_reconnect_backoff", lambda attempts: 0.02)
 
-    task = asyncio.create_task(runner._run_secondary_profile_reconnect("sec", Platform.DISCORD))
+    task = asyncio.create_task(runner._run_secondary_profile_reconnect("sec", _CHAT_A))
     deadline = time.monotonic() + 5
     while time.monotonic() < deadline and not any(kw.get("needs_attention") for _k, kw in writes):
         await asyncio.sleep(0.02)
@@ -79,5 +82,5 @@ async def test_secondary_reconnect_loop_escalates_under_own_profile(tmp_path, mo
     await asyncio.wait_for(task, timeout=2)
 
     flagged = [(key, kw) for key, kw in writes if kw.get("needs_attention")]
-    assert [key for key, _kw in flagged] == ["sec:discord"], writes
+    assert [key for key, _kw in flagged] == ["sec:chat_a"], writes
     assert flagged[0][1]["platform_state"] == "retrying" and flagged[0][1].get("retrying_since")

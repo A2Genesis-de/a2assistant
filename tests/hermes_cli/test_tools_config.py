@@ -55,7 +55,7 @@ def test_valid_platform_toolsets_no_runtime_warning(caplog):
     assert not any("#38798" in r.getMessage() for r in caplog.records)
 
 
-@pytest.mark.parametrize("platform", ["teams", "google_chat", "homeassistant"])
+@pytest.mark.parametrize("platform", ["homeassistant"])
 def test_unloaded_plugin_platform_toolset_no_runtime_warning(caplog, platform):
     """Bundled and catalog plugin-platform entries are valid before plugin loading."""
     import hermes_cli.tools_config as _tc
@@ -134,33 +134,6 @@ def test_malformed_list_string_platform_toolsets_warns_then_falls_back(caplog):
     assert enabled == default_enabled
     assert [r for r in caplog.records if "platform_toolsets.cli" in r.getMessage()
             and "expected a YAML list" in r.getMessage()]
-
-
-
-
-
-
-
-
-# ─── #35527: platform-restricted default-off toolsets (discord/discord_admin)
-# are stripped by _DEFAULT_OFF_TOOLSETS even when the user explicitly opts in
-# via the platform's native composite. The composite ``hermes-discord``
-# contains both ``discord`` and ``discord_admin`` tools, so configuring it is
-# an explicit opt-in that should survive the default-off strip. ───────────────
-
-
-def test_discord_toolsets_do_not_leak_to_other_platforms():
-    """Layer 4 (guard): discord/discord_admin are platform-restricted — they
-    must never appear on a non-discord platform even when that platform is
-    explicitly configured."""
-    config = {"platform_toolsets": {"telegram": ["hermes-telegram", "discord"]}}
-    enabled = _get_platform_tools(config, "telegram")
-    assert "discord" not in enabled
-    assert "discord_admin" not in enabled
-
-
-
-
 
 
 def test_get_platform_tools_legacy_hermes_alias_expands():

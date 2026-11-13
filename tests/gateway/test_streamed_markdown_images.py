@@ -23,7 +23,7 @@ from gateway.stream_consumer import GatewayStreamConsumer
 
 def _event():
     source = SessionSource(
-        platform=Platform.DISCORD,
+        platform=Platform.TELEGRAM,
         chat_id="D123CHAN",
         chat_type="group",
         thread_id=None,

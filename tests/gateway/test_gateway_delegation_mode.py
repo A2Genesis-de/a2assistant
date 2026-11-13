@@ -113,7 +113,7 @@ def dispatches(monkeypatch):
     return calls
 
 
-async def _turn(monkeypatch, config: dict, *, platform=Platform.WHATSAPP, model=None, during=None):
+async def _turn(monkeypatch, config: dict, *, platform=Platform.TELEGRAM, model=None, during=None):
     """One inbound message through the real gateway turn; returns (chat, the parent's model requests)."""
     import gateway.run as gateway_run
     from tools import async_delegation
@@ -208,11 +208,11 @@ async def test_an_explicit_gateway_mode_wins_over_the_interim_setting(monkeypatc
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize(("platform", "inline"), [(Platform.WHATSAPP, True), (Platform.TELEGRAM, False)])
-async def test_a_platform_interim_override_decides_for_that_platform_only(monkeypatch, dispatches, platform, inline):
+@pytest.mark.parametrize(("overridden", "inline"), [("telegram", True), ("api_server", False)])
+async def test_a_platform_interim_override_decides_for_that_platform_only(monkeypatch, dispatches, overridden, inline):
     config = {"display": {"interim_assistant_messages": True,
-                          "platforms": {"whatsapp": {"interim_assistant_messages": False}}}}
-    chat, _ = await _turn(monkeypatch, config, platform=platform)
+                          "platforms": {overridden: {"interim_assistant_messages": False}}}}
+    chat, _ = await _turn(monkeypatch, config)
 
     assert chat.sent == ([ANSWER] if inline else [PAUSE])
     assert len(dispatches) == (0 if inline else 1)
@@ -221,7 +221,7 @@ async def test_a_platform_interim_override_decides_for_that_platform_only(monkey
 @pytest.mark.asyncio
 async def test_a_platform_override_can_turn_interim_back_on_under_a_global_off(monkeypatch, dispatches):
     config = {"display": {"interim_assistant_messages": False,
-                          "platforms": {"whatsapp": {"interim_assistant_messages": True}}}}
+                          "platforms": {"telegram": {"interim_assistant_messages": True}}}}
     chat, _ = await _turn(monkeypatch, config)
 
     assert chat.sent == [PAUSE] and len(dispatches) == 1
@@ -294,10 +294,10 @@ def test_each_profile_resolves_its_own_mode_under_the_multiplexer(monkeypatch, t
     prev = secret_scope.is_multiplex_active()
     secret_scope.set_multiplex_active(True)
     try:
-        runner = _make_runner(_Chat(Platform.WHATSAPP))
+        runner = _make_runner(_Chat(Platform.TELEGRAM))
         runner.config.multiplex_profiles = True
-        source_a = SessionSource(platform=Platform.WHATSAPP, chat_id="D1", chat_type="dm", profile="default")
-        source_b = SessionSource(platform=Platform.WHATSAPP, chat_id="D2", chat_type="dm", profile="beta")
+        source_a = SessionSource(platform=Platform.TELEGRAM, chat_id="D1", chat_type="dm", profile="default")
+        source_b = SessionSource(platform=Platform.TELEGRAM, chat_id="D2", chat_type="dm", profile="beta")
         seen = []
         for source in (source_a, source_b, source_a):
             with runner._profile_scope_for_source(source):  # the inputs a fresh agent's build resolves from

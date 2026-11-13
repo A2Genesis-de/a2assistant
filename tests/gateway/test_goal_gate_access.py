@@ -11,7 +11,7 @@ from gateway.session import SessionSource
 
 def _source(user_id: str = "user-1", *, chat_type: str = "dm") -> SessionSource:
     return SessionSource(
-        platform=Platform.DISCORD,
+        platform=Platform.TELEGRAM,
         user_id=user_id,
         chat_id=f"{chat_type}-1",
         chat_type=chat_type,
@@ -24,7 +24,7 @@ def _runner(*, admins=(), group_admins=()):
     runner = object.__new__(GatewayRunner)
     runner.config = GatewayConfig(
         platforms={
-            Platform.DISCORD: PlatformConfig(
+            Platform.TELEGRAM: PlatformConfig(
                 enabled=True,
                 extra={
                     "allow_admin_from": list(admins),

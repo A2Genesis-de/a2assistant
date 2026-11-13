@@ -17,6 +17,10 @@ import gateway.run as gateway_run
 from gateway.config import GatewayConfig, HomeChannel, Platform, PlatformConfig
 from gateway.platforms.base import SendResult
 
+
+_CHAT_A = Platform._add_pseudo_member("chat_a")
+_CHAT_B = Platform._add_pseudo_member("chat_b")
+
 ONLINE_NOTICE = "♻️ Gateway online — A2Assistant is back and ready."
 
 
@@ -45,7 +49,7 @@ def multiplex_runner(tmp_path, monkeypatch):
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))
     monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
     runner = object.__new__(gateway_run.GatewayRunner)
-    runner.config = _home_config(Platform.DISCORD, "launch-home")
+    runner.config = _home_config(_CHAT_A, "launch-home")
     runner.config.sessions_dir = tmp_path / "sessions"
     runner.adapters = {}
     runner._profile_configs = {"coder": _home_config(Platform.TELEGRAM, "coder-home")}
@@ -60,7 +64,7 @@ def multiplex_runner(tmp_path, monkeypatch):
 async def test_planned_restart_notifies_every_served_profile(multiplex_runner):
     runner, marker = multiplex_runner
     launch, coder = _adapter(), _adapter()
-    runner.adapters[Platform.DISCORD] = launch
+    runner.adapters[_CHAT_A] = launch
     runner._profile_adapters["coder"][Platform.TELEGRAM] = coder
 
     await runner._replay_pending_planned_restart_notification()
@@ -76,14 +80,14 @@ async def test_marker_survives_until_a_served_profile_is_reachable(multiplex_run
     """A served profile whose platform is down at boot keeps the notice owed for its reconnect."""
     runner, marker = multiplex_runner
     launch = _adapter()
-    runner.adapters[Platform.DISCORD] = launch
+    runner.adapters[_CHAT_A] = launch
 
     await runner._replay_pending_planned_restart_notification()
 
     launch.send.assert_awaited_once()
     assert marker.exists(), "coder's channel was never notified; the marker must not be consumed"
     delivered = json.loads(marker.read_text(encoding="utf-8"))["delivered_targets"]
-    assert [target for target in delivered if target[0] == "discord"], "the reached target is recorded"
+    assert [target for target in delivered if target[0] == "chat_a"], "the reached target is recorded"
 
     coder = _adapter()
     runner._profile_adapters["coder"][Platform.TELEGRAM] = coder
@@ -159,13 +163,13 @@ async def test_profiles_sharing_one_home_chat_get_one_notice(tmp_path, monkeypat
 async def test_one_broken_profile_does_not_starve_the_rest(multiplex_runner, monkeypatch):
     """A profile whose transport resolution raises is skipped; the fan-out continues."""
     runner, _marker = multiplex_runner
-    runner.adapters[Platform.DISCORD] = _adapter()
+    runner.adapters[_CHAT_A] = _adapter()
     ok = _adapter()
     runner._profile_configs = {
         "b": _home_config(Platform.TELEGRAM, "b-home"),
-        "c": _home_config(Platform.SLACK, "c-home"),
+        "c": _home_config(_CHAT_B, "c-home"),
     }
-    runner._profile_adapters = {"b": {Platform.TELEGRAM: _adapter()}, "c": {Platform.SLACK: ok}}
+    runner._profile_adapters = {"b": {Platform.TELEGRAM: _adapter()}, "c": {_CHAT_B: ok}}
     real = gateway_delivery.resolve_delivery_transport
 
     def resolve(platform, config, adapters):
@@ -189,7 +193,7 @@ async def test_unserved_profile_config_is_pruned_from_the_fan_out(tmp_path, monk
     """
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))
     runner = object.__new__(gateway_run.GatewayRunner)
-    runner.config = _home_config(Platform.DISCORD, "launch-home")
+    runner.config = _home_config(_CHAT_A, "launch-home")
     runner._profile_configs = {"ghost": _home_config(Platform.TELEGRAM, "-200")}
     runner._profile_adapters = {}
     runner._multiplex_on = Mock(return_value=True)
@@ -206,7 +210,7 @@ async def test_unserved_profile_config_is_pruned_from_the_fan_out(tmp_path, monk
 
     assert "ghost" not in runner._profile_configs
     assert list(runner._served_home_channel_configs()) == [
-        (None, Platform.DISCORD, runner.config.platforms[Platform.DISCORD])]
+        (None, _CHAT_A, runner.config.platforms[_CHAT_A])]
 
 
 @pytest.mark.asyncio
@@ -216,7 +220,7 @@ async def test_a_served_profiles_reconnect_replays_the_owed_notice(multiplex_run
     import asyncio
 
     runner, marker = multiplex_runner
-    runner.adapters[Platform.DISCORD] = _adapter()
+    runner.adapters[_CHAT_A] = _adapter()
     await runner._replay_pending_planned_restart_notification()  # boot: coder's Telegram is down
     assert marker.exists()
 

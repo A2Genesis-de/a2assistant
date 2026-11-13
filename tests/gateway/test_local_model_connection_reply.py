@@ -212,7 +212,7 @@ class TestQuotaExhaustedIsNotAnAuthFailure:
         runner = SimpleNamespace(_resolve_session_agent_runtime=_resolve,
                                  _get_system_prompt_for_channel=lambda *a, **k: "",
                                  _ephemeral_system_prompt="")
-        ctx = TurnContext(source=SessionSource(platform=Platform.SLACK, chat_id="C1", chat_type="dm"),
+        ctx = TurnContext(source=SessionSource(platform=Platform.TELEGRAM, chat_id="C1", chat_type="dm"),
                           session_key="slack:C1", user_config={}, message="Hi")
         result = TurnRunner(runner, ctx).run_sync()
         reply = result["final_response"]
@@ -239,7 +239,7 @@ class TestQuotaExhaustedIsNotAnAuthFailure:
         runner = SimpleNamespace(_resolve_session_agent_runtime=_resolve,
                                  _get_system_prompt_for_channel=lambda *a, **k: "",
                                  _ephemeral_system_prompt="", _adapter_for_source=lambda _s: None)
-        for platform, chat_id in ((Platform.LOCAL, "local-1"), (Platform.SLACK, "C1")):
+        for platform, chat_id in ((Platform.LOCAL, "local-1"), (Platform.TELEGRAM, "C1")):
             ctx = TurnContext(source=SessionSource(platform=platform, chat_id=chat_id, chat_type="dm"),
                               session_key=f"{platform.value}:{chat_id}", user_config={}, message="Hi")
             result = TurnRunner(runner, ctx).run_sync()
@@ -290,7 +290,7 @@ def test_turn_runner_host_side_resolution_failure_does_not_send_user_to_login(mo
         runner = SimpleNamespace(_resolve_session_agent_runtime=_raising(cause),
                                  _get_system_prompt_for_channel=lambda *a, **k: "",
                                  _ephemeral_system_prompt="", _adapter_for_source=lambda _s: None)
-        ctx = TurnContext(source=SessionSource(platform=Platform.DISCORD, chat_id="T1", chat_type="thread"),
+        ctx = TurnContext(source=SessionSource(platform=Platform.TELEGRAM, chat_id="T1", chat_type="thread"),
                           session_key="discord:T1", user_config={}, message="retry")
         result = TurnRunner(runner, ctx).run_sync()
         assert result["failed"] is True and result["api_calls"] == 0

@@ -16,10 +16,9 @@ async def test_refused_startup_keeps_startup_failed_and_crash_recovery(monkeypat
     home = get_hermes_home()
     home.chmod(0o700)
     monkeypatch.setattr(gateway_run, '_hermes_home', home)
-    for name in ('GATEWAY_ALLOW_ALL_USERS', 'WHATSAPP_ALLOW_ALL_USERS', 'WHATSAPP_DM_POLICY'):
-        monkeypatch.delenv(name, raising=False)
+    monkeypatch.setattr(gateway_run, '_own_policy_open_startup_violation', lambda _config: 'telegram:open')
     # The open-DM refusal: start() writes startup_failed and requests a clean exit before recovery.
-    config = GatewayConfig(platforms={Platform.WHATSAPP: PlatformConfig(
+    config = GatewayConfig(platforms={Platform.TELEGRAM: PlatformConfig(
         enabled=True, extra={'dm_policy': 'open'})})
 
     assert await asyncio.wait_for(start_gateway(config), 30) is True

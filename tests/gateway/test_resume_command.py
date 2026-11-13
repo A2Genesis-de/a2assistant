@@ -101,8 +101,6 @@ class TestHandleResumeCommand:
         db.close()
 
 
-
-
     @pytest.mark.asyncio
     async def test_resume_clears_session_model_overrides(self, tmp_path):
         """Resume must not carry a previous session's /model override into the
@@ -562,7 +560,6 @@ class TestHandleSessionsCommand:
         db.close()
 
 
-
     @pytest.mark.asyncio
     async def test_sessions_admin_all_preserves_cross_origin_widening(self, tmp_path):
         from hermes_state import SessionDB
@@ -576,18 +573,18 @@ class TestHandleSessionsCommand:
         )
         db.set_session_title("tg_named", "Telegram Work")
         db.create_session(
-            "discord_named", "discord",
-            session_key="agent:main:discord:dm:other",
+            "webhook_named", "webhook",
+            session_key="agent:main:webhook:dm:other",
             user_id="other-user", chat_id="other",
         )
-        db.set_session_title("discord_named", "Discord Work")
+        db.set_session_title("webhook_named", "Webhook Work")
 
         runner = _make_runner(session_db=db, event=event)
         runner._resume_caller_is_admin = lambda _source: True
         result = await runner._handle_sessions_command(event)
 
         assert "Telegram Work" in result
-        assert "Discord Work" in result
+        assert "Webhook Work" in result
         db.close()
 
     @pytest.mark.asyncio
@@ -633,7 +630,6 @@ class TestHandleSessionsCommand:
         db.close()
 
 
-
     @pytest.mark.asyncio
     async def test_sessions_all_does_not_leak_cross_origin_for_non_admin(self, tmp_path):
         """`/sessions all` from a non-admin caller must stay scoped to the
@@ -650,18 +646,18 @@ class TestHandleSessionsCommand:
             user_id="12345", chat_id="67890",
         )
         db.set_session_title("tg_named", "Telegram Work")
-        db.create_session("discord_unnamed", "discord")  # other origin
-        db.append_message("discord_unnamed", "user", "discord first prompt")
+        db.create_session("webhook_unnamed", "webhook")  # other origin
+        db.append_message("webhook_unnamed", "user", "webhook first prompt")
 
         runner = _make_runner(session_db=db, event=event)
 
         result = await runner._handle_sessions_command(event)
 
-        # Caller's own (telegram) session is shown; the cross-origin (discord)
+        # Caller's own (telegram) session is shown; the cross-origin (webhook)
         # session is NOT leaked even with `all`.
         assert "Telegram Work" in result
-        assert "discord_unnamed" not in result
-        assert "Discord" not in result
+        assert "webhook_unnamed" not in result
+        assert "Webhook" not in result
         db.close()
 
     @pytest.mark.asyncio
@@ -726,7 +722,7 @@ class TestHandleSessionsCommand:
 
     @pytest.mark.asyncio
     async def test_resume_persisted_fallback_fails_closed_on_user_id_alt(self, tmp_path):
-        """egilewski/CodeRabbit probe: Signal/Feishu key the session participant
+        """egilewski/CodeRabbit probe: adapters may key the session participant
         on ``user_id_alt or user_id`` (build_session_key), but the sessions table
         stores only user_id. So a persisted per-user row that a caller shares the
         user_id of — but NOT the user_id_alt — maps to a DIFFERENT live session
@@ -738,21 +734,21 @@ class TestHandleSessionsCommand:
         from hermes_state import SessionDB
         db = SessionDB(db_path=tmp_path / "state.db")
         # Persisted rows carry only user_id (no user_id_alt column).
-        db.create_session("victim_alt_group", "signal", user_id="+15550001111",
+        db.create_session("victim_alt_group", "telegram", user_id="+15550001111",
                           chat_id="signal-group", chat_type="group")
-        db.create_session("victim_alt_dm", "signal", user_id="+15550001111")  # no chat_id
+        db.create_session("victim_alt_dm", "telegram", user_id="+15550001111")  # no chat_id
         runner = _make_runner(session_db=db)
         runner._gateway_session_origin_for_id = lambda sid: None  # persisted-only
 
         # Per-user group: attacker shares user_id but has a different user_id_alt
         # → different session key → must fail closed (was: allowed via user_id).
-        attacker = SessionSource(platform=Platform.SIGNAL, chat_id="signal-group",
+        attacker = SessionSource(platform=Platform.TELEGRAM, chat_id="signal-group",
                                  chat_type="group", user_id="+15550001111",
                                  user_id_alt="attacker-uuid")
         assert await runner._resume_target_allowed(attacker, "victim_alt_group",
                                                    allow_override=False) is False
         # No-chat_id DM keyed purely on the participant: same block.
-        dm_attacker = SessionSource(platform=Platform.SIGNAL, chat_id=None,
+        dm_attacker = SessionSource(platform=Platform.TELEGRAM, chat_id=None,
                                     chat_type="dm", user_id="+15550001111",
                                     user_id_alt="attacker-uuid")
         assert await runner._resume_target_allowed(dm_attacker, "victim_alt_dm",
@@ -803,7 +799,7 @@ class TestSameOriginChatGroupScoping:
 
     @staticmethod
     def _src(user_id, *, chat_type="group", chat_id="guild-123",
-             platform=Platform.DISCORD, user_id_alt=None, thread_id=None):
+             platform=Platform.TELEGRAM, user_id_alt=None, thread_id=None):
         return SessionSource(platform=platform, chat_id=chat_id,
                              chat_type=chat_type, user_id=user_id,
                              user_id_alt=user_id_alt, thread_id=thread_id)
@@ -855,51 +851,3 @@ class TestSameOriginChatGroupScoping:
         assert runner._same_origin_chat(threaded, parent) is False
 
 
-class TestResumeRowVisibleMatrixAllScoping:
-    """Non-admin Matrix `/resume --all` must NOT enumerate every Matrix titled
-    session: the cross-room listing short-circuit is admin-only, mirroring the
-    non-Matrix branch. A non-admin `--all` falls back to same-room scoping."""
-
-    @staticmethod
-    def _matrix_src(chat_id="!room-a:hs", user_id="@alice:hs"):
-        return SessionSource(platform=Platform.MATRIX, chat_id=chat_id,
-                             chat_type="group", user_id=user_id)
-
-    @pytest.mark.asyncio
-    async def test_non_admin_all_does_not_expose_other_room(self):
-        runner = _make_runner()
-        runner._resume_caller_is_admin = lambda src: False
-        # Titled row whose live origin is a DIFFERENT Matrix room.
-        other_room = SessionSource(platform=Platform.MATRIX, chat_id="!room-b:hs",
-                                   chat_type="group", user_id="@bob:hs")
-        runner._gateway_session_origin_for_id = lambda sid: other_room
-        row = {"id": "sid_other_room"}
-        assert await runner._resume_row_visible(self._matrix_src(), row, allow_all=True) is False
-
-
-class TestSameMatrixRoomThreadScoping:
-    """Matrix `/resume` (direct and listing) scopes by room AND thread: a live
-    session in another thread of the same room is a different session
-    (build_session_key appends thread_id), so a caller in thread A must not
-    resume/enumerate a target whose origin is in thread B. Non-threaded rooms
-    keep room-level sharing unchanged."""
-
-    @staticmethod
-    def _msrc(chat_id="!room-a:hs", user_id="@alice:hs", thread_id=None):
-        return SessionSource(platform=Platform.MATRIX, chat_id=chat_id,
-                             chat_type="group", user_id=user_id, thread_id=thread_id)
-
-    def test_same_room_no_thread_still_shared(self):
-        runner = _make_runner()
-        a = self._msrc(user_id="@alice:hs")
-        b = self._msrc(user_id="@bob:hs")
-        assert runner._same_matrix_room(a, b) is True
-
-
-    def test_cross_thread_same_room_blocked(self):
-        """The reviewer's probe: caller in thread-a, target origin in thread-b
-        of the same room → must not match."""
-        runner = _make_runner()
-        caller = self._msrc(thread_id="thread-a")
-        victim_origin = self._msrc(thread_id="thread-b")
-        assert runner._same_matrix_room(caller, victim_origin) is False

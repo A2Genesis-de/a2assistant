@@ -15,13 +15,13 @@ async def test_refused_followups_are_each_told_they_were_not_answered(tmp_path, 
     from gateway.session_ingress_context import native_callback
     from hermes_constants import get_hermes_home
     from hermes_state_runtime import list_session_admissions
-    from plugins.platforms.discord.adapter import DiscordAdapter
+    from plugins.platforms.telegram.adapter import TelegramAdapter
 
     monkeypatch.setattr(SessionAuthority, '_schedule', lambda self, ref: None)  # B and C wait queued
-    monkeypatch.setenv('DISCORD_ALLOWED_USERS', '42')
+    monkeypatch.setenv('TELEGRAM_ALLOWED_USERS', '42')
     runner = GatewayRunner(GatewayConfig())
-    adapter = DiscordAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
-    runner.adapters = {Platform.DISCORD: adapter}
+    adapter = TelegramAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
+    runner.adapters = {Platform.TELEGRAM: adapter}
     authority = await initialize_session_authority(runner, profile_id='default', instance_id='owner')
     runner._wire_adapter_handlers(adapter)
     source = adapter.build_source(chat_id='42', chat_type='dm', user_id='42')
@@ -38,7 +38,7 @@ async def test_refused_followups_are_each_told_they_were_not_answered(tmp_path, 
     owner = runner.session_store.peek_session_id(key)
     db = authority.db
     # The chat moves to an older conversation while B and C wait (the real /resume handler).
-    db.create_session('older', source='discord', user_id='42', session_key=key, chat_id='42', chat_type='dm')
+    db.create_session('older', source='telegram', user_id='42', session_key=key, chat_id='42', chat_type='dm')
     db.append_message('older', 'user', 'earlier')
     db.set_session_title('older', 'older-chat')
     resume = MessageEvent(text='/resume older-chat', source=source)

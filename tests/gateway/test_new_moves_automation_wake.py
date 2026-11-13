@@ -1,6 +1,6 @@
 """Messaging /new keeps a queued automation wake and runs it on the fresh session, as main's #114456
 kept a parked internal wake across /new; it is never stranded queued on the abandoned owner (N83).
-Real GatewayRunner, DiscordAdapter, SessionAuthority and drain over SQLite; the turn is a stand-in."""
+Real GatewayRunner, TelegramAdapter, SessionAuthority and drain over SQLite; the turn is a stand-in."""
 import asyncio
 
 import pytest
@@ -19,17 +19,17 @@ async def test_new_moves_a_queued_wake_to_the_fresh_session(monkeypatch, settles
     from gateway.session_automation import admit_route_wake
     from gateway.session_results import execution_result
     from hermes_state_runtime import list_session_admissions
-    from plugins.platforms.discord.adapter import DiscordAdapter
+    from plugins.platforms.telegram.adapter import TelegramAdapter
 
-    monkeypatch.setenv('DISCORD_ALLOWED_USERS', '42')
+    monkeypatch.setenv('TELEGRAM_ALLOWED_USERS', '42')
     runner = GatewayRunner(GatewayConfig())
-    adapter = DiscordAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
+    adapter = TelegramAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
 
     async def send(chat_id, content, reply_to=None, metadata=None):
         return SendResult(success=True, message_id='sent')
     monkeypatch.setattr(adapter, 'send', send)
     adapter.gateway_runner = runner
-    runner.adapters = {Platform.DISCORD: adapter}
+    runner.adapters = {Platform.TELEGRAM: adapter}
     authority = await initialize_session_authority(runner, profile_id='default', instance_id='owner')
     runner._wire_adapter_handlers(adapter)
     source = adapter.build_source(chat_id='42', chat_type='dm', user_id='42')

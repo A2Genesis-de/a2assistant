@@ -1,15 +1,12 @@
 """``approvals.approvers: []`` binds an approval to the member who asked, also in a Telegram observe-mode
 group (whose session route has no user), never to the first of two members whose texts one turn merged,
-and never to "anyone" when no requester could be recorded. A Discord DM-only admin answers DM approvals,
-not group ones, on the buttons exactly as on ``/approve``.
+and never to "anyone" when no requester could be recorded.
 """
 
-from types import SimpleNamespace
-from unittest.mock import AsyncMock
 
 import pytest
 
-from gateway.config import GatewayConfig, PlatformConfig
+from gateway.config import GatewayConfig
 from gateway.platforms.event import MessageType
 from gateway.session import build_session_context, build_session_key
 from gateway.session_context import _UNSET, _VAR_MAP
@@ -107,46 +104,3 @@ def test_an_approval_with_no_requester_is_answered_only_by_approvers_and_admins(
     write_approvers([])
     key = _approval_raised_in(same["k"])
     assert approval_refusal(key, "222") == "Alice Example" and approval_refusal(key, "111") is None
-
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize(("chat_type", "clicker", "allowed"), [
-    ("group", "22", False),   # DM-only admin: refused on a group card, as by the group's /approve
-    ("group", "44", True),    # group admin
-    ("dm", "22", True),       # DM admin on a DM approval
-])
-async def test_discord_buttons_use_the_approvals_own_admin_scope(chat_type, clicker, allowed, monkeypatch):
-    from gateway.session_context import clear_session_vars, set_session_vars
-    from plugins.platforms.discord.adapter import DiscordAdapter
-    from tests.gateway.test_discord_exec_approval_content import _capture_channel
-    from tools import approval as approval_mod
-    from tools.approval_gateway_wait import _ApprovalEntry
-
-    monkeypatch.setenv("DISCORD_ALLOW_ALL_USERS", "true")
-    write_approvers([])
-    tokens = set_session_vars(platform="discord", chat_type=chat_type, user_id="11", user_name="Alice", session_key="d")
-    try:
-        entry = _ApprovalEntry({"command": "rm -rf build"})
-    finally:
-        clear_session_vars(tokens)
-    approval_mod._gateway_queues.setdefault("d", []).append(entry)
-    extra = {"require_admin_for_exec_approval": True, "allow_admin_from": ["22", "44"], "group_allow_admin_from": ["44"]}
-    adapter = DiscordAdapter(PlatformConfig(enabled=True, token="***", extra=extra))
-    sent = _capture_channel(adapter)
-    await adapter.send_exec_approval(chat_id="555", command="rm -rf build", session_key="d",
-                                     request_id=entry.data["request_id"])
-    view = sent["view"]
-    view._finalize_embed = AsyncMock()
-    interaction = SimpleNamespace(
-        user=SimpleNamespace(id=int(clicker), display_name="X", roles=[]),
-        response=SimpleNamespace(send_message=AsyncMock(), edit_message=AsyncMock(), defer=AsyncMock()),
-        message=SimpleNamespace(embeds=[]), channel_id=555)
-
-    await view._resolve(interaction, "once", None, "platform.discord.approval.resolved_once")
-
-    assert entry.event.is_set() is allowed
-    if not allowed:
-        interaction.response.send_message.assert_awaited_once_with("Only Alice can answer this approval.", ephemeral=True)
-        # The settle's own in-lock check applies the same single scope.
-        assert approval_mod.resolve_gateway_approval_card(
-            "d", "once", entry.data["request_id"], actor_id=clicker, admin_ids=view.admin_user_ids, extra=extra) == 0

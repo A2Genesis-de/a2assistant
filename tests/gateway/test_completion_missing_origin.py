@@ -5,10 +5,9 @@ import pytest
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize('platform', ['telegram', 'discord'])
 @pytest.mark.parametrize('compressed', [False, True], ids=['direct', 'compressed'])
 @pytest.mark.parametrize('missing_origin', [False, True], ids=['with-origin', 'null-origin'])
-async def test_completion_uses_logical_owner_after_route_restore(tmp_path, monkeypatch, platform, compressed, missing_origin):
+async def test_completion_uses_logical_owner_after_route_restore(tmp_path, monkeypatch, compressed, missing_origin):
     from gateway.config import GatewayConfig, Platform, PlatformConfig
     from gateway.platforms.event import MessageEvent
     from gateway.run import GatewayRunner
@@ -18,23 +17,20 @@ async def test_completion_uses_logical_owner_after_route_restore(tmp_path, monke
     from gateway.session_ingress_context import native_callback
     from hermes_constants import get_hermes_home
     from hermes_state_runtime import list_session_admissions
-    from plugins.platforms.discord.adapter import DiscordAdapter
     from plugins.platforms.telegram.adapter import TelegramAdapter
     from tests.gateway.test_completion_admission import pending
     from tools import async_delegation as delegation
 
     # Admit through the real adapter and SQLite FIFO, stopping before a model turn.
     monkeypatch.setattr(SessionAuthority, '_schedule', lambda self, ref: None)
-    monkeypatch.setenv(platform.upper() + '_ALLOWED_USERS', '42')
+    platform = 'telegram'
+    monkeypatch.setenv('TELEGRAM_ALLOWED_USERS', '42')
     runner = GatewayRunner(GatewayConfig())
-    adapter_cls = TelegramAdapter if platform == 'telegram' else DiscordAdapter
-    adapter = adapter_cls(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
+    adapter = TelegramAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
     runner.adapters = {Platform(platform): adapter}
     authority = await initialize_session_authority(runner, profile_id='default', instance_id='restore')
     runner._wire_adapter_handlers(adapter)
-    source = adapter.build_source(chat_id='-10042' if platform == 'telegram' else '42',
-                                  chat_type='group' if platform == 'telegram' else 'dm',
-                                  thread_id='7' if platform == 'telegram' else None, user_id='42')
+    source = adapter.build_source(chat_id='-10042', chat_type='group', thread_id='7', user_id='42')
     human = MessageEvent(text='human', source=source, message_id='human')
     with native_callback(runner, human, get_hermes_home()):
         receipt = await authority.admit_native(human)

@@ -24,9 +24,9 @@ from gateway.run_turn_runner import TurnRunner
 from gateway.session import SessionEntry, SessionSource
 from gateway.turn_context import TurnContext
 
-KEY = "agent:main:discord:group:1513247605675790346:117431298246705156"
+KEY = "agent:main:telegram:group:1513247605675790346:117431298246705156"
 _ORIGIN = dict(
-    platform=Platform.DISCORD,
+    platform=Platform.TELEGRAM,
     chat_id="1513247605675790346",
     chat_type="group",
     user_id="117431298246705156",
@@ -54,9 +54,7 @@ def _make_runner(
 ):
     import agent.model_metadata as mm
     import gateway.run as gr
-    import gateway.session as gs
 
-    monkeypatch.setattr(gs, "_discord_tools_loaded", lambda: True)
     monkeypatch.setattr(gr, "_resolve_runtime_agent_kwargs", lambda: {"api_key": "fake"})
     monkeypatch.setattr(mm, "get_model_context_length", lambda *a, **k: 100_000)
 
@@ -89,7 +87,7 @@ def _make_runner(
         session_id="sess-wiring",
         created_at=datetime(2026, 1, 1),
         updated_at=datetime(2026, 1, 2),
-        platform=Platform.DISCORD,
+        platform=Platform.TELEGRAM,
         chat_type="group",
     )
     store.load_transcript.return_value = []
@@ -179,7 +177,7 @@ def _effective_ephemeral(runner, kw) -> str:
 
 def _thread_origin() -> dict:
     return dict(
-        platform=Platform.DISCORD,
+        platform=Platform.TELEGRAM,
         chat_id=THREAD_ID,
         chat_type="thread",
         thread_id=THREAD_ID,
@@ -207,7 +205,7 @@ def _wake_thread_source() -> SessionSource:
 @pytest.mark.asyncio
 async def test_internal_event_keeps_channel_prompt_and_parent_override(monkeypatch):
     config = GatewayConfig()
-    config.platforms[Platform.DISCORD] = PlatformConfig(
+    config.platforms[Platform.TELEGRAM] = PlatformConfig(
         enabled=True,
         channel_overrides={PARENT_ID: ChannelOverride(system_prompt="Parent persona.")},
     )
@@ -238,7 +236,7 @@ async def test_eventless_followup_keeps_effective_prompt_through_next_human(
     monkeypatch, result_key, interrupted, channel_prompt
 ):
     config = GatewayConfig()
-    config.platforms[Platform.DISCORD] = PlatformConfig(
+    config.platforms[Platform.TELEGRAM] = PlatformConfig(
         enabled=True,
         channel_overrides={PARENT_ID: ChannelOverride(system_prompt="Parent persona.")},
     )
@@ -325,7 +323,7 @@ async def test_event_backed_followup_overrides_inherited_channel_prompt(monkeypa
 @pytest.mark.asyncio
 async def test_first_internal_event_after_restart_rehydrates_durable_prompt_pins(monkeypatch):
     config = GatewayConfig()
-    config.platforms[Platform.DISCORD] = PlatformConfig(
+    config.platforms[Platform.TELEGRAM] = PlatformConfig(
         enabled=True,
         channel_overrides={PARENT_ID: ChannelOverride(system_prompt="Parent persona.")},
     )
@@ -369,7 +367,7 @@ async def test_first_internal_event_after_agent_eviction_keeps_effective_prompt(
     """/stop, /undo and /model evict the cached agent mid-conversation and clear the context pin
     while the channel pin survives; a wake arriving next must still send the human turn's bytes."""
     config = GatewayConfig()
-    config.platforms[Platform.DISCORD] = PlatformConfig(
+    config.platforms[Platform.TELEGRAM] = PlatformConfig(
         enabled=True,
         channel_overrides={PARENT_ID: ChannelOverride(system_prompt="Parent persona.")},
     )
@@ -415,7 +413,7 @@ async def test_synthetic_goal_turn_keeps_pins_and_effective_prompt(monkeypatch, 
     authorization and the emergency stop) but carry no channel prompt of their own; they must
     reuse the human turn's pins instead of overwriting the channel pin with None (A->B->A)."""
     config = GatewayConfig()
-    config.platforms[Platform.DISCORD] = PlatformConfig(
+    config.platforms[Platform.TELEGRAM] = PlatformConfig(
         enabled=True,
         channel_overrides={PARENT_ID: ChannelOverride(system_prompt="Parent persona.")},
     )
@@ -459,21 +457,20 @@ async def test_goal_continuation_keeps_channel_pin_through_session_authority(tmp
     """The default runtime admits adapter turns through the native session envelope; a goal
     continuation must arrive at the handler still asking to reuse the pins (#126109). The
     continuation is enqueued mid-turn like the post-turn hook does and drains from the adapter
-    FIFO; a source carrying ``message_id`` (Discord) must keep its adapter ref through the
+    FIFO; a source carrying ``message_id`` must keep its adapter ref through the
     producer's copy or native admission refuses it as ``not_found``."""
     import gateway.run as gr
     from gateway.platforms.base import SendResult
     from gateway.session_authority import initialize_session_authority
-    from plugins.platforms.whatsapp.adapter import WhatsAppAdapter
+    from plugins.platforms.telegram.adapter import TelegramAdapter
     from tests.waiting import async_wait_until
 
-    chat = "15551234567@s.whatsapp.net"
-    monkeypatch.setenv("WHATSAPP_ALLOWED_USERS", "15551234567")
+    chat = "15551234567"
+    monkeypatch.setenv("TELEGRAM_ALLOWED_USERS", "15551234567")
     monkeypatch.setattr(gr, "_resolve_runtime_agent_kwargs", lambda: {"api_key": "fake"})
     runner = gr.GatewayRunner(GatewayConfig(sessions_dir=tmp_path / "sessions"))
-    adapter = WhatsAppAdapter(PlatformConfig(enabled=True, extra={
-        "text_batch_delay_seconds": 0, "session_path": str(tmp_path / "wa")}))
-    adapter.gateway_runner, runner.adapters = runner, {Platform.WHATSAPP: adapter}
+    adapter = TelegramAdapter(PlatformConfig(enabled=True, token="123:abc", extra={"text_batch_delay_seconds": 0}))
+    adapter.gateway_runner, runner.adapters = runner, {Platform.TELEGRAM: adapter}
     authority = await initialize_session_authority(runner, profile_id="default", instance_id="pins")
     runner._wire_adapter_handlers(adapter)
     calls: list[dict] = []
@@ -535,7 +532,7 @@ async def test_human_first_after_restart_ignores_stale_durable_prompt_pin(monkey
         }
     }
     config = GatewayConfig()
-    config.platforms[Platform.DISCORD] = PlatformConfig(
+    config.platforms[Platform.TELEGRAM] = PlatformConfig(
         enabled=True,
         channel_overrides={PARENT_ID: ChannelOverride(system_prompt="Parent persona.")},
     )
@@ -638,7 +635,7 @@ async def test_channel_override_turns_keep_one_cached_agent_and_the_pin(
     import gateway.run as gr
 
     config = GatewayConfig()
-    config.platforms[Platform.DISCORD] = PlatformConfig(
+    config.platforms[Platform.TELEGRAM] = PlatformConfig(
         enabled=True, channel_overrides={_ORIGIN["chat_id"]: ChannelOverride(model="chan/model")},
     )
     monkeypatch.setattr(gr, "_load_gateway_config", lambda: {"model": {"default": global_model}})

@@ -27,8 +27,8 @@ def _entry(session_key, chat_id, profile):
     now = _now()
     return SessionEntry(
         session_key=session_key, session_id=f"sid-{chat_id}",
-        platform=Platform.FEISHU, chat_type="dm", created_at=now, updated_at=now,
-        origin=SessionSource(platform=Platform.FEISHU, chat_id=chat_id, profile=profile),
+        platform=Platform.TELEGRAM, chat_type="dm", created_at=now, updated_at=now,
+        origin=SessionSource(platform=Platform.TELEGRAM, chat_id=chat_id, profile=profile),
     )
 
 

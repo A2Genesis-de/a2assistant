@@ -1,6 +1,6 @@
 """Native messages queued behind a turn that exhausts its context run once, in order, on the fresh
 session the auto-reset creates; the exhausted turn is not replayed and a transport retry of a
-re-homed message still dedupes. Real GatewayRunner, DiscordAdapter, SessionAuthority and drain over
+re-homed message still dedupes. Real GatewayRunner, TelegramAdapter, SessionAuthority and drain over
 SQLite; the turn is a stand-in. Adapted from helix4u's #139673 headline test."""
 import asyncio
 from types import SimpleNamespace
@@ -17,23 +17,23 @@ from gateway.session_contract import SessionRef
 from gateway.session_ingress_context import native_callback
 from hermes_constants import get_hermes_home
 from hermes_state_runtime import list_session_admissions
-from plugins.platforms.discord.adapter import DiscordAdapter
+from plugins.platforms.telegram.adapter import TelegramAdapter
 
 _REAL_SCHEDULE = SessionAuthority._schedule  # the fixture parks scheduling; races restore it
 
 
 @pytest_asyncio.fixture
 async def native(monkeypatch):
-    monkeypatch.setenv("DISCORD_ALLOWED_USERS", "42")
+    monkeypatch.setenv("TELEGRAM_ALLOWED_USERS", "42")
     monkeypatch.setattr(SessionAuthority, "_schedule", lambda self, ref: None)
     runner = GatewayRunner(GatewayConfig())
-    adapter = DiscordAdapter(PlatformConfig(enabled=True, token="fixture-token", typing_indicator=False))
+    adapter = TelegramAdapter(PlatformConfig(enabled=True, token="fixture-token", typing_indicator=False))
 
     async def send(chat_id, content, reply_to=None, metadata=None):
         return SendResult(success=True, message_id="fixture-reply")
 
     monkeypatch.setattr(adapter, "send", send)
-    runner.adapters = {Platform.DISCORD: adapter}
+    runner.adapters = {Platform.TELEGRAM: adapter}
     authority = await initialize_session_authority(runner, profile_id="default", instance_id="fixture")
     runner._wire_adapter_handlers(adapter)
     source = adapter.build_source(chat_id="42", chat_type="dm", user_id="42")

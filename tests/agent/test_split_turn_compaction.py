@@ -288,27 +288,25 @@ def test_active_request_survives_repeated_compaction_and_restart(tmp_path) -> No
 _LONG_QUOTE = "Earlier assistant answer. " * 80
 
 
-def _gateway_reply(text: str, *, own: bool = False, discord_id: str | None = None) -> str:
+def _gateway_reply(text: str, *, own: bool = False) -> str:
     """Build the row exactly as the gateway does, so a pointer format change fails here."""
     from gateway.config import Platform
     from gateway.platforms.event import MessageEvent
     from gateway.run import GatewayRunner
     from gateway.session import SessionSource
 
-    platform = Platform.DISCORD if discord_id else Platform.TELEGRAM
-    source = SessionSource(platform=platform, chat_id="1", chat_type="dm")
+    source = SessionSource(platform=Platform.TELEGRAM, chat_id="1", chat_type="dm")
     event = MessageEvent(
-        text=text, source=source, message_id=discord_id,
+        text=text, source=source, message_id=None,
         reply_to_message_id="7", reply_to_text=_LONG_QUOTE, reply_to_is_own_message=own,
     )
-    with patch("gateway.session._discord_tools_loaded", return_value=True):
-        return GatewayRunner._prepend_inbound_reply_context(event, source, text)
+    return GatewayRunner._prepend_inbound_reply_context(event, source, text)
 
 
 @pytest.mark.parametrize(
     "gateway_kwargs",
-    [{}, {"own": True}, {"discord_id": "42"}],
-    ids=["reply", "own-reply", "discord-note"],
+    [{}, {"own": True}],
+    ids=["reply", "own-reply"],
 )
 def test_reply_pointer_does_not_count_toward_the_request_size(gateway_kwargs: dict[str, Any]) -> None:
     """A short reply to a long answer must still split, and the snapshot must keep the request

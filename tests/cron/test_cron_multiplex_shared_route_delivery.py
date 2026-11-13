@@ -21,16 +21,16 @@ PRIMARY_YAML = {
     "gateway": {
         "multiplex_profiles": True,
         "profile_routes": [
-            {"name": "fit", "platform": "discord", "chat_id": "1543065293755256852", "profile": "fitness"},
-            {"name": "off", "platform": "discord", "chat_id": "999", "profile": "fitness", "enabled": False},
-            {"name": "other", "platform": "discord", "chat_id": "777", "profile": "other"},
+            {"name": "fit", "platform": "telegram", "chat_id": "1543065293755256852", "profile": "fitness"},
+            {"name": "off", "platform": "telegram", "chat_id": "999", "profile": "fitness", "enabled": False},
+            {"name": "other", "platform": "telegram", "chat_id": "777", "profile": "other"},
         ],
     }
 }
 
 
 def _job(chat_id: str) -> dict:
-    return {"id": "a7ae1520356c", "name": "brief", "deliver": f"discord:{chat_id}"}
+    return {"id": "a7ae1520356c", "name": "brief", "deliver": f"telegram:{chat_id}"}
 
 
 def _run(job, adapters):
@@ -47,10 +47,10 @@ def _run(job, adapters):
 
     async def _fake_send_to_platform(platform, pconfig, chat_id, text, **kwargs):
         standalone.append(chat_id)
-        return {"success": False, "error": "DISCORD_BOT_TOKEN is not set"}
+        return {"success": False, "error": "TELEGRAM_BOT_TOKEN is not set"}
 
     config = MagicMock()
-    config.platforms = {Platform.DISCORD: PlatformConfig(enabled=True)}
+    config.platforms = {Platform.TELEGRAM: PlatformConfig(enabled=True)}
     config.get_home_channel = lambda p: None
     with patch("gateway.config.load_gateway_config", return_value=config), \
          patch("cron.scheduler.load_config", return_value={"cron": {"wrap_response": False}}), \
@@ -83,7 +83,7 @@ def test_satellite_routes_exact_target_through_primary_adapter(tmp_path, monkeyp
     token = set_hermes_home_override(str(fitness_home))
     try:
         shared = SharedRouteAdapters(
-            {Platform.DISCORD: primary}, _primary_profile_routes_for_current_home()
+            {Platform.TELEGRAM: primary}, _primary_profile_routes_for_current_home()
         )
         # exact enabled route → primary adapter sends, no standalone attempt
         error, standalone = _run(_job("1543065293755256852"), shared)
@@ -97,7 +97,7 @@ def test_satellite_routes_exact_target_through_primary_adapter(tmp_path, monkeyp
         for chat in ("424242", "999", "777"):
             primary.sent.clear()
             error, standalone = _run(_job(chat), shared)
-            assert error is not None and "DISCORD_BOT_TOKEN" in error
+            assert error is not None and "TELEGRAM_BOT_TOKEN" in error
             assert primary.sent == []
             assert standalone == [chat]
     finally:
@@ -106,7 +106,7 @@ def test_satellite_routes_exact_target_through_primary_adapter(tmp_path, monkeyp
 
 def test_shared_view_is_falsy_without_routes_or_primary_adapters():
     assert not SharedRouteAdapters({}, [])
-    assert SharedRouteAdapters({Platform.DISCORD: object()}, []).get(Platform.DISCORD) is None
+    assert SharedRouteAdapters({Platform.TELEGRAM: object()}, []).get(Platform.TELEGRAM) is None
 
 
 def test_guild_scoped_route_authorizes_cron_target_even_when_satellite_has_no_platform_block(
@@ -114,22 +114,22 @@ def test_guild_scoped_route_authorizes_cron_target_even_when_satellite_has_no_pl
 ):
     """The documented Discord route shape is ``guild_id + chat_id``. A cron target carries no guild
     anchor, so the route must be matched on its target-exact discriminators; and the satellite's
-    missing/disabled ``platforms.discord`` block must not veto the PRIMARY's authorized transport
-    (#89302 sibling) — before, both fell to standalone "DISCORD_BOT_TOKEN is not set"."""
+    missing/disabled ``platforms.telegram`` block must not veto the PRIMARY's authorized transport
+    (#89302 sibling) — before, both fell to standalone "TELEGRAM_BOT_TOKEN is not set"."""
     root = tmp_path / "root"
     sat_home = root / "profiles" / "fitness"
     sat_home.mkdir(parents=True)
     (root / "config.yaml").write_text(yaml.safe_dump({
         "gateway": {"multiplex_profiles": True, "profile_routes": [
-            {"platform": "discord", "guild_id": "G1", "chat_id": "C1", "profile": "fitness"}]},
+            {"platform": "telegram", "guild_id": "G1", "chat_id": "C1", "profile": "fitness"}]},
     }), encoding="utf-8")
     monkeypatch.setattr("hermes_constants.get_default_hermes_root", lambda: root)
     primary = _primary_adapter()
 
     token = set_hermes_home_override(str(sat_home))
     try:
-        shared = SharedRouteAdapters({Platform.DISCORD: primary}, _primary_profile_routes_for_current_home())
-        for satellite_platforms in ({}, {Platform.DISCORD: PlatformConfig(enabled=False)}):
+        shared = SharedRouteAdapters({Platform.TELEGRAM: primary}, _primary_profile_routes_for_current_home())
+        for satellite_platforms in ({}, {Platform.TELEGRAM: PlatformConfig(enabled=False)}):
             primary.sent.clear()
             config = MagicMock()
             config.platforms = satellite_platforms
@@ -151,14 +151,14 @@ def test_live_native_adapter_without_platform_block_is_not_treated_as_disabled()
     config.platforms = {}
     adapter = object()
     resolved, err = _resolve_target_transport(
-        {"id": "j"}, Platform.DISCORD, "discord", {"platform": "discord", "chat_id": "C1"},
-        {Platform.DISCORD: adapter}, config)
+        {"id": "j"}, Platform.TELEGRAM, "telegram", {"platform": "telegram", "chat_id": "C1"},
+        {Platform.TELEGRAM: adapter}, config)
     assert err is None and resolved[2] is adapter and resolved[1].enabled
     # an explicitly disabled block still vetoes
-    config.platforms = {Platform.DISCORD: PlatformConfig(enabled=False)}
+    config.platforms = {Platform.TELEGRAM: PlatformConfig(enabled=False)}
     resolved, err = _resolve_target_transport(
-        {"id": "j"}, Platform.DISCORD, "discord", {"platform": "discord", "chat_id": "C1"},
-        {Platform.DISCORD: adapter}, config)
+        {"id": "j"}, Platform.TELEGRAM, "telegram", {"platform": "telegram", "chat_id": "C1"},
+        {Platform.TELEGRAM: adapter}, config)
     assert resolved is None and "not configured/enabled" in err
 
 
@@ -169,7 +169,7 @@ def test_multiplex_tick_routes_desktop_served_satellite_with_only_local_adapter(
     ``{LOCAL: adapter}`` in ``_profile_adapters``. LOCAL carries no platform credential, so its
     cron tick must still hand it the routed primary view — before, the non-empty map skipped
     ``SharedRouteAdapters`` and delivery fell through to the profile's own credentialless config
-    (``platform 'discord' not configured/enabled``)."""
+    (``platform 'telegram' not configured/enabled``)."""
     import threading
 
     from cron.scheduler_provider import InProcessCronScheduler
@@ -180,7 +180,7 @@ def test_multiplex_tick_routes_desktop_served_satellite_with_only_local_adapter(
     (sat_home / "cron").mkdir(parents=True)
     (root / "config.yaml").write_text(yaml.safe_dump({
         "gateway": {"multiplex_profiles": True, "profile_routes": [
-            {"platform": "discord", "guild_id": "G1", "chat_id": "C1", "profile": "sat"}]},
+            {"platform": "telegram", "guild_id": "G1", "chat_id": "C1", "profile": "sat"}]},
     }), encoding="utf-8")
     monkeypatch.setattr("hermes_constants.get_default_hermes_root", lambda: root)
 
@@ -200,7 +200,7 @@ def test_multiplex_tick_routes_desktop_served_satellite_with_only_local_adapter(
             kwargs={
                 "interval": 0,
                 "profile_homes": [("sat", sat_home)],
-                "adapters": {Platform.DISCORD: primary},
+                "adapters": {Platform.TELEGRAM: primary},
                 "profile_adapters": {"sat": {Platform.LOCAL: object()}},
                 "default_profile": "default",
             },
@@ -215,5 +215,5 @@ def test_multiplex_tick_routes_desktop_served_satellite_with_only_local_adapter(
     shared = captured["adapters"]
     assert isinstance(shared, SharedRouteAdapters)
     # The routed view releases the primary adapter for exactly the route-mapped target.
-    assert shared.get(Platform.DISCORD, {"chat_id": "C1"}) is primary
-    assert shared.get(Platform.DISCORD, {"chat_id": "unmapped"}) is None
+    assert shared.get(Platform.TELEGRAM, {"chat_id": "C1"}) is primary
+    assert shared.get(Platform.TELEGRAM, {"chat_id": "unmapped"}) is None

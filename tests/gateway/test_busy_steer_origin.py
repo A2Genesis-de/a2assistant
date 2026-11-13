@@ -12,7 +12,7 @@ from gateway.session import SessionSource
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("route", ["explicit", "priority", "normal", "redirect", "priority_redirect"])
-@pytest.mark.parametrize("platform", [Platform.TELEGRAM, Platform.DISCORD])  # hashed vs. unhashed PII path
+@pytest.mark.parametrize("platform", [Platform.TELEGRAM, Platform.API_SERVER])  # hashed vs. unhashed PII path
 @pytest.mark.parametrize("redact_pii", [False, True])
 async def test_busy_injection_preserves_original_routing_fields(route, platform, redact_pii, tmp_path, monkeypatch):
     from dataclasses import asdict
@@ -59,7 +59,7 @@ async def test_busy_injection_preserves_original_routing_fields(route, platform,
         "parent_chat_id", "chat_id_alt", "user_id_alt", "prospective_thread_id",
     )}
     expected.update(platform=platform.value, message_id=event.message_id, source_message_id=source.message_id)
-    if redact_pii and platform != Platform.DISCORD:
+    if redact_pii and platform != Platform.API_SERVER:
         for key, value in expected.items():
             if key in ("platform", "chat_type"):
                 continue

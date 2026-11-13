@@ -25,7 +25,7 @@ from gateway.status import flush_runtime_status
 
 
 class _Adapter:
-    platform = Platform.DISCORD
+    platform = Platform.TELEGRAM
 
     def __init__(self, token):
         self.token = token
@@ -63,9 +63,9 @@ def _runner(tmp_path, monkeypatch):
     async def _start(profile_name, profile_home, claimed):
         started.append(profile_name)
         token = (profile_home / ".env").read_text(encoding="utf-8") if (profile_home / ".env").exists() else ""
-        if "DISCORD_BOT_TOKEN" not in token:
+        if "TELEGRAM_BOT_TOKEN" not in token:
             return 0
-        runner._profile_adapters.setdefault(profile_name, {})[Platform.DISCORD] = _Adapter(token)
+        runner._profile_adapters.setdefault(profile_name, {})[Platform.TELEGRAM] = _Adapter(token)
         return 1
 
     runner._start_one_profile_adapters = _start
@@ -116,12 +116,12 @@ def _served_record(home):
 @pytest.mark.asyncio
 async def test_opt_out_rescans_and_opt_in_waits_for_own_gateway_to_stop(tmp_path, monkeypatch, caplog):
     runner, home = _runner(tmp_path, monkeypatch)
-    solo = _mkprofile(home, "solo", "DISCORD_BOT_TOKEN=solo-token\n")
+    solo = _mkprofile(home, "solo", "TELEGRAM_BOT_TOKEN=solo-token\n")
     own_pids = {}
     monkeypatch.setattr("gateway.status.live_gateway_pid_for_home", lambda h: own_pids.get(h))
     with patch("hermes_cli.profiles.get_active_profile_name", return_value="default"):
         await runner._start_secondary_profile_adapters()
-        adapter = runner._profile_adapters["solo"][Platform.DISCORD]
+        adapter = runner._profile_adapters["solo"][Platform.TELEGRAM]
         (solo / "config.yaml").write_text("gateway:\n  standalone: true\n")
         result = await runner.reconcile_served_profiles()
         assert result["removed"] == ["solo"]
@@ -154,7 +154,7 @@ async def test_stalled_own_gateway_probe_never_wedges_the_loop_or_serves(tmp_pat
     from gateway import run_profile_reconcile as reconcile_mod
 
     runner, home = _runner(tmp_path, monkeypatch)
-    _mkprofile(home, "alpha", "DISCORD_BOT_TOKEN=alpha-token\n")
+    _mkprofile(home, "alpha", "TELEGRAM_BOT_TOKEN=alpha-token\n")
     with patch("hermes_cli.profiles.get_active_profile_name", return_value="default"):
         await runner._start_secondary_profile_adapters()
 
@@ -166,7 +166,7 @@ async def test_stalled_own_gateway_probe_never_wedges_the_loop_or_serves(tmp_pat
         monkeypatch.setattr("gateway.status.live_gateway_pid_for_home", _stalling_probe)
         monkeypatch.setattr(reconcile_mod, "_OWN_GATEWAY_PROBE_TIMEOUT_SECS", 0.2)
 
-        _mkprofile(home, "gamma", "DISCORD_BOT_TOKEN=gamma-token\n")
+        _mkprofile(home, "gamma", "TELEGRAM_BOT_TOKEN=gamma-token\n")
 
         async def _liveness_probe():
             # shutdown_watchdog stand-in: the loop must keep turning while the probe is stalled.
@@ -224,7 +224,7 @@ async def test_parked_profile_boot_and_reconcile(tmp_path, monkeypatch, caplog):
 async def test_profile_control_verbs_round_trip_and_refusals(tmp_path, monkeypatch):
     from gateway import run_profile_reconcile as verbs
     runner, home = _runner(tmp_path, monkeypatch)
-    secondary = _mkprofile(home, "worker", "DISCORD_BOT_TOKEN=worker-token\n")
+    secondary = _mkprofile(home, "worker", "TELEGRAM_BOT_TOKEN=worker-token\n")
     with patch("hermes_cli.profiles.get_active_profile_name", return_value="default"):
         await runner._start_secondary_profile_adapters()
         stop = verbs.unserve_profile_verb(runner)
@@ -232,7 +232,7 @@ async def test_profile_control_verbs_round_trip_and_refusals(tmp_path, monkeypat
         for handler, name in [(stop, "default"), (stop, "missing"), (start, "missing"),
                               (start, "worker"), (start, "default")]:
             assert (await asyncio.to_thread(handler, {"name": name}))["error"]
-        old = runner._profile_adapters["worker"][Platform.DISCORD]
+        old = runner._profile_adapters["worker"][Platform.TELEGRAM]
         answer = await asyncio.to_thread(stop, {"name": "worker"})
         assert answer["unserved"] == "worker"
         assert answer["served_profiles"] == _served_record(home) == ["default"]
@@ -241,11 +241,11 @@ async def test_profile_control_verbs_round_trip_and_refusals(tmp_path, monkeypat
         marker.touch()
         assert (await asyncio.to_thread(start, {"name": "worker"}))["error"]
         marker.unlink()
-        (secondary / ".env").write_text("DISCORD_BOT_TOKEN=new-worker-token\n")
+        (secondary / ".env").write_text("TELEGRAM_BOT_TOKEN=new-worker-token\n")
         answer = await asyncio.to_thread(start, {"name": "worker"})
         assert answer["served"] == "worker"
         assert answer["served_profiles"] == _served_record(home) == ["default", "worker"]
-        assert runner._profile_adapters["worker"][Platform.DISCORD].token.endswith("new-worker-token\n")
+        assert runner._profile_adapters["worker"][Platform.TELEGRAM].token.endswith("new-worker-token\n")
 
 
 @pytest.mark.platforms("linux")
@@ -277,11 +277,11 @@ async def test_profile_lifecycle_over_real_control_socket(tmp_path, monkeypatch)
 @pytest.mark.asyncio
 async def test_created_then_credentialed_profile_is_served_without_restart(tmp_path, monkeypatch):
     runner, home = _runner(tmp_path, monkeypatch)
-    alpha_dir = _mkprofile(home, "alpha", "DISCORD_BOT_TOKEN=alpha-token\n")
+    alpha_dir = _mkprofile(home, "alpha", "TELEGRAM_BOT_TOKEN=alpha-token\n")
     with patch("hermes_cli.profiles.get_active_profile_name", return_value="default"):
         _boot(runner, home)
         await runner._start_secondary_profile_adapters()
-        alpha_adapter = runner._profile_adapters["alpha"][Platform.DISCORD]
+        alpha_adapter = runner._profile_adapters["alpha"][Platform.TELEGRAM]
         assert _served_record(home) == ["default", "alpha"]
 
         # 1. Created while running, no token yet: served (routes/prefixes/cron), zero adapters, and the
@@ -294,20 +294,20 @@ async def test_created_then_credentialed_profile_is_served_without_restart(tmp_p
         from gateway.runtime_ownership import process_ownership
         assert process_ownership.owns(gamma_dir)
         assert "gamma" in runner.pairing_stores
-        assert Platform.DISCORD not in runner._profile_adapters.get("gamma", {})
+        assert Platform.TELEGRAM not in runner._profile_adapters.get("gamma", {})
 
         # 2. Token added afterwards: the rescan builds the adapter (never "adapter-less forever").
-        (gamma_dir / ".env").write_text("DISCORD_BOT_TOKEN=gamma-token\n", encoding="utf-8")
+        (gamma_dir / ".env").write_text("TELEGRAM_BOT_TOKEN=gamma-token\n", encoding="utf-8")
         result = await runner.reconcile_served_profiles()
         assert result["rescanned"] == ["gamma"]
-        assert runner._profile_adapters["gamma"][Platform.DISCORD].token.strip().endswith("gamma-token")
+        assert runner._profile_adapters["gamma"][Platform.TELEGRAM].token.strip().endswith("gamma-token")
 
         # 3. A no-op rescan and the whole sequence never touched alpha's live adapter.
         assert await runner.reconcile_served_profiles() == {
             "added": [], "removed": [], "rescanned": [], "parked": [], "reason": "request",
             "served_profiles": ["default", "alpha", "gamma"],
         }
-        assert runner._profile_adapters["alpha"][Platform.DISCORD] is alpha_adapter
+        assert runner._profile_adapters["alpha"][Platform.TELEGRAM] is alpha_adapter
         assert alpha_adapter.disconnected is False
         assert runner._started.count("alpha") == 1
         assert profile_serve_signature(alpha_dir) == runner._served_profile_signatures["alpha"]
@@ -316,14 +316,14 @@ async def test_created_then_credentialed_profile_is_served_without_restart(tmp_p
 @pytest.mark.asyncio
 async def test_deleted_profile_is_torn_down_and_unrouted_others_untouched(tmp_path, monkeypatch):
     runner, home = _runner(tmp_path, monkeypatch)
-    _mkprofile(home, "alpha", "DISCORD_BOT_TOKEN=alpha-token\n")
-    gamma_dir = _mkprofile(home, "gamma", "DISCORD_BOT_TOKEN=gamma-token\n")
+    _mkprofile(home, "alpha", "TELEGRAM_BOT_TOKEN=alpha-token\n")
+    gamma_dir = _mkprofile(home, "gamma", "TELEGRAM_BOT_TOKEN=gamma-token\n")
     with patch("hermes_cli.profiles.get_active_profile_name", return_value="default"):
         _boot(runner, home)
         await runner._start_secondary_profile_adapters()
-        alpha_adapter = runner._profile_adapters["alpha"][Platform.DISCORD]
-        gamma_adapter = runner._profile_adapters["gamma"][Platform.DISCORD]
-        runner._agent_cache = {"agent:gamma:discord:dm:1": ("agent",), "agent:alpha:discord:dm:1": ("agent",)}
+        alpha_adapter = runner._profile_adapters["alpha"][Platform.TELEGRAM]
+        gamma_adapter = runner._profile_adapters["gamma"][Platform.TELEGRAM]
+        runner._agent_cache = {"agent:gamma:telegram:dm:1": ("agent",), "agent:alpha:telegram:dm:1": ("agent",)}
         evicted = []
         runner._evict_cached_agent = evicted.append
         reconnect = asyncio.get_running_loop().create_task(asyncio.sleep(3600))
@@ -338,13 +338,13 @@ async def test_deleted_profile_is_torn_down_and_unrouted_others_untouched(tmp_pa
     assert "gamma" not in runner._profile_adapters
     assert "gamma" not in runner.pairing_stores
     assert reconnect.cancelled()
-    assert evicted == ["agent:gamma:discord:dm:1"]
+    assert evicted == ["agent:gamma:telegram:dm:1"]
     assert _served_record(home) == ["default", "alpha"]
     # The reservation shrank with it: the next restart must not reserve a home that is gone.
     assert _reserved_names(runner) == ["alpha", "default"]
     from gateway.runtime_ownership import process_ownership
     assert not process_ownership.owns(gamma_dir)
-    assert runner._profile_adapters["alpha"][Platform.DISCORD] is alpha_adapter
+    assert runner._profile_adapters["alpha"][Platform.TELEGRAM] is alpha_adapter
     assert alpha_adapter.disconnected is False
 
 
@@ -365,8 +365,8 @@ async def test_unserve_releases_gateway_held_log_and_mcp_handles(tmp_path, monke
     )
 
     runner, home = _runner(tmp_path, monkeypatch)
-    alpha_dir = _mkprofile(home, "alpha", "DISCORD_BOT_TOKEN=alpha-token\n")
-    gamma_dir = _mkprofile(home, "gamma", "DISCORD_BOT_TOKEN=gamma-token\n")
+    alpha_dir = _mkprofile(home, "alpha", "TELEGRAM_BOT_TOKEN=alpha-token\n")
+    gamma_dir = _mkprofile(home, "gamma", "TELEGRAM_BOT_TOKEN=gamma-token\n")
 
     def _holds_open_log_file(handler) -> bool:
         # concurrent-log-handler (Windows) keeps the cross-process ``.__agent.lock``
@@ -438,11 +438,11 @@ async def test_transient_start_failure_is_retried_on_next_reconcile(tmp_path, mo
     unreachable, a half-written config.yaml) must not be recorded as scanned: the next
     reconcile retries it. Only the deliberate MultiplexConfigError park is acknowledged."""
     runner, home = _runner(tmp_path, monkeypatch)
-    _mkprofile(home, "alpha", "DISCORD_BOT_TOKEN=alpha-token\n")
+    _mkprofile(home, "alpha", "TELEGRAM_BOT_TOKEN=alpha-token\n")
     with patch("hermes_cli.profiles.get_active_profile_name", return_value="default"):
         await runner._start_secondary_profile_adapters()
 
-        _mkprofile(home, "gamma", "DISCORD_BOT_TOKEN=gamma-token\n")
+        _mkprofile(home, "gamma", "TELEGRAM_BOT_TOKEN=gamma-token\n")
         attempts = []
         real_start = runner._start_one_profile_adapters
 
@@ -456,19 +456,19 @@ async def test_transient_start_failure_is_retried_on_next_reconcile(tmp_path, mo
         first = await runner.reconcile_served_profiles()
         assert first["added"] == ["gamma"]
         assert attempts == ["gamma"]
-        assert Platform.DISCORD not in runner._profile_adapters.get("gamma", {})
+        assert Platform.TELEGRAM not in runner._profile_adapters.get("gamma", {})
         # Unacknowledged: the failed scan's signature must not survive ``_note_served_profiles``.
         assert "gamma" not in runner._served_profile_signatures
 
         second = await runner.reconcile_served_profiles()
         assert attempts == ["gamma", "gamma"]
         assert second["rescanned"] == ["gamma"]
-        assert runner._profile_adapters["gamma"][Platform.DISCORD].token.strip().endswith("gamma-token")
+        assert runner._profile_adapters["gamma"][Platform.TELEGRAM].token.strip().endswith("gamma-token")
 
         # The deliberate park stays distinct: a MultiplexConfigError is acknowledged, not retried.
         from gateway.run import MultiplexConfigError
 
-        _mkprofile(home, "delta", "DISCORD_BOT_TOKEN=delta-token\n")
+        _mkprofile(home, "delta", "TELEGRAM_BOT_TOKEN=delta-token\n")
         parked = []
 
         async def park(name, profile_home, claimed):
@@ -540,7 +540,7 @@ async def test_transient_secret_hydrate_failure_retries_through_real_start_path(
 
     monkeypatch.setattr(env_loader, "hydrate_profile_secret_sources", _flaky)
 
-    gamma_dir = _mkprofile(home, "gamma", "DISCORD_BOT_TOKEN=gamma-token\n")
+    gamma_dir = _mkprofile(home, "gamma", "TELEGRAM_BOT_TOKEN=gamma-token\n")
     with patch("hermes_cli.profiles.get_active_profile_name", return_value="default"):
         await runner._start_secondary_profile_adapters()
         assert connected == []
@@ -549,8 +549,8 @@ async def test_transient_secret_hydrate_failure_retries_through_real_start_path(
 
         result = await runner.reconcile_served_profiles()
         assert result["rescanned"] == ["gamma"]
-        assert connected == [Platform.DISCORD]
-        assert runner._profile_adapters["gamma"][Platform.DISCORD].platform == Platform.DISCORD
+        assert connected == [Platform.TELEGRAM]
+        assert runner._profile_adapters["gamma"][Platform.TELEGRAM].platform == Platform.TELEGRAM
         assert runner._served_profile_signatures["gamma"] == profile_serve_signature(gamma_dir)
 
 
@@ -559,19 +559,19 @@ async def test_hot_added_profile_cannot_double_claim_a_live_secondary_token(tmp_
     """Boot's duplicate-credential guard sees every profile at once; a hot add must see the LIVE
     secondaries' claims too, or the new profile starts a second poller on alpha's bot."""
     runner, home = _runner(tmp_path, monkeypatch)
-    _mkprofile(home, "alpha", "DISCORD_BOT_TOKEN=shared\n")
+    _mkprofile(home, "alpha", "TELEGRAM_BOT_TOKEN=shared\n")
     seen_claims = {}
 
     async def _start(profile_name, profile_home, claimed):
         seen_claims[profile_name] = dict(claimed)
-        runner._profile_adapters.setdefault(profile_name, {})[Platform.DISCORD] = _Adapter("shared")
+        runner._profile_adapters.setdefault(profile_name, {})[Platform.TELEGRAM] = _Adapter("shared")
         return 1
 
     runner._start_one_profile_adapters = _start
     with patch("hermes_cli.profiles.get_active_profile_name", return_value="default"):
         _boot(runner, home)
         await runner._start_secondary_profile_adapters()
-        _mkprofile(home, "dupe", "DISCORD_BOT_TOKEN=shared\n")
+        _mkprofile(home, "dupe", "TELEGRAM_BOT_TOKEN=shared\n")
         await runner.reconcile_served_profiles()
     fp = GatewayRunner._adapter_credential_fingerprint(_Adapter("shared"))
-    assert seen_claims["dupe"].get((Platform.DISCORD, fp)) == "alpha"
+    assert seen_claims["dupe"].get((Platform.TELEGRAM, fp)) == "alpha"

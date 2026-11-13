@@ -3,7 +3,7 @@
 N45: a /stop while the claimed turn still builds its agent (the slot holds the pending sentinel)
 must latch on the authority, so the agent the turn adopts starts interrupted and never runs tools.
 N53: an idle /stop or /new (between turns: slot released, next row not yet claimed) must still
-cancel the queued messaging follow-up. Real GatewayRunner, DiscordAdapter, SessionAuthority and
+cancel the queued messaging follow-up. Real GatewayRunner, TelegramAdapter, SessionAuthority and
 drain over a real SessionDB; only agent construction/conversation is a stand-in.
 """
 import asyncio
@@ -15,11 +15,11 @@ from tests.waiting import async_wait_until
 def _owner(monkeypatch):
     from gateway.config import GatewayConfig, Platform, PlatformConfig
     from gateway.run import GatewayRunner
-    from plugins.platforms.discord.adapter import DiscordAdapter
+    from plugins.platforms.telegram.adapter import TelegramAdapter
 
-    monkeypatch.setenv('DISCORD_ALLOWED_USERS', '42')
+    monkeypatch.setenv('TELEGRAM_ALLOWED_USERS', '42')
     runner = GatewayRunner(GatewayConfig())
-    adapter = DiscordAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
+    adapter = TelegramAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
     sent = []
 
     async def send(chat_id, content, reply_to=None, metadata=None):
@@ -27,7 +27,7 @@ def _owner(monkeypatch):
         sent.append(content)
         return SendResult(success=True, message_id=f's{len(sent)}')
     monkeypatch.setattr(adapter, 'send', send)
-    runner.adapters = {Platform.DISCORD: adapter}
+    runner.adapters = {Platform.TELEGRAM: adapter}
     return runner, adapter, sent
 
 

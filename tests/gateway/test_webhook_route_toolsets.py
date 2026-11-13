@@ -91,7 +91,7 @@ class TestGatewayResolveEnabledToolsetsForSource:
     def test_override_validated_like_platform_config(self):
         # Contract: resolving with an override is byte-identical to resolving
         # the same list configured as platform_toolsets.webhook.
-        override = ["terminal", "file", "web", "discord_admin"]
+        override = ["terminal", "file", "web"]
         wa = _make_adapter({"mon": {"secret": "x", "toolsets": override}})
         gr = _make_runner(wa)
         res = GatewayRunner._resolve_enabled_toolsets_for_source(
@@ -103,8 +103,6 @@ class TestGatewayResolveEnabledToolsetsForSource:
             )
         )
         assert res == expected
-        # discord_admin is platform-restricted to discord — must be dropped.
-        assert "discord_admin" not in res
 
     def test_no_override_uses_platform_resolution(self):
         wa = _make_adapter({"plain": {"secret": "x"}})

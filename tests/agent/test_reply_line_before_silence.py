@@ -68,7 +68,7 @@ def test_a_crash_left_turn_recovers_the_reply_not_the_warning(real_loop):
     real_loop.agent._silence_marker_needs_reply = True
     real_loop.run(_reply_then_marker(), "when is my meeting?")
     history = real_loop.db.get_messages_as_conversation(real_loop.sid)
-    origin = SessionSource(platform=Platform.SLACK, chat_id="D1", chat_type="dm", user_id="u1")
+    origin = SessionSource(platform=Platform.TELEGRAM, chat_id="1", chat_type="dm", user_id="u1")
 
     assert GatewayRunner._crash_left_reply(object(), history, 0, origin) == ANSWER
 

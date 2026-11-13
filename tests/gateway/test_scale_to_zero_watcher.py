@@ -425,7 +425,7 @@ def test_real_inbound_after_dormancy_restores_running_status(monkeypatch):
 # known platform, so list(config.platforms.keys()) is always the full ~20-entry catalog
 # regardless of what the instance runs. The arm check must filter to ENABLED platforms
 # (mirroring the connect loop) before asking messaging_is_relay_only_or_absent — passing
-# the bare placeholder keys made it see disabled `discord`/`telegram`/… as live direct
+# the bare placeholder keys made it see disabled `telegram`/… as live direct
 # platforms and refuse to arm on a real relay-only instance. The pure-helper tests in
 # test_scale_to_zero.py pass bare names so they never exercised this call site.
 
@@ -457,9 +457,7 @@ def test_arm_true_for_relay_only_with_disabled_placeholders(monkeypatch):
         monkeypatch,
         {
             Platform.TELEGRAM: False,
-            Platform.DISCORD: False,
-            Platform.SLACK: False,
-            Platform.MATRIX: False,
+            Platform.WEBHOOK: False,
             Platform.RELAY: True,
         },
     )
@@ -467,13 +465,13 @@ def test_arm_true_for_relay_only_with_disabled_placeholders(monkeypatch):
 
 
 def test_no_arm_when_a_direct_platform_is_actually_enabled(monkeypatch):
-    """A genuinely-enabled direct-socket platform (real Discord token) DOES disarm —
+    """A genuinely-enabled direct-socket platform (real Telegram token) DOES disarm —
     the filter must not over-broaden to 'ignore everything but relay'."""
     from gateway.platforms.base import Platform
 
     r = _arm_runner(
         monkeypatch,
-        {Platform.DISCORD: True, Platform.RELAY: True},
+        {Platform.TELEGRAM: True, Platform.RELAY: True},
     )
     assert r._scale_to_zero_should_arm() is False
 
@@ -610,7 +608,7 @@ def test_direct_platform_still_disarms_alongside_api_server(monkeypatch):
         {
             Platform.RELAY: True,
             Platform.API_SERVER: True,
-            Platform.DISCORD: True,
+            Platform.TELEGRAM: True,
         },
     )
     assert r._scale_to_zero_should_arm() is False

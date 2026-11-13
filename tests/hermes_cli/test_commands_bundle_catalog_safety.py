@@ -3,7 +3,7 @@
 import pytest
 
 from agent.skill_bundles import resolve_bundle_command_key
-from hermes_cli.commands_platforms import discord_skill_commands_by_category, telegram_menu_commands
+from hermes_cli.commands_platforms import telegram_menu_commands
 
 
 @pytest.fixture
@@ -23,8 +23,6 @@ def test_a_non_utf8_bundle_never_hides_the_other_commands(catalog):
 
     menu, _hidden = telegram_menu_commands()
     assert "valid_skill" in [name for name, _ in menu]
-    _categories, uncategorized, _hidden = discord_skill_commands_by_category(set())
-    assert ("valid-skill", "A valid skill", "/valid-skill") in uncategorized
 
 
 def test_every_advertised_bundle_name_dispatches_to_its_bundle(catalog):

@@ -83,8 +83,8 @@ class RecordingAdapter:
 async def test_silence_narration_dropped_pre_send(tmp_path, monkeypatch):
     monkeypatch.setattr("gateway.delivery.get_hermes_home", lambda: tmp_path)
     adapter = RecordingAdapter()
-    router = DeliveryRouter(GatewayConfig(), adapters={Platform.DISCORD: adapter})
-    target = DeliveryTarget.parse("discord:99887766")
+    router = DeliveryRouter(GatewayConfig(), adapters={Platform.TELEGRAM: adapter})
+    target = DeliveryTarget.parse("telegram:99887766")
 
     result = await router._deliver_to_platform(target, "*(silent)*", metadata=None)
 
@@ -101,8 +101,8 @@ async def test_config_opt_out_lets_silence_through(tmp_path, monkeypatch):
     monkeypatch.setattr("gateway.delivery.get_hermes_home", lambda: tmp_path)
     adapter = RecordingAdapter()
     config = GatewayConfig(filter_silence_narration=False)
-    router = DeliveryRouter(config, adapters={Platform.DISCORD: adapter})
-    target = DeliveryTarget.parse("discord:99887766")
+    router = DeliveryRouter(config, adapters={Platform.TELEGRAM: adapter})
+    target = DeliveryTarget.parse("telegram:99887766")
 
     result = await router._deliver_to_platform(target, "*(silent)*", metadata=None)
 
@@ -118,8 +118,8 @@ async def test_env_does_not_override_config_opt_out(tmp_path, monkeypatch):
     monkeypatch.setenv("HERMES_FILTER_SILENCE_NARRATION", "1")
     adapter = RecordingAdapter()
     config = GatewayConfig(filter_silence_narration=False)
-    router = DeliveryRouter(config, adapters={Platform.DISCORD: adapter})
-    target = DeliveryTarget.parse("discord:99887766")
+    router = DeliveryRouter(config, adapters={Platform.TELEGRAM: adapter})
+    target = DeliveryTarget.parse("telegram:99887766")
 
     result = await router._deliver_to_platform(target, "*(silent)*", metadata=None)
 
@@ -135,8 +135,8 @@ async def test_env_does_not_disable_filter_when_config_enabled(tmp_path, monkeyp
     monkeypatch.setenv("HERMES_FILTER_SILENCE_NARRATION", "0")
     adapter = RecordingAdapter()
     config = GatewayConfig(filter_silence_narration=True)
-    router = DeliveryRouter(config, adapters={Platform.DISCORD: adapter})
-    target = DeliveryTarget.parse("discord:99887766")
+    router = DeliveryRouter(config, adapters={Platform.TELEGRAM: adapter})
+    target = DeliveryTarget.parse("telegram:99887766")
 
     result = await router._deliver_to_platform(target, "*(silent)*", metadata=None)
 
@@ -155,9 +155,9 @@ async def test_multiplex_profiles_independent_silence_narration_filtering(tmp_pa
     monkeypatch.setenv("HERMES_FILTER_SILENCE_NARRATION", "1")
     adapter_a = RecordingAdapter()
     adapter_b = RecordingAdapter()
-    router_a = DeliveryRouter(GatewayConfig(filter_silence_narration=True), adapters={Platform.DISCORD: adapter_a})
-    router_b = DeliveryRouter(GatewayConfig(filter_silence_narration=False), adapters={Platform.DISCORD: adapter_b})
-    target = DeliveryTarget.parse("discord:99887766")
+    router_a = DeliveryRouter(GatewayConfig(filter_silence_narration=True), adapters={Platform.TELEGRAM: adapter_a})
+    router_b = DeliveryRouter(GatewayConfig(filter_silence_narration=False), adapters={Platform.TELEGRAM: adapter_b})
+    target = DeliveryTarget.parse("telegram:99887766")
 
     res_a = await router_a._deliver_to_platform(target, "*(silent)*", metadata=None)
     res_b = await router_b._deliver_to_platform(target, "*(silent)*", metadata=None)
@@ -182,8 +182,8 @@ async def test_multiplex_profiles_independent_silence_narration_filtering(tmp_pa
 async def test_cron_job_id_metadata_bypasses_the_filter(tmp_path, monkeypatch):
     monkeypatch.setattr("gateway.delivery.get_hermes_home", lambda: tmp_path)
     adapter = RecordingAdapter()
-    router = DeliveryRouter(GatewayConfig(), adapters={Platform.DISCORD: adapter})
-    target = DeliveryTarget.parse("discord:99887766")
+    router = DeliveryRouter(GatewayConfig(), adapters={Platform.TELEGRAM: adapter})
+    target = DeliveryTarget.parse("telegram:99887766")
 
     result = await router._deliver_to_platform(
         target, "*(silent)*", metadata={"job_id": "92e639af907f"},
@@ -200,8 +200,8 @@ async def test_non_cron_metadata_still_filters(tmp_path, monkeypatch):
     """The exemption keys on job_id alone — everything else is unchanged."""
     monkeypatch.setattr("gateway.delivery.get_hermes_home", lambda: tmp_path)
     adapter = RecordingAdapter()
-    router = DeliveryRouter(GatewayConfig(), adapters={Platform.DISCORD: adapter})
-    target = DeliveryTarget.parse("discord:99887766")
+    router = DeliveryRouter(GatewayConfig(), adapters={Platform.TELEGRAM: adapter})
+    target = DeliveryTarget.parse("telegram:99887766")
 
     result = await router._deliver_to_platform(
         target, "*(silent)*", metadata={"thread_id": "42", "user_id": "u1"},

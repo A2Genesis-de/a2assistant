@@ -16,7 +16,6 @@ from gateway.config import Platform, HomeChannel
 class TestHashHelpers:
 
 
-
     def test_hash_chat_id_preserves_prefix(self):
         result = _hash_chat_id("telegram:12345")
         assert result.startswith("telegram:")
@@ -87,26 +86,3 @@ class TestBuildSessionContextPromptRedaction:
         assert prompt1 == prompt2
 
 
-    def test_discord_ids_not_redacted_even_with_flag(self):
-        """Discord needs real IDs for <@user_id> mentions."""
-        ctx = _make_context(user_id="123456789", platform=Platform.DISCORD)
-        prompt = build_session_context_prompt(ctx, redact_pii=True)
-        assert "123456789" in prompt
-
-    def test_whatsapp_ids_redacted(self):
-        ctx = _make_context(user_id="+15551234567", platform=Platform.WHATSAPP)
-        prompt = build_session_context_prompt(ctx, redact_pii=True)
-        assert "+15551234567" not in prompt
-        assert "user_" in prompt
-
-    def test_signal_ids_redacted(self):
-        ctx = _make_context(user_id="+15551234567", platform=Platform.SIGNAL)
-        prompt = build_session_context_prompt(ctx, redact_pii=True)
-        assert "+15551234567" not in prompt
-        assert "user_" in prompt
-
-    def test_slack_ids_not_redacted(self):
-        """Slack may need IDs for mentions too."""
-        ctx = _make_context(user_id="U12345ABC", platform=Platform.SLACK)
-        prompt = build_session_context_prompt(ctx, redact_pii=True)
-        assert "U12345ABC" in prompt

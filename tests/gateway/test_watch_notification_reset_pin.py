@@ -1,6 +1,6 @@
 """A watch notice pinned to a session that ended at a user boundary (/new) is dropped, not requeued
 forever: the session authority refuses it ``admission_conflict`` on every drain tick (#141562).
-Real GatewayRunner, DiscordAdapter, SessionAuthority and drain over SQLite; no agent turn runs."""
+Real GatewayRunner, TelegramAdapter, SessionAuthority and drain over SQLite; no agent turn runs."""
 import asyncio
 import logging
 import queue
@@ -18,13 +18,13 @@ async def _gateway(monkeypatch):
     from gateway.run import GatewayRunner
     from gateway.session_results import execution_result
     from gateway.session_authority import SessionAuthority, initialize_session_authority
-    from plugins.platforms.discord.adapter import DiscordAdapter
+    from plugins.platforms.telegram.adapter import TelegramAdapter
 
-    monkeypatch.setenv('DISCORD_ALLOWED_USERS', '42')
+    monkeypatch.setenv('TELEGRAM_ALLOWED_USERS', '42')
     runner = GatewayRunner(GatewayConfig())
-    adapter = DiscordAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
+    adapter = TelegramAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
     adapter.gateway_runner = runner
-    runner.adapters = {Platform.DISCORD: adapter}
+    runner.adapters = {Platform.TELEGRAM: adapter}
     authority = await initialize_session_authority(runner, profile_id='default', instance_id='owner')
     runner._wire_adapter_handlers(adapter)
 
@@ -131,7 +131,7 @@ async def _foreign_pin(runner):
     """A live session of another chat: the authority refuses the notice, but nothing proves the pin
     gone (its owner may still appear, d6635ffe03b), so the refusal stays retryable."""
     from gateway.config import Platform
-    adapter = runner.adapters[Platform.DISCORD]
+    adapter = runner.adapters[Platform.TELEGRAM]
     other = adapter.build_source(chat_id='43', chat_type='dm', user_id='42')
     return runner.session_store.get_or_create_session(other).session_id
 

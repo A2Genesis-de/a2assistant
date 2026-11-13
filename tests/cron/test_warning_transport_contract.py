@@ -40,14 +40,14 @@ def test_warning_policy_at_real_transport_boundary(tmp_path, monkeypatch, loop_t
         config_text += f"display: {{suppress_warning_notifications: {str(setting).lower()}}}\n"
     (tmp_path / "config.yaml").write_text(config_text)
     config = GatewayConfig()
-    config.platforms[Platform.DISCORD] = PlatformConfig(enabled=True)
+    config.platforms[Platform.TELEGRAM] = PlatformConfig(enabled=True)
     config.platforms[Platform.RELAY] = PlatformConfig(enabled=True)
     monkeypatch.setattr("gateway.config.load_gateway_config", lambda: config)
     sent = []
     fallbacks = []
 
     async def send(chat_id, content, metadata=None):
-        sent.append(("discord", chat_id, content))
+        sent.append(("telegram", chat_id, content))
         if lane == "native-fallback":
             raise RuntimeError("isolated live failure")
         return {"success": True, "message_id": "native-id"}
@@ -64,10 +64,10 @@ def test_warning_policy_at_real_transport_boundary(tmp_path, monkeypatch, loop_t
 
     monkeypatch.setattr("tools.send_message_tool._send_to_platform", standalone)
     adapter = SimpleNamespace(send=send, send_for_platform=relay_send,
-                              fronts_platform=lambda p: p == Platform.DISCORD)
+                              fronts_platform=lambda p: p == Platform.TELEGRAM)
     adapters = {} if lane.startswith("standalone") else {
-        Platform.RELAY if lane.startswith("relay") else Platform.DISCORD: adapter}
-    job = {"id": "fixture", "execution_id": "run", "deliver": "discord:fixture"}
+        Platform.RELAY if lane.startswith("relay") else Platform.TELEGRAM: adapter}
+    job = {"id": "fixture", "execution_id": "run", "deliver": "telegram:fixture"}
     payload = "Requested warning quotation" if not for_failure else "Automatic failure notice"
     delivery_queue.enqueue("run", job, payload, for_failure=for_failure)
 
@@ -81,8 +81,8 @@ def test_warning_policy_at_real_transport_boundary(tmp_path, monkeypatch, loop_t
     else:
         drain()
     muted = setting is True and for_failure
-    assert sent == ([] if muted or lane.startswith("standalone") else [("discord", "fixture", payload)])
-    assert fallbacks == ([] if muted or lane not in ("standalone", "standalone-async", "native-fallback") else [("discord", "fixture", payload)])
+    assert sent == ([] if muted or lane.startswith("standalone") else [("telegram", "fixture", payload)])
+    assert fallbacks == ([] if muted or lane not in ("standalone", "standalone-async", "native-fallback") else [("telegram", "fixture", payload)])
     expected = "suppressed" if muted else "failed" if lane == "relay-failure" else "delivered"
     assert delivery_queue.get_status("run")["status"] == expected
     # Duplicate category and policy changes cannot overwrite durable SQL queue outcomes.

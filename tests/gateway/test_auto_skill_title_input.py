@@ -30,10 +30,10 @@ async def test_gateway_titles_original_request_without_changing_model_input(tmp_
     ))
     monkeypatch.setattr("gateway.run._load_gateway_config", dict)
     monkeypatch.setattr("hermes_cli.config.load_config_readonly", dict)
-    source = SessionSource(platform=Platform.DISCORD, chat_id="channel", user_id="user", user_name="Example")
+    source = SessionSource(platform=Platform.TELEGRAM, chat_id="channel", user_id="user", user_name="Example")
     event = MessageEvent(text=question, source=source, auto_skill=skills,
                          channel_context="[Discord channel context: synthetic metadata]")
-    entry = SessionEntry(session_id="title-test", session_key="discord:title-test",
+    entry = SessionEntry(session_id="title-test", session_key="telegram:title-test",
                          created_at=datetime(2026, 1, 1), updated_at=datetime(2026, 1, 1))
     runner = GatewayRunner.__new__(GatewayRunner)
     runner.config = GatewayConfig()
@@ -62,7 +62,7 @@ async def test_gateway_titles_original_request_without_changing_model_input(tmp_
     from hermes_state import SessionDB
     db = SessionDB(tmp_path / "state.db")
     agent = AIAgent(session_db=db, model="test-model", api_key="test-key", base_url="http://127.0.0.1:1/v1",
-                    platform="discord", session_id=entry.session_id, enabled_toolsets=[],
+                    platform="telegram", session_id=entry.session_id, enabled_toolsets=[],
                     quiet_mode=True, skip_memory=True, skip_context_files=True)
     agent.compression_enabled = False
     title_inputs, title_requests, model_inputs = [], [], []
@@ -86,7 +86,7 @@ async def test_gateway_titles_original_request_without_changing_model_input(tmp_
 
     defaults = TurnContext()
     display = SimpleNamespace(**{name: getattr(defaults, name) for name in runner._DISPLAY_TO_TURN_CTX})
-    display.platform_key = "discord"
+    display.platform_key = "telegram"
     display.resolve_display_setting = lambda *args: False
     runner._run_agent_display_settings = lambda source: display
 

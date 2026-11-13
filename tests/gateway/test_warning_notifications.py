@@ -35,7 +35,7 @@ class Emitter(StatusOutputMixin):
     log_prefix = ""
 
 
-@pytest.mark.parametrize("platform", [Platform.SLACK, Platform.TELEGRAM, Platform.LOCAL])
+@pytest.mark.parametrize("platform", [Platform.TELEGRAM, Platform.LOCAL])
 @pytest.mark.parametrize("configured,enabled", [
     ("", True), ("display: null", True),
     ("display: {suppress_warning_notifications: null}", True),
@@ -46,17 +46,17 @@ class Emitter(StatusOutputMixin):
     ("display: broken", True),
     ("display: [broken]", True),
     ("display: {platforms: broken}", True),
-    ("display: {suppress_warning_notifications: true, platforms: {slack: {suppress_warning_notifications: false}}}", True),
+    ("display: {suppress_warning_notifications: true, platforms: {telegram: {suppress_warning_notifications: false}}}", True),
 ])
 def test_warning_opt_out_preserves_other_delivery(tmp_path, monkeypatch, platform, configured, enabled):
     from gateway import run
 
-    thread_id = "1700.1"  # threaded vs. unthreaded delivery is covered in test_warning_notifications_transport
+    thread_id = "1700.1"
 
     (tmp_path / "config.yaml").write_text(configured)
     monkeypatch.setattr(run, "_hermes_home", tmp_path)
     config = _load_gateway_config()
-    if "platforms: {slack" in configured and platform != Platform.SLACK:
+    if "platforms: {telegram" in configured and platform != Platform.TELEGRAM:
         enabled = False
 
     adapter = RecordingAdapter()
@@ -114,12 +114,12 @@ def test_direct_warning_delivery_keeps_failure_state(tmp_path, monkeypatch, enab
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))
     monkeypatch.setattr(run, "_hermes_home", tmp_path)
     adapter = RecordingAdapter()
-    source = SessionSource(platform=Platform.SLACK, chat_id="chat", user_id="user")
+    source = SessionSource(platform=Platform.TELEGRAM, chat_id="chat", user_id="user")
     gateway = object.__new__(GatewayRunner)
     gateway._delivery_adapter_for = lambda source: adapter
     gateway._session_db_init_error = "database is locked"
     gateway._session_db_handle_cache = None
-    gateway._home_channel_transports = lambda: [(Platform.SLACK, None, SimpleNamespace(chat_id="chat"), adapter)]
+    gateway._home_channel_transports = lambda: [(Platform.TELEGRAM, None, SimpleNamespace(chat_id="chat"), adapter)]
     gateway._send_home_channel_message = AsyncMock()
     asyncio.run(gateway._hmwa_hygiene_notify(source, {}, "Compression failed", "failure"))
     asyncio.run(gateway._run_agent_inactivity_warning(SimpleNamespace(agent_warning=60, agent_timeout=120), source, {}))

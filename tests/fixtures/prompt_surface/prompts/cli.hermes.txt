@@ -60,7 +60,6 @@ After difficult/iterative tasks, offer to save as a skill. If a skill you loaded
     - microsoft-office: Create, read, and edit Word, PowerPoint, and Excel files.
     - pdf: PDF files: create, read, merge, fill, OCR, edit text.
     - product-price-monitor: Watch product, flight, or listing prices; alert on target.
-    - teams-meeting-pipeline: Teams meeting summaries, job replay, Graph subscriptions.
     - weekly-review-planning: Weekly reset: commitments, stalled work, next-week plan.
   research:
     - arxiv: Search arXiv papers by keyword, author, category, or ID.

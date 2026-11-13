@@ -116,18 +116,6 @@ def test_null_platform_warns_even_when_others_are_valid():
     assert not any("zero valid toolsets" in w for w in warnings)
 
 
-def test_null_platform_uses_canonical_default_for_alias():
-    cfg = {"whatsapp_cloud": None, "telegram": ["hermes-telegram"]}
-    warnings = validate_platform_toolsets(cfg, _is_valid)
-
-    assert any(
-        "platform 'whatsapp_cloud'" in w
-        and "falling back to 'hermes-whatsapp'" in w
-        for w in warnings
-    )
-    assert not any("zero valid toolsets" in w for w in warnings)
-
-
 def test_scalar_platform_value_warns_but_uses_platform_default():
     cfg = {"cli": "bogus", "telegram": ["hermes-telegram"]}
     warnings = validate_platform_toolsets(cfg, _is_valid)
@@ -150,19 +138,6 @@ def test_list_literal_string_is_validated_as_the_list_it_encodes():
     warnings = validate_platform_toolsets({"cli": '["web", "nope"]'}, _is_valid)
     assert any("platform 'cli' references unknown toolset 'nope'" in w for w in warnings)
     assert not any("falling back" in w for w in warnings)
-
-
-def test_platform_restricted_toolset_warns_when_other_platform_is_valid():
-    cfg = {"telegram": ["discord"], "cli": ["hermes-cli"]}
-    warnings = validate_platform_toolsets(cfg, _is_valid)
-
-    assert any(
-        "platform 'telegram'" in w
-        and "toolset 'discord'" in w
-        and "not available" in w
-        for w in warnings
-    )
-    assert not any("zero valid toolsets" in w for w in warnings)
 
 
 def test_null_plugin_platform_uses_synthetic_default():

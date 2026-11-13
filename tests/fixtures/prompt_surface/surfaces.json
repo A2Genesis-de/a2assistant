@@ -3,7 +3,7 @@
     "prompt_tokens": {
       "context": 134,
       "stable": 1883,
-      "volatile": 1269
+      "volatile": 1247
     },
     "tool_tokens": 11247,
     "tools": [
@@ -36,7 +36,7 @@
     "prompt_tokens": {
       "context": 0,
       "stable": 1278,
-      "volatile": 1270
+      "volatile": 1248
     },
     "tool_tokens": 11247,
     "tools": [
@@ -69,7 +69,7 @@
     "prompt_tokens": {
       "context": 0,
       "stable": 1700,
-      "volatile": 1268
+      "volatile": 1246
     },
     "tool_tokens": 11247,
     "tools": [
@@ -102,7 +102,7 @@
     "prompt_tokens": {
       "context": 0,
       "stable": 2473,
-      "volatile": 1266
+      "volatile": 1244
     },
     "tool_tokens": 11403,
     "tools": [
@@ -135,7 +135,7 @@
     "prompt_tokens": {
       "context": 0,
       "stable": 1278,
-      "volatile": 1269
+      "volatile": 1247
     },
     "tool_tokens": 11247,
     "tools": [
@@ -168,7 +168,7 @@
     "prompt_tokens": {
       "context": 0,
       "stable": 1265,
-      "volatile": 1270
+      "volatile": 1248
     },
     "tool_tokens": 11247,
     "tools": [
@@ -201,7 +201,7 @@
     "prompt_tokens": {
       "context": 0,
       "stable": 1528,
-      "volatile": 1271
+      "volatile": 1249
     },
     "tool_tokens": 11900,
     "tools": [
@@ -231,44 +231,11 @@
       "write_file"
     ]
   },
-  "discord.claude": {
-    "prompt_tokens": {
-      "context": 0,
-      "stable": 1297,
-      "volatile": 1271
-    },
-    "tool_tokens": 11247,
-    "tools": [
-      "browser_cdp",
-      "browser_dialog",
-      "browser_exec",
-      "clarify",
-      "delegate_task",
-      "execute_code",
-      "manage_connections",
-      "memory",
-      "patch",
-      "read_file",
-      "search_files",
-      "skill_manage",
-      "skill_view",
-      "skills_list",
-      "terminal",
-      "text_to_speech",
-      "tool_call",
-      "tool_describe",
-      "tool_search",
-      "vision_analyze",
-      "web_extract",
-      "web_search",
-      "write_file"
-    ]
-  },
   "telegram.claude": {
     "prompt_tokens": {
       "context": 0,
       "stable": 1384,
-      "volatile": 1271
+      "volatile": 1249
     },
     "tool_tokens": 11247,
     "tools": [

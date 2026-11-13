@@ -269,7 +269,7 @@ def test_an_auto_resumed_chat_counts_toward_its_owning_profiles_peak(tmp_path, m
 
 
 def test_a_held_burst_dropped_by_stop_counts_under_its_own_profile_not_the_chats_last_one(rows, monkeypatch, tmp_path):
-    """Two profiles serve one Discord channel through different bots; the other profile ran the
+    """Two profiles serve one Telegram chat through different bots; the other profile ran the
     chat's latest turn. A burst held for this profile's bot and dropped by /stop is recorded under
     the profile its routing identity names, so that profile's collection setting decides."""
     from gateway.session_identity import RoutingIdentity
@@ -280,16 +280,16 @@ def test_a_held_burst_dropped_by_stop_counts_under_its_own_profile_not_the_chats
     alpha, beta = tmp_path / "alpha", tmp_path / "beta"
     token = set_hermes_home_override(str(beta))
     try:
-        smg.start_reply_clock(SessionSource(platform=Platform.DISCORD, chat_id="chan", user_id="9"))
+        smg.start_reply_clock(SessionSource(platform=Platform.TELEGRAM, chat_id="chan", user_id="9"))
     finally:
         reset_hermes_home_override(token)
-    source = SessionSource(platform=Platform.DISCORD, chat_id="chan", user_id="7")
+    source = SessionSource(platform=Platform.TELEGRAM, chat_id="chan", user_id="7")
     source._identity = RoutingIdentity(transport_profile="alpha", runtime_profile="alpha",
                                        authorization_home=alpha, runtime_home=alpha)
 
     async def scenario():
         adapter = _Adapter(handler=None)
-        adapter.platform = Platform.DISCORD
+        adapter.platform = Platform.TELEGRAM
         held = asyncio.create_task(dispatch_busy_burst(adapter, MessageEvent(text="x", source=source), KEY))
         await asyncio.sleep(0)
         discard_busy_burst(adapter, KEY)
@@ -333,19 +333,19 @@ def test_a_closing_day_keeps_a_peak_reached_just_before_midnight(tmp_path, monke
 
 
 async def _real_runner(monkeypatch):
-    """Real GatewayRunner busy dispatch, real DiscordAdapter, real authority over a real SessionDB;
+    """Real GatewayRunner busy dispatch, real TelegramAdapter, real authority over a real SessionDB;
     the drain is not scheduled, so a queued row waits until the test runs or cancels it."""
     from gateway.config import GatewayConfig, PlatformConfig
     from gateway.platforms.base import SendResult
     from gateway.run import GatewayRunner
     from gateway.session_authority import SessionAuthority, initialize_session_authority
-    from plugins.platforms.discord.adapter import DiscordAdapter
+    from plugins.platforms.telegram.adapter import TelegramAdapter
 
     monkeypatch.setattr(SessionAuthority, "_schedule", lambda self, ref: None)
-    monkeypatch.setenv("DISCORD_ALLOWED_USERS", "42")
+    monkeypatch.setenv("TELEGRAM_ALLOWED_USERS", "42")
     runner = GatewayRunner(GatewayConfig())
-    adapter = DiscordAdapter(PlatformConfig(enabled=True, token="fixture-token", typing_indicator=False))
-    runner.adapters = {Platform.DISCORD: adapter}
+    adapter = TelegramAdapter(PlatformConfig(enabled=True, token="fixture-token", typing_indicator=False))
+    runner.adapters = {Platform.TELEGRAM: adapter}
     sent = []
 
     async def send(chat_id, content, **_kwargs):
@@ -411,7 +411,7 @@ async def test_a_busy_message_cancelled_before_admission_reads_its_row_counts_as
 
     runner, authority, source, _key = await _real_runner(monkeypatch)
     follow_up = MessageEvent(text="B", source=source, message_id="B")
-    busy.stamp_busy_arrival(runner.adapters[Platform.DISCORD], follow_up)
+    busy.stamp_busy_arrival(runner.adapters[Platform.TELEGRAM], follow_up)
     busy.note_busy_admitting(follow_up)
     commit = authority.admit_native
 

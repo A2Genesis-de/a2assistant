@@ -16,19 +16,17 @@ def _make_runner(config: GatewayConfig) -> GatewayRunner:
 
 
 @pytest.mark.asyncio
-async def test_preprocess_includes_slack_author_mention_for_shared_thread():
-    """Shared Slack threads expose the current author's verifiable user ID
-    next to the display name so 'mention me again' requests can bind the
-    mention to the CURRENT speaker (#17916)."""
+async def test_preprocess_prefixes_the_current_author_in_a_shared_thread():
+    """Shared threads prefix each message with the current author's display name."""
     runner = _make_runner(
         GatewayConfig(
             platforms={
-                Platform.SLACK: PlatformConfig(enabled=True, token="fake"),
+                Platform.TELEGRAM: PlatformConfig(enabled=True, token="fake"),
             },
         )
     )
     source = SessionSource(
-        platform=Platform.SLACK,
+        platform=Platform.TELEGRAM,
         chat_id="C123",
         chat_name="team-channel",
         chat_type="group",
@@ -44,6 +42,6 @@ async def test_preprocess_includes_slack_author_mention_for_shared_thread():
         history=[],
     )
 
-    assert result == "[Alice | Slack user <@U123>] mention me again"
+    assert result == "[Alice] mention me again"
 
 

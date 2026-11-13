@@ -1645,7 +1645,7 @@ class TestPlatformLockTakeoverGovernance:
         from gateway.config import Platform, PlatformConfig
 
         adapter = _LockGovernanceProbeAdapter(
-            config=PlatformConfig(), platform=Platform.DISCORD
+            config=PlatformConfig(), platform=Platform.TELEGRAM
         )
         adapter._platform_lock_takeover_allowed = takeover_allowed
         return adapter
@@ -1674,10 +1674,10 @@ class TestPlatformLockTakeoverGovernance:
         adapter = self._make_adapter(takeover_allowed=False)
         # Ordinary (supervised) start: the live cross-home holder must be
         # left untouched — the gateway fails retryably instead of killing it.
-        assert adapter._acquire_platform_lock("discord-token", "tok", "Discord") is False
+        assert adapter._acquire_platform_lock("telegram-token", "tok", "Telegram") is False
         assert takeover_calls == []
         assert adapter.fatal_error_retryable is True
-        assert adapter._fatal_error_code == "discord-token_lock"
+        assert adapter._fatal_error_code == "telegram-token_lock"
 
     def test_takeover_authority_consumed_once(self, tmp_path, monkeypatch):
         from gateway import status
@@ -1702,10 +1702,10 @@ class TestPlatformLockTakeoverGovernance:
 
         adapter = self._make_adapter(takeover_allowed=True)
         # An explicit --replace start may attempt exactly one takeover...
-        assert adapter._acquire_platform_lock("discord-token", "tok", "Discord") is False
+        assert adapter._acquire_platform_lock("telegram-token", "tok", "Telegram") is False
         assert len(takeover_calls) == 1
         # ...but the authority is consumed, so a reconnect can never evict a
         # healthy holder (this is what stops the supervised respawn loop).
-        assert adapter._acquire_platform_lock("discord-token", "tok", "Discord") is False
+        assert adapter._acquire_platform_lock("telegram-token", "tok", "Telegram") is False
         assert len(takeover_calls) == 1
         assert adapter._platform_lock_takeover_attempted is True

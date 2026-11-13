@@ -29,14 +29,12 @@ class TestCredentialFingerprint:
 
     def test_claims_never_raise(self):
         """Unserve and a fatal teardown compute claims after the adapter left the map: a lone surrogate in a
-        token, or a non-finite port int() cannot take, must not raise there. Valid tokens hash as before."""
+        token must not raise there. Valid tokens hash as before."""
         import hashlib
 
         valid, odd = _FakeAdapter("tok"), _FakeAdapter("tok\ud800")
         assert GatewayRunner._adapter_credential_fingerprint(valid) == hashlib.sha256(b"hermes-mux:tok").hexdigest()[:16]
         assert GatewayRunner._adapter_credential_fingerprint(odd)
-        photon = types.SimpleNamespace(_sidecar_bind="0.0.0.0", _sidecar_port=float("inf"))
-        assert GatewayRunner._adapter_listener_claim(Platform("photon"), photon) is None
 
 
     def test_reads_photon_project_secret(self):
@@ -174,8 +172,8 @@ class TestProfileRuntimeStatus:
                 return None
 
         adapter = _ConcreteAdapter.__new__(_ConcreteAdapter)
-        adapter.platform = Platform.DISCORD
-        adapter._runtime_status_platform_key = "reviewer:discord"
+        adapter.platform = Platform.TELEGRAM
+        adapter._runtime_status_platform_key = "reviewer:telegram"
         writes = []
         monkeypatch.setattr(
             "gateway.status.publish_runtime_status",
@@ -185,12 +183,12 @@ class TestProfileRuntimeStatus:
         adapter._write_runtime_status_safe("fatal", platform_state="fatal")
 
         assert writes == [
-            {"platform": "reviewer:discord", "platform_state": "fatal"}
+            {"platform": "reviewer:telegram", "platform_state": "fatal"}
         ]
 
 
 class _SecondaryRecoveryAdapter:
-    platform = Platform.DISCORD
+    platform = Platform.TELEGRAM
 
     def __init__(self, *, retryable=True):
         self.fatal_error_retryable = retryable
@@ -264,7 +262,7 @@ def _install_secondary_reconnect_context(
         lambda: GatewayConfig(
             multiplex_profiles=True,
             platforms={
-                Platform.DISCORD: PlatformConfig(
+                Platform.TELEGRAM: PlatformConfig(
                     enabled=True, token="profile-token"
                 )
             },
@@ -319,7 +317,7 @@ class TestSecondaryProfileFatalRecovery:
 
         async def connect(adapter, platform, **_kwargs):
             assert adapter is replacement
-            assert platform is Platform.DISCORD
+            assert platform is Platform.TELEGRAM
             return True
 
         monkeypatch.setattr(
@@ -335,7 +333,7 @@ class TestSecondaryProfileFatalRecovery:
                 "reviewer", Path("/profiles/reviewer"), {}
             )
         else:
-            coro = runner._run_secondary_profile_reconnect("reviewer", Platform.DISCORD)
+            coro = runner._run_secondary_profile_reconnect("reviewer", Platform.TELEGRAM)
         ticker_task = asyncio.create_task(ticker())
         work = asyncio.create_task(coro)
         try:
@@ -349,7 +347,7 @@ class TestSecondaryProfileFatalRecovery:
         assert hydration_thread_ids[0] != loop_thread_id
         assert ticks_during_hydration > 0
         assert hydration_flags and set(hydration_flags) == {False}
-        assert runner._profile_adapters["reviewer"][Platform.DISCORD] is replacement
+        assert runner._profile_adapters["reviewer"][Platform.TELEGRAM] is replacement
 
     @pytest.mark.asyncio
     async def test_secondary_initial_connect_syncs_voice_mode_state(self, monkeypatch):
@@ -379,7 +377,7 @@ class TestSecondaryProfileFatalRecovery:
         runner = _secondary_recovery_runner()
         stale = _SecondaryRecoveryAdapter()
         replacement = _SecondaryRecoveryAdapter()
-        runner._profile_adapters["reviewer"] = {Platform.DISCORD: stale}
+        runner._profile_adapters["reviewer"] = {Platform.TELEGRAM: stale}
         scoped_homes: list[Path] = []
         _install_secondary_reconnect_context(
             monkeypatch, runner, replacement, scoped_homes
@@ -387,7 +385,7 @@ class TestSecondaryProfileFatalRecovery:
 
         async def connect(adapter, platform, *, is_reconnect=False):
             assert adapter is replacement
-            assert platform is Platform.DISCORD
+            assert platform is Platform.TELEGRAM
             assert is_reconnect is True
             replacement.connected = True
             return True
@@ -403,17 +401,17 @@ class TestSecondaryProfileFatalRecovery:
 
         runner._redeliver_failed_obligations_for_platform.side_effect = redeliver
         await runner._handle_profile_adapter_fatal_error(
-            "reviewer", Platform.DISCORD, stale
+            "reviewer", Platform.TELEGRAM, stale
         )
 
         assert stale.disconnected is True
-        assert Platform.DISCORD not in runner._profile_adapters["reviewer"]
+        assert Platform.TELEGRAM not in runner._profile_adapters["reviewer"]
         tasks = list(runner._background_tasks)
         assert len(tasks) == 1
         await tasks[0]
-        assert runner._profile_adapters["reviewer"][Platform.DISCORD] is replacement
+        assert runner._profile_adapters["reviewer"][Platform.TELEGRAM] is replacement
         runner._redeliver_failed_obligations_for_platform.assert_awaited_once_with(
-            Platform.DISCORD, profile="reviewer"
+            Platform.TELEGRAM, profile="reviewer"
         )
         assert scoped_homes
         assert all(path == Path("/profiles/reviewer") for path in scoped_homes)
@@ -429,7 +427,7 @@ class TestSecondaryProfileFatalRecovery:
         runner = _secondary_recovery_runner()
         runner._adapter_disconnect_timeout_secs = lambda: 5
         primary = object()
-        runner.adapters = {Platform.DISCORD: primary}
+        runner.adapters = {Platform.TELEGRAM: primary}
         runner.config.profile_routes = [ProfileRoute("r", "discord", "reviewer", chat_id="C1")]
         monkeypatch.setattr(gateway_run, "_multiplex_profile_homes",
                             lambda config: [("reviewer", Path("/profiles/reviewer"))])
@@ -446,28 +444,28 @@ class TestSecondaryProfileFatalRecovery:
 
         stale.disconnect = disconnect
         handler = asyncio.create_task(
-            runner._handle_profile_adapter_fatal_error("reviewer", Platform.DISCORD, stale))
+            runner._handle_profile_adapter_fatal_error("reviewer", Platform.TELEGRAM, stale))
         await asyncio.wait_for(disconnecting.wait(), 5)
-        assert runner._adapters_for_profile("reviewer").get(Platform.DISCORD) is None
+        assert runner._adapters_for_profile("reviewer").get(Platform.TELEGRAM) is None
         release.set()
         await handler
         assert not runner._background_tasks
-        assert runner._adapters_for_profile("reviewer").get(Platform.DISCORD) is None
+        assert runner._adapters_for_profile("reviewer").get(Platform.TELEGRAM) is None
 
     @pytest.mark.asyncio
     async def test_secondary_reconnect_keeps_inbound_dedup(self, monkeypatch):
         """A secondary profile's rebuilt adapter still drops an inbound ID the stale one admitted."""
         runner = _secondary_recovery_runner()
         stale, replacement = _SecondaryRecoveryAdapter(), _SecondaryRecoveryAdapter()
-        runner._profile_adapters["reviewer"] = {Platform.DISCORD: stale}
+        runner._profile_adapters["reviewer"] = {Platform.TELEGRAM: stale}
         _install_secondary_reconnect_context(monkeypatch, runner, replacement)
         monkeypatch.setattr(runner, "_connect_adapter_with_timeout", AsyncMock(return_value=True))
         assert stale._dedup.is_duplicate("m1") is False
 
-        await runner._handle_profile_adapter_fatal_error("reviewer", Platform.DISCORD, stale)
+        await runner._handle_profile_adapter_fatal_error("reviewer", Platform.TELEGRAM, stale)
         await asyncio.gather(*runner._background_tasks)
 
-        assert runner._profile_adapters["reviewer"][Platform.DISCORD] is replacement
+        assert runner._profile_adapters["reviewer"][Platform.TELEGRAM] is replacement
         assert replacement._dedup.is_duplicate("m1") is True
         assert replacement._dedup.is_duplicate("m2") is False
 
@@ -490,9 +488,9 @@ class TestSecondaryProfileFatalRecovery:
 
         monkeypatch.setattr(runner, "_connect_adapter_with_timeout", connect)
         task = asyncio.create_task(
-            runner._run_secondary_profile_reconnect("reviewer", Platform.DISCORD)
+            runner._run_secondary_profile_reconnect("reviewer", Platform.TELEGRAM)
         )
-        runner._profile_failed_platforms["reviewer"][Platform.DISCORD] = task
+        runner._profile_failed_platforms["reviewer"][Platform.TELEGRAM] = task
         await connect_started.wait()
         runner._running = False
         release_connect.set()
@@ -546,7 +544,7 @@ class TestSecondaryStartupFailureRecovery:
 
         assert connected == 0
         assert failed.disconnected is True
-        assert Platform.DISCORD not in runner._profile_adapters.get(
+        assert Platform.TELEGRAM not in runner._profile_adapters.get(
             "reviewer", {}
         )
         bridge = list(runner._background_tasks)
@@ -559,15 +557,15 @@ class TestSecondaryStartupFailureRecovery:
         # so wait on a deadline rather than a fixed number of loop turns.
         deadline = time.monotonic() + 1.0
         while (
-            runner._profile_adapters.get("reviewer", {}).get(Platform.DISCORD)
+            runner._profile_adapters.get("reviewer", {}).get(Platform.TELEGRAM)
             is not replacement
             and time.monotonic() < deadline
         ):
             await asyncio.sleep(0.005)
         assert (
-            runner._profile_adapters["reviewer"][Platform.DISCORD] is replacement
+            runner._profile_adapters["reviewer"][Platform.TELEGRAM] is replacement
         )
-        assert Platform.DISCORD not in runner._profile_failed_platforms.get(
+        assert Platform.TELEGRAM not in runner._profile_failed_platforms.get(
             "reviewer", {}
         )
         # Reconnect must have re-entered the profile's own runtime scope.
@@ -614,15 +612,15 @@ class TestSecondaryStartupFailureRecovery:
         # so wait on a deadline rather than a fixed number of loop turns.
         deadline = time.monotonic() + 1.0
         while (
-            runner._profile_adapters.get("reviewer", {}).get(Platform.DISCORD)
+            runner._profile_adapters.get("reviewer", {}).get(Platform.TELEGRAM)
             is not replacement
             and time.monotonic() < deadline
         ):
             await asyncio.sleep(0.005)
         assert (
-            runner._profile_adapters["reviewer"][Platform.DISCORD] is replacement
+            runner._profile_adapters["reviewer"][Platform.TELEGRAM] is replacement
         )
-        assert Platform.DISCORD not in runner._profile_failed_platforms.get(
+        assert Platform.TELEGRAM not in runner._profile_failed_platforms.get(
             "reviewer", {}
         )
 
@@ -693,7 +691,7 @@ class TestSecondaryStartupFailureRecovery:
         assert runner._profile_failed_platforms == {}
         assert statuses == [
             (
-                "reviewer:discord",
+                "reviewer:telegram",
                 {
                     "platform_state": "fatal",
                     "error_code": "discord-bot-token_lock",
@@ -746,7 +744,7 @@ class TestSecondaryStartupFailureRecovery:
             for record in caplog.records
         )
         # Nothing was scheduled and no slot leaked behind the failed handoff.
-        assert Platform.DISCORD not in runner._profile_adapters.get("reviewer", {})
+        assert Platform.TELEGRAM not in runner._profile_adapters.get("reviewer", {})
         assert runner._profile_failed_platforms == {}
 
 
@@ -754,54 +752,13 @@ class TestSecondaryProfileConfigHandling:
     """Secondary config errors degrade only when the profile is safe to skip."""
 
 
-    @pytest.mark.asyncio
-    async def test_secondary_port_binders_run_in_shared_listener_mode(self, monkeypatch):
-        """A secondary's inbound-port platforms are NOT refused: they are built without a port and
-        served at /p/<profile>/ by the default's listener; api_server/webhook (already mirrored
-        there) are skipped, never a second instance."""
-        from gateway.config import GatewayConfig, Platform, PlatformConfig
-
-        runner = GatewayRunner.__new__(GatewayRunner)
-        runner.config = GatewayConfig(multiplex_profiles=True)
-        runner._profile_adapters = {}
-        runner.adapters = {}
-
-        reviewer_cfg = GatewayConfig(multiplex_profiles=True)
-        reviewer_cfg.platforms = {
-            # connection_mode=webhook: with #52563's conditional check merged,
-            # default (websocket) Feishu does not bind a port.
-            Platform.FEISHU: PlatformConfig(enabled=True, extra={"connection_mode": "webhook"}),
-            Platform.WEBHOOK: PlatformConfig(enabled=True, extra={"port": 8644}),
-            Platform.TELEGRAM: PlatformConfig(enabled=True, token="t"),
-        }
-        monkeypatch.setattr("gateway.config.load_gateway_config", lambda: reviewer_cfg)
-        created = {}
-
-        def fake_create(platform, platform_config):
-            created[platform] = _FakeAdapter(token=platform_config.token or None)
-            created[platform].config = platform_config
-            return created[platform]
-
-        monkeypatch.setattr(runner, "_create_adapter", fake_create)
-        monkeypatch.setattr(runner, "_wire_adapter_handlers", lambda *a, **k: None)
-        monkeypatch.setattr(runner, "_bind_voice_input_callback", lambda *a, **k: None)
-        monkeypatch.setattr(runner, "_sync_voice_mode_state_to_adapter", lambda *a, **k: None)
-        monkeypatch.setattr(runner, "_connect_initial_adapter_with_timeout", AsyncMock(return_value=True))
-
-        connected = await runner._start_one_profile_adapters("reviewer", "/tmp/x", {})
-
-        assert connected == 2
-        assert set(created) == {Platform.FEISHU, Platform.TELEGRAM}  # webhook is a default-listener mirror
-        assert created[Platform.FEISHU]._shared_listener_profile == "reviewer"
-        assert getattr(created[Platform.TELEGRAM], "_shared_listener_profile", None) is None
-
     def test_configured_secondary_adapter_namespaces_runtime_status(self):
         runner = _secondary_recovery_runner()
         adapter = _SecondaryRecoveryAdapter()
 
-        runner._configure_profile_adapter(adapter, "reviewer", Platform.DISCORD)
+        runner._configure_profile_adapter(adapter, "reviewer", Platform.TELEGRAM)
 
-        assert adapter._runtime_status_platform_key == "reviewer:discord"
+        assert adapter._runtime_status_platform_key == "reviewer:telegram"
 
     @pytest.mark.asyncio
     async def test_duplicate_credential_is_persisted_as_profile_fatal(
@@ -811,13 +768,13 @@ class TestSecondaryProfileConfigHandling:
         config = GatewayConfig(
             multiplex_profiles=True,
             platforms={
-                Platform.DISCORD: PlatformConfig(
-                    enabled=True, token="shared-discord-token"
+                Platform.TELEGRAM: PlatformConfig(
+                    enabled=True, token="shared-telegram-token"
                 )
             },
         )
         adapter = _SecondaryRecoveryAdapter()
-        adapter.config = config.platforms[Platform.DISCORD]
+        adapter.config = config.platforms[Platform.TELEGRAM]
         writes = []
 
         monkeypatch.setattr("gateway.config.load_gateway_config", lambda: config)
@@ -827,7 +784,7 @@ class TestSecondaryProfileConfigHandling:
             "_update_platform_runtime_status",
             lambda platform, **kwargs: writes.append((platform, kwargs)),
         )
-        claim = runner._adapter_credential_claim(Platform.DISCORD, adapter)
+        claim = runner._adapter_credential_claim(Platform.TELEGRAM, adapter)
 
         connected = await runner._start_one_profile_adapters(
             "reviewer", "/tmp/reviewer", {claim: "default"}
@@ -836,56 +793,18 @@ class TestSecondaryProfileConfigHandling:
         assert connected == 0
         assert writes == [
             (
-                "reviewer:discord",
+                "reviewer:telegram",
                 {
                     "platform_state": "fatal",
                     "error_code": "duplicate_credential",
                     "error_message": (
-                        "Profile 'default' and 'reviewer' both configure discord "
+                        "Profile 'default' and 'reviewer' both configure telegram "
                         "with the same credential. Give each profile its own "
-                        "discord credential."
+                        "telegram credential."
                     ),
                 },
             )
         ]
-
-    @pytest.mark.asyncio
-    async def test_duplicate_listener_is_persisted_without_public_bind_details(
-        self, monkeypatch
-    ):
-        class _ListenerAdapter(_SecondaryRecoveryAdapter):
-            _sidecar_bind = "127.0.0.1"
-            _sidecar_port = 8789
-
-        runner = _secondary_recovery_runner()
-        platform = Platform("photon")
-        config = GatewayConfig(
-            multiplex_profiles=True,
-            platforms={platform: PlatformConfig(enabled=True)},
-        )
-        adapter = _ListenerAdapter()
-        adapter.platform = platform
-        adapter.config = config.platforms[platform]
-        writes = []
-
-        monkeypatch.setattr("gateway.config.load_gateway_config", lambda: config)
-        monkeypatch.setattr(runner, "_create_adapter", lambda _p, _c: adapter)
-        monkeypatch.setattr(
-            runner,
-            "_update_platform_runtime_status",
-            lambda key, **kwargs: writes.append((key, kwargs)),
-        )
-        claim = runner._adapter_listener_claim(platform, adapter)
-
-        connected = await runner._start_one_profile_adapters(
-            "reviewer", "/tmp/reviewer", {claim: "default"}
-        )
-
-        assert connected == 0
-        assert writes[0][0] == "reviewer:photon"
-        assert writes[0][1]["error_code"] == "duplicate_listener"
-        assert "127.0.0.1" not in writes[0][1]["error_message"]
-        assert "8789" not in writes[0][1]["error_message"]
 
     @pytest.mark.asyncio
     async def test_multiplexer_skips_bad_profile_and_continues(self, monkeypatch, caplog):
@@ -992,176 +911,6 @@ class TestSecondaryProfileConfigHandling:
             await runner._start_secondary_profile_adapters()
 
 
-    @pytest.mark.asyncio
-    async def test_secondary_distinct_photon_credentials_distinct_ports_connect(
-        self, monkeypatch
-    ):
-        """Multiplexing remains supported when Photon sidecars cannot collide."""
-        from gateway.config import GatewayConfig, Platform, PlatformConfig
-
-        class _PhotonAdapter:
-            def __init__(self, secret, port):
-                self._project_secret = secret
-                self._sidecar_bind = "127.0.0.1"
-                self._sidecar_port = port
-                self.platform = Platform("photon")
-                self.connected = False
-                self.disconnected = False
-                self.config = PlatformConfig(enabled=True)
-
-            def __getattr__(self, name):
-                if name.startswith("set_"):
-                    return lambda *args, **kwargs: None
-                raise AttributeError(name)
-
-            async def disconnect(self):
-                self.disconnected = True
-
-        runner = GatewayRunner.__new__(GatewayRunner)
-        runner.config = GatewayConfig(multiplex_profiles=True)
-        runner._profile_adapters = {}
-        runner.session_store = None
-        runner._busy_text_mode = "queue"
-
-        photon = Platform("photon")
-        reviewer_cfg = GatewayConfig(multiplex_profiles=True)
-        reviewer_cfg.platforms = {photon: PlatformConfig(enabled=True)}
-        primary = _PhotonAdapter("primary-secret", 8789)
-        secondary = _PhotonAdapter("different-secret", 8790)
-        claimed = {
-            GatewayRunner._adapter_listener_claim(photon, primary): "default"
-        }
-
-        async def _connect(adapter, platform, **_kw):
-            adapter.connected = True
-            return True
-
-        monkeypatch.setattr("gateway.config.load_gateway_config", lambda: reviewer_cfg)
-        monkeypatch.setattr(runner, "_create_adapter", lambda p, c: secondary)
-        monkeypatch.setattr(runner, "_connect_adapter_with_timeout", _connect)
-        monkeypatch.setattr(
-            runner, "_make_adapter_auth_check", lambda p, **kwargs: None
-        )
-
-        connected = await runner._start_one_profile_adapters(
-            "reviewer", "/tmp/x", claimed
-        )
-
-        assert connected == 1
-        assert secondary.connected is True
-        assert secondary.disconnected is False
-        assert runner._profile_adapters["reviewer"][photon] is secondary
-
-    @pytest.mark.asyncio
-    async def test_failed_photon_connect_releases_listener_for_later_profile(
-        self, monkeypatch
-    ):
-        """A failed sidecar must not reserve an endpoint it never owned."""
-        from gateway.config import GatewayConfig, Platform, PlatformConfig
-
-        class _PhotonAdapter:
-            def __init__(self, secret, should_connect):
-                self._project_secret = secret
-                self._sidecar_bind = "127.0.0.1"
-                self._sidecar_port = 8789
-                self.platform = Platform("photon")
-                self.should_connect = should_connect
-                self.disconnected = False
-                self.config = PlatformConfig(enabled=True)
-
-            def __getattr__(self, name):
-                if name.startswith("set_"):
-                    return lambda *args, **kwargs: None
-                raise AttributeError(name)
-
-            async def disconnect(self):
-                self.disconnected = True
-
-        runner = GatewayRunner.__new__(GatewayRunner)
-        runner.config = GatewayConfig(multiplex_profiles=True)
-        runner._profile_adapters = {}
-        runner.session_store = None
-        runner._busy_text_mode = "queue"
-
-        photon = Platform("photon")
-        profile_cfg = GatewayConfig(multiplex_profiles=True)
-        profile_cfg.platforms = {photon: PlatformConfig(enabled=True)}
-        failed = _PhotonAdapter("failed-secret", False)
-        later = _PhotonAdapter("later-secret", True)
-        adapters = iter((failed, later))
-        claimed = {}
-
-        async def _connect(adapter, platform, **_kw):
-            return adapter.should_connect
-
-        monkeypatch.setattr("gateway.config.load_gateway_config", lambda: profile_cfg)
-        monkeypatch.setattr(runner, "_create_adapter", lambda p, c: next(adapters))
-        monkeypatch.setattr(runner, "_connect_adapter_with_timeout", _connect)
-        monkeypatch.setattr(
-            runner, "_make_adapter_auth_check", lambda p, **kwargs: None
-        )
-
-        first = await runner._start_one_profile_adapters("broken", "/tmp/x", claimed)
-        second = await runner._start_one_profile_adapters("later", "/tmp/y", claimed)
-
-        assert first == 0
-        assert failed.disconnected is True
-        assert second == 1
-        assert runner._profile_adapters["later"][photon] is later
-
-    @pytest.mark.asyncio
-    @pytest.mark.parametrize("paired", [False, True])
-    async def test_secondary_profile_adapter_start_skips_whatsapp(self, monkeypatch, tmp_path, paired):
-        """Only paired secondaries start a profile-local WhatsApp adapter."""
-        runner = _secondary_recovery_runner()
-        direct = _SecondaryRecoveryAdapter()
-        _real_profile_scope = gateway_run._profile_runtime_scope
-        _install_secondary_reconnect_context(monkeypatch, runner, direct)
-        monkeypatch.setattr(gateway_run, "_profile_runtime_scope", _real_profile_scope)
-        home = tmp_path / "secondary"
-        session = home / "platforms/whatsapp/session"
-        session.mkdir(parents=True)
-        if paired:
-            (session / "creds.json").write_text("{}")
-        statuses = []
-        monkeypatch.setattr(runner, "_update_platform_runtime_status", lambda *a, **kw: statuses.append((a, kw)))
-        monkeypatch.setattr(
-            "gateway.config.load_gateway_config",
-            lambda: GatewayConfig(
-                multiplex_profiles=True,
-                platforms={
-                    Platform.WHATSAPP: PlatformConfig(enabled=True),
-                    Platform.DISCORD: PlatformConfig(enabled=True, token="profile-token"),
-                },
-            ),
-        )
-        factory_calls = []
-
-        def _create_adapter(platform, config):
-            factory_calls.append(platform)
-            if platform is Platform.WHATSAPP:
-                from plugins.platforms.whatsapp.adapter import WhatsAppAdapter
-                wa = WhatsAppAdapter(config)
-                assert wa._session_path == session
-                return wa
-            return direct
-
-        async def _connect(adapter, platform):
-            return True
-
-        monkeypatch.setattr(runner, "_create_adapter", _create_adapter)
-        monkeypatch.setattr(runner, "_connect_initial_adapter_with_timeout", _connect)
-
-        monkeypatch.setattr(runner, "_configure_profile_adapter", lambda *a: None)
-        connected = await runner._start_one_profile_adapters("clientbot", home, {})
-
-        assert connected == (2 if paired else 1)
-        assert factory_calls == ([Platform.WHATSAPP, Platform.DISCORD] if paired else [Platform.DISCORD])
-        if not paired:
-            assert statuses[-1][1]["error_code"] == "whatsapp_unpaired"
-            assert "hermes -p clientbot whatsapp" in statuses[-1][1]["error_message"]
-
-
 class TestSecondaryProfileHookRegistration:
     """A secondary profile's own `hooks:` block must register on ITS
     plugin manager, not just the root/default profile's (#92672).
@@ -1209,33 +958,6 @@ class TestSecondaryProfileHookRegistration:
         assert ("webhook", profile_cfg) in seen
 
 
-class TestFeishuPortBindingConditional:
-    """Feishu websocket mode does NOT bind a port; only webhook mode does (#52563)."""
-
-    @pytest.mark.asyncio
-    async def test_feishu_websocket_mode_not_rejected(self, monkeypatch):
-        """Feishu in websocket mode (the default) should NOT raise MultiplexConfigError."""
-        from gateway.run import MultiplexConfigError
-        from gateway.config import GatewayConfig, Platform, PlatformConfig
-
-        runner = GatewayRunner.__new__(GatewayRunner)
-        runner.config = GatewayConfig(multiplex_profiles=True)
-        runner._profile_adapters = {}
-
-        reviewer_cfg = GatewayConfig(multiplex_profiles=True)
-        reviewer_cfg.platforms = {
-            Platform.FEISHU: PlatformConfig(
-                enabled=True,
-                extra={"app_id": "cli_xxx", "app_secret": "sec", "connection_mode": "websocket"},
-            ),
-        }
-        monkeypatch.setattr("gateway.config.load_gateway_config", lambda: reviewer_cfg)
-        monkeypatch.setattr(runner, "_create_adapter", lambda p, c: None)
-
-        connected = await runner._start_one_profile_adapters("reviewer", "/tmp/x", {})
-        assert connected == 0  # no error, just nothing connected
-
-
 class TestSecondarySkipsCredentiallessPlatforms:
     """#84079 — multiplex must not build adapters for platforms a profile
     has no credential for.
@@ -1277,23 +999,14 @@ class TestSecondarySkipsCredentiallessPlatforms:
         from gateway.config import GatewayConfig, Platform, PlatformConfig
 
         profile_cfg = GatewayConfig(multiplex_profiles=True)
-        profile_cfg.platforms = {
-            # Shared config.yaml enables Slack; profile-b's .env has no
-            # SLACK_BOT_TOKEN, so its scoped load resolves token="" but
-            # keeps enabled=True (#84079).
-            Platform.SLACK: PlatformConfig(enabled=True, token=""),
-            Platform.TELEGRAM: PlatformConfig(enabled=True, token="telegram-token-b"),
-        }
+        profile_cfg.platforms = {Platform.TELEGRAM: PlatformConfig(enabled=True, token="")}
         runner, created = self._make_runner(monkeypatch, profile_cfg)
 
         connected = await runner._start_one_profile_adapters("profile-b", tmp_path, {})
 
-        # Only Telegram (which profile-b has its own credential for) gets an
-        # adapter; Slack is skipped instead of fanning out a turn per profile.
-        assert [p for p, _ in created] == [Platform.TELEGRAM]
-        assert connected == 1
-        assert Platform.TELEGRAM in runner._profile_adapters["profile-b"]
-        assert Platform.SLACK not in runner._profile_adapters["profile-b"]
+        assert created == []
+        assert connected == 0
+        assert Platform.TELEGRAM not in runner._profile_adapters.get("profile-b", {})
 
     @pytest.mark.asyncio
     async def test_profile_with_own_credential_still_connects(self, monkeypatch, tmp_path):
@@ -1302,12 +1015,12 @@ class TestSecondarySkipsCredentiallessPlatforms:
 
         profile_cfg = GatewayConfig(multiplex_profiles=True)
         profile_cfg.platforms = {
-            Platform.SLACK: PlatformConfig(enabled=True, token="slack-token-b"),
+            Platform.TELEGRAM: PlatformConfig(enabled=True, token="telegram-token-b"),
         }
         runner, created = self._make_runner(monkeypatch, profile_cfg)
 
         connected = await runner._start_one_profile_adapters("profile-b", tmp_path, {})
 
         assert connected == 1
-        assert created == [(Platform.SLACK, profile_cfg.platforms[Platform.SLACK])]
-        assert Platform.SLACK in runner._profile_adapters["profile-b"]
+        assert created == [(Platform.TELEGRAM, profile_cfg.platforms[Platform.TELEGRAM])]
+        assert Platform.TELEGRAM in runner._profile_adapters["profile-b"]

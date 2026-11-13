@@ -21,27 +21,27 @@ def mux_runner(tmp_path, monkeypatch):
     (home / "profiles" / "nobot").mkdir(parents=True)
     monkeypatch.setattr(Path, "home", lambda: tmp_path)
     monkeypatch.setenv("HERMES_HOME", str(home))
-    default_slack, sec_slack = object(), object()
+    default_bot, sec_bot = object(), object()
     runner = object.__new__(GatewayRunner)
-    runner.adapters = {Platform.SLACK: default_slack}
-    runner._profile_adapters = {"sec": {Platform.SLACK: sec_slack}, "nobot": {}}
+    runner.adapters = {Platform.TELEGRAM: default_bot}
+    runner._profile_adapters = {"sec": {Platform.TELEGRAM: sec_bot}, "nobot": {}}
     runner._primary_profile_name = "default"
     import gateway.run as gateway_run
     monkeypatch.setattr(gateway_run, "_gateway_runner_ref", lambda: runner)
-    return home, default_slack, sec_slack
+    return home, default_bot, sec_bot
 
 
 def test_secondary_profile_turn_resolves_its_own_adapter(mux_runner):
-    home, default_slack, sec_slack = mux_runner
+    home, default_bot, sec_bot = mux_runner
     with _profile_runtime_scope(home / "profiles" / "sec", {}):
-        _, adapter = _live_adapter(Platform.SLACK)
-    assert adapter is sec_slack
-    _, adapter = _live_adapter(Platform.SLACK)  # default scope still gets the default bot
-    assert adapter is default_slack
+        _, adapter = _live_adapter(Platform.TELEGRAM)
+    assert adapter is sec_bot
+    _, adapter = _live_adapter(Platform.TELEGRAM)  # default scope still gets the default bot
+    assert adapter is default_bot
 
 
 def test_profile_without_adapter_fails_closed_never_default_bot(mux_runner):
-    home, _default_slack, _ = mux_runner
+    home, _default_bot, _ = mux_runner
     with _profile_runtime_scope(home / "profiles" / "nobot", {}):
-        _, adapter = _live_adapter(Platform.SLACK)
+        _, adapter = _live_adapter(Platform.TELEGRAM)
     assert adapter is None

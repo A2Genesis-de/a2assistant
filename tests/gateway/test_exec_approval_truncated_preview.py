@@ -77,62 +77,15 @@ async def test_full_command_send_is_marked_interim_so_it_never_seals_the_live_re
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("adapter_factory", ["base", "discord", "slack"])
-async def test_backticks_inside_a_short_command_cannot_close_the_card_fence(adapter_factory):
+async def test_backticks_inside_a_short_command_cannot_close_the_card_fence():
     """A ``` (or longer run) in the command would end the card's markdown fence early, and the rest
     would render as markdown (spoilers, links): the fence is longer than any run in the command."""
     from gateway.platforms.base_exec_approval import render_exec_approval
 
     adapter = _Chat()
-    if adapter_factory == "discord":
-        from plugins.platforms.discord.adapter import DiscordAdapter
-        adapter = DiscordAdapter.__new__(DiscordAdapter)
-        adapter._approval_mention_content = lambda: ""
-    elif adapter_factory == "slack":
-        from plugins.platforms.slack.adapter import SlackAdapter
-        adapter = SlackAdapter.__new__(SlackAdapter)
     command = "echo '```' ||spoiler|| [x](https://e.x) ````` done"
     text, truncated = render_exec_approval(adapter, command, "flagged", False, True)
     assert not truncated
     fence = "``````"  # one longer than the command's longest run (5)
     assert text.count(fence) == 2
     assert text.index(fence) < text.index(command) < text.rindex(fence)
-
-
-@pytest.mark.parametrize("command", ["echo " + "`" * 900 + " ; rm -rf ~", "`" * 1990, "`" * 5000],
-                         ids=["echo-900-ticks", "1990-ticks", "5000-ticks"])
-def test_a_long_backtick_run_the_preview_drops_cannot_push_the_card_past_the_cap(command):
-    """The fence is sized from the preview actually shown: a backtick run cut off with the tail must not
-    widen the fence past Discord's 2,000-char cap (that card fell back to text and lost its buttons)."""
-    import re
-
-    from gateway.platforms.base_exec_approval import render_exec_approval
-    from plugins.platforms.discord.adapter import DiscordAdapter
-
-    adapter = DiscordAdapter.__new__(DiscordAdapter)
-    adapter._approval_mention_content = lambda: ""
-    text, truncated = render_exec_approval(adapter, command, "flagged", False, False)
-    assert len(text) <= adapter.MAX_MESSAGE_LENGTH
-    assert truncated and "Preview shortened" in text and "only Deny is offered" in text
-    runs = re.findall(r"^(`{3,})", text, re.MULTILINE)
-    open_fence, close_fence = runs[0], runs[-1]  # the opener line and the closer line
-    shown = text[text.index(open_fence) + len(open_fence):text.rindex(close_fence)].removeprefix("bash")
-    assert open_fence == close_fence and max(map(len, re.findall("`+", shown)), default=0) < len(open_fence)
-
-
-@pytest.mark.parametrize("command", ["`" * 20 + " rm -rf ~ " + "`" * 20, "`" * 20 + "x" * 4000 + "`" * 20],
-                         ids=["fits", "cut"])
-def test_slack_fence_sits_on_its_own_line_so_the_commands_backticks_never_merge_into_it(command):
-    """With the fence glued to the command, 20 leading backticks and a 21-tick fence render as one 41-tick run."""
-    import re
-
-    from gateway.platforms.base_exec_approval import render_exec_approval
-    from plugins.platforms.slack.adapter import SlackAdapter
-
-    adapter = SlackAdapter.__new__(SlackAdapter)
-    text, _ = render_exec_approval(adapter, command, "flagged", False, False)
-    assert len(text) <= 3000  # Slack's section cap
-    fence = "`" * 21
-    assert text.splitlines().count(fence) == 2  # opener and closer each alone on a line
-    shown = text.split(fence + "\n", 1)[1].rsplit("\n" + fence, 1)[0]
-    assert shown.startswith("`" * 20) and max(map(len, re.findall("`+", shown))) == 20

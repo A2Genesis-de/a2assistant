@@ -43,7 +43,7 @@ async def test_teardown_bounds_hanging_cancel(bare_runner, monkeypatch, caplog):
 
     with caplog.at_level(logging.WARNING, logger="gateway.run"):
         await asyncio.wait_for(
-            bare_runner._bounded_adapter_teardown(adapter, Platform.FEISHU),
+            bare_runner._bounded_adapter_teardown(adapter, Platform.TELEGRAM),
             timeout=5.0,
         )
 
@@ -79,7 +79,7 @@ async def test_teardown_continues_after_cancellation_swallowing_background_cance
     adapter.cancel_background_tasks = AsyncMock(side_effect=swallow_cancellation)
     adapter.disconnect = AsyncMock(return_value=None)
     operation = asyncio.create_task(
-        bare_runner._bounded_adapter_teardown(adapter, Platform.FEISHU)
+        bare_runner._bounded_adapter_teardown(adapter, Platform.TELEGRAM)
     )
     await started.wait()
     done, _pending = await asyncio.wait({operation}, timeout=0.2)

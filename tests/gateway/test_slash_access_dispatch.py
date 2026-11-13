@@ -33,7 +33,7 @@ from gateway.session_identity import RoutingIdentity
 
 def _make_source(
     *,
-    platform: Platform = Platform.DISCORD,
+    platform: Platform = Platform.TELEGRAM,
     user_id: str = "user1",
     chat_type: str = "dm",
     chat_id: str = "c1",
@@ -54,7 +54,7 @@ def _make_event(text: str, source: SessionSource) -> MessageEvent:
 
 
 def _make_runner(*, platform_extra: dict | None = None,
-                 platform: Platform = Platform.DISCORD,
+                 platform: Platform = Platform.TELEGRAM,
                  multiplex_profiles: bool = False):
     from gateway.run import GatewayRunner
 
@@ -80,7 +80,7 @@ def _make_runner(*, platform_extra: dict | None = None,
     )
     runner.session_store = MagicMock()
     session_entry = SessionEntry(
-        session_key="agent:main:discord:dm:c1",
+        session_key="agent:main:telegram:dm:c1",
         session_id="sess-1",
         created_at=datetime.now(),
         updated_at=datetime.now(),
@@ -146,7 +146,7 @@ async def test_secondary_profile_slash_policy_uses_its_own_config():
     runner = _make_runner(multiplex_profiles=True)
     runner._profile_configs["beta"] = GatewayConfig(
         platforms={
-            Platform.DISCORD: PlatformConfig(
+            Platform.TELEGRAM: PlatformConfig(
                 enabled=True,
                 extra={"allow_admin_from": ["admin"], "user_allowed_commands": ["status"]},
             )
@@ -370,81 +370,3 @@ async def test_running_agent_fastpath_allows_admin_command():
 # group has its own admin list (regression guard for the "admin lists are
 # scope-specific" rule).
 # ---------------------------------------------------------------------------
-
-
-# ---------------------------------------------------------------------------
-# Multi-platform isolation — gating on Discord doesn't leak to Telegram.
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_gating_isolated_per_platform():
-    """When Discord is gated and Telegram isn't, the same user_id on
-    Telegram must be unrestricted."""
-    from gateway.run import GatewayRunner
-    from gateway.config import GatewayConfig, Platform, PlatformConfig
-
-    runner = object.__new__(GatewayRunner)
-    runner.config = GatewayConfig(
-        platforms={
-            Platform.DISCORD: PlatformConfig(
-                enabled=True,
-                token="***",
-                extra={
-                    "allow_admin_from": ["111"],
-                    "user_allowed_commands": [],
-                },
-            ),
-            Platform.TELEGRAM: PlatformConfig(
-                enabled=True, token="***", extra={}
-            ),
-        }
-    )
-    runner.adapters = {
-        Platform.DISCORD: MagicMock(send=AsyncMock()),
-        Platform.TELEGRAM: MagicMock(send=AsyncMock()),
-    }
-    runner._voice_mode = {}
-    runner.hooks = SimpleNamespace(
-        emit=AsyncMock(),
-        emit_collect=AsyncMock(return_value=[]),
-        loaded_hooks=False,
-    )
-    runner.session_store = MagicMock()
-    session_entry = SessionEntry(
-        session_key="agent:main:telegram:dm:c1",
-        session_id="sess-1",
-        created_at=datetime.now(),
-        updated_at=datetime.now(),
-        platform=Platform.TELEGRAM,
-        chat_type="dm",
-        total_tokens=0,
-    )
-    runner.session_store.get_or_create_session.return_value = session_entry
-    runner.session_store.load_transcript.return_value = []
-    runner.session_store.has_any_sessions.return_value = True
-    runner.session_store.append_to_transcript = MagicMock()
-    runner.session_store.rewrite_transcript = MagicMock()
-    runner.session_store.update_session = MagicMock()
-    runner._running_agents = {}
-    runner._running_agents_ts = {}
-    runner._pending_messages = {}
-    runner._pending_approvals = {}
-    runner._session_sources = {}
-    runner._session_db = MagicMock()
-    runner._session_db.get_session_title.return_value = None
-    runner._session_db.get_session.return_value = None
-    runner._reasoning_config = None
-    runner._provider_routing = {}
-    runner._fallback_model = None
-    runner._show_reasoning = False
-    runner._is_user_authorized = lambda _source: True
-    runner._set_session_env = lambda _context: None
-    runner._should_send_voice_reply = lambda *_args, **_kwargs: False
-    runner._send_voice_reply = AsyncMock()
-    runner._emit_gateway_run_progress = AsyncMock()
-
-    # Same user_id on Telegram → must be unrestricted (Telegram has no admin list).
-    tg_src = _make_source(platform=Platform.TELEGRAM, user_id="999", chat_id="t1")
-    result = await runner._handle_message(_make_event("/whoami", tg_src))
-    assert "Tier: unrestricted" in result

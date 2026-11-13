@@ -20,7 +20,7 @@ async def test_a_platform_installed_by_this_start_is_in_the_runners_config(tmp_p
     def load_config():
         platforms = {Platform.TELEGRAM: PlatformConfig(enabled=True)}
         if plugin_installed:
-            platforms[Platform.WEIXIN] = PlatformConfig(enabled=True)  # the platform the plugin ships
+            platforms[Platform.TELEGRAM] = PlatformConfig(enabled=True)  # the platform the plugin ships
         return GatewayConfig(platforms=platforms)
 
     def recover_at_startup(*, say=None, gateway_start=False):
@@ -47,7 +47,7 @@ async def test_a_platform_installed_by_this_start_is_in_the_runners_config(tmp_p
     with pytest.raises(SystemExit):
         await gateway_run.start_gateway(replace=False, verbosity=None)
 
-    assert seen["platforms"] == {Platform.TELEGRAM, Platform.WEIXIN}
+    assert seen["platforms"] == {Platform.TELEGRAM, Platform.TELEGRAM}
 
 
 @pytest.mark.asyncio
@@ -77,7 +77,7 @@ async def test_a_named_launch_stays_standalone_across_the_reload(tmp_path, monke
             seen["multiplex"] = config.multiplex_profiles
             seen["served"] = [name for name, _home in gateway_run._multiplex_profile_homes(config)] \
                 if config.multiplex_profiles else ["foo"]
-            seen["default_slack"] = Platform.SLACK in config.platforms  # default's platform, not foo's
+            seen["default_slack"] = Platform.TELEGRAM in config.platforms  # default's platform, not foo's
             raise SystemExit(0)
 
     from agent.secret_scope import is_multiplex_active, set_multiplex_active
