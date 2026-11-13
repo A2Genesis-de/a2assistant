@@ -273,11 +273,11 @@ def selection_exists(section: str) -> bool:
 _REMOVED_WEB_VENDORS = {
     "brave-free": "Brave Search", "exa": "Exa", "firecrawl": "Firecrawl", "keenable": "Keenable",
     "openai-native": "OpenAI native web search", "parallel": "Parallel", "perplexity": "Perplexity",
-    "searxng": "SearXNG", "tavily": "Tavily", "xai": "xAI",
+    "tavily": "Tavily", "xai": "xAI",
 }
 REMOVED_BACKENDS: dict[str, dict[str, str]] = {
     "web": {
-        name: f"the {label} backend was removed (bundled web search is DuckDuckGo via ddgs; "
+        name: f"the {label} backend was removed (web search uses DuckDuckGo via ddgs or SearXNG; "
               "other backends come from web provider plugins)"
         for name, label in _REMOVED_WEB_VENDORS.items()
     },
