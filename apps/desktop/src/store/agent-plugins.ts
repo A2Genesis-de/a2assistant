@@ -111,19 +111,16 @@ export const $agentPluginsProfile = atom<null | string | undefined>(undefined)
 export const $agentPluginBusy = atom<string | null>(null)
 
 // Rows the Plugins page actually lists (and search should surface): plugins
-// the USER installed, plus the few repo-bundled lifecycle plugins that use the
-// ordinary enable/disable contract and have no settings surface of their own
-// (#98861). Every other built-in (providers, platforms, browser/web backends,
+// the USER installed. Every built-in (providers, platforms, browser/web backends,
 // dashboard auth, observability, unknown future keys) ships enabled-by-default
 // and is configured from its own surface, so it's pure noise here. The prefix
 // list is the fallback for older backends whose rows predate a reliable
 // `source` field — same curation stance as desktop-slash-commands.ts.
 const HIDDEN_KEY_PREFIXES = ['dashboard_auth/', 'model-providers/', 'platforms/']
-const MANAGEABLE_BUNDLED_KEYS = new Set(['disk-cleanup', 'security-guidance'])
 
 export const isDesktopRelevantPlugin = (row: AgentPluginRow): boolean => {
   if (row.source === 'bundled') {
-    return MANAGEABLE_BUNDLED_KEYS.has(row.key ?? row.name)
+    return false
   }
 
   const key = row.key

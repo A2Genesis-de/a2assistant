@@ -76,7 +76,6 @@
     "plugins/dashboard_auth/session_token/__init__.py plugins.dashboard_auth._shared.SkipRegistration": 1,
     "plugins/dashboard_auth/session_token/__init__.py plugins.dashboard_auth._shared.load_config_section": 1,
     "plugins/dashboard_auth/session_token/__init__.py plugins.dashboard_auth._shared.register_provider": 1,
-    "plugins/disk-cleanup/disk_cleanup.py hermes_cli.source_check._git_ok": 1,
     "plugins/google_meet/_jsonfile.py hermes_cli.auth._file_lock": 1,
     "plugins/google_meet/cli.py hermes_cli.browser_runtime.chromium_executable": 1,
     "plugins/google_meet/meet_bot.py hermes_cli.browser_runtime.chromium_executable": 1,

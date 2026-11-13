@@ -22,8 +22,7 @@ import pytest
 def _plugins():
     """Resolve hermes_cli.plugins at call time, not import time.
 
-    Some test files (e.g. tests/plugins/test_security_guidance_plugin.py)
-    delete ``hermes_cli.plugins`` from ``sys.modules`` and re-import it,
+    Some test files delete ``hermes_cli.plugins`` from ``sys.modules`` and re-import it,
     which would leave a module-level binding here pointing at a stale
     module object whose PluginManager the curator never sees.
     """
