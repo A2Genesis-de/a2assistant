@@ -282,8 +282,10 @@ def _chromium_not_needed_reason() -> str:
         return "a CDP override is set"
     if str(cfg_get(config, "browser", "engine") or "").strip().lower() == "lightpanda":
         return "browser.engine is lightpanda"
+    from tools.browser_config import REMOVED_CLOUD_PROVIDERS
     provider = str(cfg_get(config, "browser", "cloud_provider") or "").strip().lower()
-    return f"cloud provider {provider} is selected" if provider not in ("", "local") else ""
+    local = provider in ("", "local") or provider in REMOVED_CLOUD_PROVIDERS
+    return "" if local else f"cloud provider {provider} is selected"
 
 
 def _check_chromium(should_fix: bool) -> None:

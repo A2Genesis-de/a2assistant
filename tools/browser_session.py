@@ -38,7 +38,7 @@ DEFAULT_SESSION_INACTIVITY_TIMEOUT = int(DEFAULT_CONFIG.get("browser", {}).get("
 
 
 def _get_session_inactivity_timeout() -> int:
-    from tools.browser_session_cloud import inactivity_timeout
+    from tools.browser_config import inactivity_timeout
     return inactivity_timeout(env_int("BROWSER_INACTIVITY_TIMEOUT", DEFAULT_SESSION_INACTIVITY_TIMEOUT))
 
 
@@ -124,7 +124,7 @@ def run_fenced(session_info: dict[str, Any], fn: Callable[[], dict[str, Any]]) -
 def ensure_screen_for_headed_chromium() -> None:
     """Tool-call boundary for ``bot_desktop.auto_start``: a headed Chromium is about to start, so a headless
     profile gets its screen first. Headless browsing and Lightpanda never bring one up."""
-    from tools.browser_session_cloud import is_headed_mode
+    from tools.browser_config import is_headed_mode
     if is_headed_mode():
         from tools.bot_desktop.runtime import ensure_started_for_tool
         ensure_started_for_tool()
@@ -186,7 +186,7 @@ def _launch_target(cache_key: str) -> tuple[str, dict[str, Any], bool]:
     bot_desktop = _bot_desktop_target()
     if bot_desktop is not None:
         return bot_desktop[0], bot_desktop[1], True
-    from tools.browser_session_cloud import user_data_dir
+    from tools.browser_config import user_data_dir
     udd = user_data_dir()
     if udd:
         return f"profile:{udd}", {"user_data_dir": udd, "ephemeral": False}, True
@@ -218,7 +218,7 @@ def _create_chromium_session(cache_key: str) -> dict[str, Any]:
 
 def _create_lightpanda_session(cache_key: str) -> dict[str, Any]:
     from tools.browser_lightpanda import launch_lightpanda
-    from tools.browser_session_cloud import is_local_backend
+    from tools.browser_config import is_local_backend
     info = _session_record("lp", None, {"local": True, "lightpanda": True})
     server, err = launch_lightpanda(info["session_name"], block_private_networks=not is_local_backend())
     if err:
@@ -279,7 +279,7 @@ def _create_cloud_session_or_fallback(cache_key: str, provider) -> dict[str, Any
 def _create_session_for_key(cache_key: str, force_local: bool) -> dict[str, Any]:
     """Fresh session (runs OUTSIDE the lock: cloud mode makes a network call, a launch takes seconds)."""
     from tools.browser_session_cdp import get_cdp_override
-    from tools.browser_session_cloud import get_cloud_provider
+    from tools.browser_config import get_cloud_provider
     override = get_cdp_override()
     if override and not force_local:
         logger.info("Created CDP browser session for %s", cache_key)

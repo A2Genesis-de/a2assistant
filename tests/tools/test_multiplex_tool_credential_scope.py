@@ -24,18 +24,16 @@ def secondary_scope(monkeypatch):
 
 
 def test_scoped_tool_credential_gates_ignore_default_profile_environ(monkeypatch, secondary_scope, tmp_path):
-    from tools import browser_use_cli, read_extract, tool_backend_helpers
+    from tools import read_extract, tool_backend_helpers
 
     monkeypatch.setenv("FIRECRAWL_API_KEY", "fc-default")
     monkeypatch.setenv("MODAL_TOKEN_ID", "id-default")
     monkeypatch.setenv("MODAL_TOKEN_SECRET", "secret-default")
-    monkeypatch.setenv("BROWSER_USE_API_KEY", "bu-default")
     monkeypatch.setattr(tool_backend_helpers.Path, "home", lambda: tmp_path)  # no ~/.modal.toml
 
     enabled, api_key, _ = read_extract._hosted_ocr_config()
     assert (enabled, api_key) == (False, None)
     assert tool_backend_helpers.has_direct_modal_credentials() is False
-    assert browser_use_cli.is_legacy_browser_use_cloud_config({"cloud_provider": "browser-use"}) is False
 
 
 def test_weixin_home_channel_resolves_from_profile_scope_not_environ(monkeypatch, secondary_scope):

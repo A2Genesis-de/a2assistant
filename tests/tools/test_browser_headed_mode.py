@@ -11,7 +11,7 @@ import pytest
 
 from tools import browser_launcher as launcher
 from tools import browser_session as bs
-from tools import browser_session_cloud as bs_cloud
+from tools import browser_config as bs_cloud
 
 
 @pytest.fixture(autouse=True)
@@ -52,7 +52,7 @@ class TestCleanupTaskResourcesHeadedSkip:
     def test_headless_still_cleans_browser(self):
         from agent.chat_completion_helpers import cleanup_task_resources
         with (
-            patch("tools.browser_session_cloud.is_headed_mode", return_value=False),
+            patch("tools.browser_config.is_headed_mode", return_value=False),
             patch("run_agent.cleanup_vm"),
             patch("run_agent.cleanup_browser") as mock_cb,
             patch(
@@ -68,7 +68,7 @@ class TestCleanupTaskResourcesHeadedSkip:
         """A headed session survives the turn; the inactivity reaper closes it when idle."""
         from agent.chat_completion_helpers import cleanup_task_resources
         with (
-            patch("tools.browser_session_cloud.is_headed_mode", return_value=True),
+            patch("tools.browser_config.is_headed_mode", return_value=True),
             patch("run_agent.cleanup_vm"),
             patch("run_agent.cleanup_browser") as mock_cb,
             patch(
@@ -84,7 +84,7 @@ class TestCleanupTaskResourcesHeadedSkip:
         """Headed mode only affects the browser; VM teardown is untouched."""
         from agent.chat_completion_helpers import cleanup_task_resources
         with (
-            patch("tools.browser_session_cloud.is_headed_mode", return_value=True),
+            patch("tools.browser_config.is_headed_mode", return_value=True),
             patch("run_agent.cleanup_vm") as mock_vm,
             patch("run_agent.cleanup_browser"),
             patch(

@@ -9,7 +9,7 @@ Cloud backends (Browserbase, Browser Use) enforce it by default. Users can opt o
 
 import pytest
 
-from tools import browser_session_cdp, browser_session_cloud, browser_url_policy, browser_use_cli
+from tools import browser_session_cdp, browser_config, browser_url_policy, browser_use_cli
 from tools.browser_url_policy import evaluate_url_safety
 
 
@@ -30,8 +30,8 @@ class TestPreNavigationSsrf:
 
     def test_cloud_blocks_private_url_by_default(self, monkeypatch):
         """SSRF protection blocks private URLs in cloud mode."""
-        monkeypatch.setattr(browser_session_cloud, "is_local_backend", lambda: False)
-        monkeypatch.setattr(browser_session_cloud, "allow_private_urls", lambda: False)
+        monkeypatch.setattr(browser_config, "is_local_backend", lambda: False)
+        monkeypatch.setattr(browser_config, "allow_private_urls", lambda: False)
         monkeypatch.setattr(browser_url_policy, "is_safe_url", lambda url: False)
 
         result = evaluate_url_safety(self.PRIVATE_URL)
@@ -41,8 +41,8 @@ class TestPreNavigationSsrf:
 
     def test_cloud_allows_private_url_when_setting_true(self, monkeypatch):
         """Private URLs pass in cloud mode when allow_private_urls is True."""
-        monkeypatch.setattr(browser_session_cloud, "is_local_backend", lambda: False)
-        monkeypatch.setattr(browser_session_cloud, "allow_private_urls", lambda: True)
+        monkeypatch.setattr(browser_config, "is_local_backend", lambda: False)
+        monkeypatch.setattr(browser_config, "allow_private_urls", lambda: True)
         monkeypatch.setattr(browser_url_policy, "is_safe_url", lambda url: False)
 
         assert evaluate_url_safety(self.PRIVATE_URL) is None
@@ -51,16 +51,16 @@ class TestPreNavigationSsrf:
 
     def test_local_allows_private_url(self, monkeypatch):
         """Local backends skip SSRF — private URLs are always allowed."""
-        monkeypatch.setattr(browser_session_cloud, "is_local_backend", lambda: True)
-        monkeypatch.setattr(browser_session_cloud, "allow_private_urls", lambda: False)
+        monkeypatch.setattr(browser_config, "is_local_backend", lambda: True)
+        monkeypatch.setattr(browser_config, "allow_private_urls", lambda: False)
         monkeypatch.setattr(browser_url_policy, "is_safe_url", lambda url: False)
 
         assert evaluate_url_safety(self.PRIVATE_URL) is None
 
     def test_local_allows_public_url(self, monkeypatch):
         """Local backends pass public URLs too (sanity check)."""
-        monkeypatch.setattr(browser_session_cloud, "is_local_backend", lambda: True)
-        monkeypatch.setattr(browser_session_cloud, "allow_private_urls", lambda: False)
+        monkeypatch.setattr(browser_config, "is_local_backend", lambda: True)
+        monkeypatch.setattr(browser_config, "allow_private_urls", lambda: False)
         monkeypatch.setattr(browser_url_policy, "is_safe_url", lambda url: True)
 
         assert evaluate_url_safety("https://example.com") is None
@@ -81,8 +81,8 @@ class TestPreNavigationSsrf:
     @pytest.mark.parametrize("imds_url", IMDS_URLS)
     def test_cloud_blocks_imds_even_when_routing_to_local_sidecar(self, monkeypatch, imds_url):
         """Hybrid routing must not let cloud metadata endpoints through."""
-        monkeypatch.setattr(browser_session_cloud, "is_local_backend", lambda: False)
-        monkeypatch.setattr(browser_session_cloud, "allow_private_urls", lambda: False)
+        monkeypatch.setattr(browser_config, "is_local_backend", lambda: False)
+        monkeypatch.setattr(browser_config, "allow_private_urls", lambda: False)
         # Hybrid routing kicks in for this URL (cloud provider configured, private URL → local sidecar).
         monkeypatch.setattr(browser_url_policy, "hybrid_routes_locally", lambda url: True)
         # is_safe_url would catch IMDS, but the sidecar relaxes it. Force it True so the test pins the
@@ -97,8 +97,8 @@ class TestPreNavigationSsrf:
     def test_cloud_allows_ordinary_private_url_via_sidecar(self, monkeypatch):
         """Hybrid routing still works for ordinary private URLs — floor
         must be narrow enough to not break the PR #16136 feature."""
-        monkeypatch.setattr(browser_session_cloud, "is_local_backend", lambda: False)
-        monkeypatch.setattr(browser_session_cloud, "allow_private_urls", lambda: False)
+        monkeypatch.setattr(browser_config, "is_local_backend", lambda: False)
+        monkeypatch.setattr(browser_config, "allow_private_urls", lambda: False)
         monkeypatch.setattr(browser_url_policy, "hybrid_routes_locally", lambda url: True)
         monkeypatch.setattr(browser_url_policy, "is_safe_url", lambda url: False)
 
@@ -122,17 +122,17 @@ class TestIsLocalBackend:
     def test_no_cloud_provider_is_local(self, monkeypatch):
         """No cloud provider configured → local backend."""
         monkeypatch.setattr(browser_session_cdp, "get_cdp_override_raw", lambda: "")
-        monkeypatch.setattr(browser_session_cloud, "get_cloud_provider", lambda: None)
+        monkeypatch.setattr(browser_config, "get_cloud_provider", lambda: None)
 
-        assert browser_session_cloud.is_local_backend() is True
+        assert browser_config.is_local_backend() is True
 
 
 class TestAllowPrivateUrlsConfig:
     @pytest.fixture(autouse=True)
     def _reset_cache(self):
-        browser_session_cloud.reset_caches()
+        browser_config.reset_caches()
         yield
-        browser_session_cloud.reset_caches()
+        browser_config.reset_caches()
 
     def test_browser_config_string_false_stays_disabled(self, monkeypatch):
         monkeypatch.setattr(
@@ -140,7 +140,7 @@ class TestAllowPrivateUrlsConfig:
             lambda: {"browser": {"allow_private_urls": "false"}},
         )
 
-        assert browser_session_cloud.allow_private_urls() is False
+        assert browser_config.allow_private_urls() is False
 
     @pytest.mark.parametrize(
         "profile_order",
@@ -170,7 +170,7 @@ class TestAllowPrivateUrlsConfig:
         def under_profile(home):
             token = set_hermes_home_override(home)
             try:
-                return browser_session_cloud.allow_private_urls()
+                return browser_config.allow_private_urls()
             finally:
                 reset_hermes_home_override(token)
 

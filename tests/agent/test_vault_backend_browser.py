@@ -616,7 +616,7 @@ def test_list_refreshes_when_pin_changed_and_browser_is_running(tmp_path, monkey
         state["running"] = True
         return ("ws://relaunched", None)
 
-    monkeypatch.setattr("tools.browser_session_cloud.use_real_profile", lambda: True)
+    monkeypatch.setattr("tools.browser_config.use_real_profile", lambda: True)
     monkeypatch.setattr("tools.browser_lightpanda.using_lightpanda_engine", lambda: False)
     monkeypatch.setattr("tools.browser_launcher.get_browser", fake_get_browser)
     monkeypatch.setattr("tools.browser_launcher.stop_browser", fake_stop_browser)

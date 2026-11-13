@@ -1,5 +1,5 @@
-"""``browser.*`` config knobs and cloud browser provider resolution (explicit ``browser.cloud_provider``,
-auto-detect, per-profile cache).
+"""``browser.*`` config knobs and resolution of a plugin-registered cloud browser provider (explicit
+``browser.cloud_provider`` only, per-profile cache).
 
 Every config read is profile-scoped: under a routed profile (multiplexed gateway, HERMES_HOME override)
 the cached slots are bypassed or keyed by ``hermes_home_key()``, so one profile's engine / headed /
@@ -178,8 +178,8 @@ def _ensure_browser_plugins_loaded() -> None:
 
 
 def _instantiate_explicit_provider(provider_key: str) -> Optional[BrowserProvider]:
-    """The provider named by ``browser.cloud_provider``. An unregistered name raises ``ValueError`` (never a
-    silent reroute to auto-detect); any other instantiation error yields None so the next call retries."""
+    """The provider named by ``browser.cloud_provider``. An unregistered name raises ``ValueError`` (a typo is
+    surfaced, not silently browsed locally); any other instantiation error yields None so the next call retries."""
     from agent.browser_registry import get_provider
     try:
         _ensure_browser_plugins_loaded()
@@ -196,25 +196,20 @@ def _instantiate_explicit_provider(provider_key: str) -> Optional[BrowserProvide
     return resolved
 
 
-def _autodetect_provider() -> Optional[BrowserProvider]:
-    """Browser Use, then Browserbase, from credentials; never raises. Third-party plugins are only reachable
-    through an explicit ``browser.cloud_provider``."""
-    # Late import: a core tool must not execute bundled plugin code before a session is resolved.
-    from plugins.browser.browser_use.provider import BrowserUseBrowserProvider
-    from plugins.browser.browserbase.provider import BrowserbaseBrowserProvider
-    try:
-        for cls in (BrowserUseBrowserProvider, BrowserbaseBrowserProvider):
-            provider = cls()
-            if provider.is_available():
-                return provider
-    except Exception:  # health: allow BLE001 -- auto-detect must never poison the cache
-        logger.debug("Cloud provider auto-detect failed", exc_info=True)
-    return None
+REMOVED_CLOUD_PROVIDERS = frozenset({"browserbase", "browser-use", "browser_use", "firecrawl", "nous"})
+_warned_removed: set[str] = set()
+
+
+def _warn_removed_provider(provider_key: str) -> None:
+    if provider_key in _warned_removed:
+        return
+    _warned_removed.add(provider_key)
+    logger.warning("browser.cloud_provider %r is no longer available; using the local browser", provider_key)
 
 
 def _resolve_provider_uncached() -> tuple[Optional[BrowserProvider], bool]:
-    """``(provider, definitive)``. Definitive answers (explicit ``local``/``camofox``, a resolved provider) are
-    cached; a transient None (unreadable config, missing credentials) is not, so it self-heals."""
+    """``(provider, definitive)``. Definitive answers (explicit ``local``/``camofox``, a removed bundled
+    provider, a resolved provider) are cached; a transient None (unset or unreadable config) is not."""
     provider_key = None
     try:
         section = browser_section()
@@ -222,16 +217,14 @@ def _resolve_provider_uncached() -> tuple[Optional[BrowserProvider], bool]:
             provider_key = normalize_browser_cloud_provider(section.get("cloud_provider"))
     except (OSError, ValueError, TypeError) as exc:
         logger.debug("Could not read cloud_provider from config: %s", exc)
+    if not provider_key:
+        return None, False
     if provider_key in ("local", "camofox"):
         return None, True  # camofox is a plugin with its own tool surface, not a CDP provider
-    if provider_key == "nous":
-        provider_key = "browser-use"  # the managed Nous subscription is served by the Browser Use provider
-    if provider_key:
-        resolved = _instantiate_explicit_provider(provider_key)
-        return resolved, resolved is not None
-    if provider_key is not None:  # an empty selection was written: no auto-detect
-        return None, False
-    resolved = _autodetect_provider()
+    if provider_key in REMOVED_CLOUD_PROVIDERS:
+        _warn_removed_provider(provider_key)
+        return None, True
+    resolved = _instantiate_explicit_provider(provider_key)
     return resolved, resolved is not None
 
 

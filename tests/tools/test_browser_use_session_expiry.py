@@ -2,9 +2,8 @@
 
 from unittest.mock import Mock
 
-from plugins.browser.browser_use import provider as browser_use_provider
 from tools import browser_session as bs
-from tools import browser_session_cloud as bs_cloud
+from tools import browser_config as bs_cloud
 
 
 def _isolate_browser_state(monkeypatch):
@@ -13,34 +12,6 @@ def _isolate_browser_state(monkeypatch):
     monkeypatch.setattr(bs, "_session_owner_homes", {})
     monkeypatch.setattr("tools.browser_session_lifecycle.start_cleanup_thread", lambda: None)
     monkeypatch.setattr("tools.browser_session_cdp.ensure_cdp_supervisor", lambda task_id: None)
-
-
-def test_browser_use_preserves_provider_timeout(monkeypatch):
-    provider = browser_use_provider.BrowserUseBrowserProvider()
-    response = Mock(
-        ok=True,
-        headers={},
-    )
-    response.json.return_value = {
-        "id": "browser-session-1",
-        "cdpUrl": "ws://browser-use.example/devtools/browser/1",
-        "timeoutAt": "2030-01-01T00:05:00Z",
-    }
-
-    monkeypatch.setattr(
-        provider,
-        "_get_config",
-        lambda: {
-            "api_key": "test-key",
-            "base_url": "https://api.browser-use.example/api/v3",
-            "managed_mode": False,
-        },
-    )
-    monkeypatch.setattr(browser_use_provider.requests, "post", Mock(return_value=response))
-
-    session = provider.create_session("task-1")
-
-    assert session["expires_at"] == "2030-01-01T00:05:00Z"
 
 
 def test_live_cloud_session_is_reused(monkeypatch):

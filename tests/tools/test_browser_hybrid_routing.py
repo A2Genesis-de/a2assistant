@@ -18,7 +18,7 @@ import pytest
 from tools.bot_desktop import placement
 from tools import browser_launcher
 from tools import browser_session as bs
-from tools import browser_session_cloud as bs_cloud
+from tools import browser_config as bs_cloud
 from tools import browser_session_lifecycle as lifecycle
 from tools import browser_use_cli as bu
 

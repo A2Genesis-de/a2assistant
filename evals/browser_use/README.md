@@ -22,9 +22,7 @@ web tasks.
   compare).
 - **Resume-safe.** Completed cells in `results/*.jsonl` are skipped on rerun
   (same pattern as `evals/toolperf_abeval`).
-- **Backend matrix.** `orchestrate.py` drives a local headless-Chrome CDP;
-  `orchestrate_cloud.py --backend nous-cloud|browserbase` provisions a real
-  cloud browser per cell through the same provider plumbing the product uses.
+- **Backend.** `orchestrate.py` drives a local headless-Chrome CDP.
 
 ## Run
 
@@ -73,11 +71,7 @@ nothing and saves a little; the full 11KB live skill dump adds nothing.
 ```
 model      backend          ok  tok_mean  calls   wall
 opus4.8    local-cdp     17/18     25934    2.0   17.5
-opus4.8    nous-cloud    12/12     33330    2.8   33.8
-opus4.8    browserbase    6/6      26712    2.2   23.2
 kimi-k3    local-cdp     18/18     19230    2.4   33.3
-kimi-k3    nous-cloud    12/12     22050    2.9   41.4
-kimi-k3    browserbase    6/6      22121    2.8   35.2
 ```
 
 **Easy battery, round 1** (5 tasks x 3 reps, sonnet-5 + qwen3-coder-30b;
@@ -95,9 +89,9 @@ sonnet-5: −30% tokens at parity. qwen3-30b: a wash — weak coders burn the
 savings retrying exec code. The token win concentrates on multi-step tasks
 and grows with task hardness; strong models also finish in fewer tool calls.
 
-Compatibility probes from the same run: Firecrawl cloud browsers attach fine
-(CDP websocket); Camofox has no CDP surface — structurally incompatible,
-hence the automatic fallback to the built-in toolset in #81958.
+Compatibility probe from the same run: Camofox has no CDP surface —
+structurally incompatible, hence the automatic fallback to the built-in
+toolset in #81958.
 
 Caveats: toscrape-family sites (no anti-bot, no heavy SPA); n<=3 per cell;
 success-rate deltas at this n are noise — audit sub-100% cells run-by-run

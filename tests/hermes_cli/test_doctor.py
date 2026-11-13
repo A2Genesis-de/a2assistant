@@ -905,7 +905,7 @@ def test_doctor_fix_reports_pm_install_failure(monkeypatch, tmp_path):
 @pytest.mark.parametrize("browser_yaml,reason", [
     ("browser:\n  cdp_url: http://127.0.0.1:9222\n", "CDP override"),
     ("browser:\n  engine: lightpanda\n", "lightpanda"),
-    ("browser:\n  cloud_provider: browserbase\n", "browserbase"),
+    ("browser:\n  cloud_provider: browserless\n", "browserless"),
 ])
 def test_missing_chromium_is_info_when_config_needs_none(monkeypatch, tmp_path, browser_yaml, reason):
     """A CDP override, Lightpanda or a cloud provider runs no local Chromium: no warning row."""

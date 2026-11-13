@@ -13,26 +13,10 @@ from hermes_cli.nous_account import NousPortalAccountInfo
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 TOOLS_DIR = REPO_ROOT / "tools"
-PLUGINS_DIR = REPO_ROOT / "plugins"
 
 
 def _load_tool_module(module_name: str, filename: str):
     spec = spec_from_file_location(module_name, TOOLS_DIR / filename)
-    assert spec and spec.loader
-    module = module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-def _load_plugin_module(module_name: str, relpath: str):
-    """Load a plugin module by file path from ``plugins/``.
-
-    Mirror of :func:`_load_tool_module` for the plugin tree. Used by tests
-    that exercise the per-vendor browser plugins' session-lifecycle
-    behaviour after the PR #25214 migration.
-    """
-    spec = spec_from_file_location(module_name, PLUGINS_DIR / relpath)
     assert spec and spec.loader
     module = module_from_spec(spec)
     sys.modules[module_name] = module
@@ -111,11 +95,6 @@ def _install_fake_tools_package():
         sanitize_borrowed_credential_payload=lambda entry, provider_id=None: entry,
     )
 
-    # Stubs for the browser-provider plugin layer introduced in PR #25214.
-    # Install just enough stand-ins to isolate
-    # ``tools.browser_tool``'s top-level imports. The actual lifecycle
-    # tests instantiate the real plugin classes via _load_tool_module
-    # below, so the stubs only need to satisfy import + isinstance.
     class _StubBrowserProvider:
         """Minimal BrowserProvider stub for ``from agent.browser_provider import BrowserProvider``."""
 
@@ -126,34 +105,11 @@ def _install_fake_tools_package():
         get_provider=lambda name: None,
         list_providers=list,
         register_provider=lambda provider: None,
-        _resolve=lambda configured: None,
     )
 
-    # Plugin module stubs — the real plugin classes are loaded from disk by
-    # the lifecycle tests below via _load_tool_module(). For the import
-    # phase, we just need the class names to exist on the right module path.
     plugins_package = types.ModuleType("plugins")
     plugins_package.__path__ = []  # type: ignore[attr-defined]
     sys.modules["plugins"] = plugins_package
-    plugins_browser_package = types.ModuleType("plugins.browser")
-    plugins_browser_package.__path__ = []  # type: ignore[attr-defined]
-    sys.modules["plugins.browser"] = plugins_browser_package
-
-    for _name, _classname in (
-        ("browserbase", "BrowserbaseBrowserProvider"),
-        ("browser_use", "BrowserUseBrowserProvider"),
-        ("firecrawl", "FirecrawlBrowserProvider"),
-    ):
-        _vendor_pkg = types.ModuleType(f"plugins.browser.{_name}")
-        _vendor_pkg.__path__ = []  # type: ignore[attr-defined]
-        sys.modules[f"plugins.browser.{_name}"] = _vendor_pkg
-        _provider_stub_cls = type(_classname, (_StubBrowserProvider,), {})
-        sys.modules[f"plugins.browser.{_name}.provider"] = types.SimpleNamespace(
-            **{_classname: _provider_stub_cls},
-        )
-    # The fake ``plugins.browser`` package has an empty __path__, so the shared
-    # base the real vendor modules import must be loaded by path as well.
-    _load_plugin_module("plugins.browser._common", "browser/_common.py")
 
     sys.modules["tools.managed_tool_gateway"] = _load_tool_module(
         "tools.managed_tool_gateway",
@@ -207,45 +163,23 @@ def _install_fake_tools_package():
     sys.modules["tools.environments.docker"] = types.SimpleNamespace(DockerEnvironment=_DummyEnvironment)
 
 
-def test_browser_use_explicit_local_mode_stays_local_even_when_managed_gateway_is_ready(tmp_path):
+def test_browser_explicit_local_mode_stays_local_even_when_managed_gateway_is_ready(tmp_path):
     _install_fake_tools_package()
     (tmp_path / "config.yaml").write_text("browser:\n  cloud_provider: local\n", encoding="utf-8")
     env = os.environ.copy()
-    env.pop("BROWSER_USE_API_KEY", None)
     env.update({
         "HERMES_HOME": str(tmp_path),
         "TOOL_GATEWAY_USER_TOKEN": "nous-token",
-        "BROWSER_USE_GATEWAY_URL": "http://127.0.0.1:3009",
     })
 
     with patch.dict(os.environ, env, clear=True):
-        browser_session_cloud = _load_tool_module("tools.browser_session_cloud", "browser_session_cloud.py")
+        browser_config = _load_tool_module("tools.browser_config", "browser_config.py")
 
-        provider = browser_session_cloud.get_cloud_provider()
-        local_backend = browser_session_cloud.is_local_backend()
+        provider = browser_config.get_cloud_provider()
+        local_backend = browser_config.is_local_backend()
 
     assert provider is None
     assert local_backend is True  # no SSRF guard: the browser really is this host's
-
-
-def test_browserbase_does_not_use_gateway_only_configuration():
-    _install_fake_tools_package()
-    env = os.environ.copy()
-    env.pop("BROWSERBASE_API_KEY", None)
-    env.pop("BROWSERBASE_PROJECT_ID", None)
-    env.update({
-        "TOOL_GATEWAY_USER_TOKEN": "nous-token",
-        "BROWSERBASE_GATEWAY_URL": "http://127.0.0.1:3009",
-    })
-
-    with patch.dict(os.environ, env, clear=True):
-        browserbase_module = _load_plugin_module(
-            "plugins.browser.browserbase.provider",
-            "browser/browserbase/provider.py",
-        )
-        provider = browserbase_module.BrowserbaseBrowserProvider()
-
-    assert provider.is_available() is False
 
 
 class TestShellEscapeBypass:

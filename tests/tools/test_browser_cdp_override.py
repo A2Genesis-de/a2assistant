@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from tools import browser_session, browser_session_cdp, browser_session_cloud, browser_session_lifecycle
+from tools import browser_session, browser_session_cdp, browser_config, browser_session_lifecycle
 from tools.browser_session_cdp import resolve_cdp_override
 
 
@@ -83,7 +83,7 @@ class TestResolveCdpOverride:
         response.json.return_value = {"webSocketDebuggerUrl": WS_URL}
 
         monkeypatch.setattr(browser_session_cdp, "get_cdp_override", lambda: "")
-        monkeypatch.setattr(browser_session_cloud, "get_cloud_provider", lambda: provider)
+        monkeypatch.setattr(browser_config, "get_cloud_provider", lambda: provider)
 
         with patch("requests.get", return_value=response) as mock_get:
             session_info = browser_session.get_session_info("task-browser-use")

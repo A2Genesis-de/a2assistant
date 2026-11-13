@@ -42,7 +42,7 @@ def test_browser_exec_child_environment(tmp_path, monkeypatch):
     monkeypatch.setattr("hermes_cli.config_effective.load_user_config_effective", lambda: {"browser": {}})
     monkeypatch.setattr("tools.browser_session_cdp.get_cdp_override", lambda: "")
     monkeypatch.setattr("tools.browser_session_cdp.resolve_cdp_override", lambda url: url)
-    monkeypatch.setattr("tools.browser_session_cloud.get_cloud_provider", lambda: None)
+    monkeypatch.setattr("tools.browser_config.get_cloud_provider", lambda: None)
     monkeypatch.setattr("tools.browser_lightpanda.using_lightpanda_engine", lambda: False)
     def local_browser(cache_key):
         assert cache_key == "bu-named-research"
@@ -54,20 +54,18 @@ def test_browser_exec_child_environment(tmp_path, monkeypatch):
     monkeypatch.setenv("PYTHONPATH", "/wrong-abi")
     monkeypatch.setenv("PYTHONHOME", "/wrong-python")
     monkeypatch.setenv("OPENAI_API_KEY", "must-not-leak")
-    monkeypatch.setenv("BROWSERBASE_API_KEY", "browser-key")
-    monkeypatch.setenv("BROWSER_USE_API_KEY", "bu-key")
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "bot-key")
     monkeypatch.setenv("KEEP_BROWSER_PROBE", "kept")
     monkeypatch.delenv("ANONYMIZED_TELEMETRY", raising=False)
     result = json.loads(bu.browser_exec("print('payload')", session="research", task_id="owner"))
     assert result["success"], result
     child = json.loads(child_view.read_text(encoding="utf-8"))
     assert child["stdin"] == "print('payload')"
-    for key in ("PYTHONHOME", "OPENAI_API_KEY", "BROWSERBASE_API_KEY", "_HERMES_BU_PRIVATE_BROWSER"):
+    for key in ("PYTHONHOME", "OPENAI_API_KEY", "TELEGRAM_BOT_TOKEN", "_HERMES_BU_PRIVATE_BROWSER"):
         assert key not in child["env"]
     assert child["env"].get("PYTHONPATH") == bu._harness_site_dir()
     assert child["env"]["BU_NAME"] == "research"
     assert child["env"]["BU_CDP_WS"] == "ws://127.0.0.1:47000/private"
     assert child["env"]["ANONYMIZED_TELEMETRY"] == "false"
-    assert child["env"]["BROWSER_USE_API_KEY"] == "bu-key"
     assert child["env"]["KEEP_BROWSER_PROBE"] == "kept"
     assert attached == [("owner", "ws://127.0.0.1:47000/private")]

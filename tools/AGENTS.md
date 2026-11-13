@@ -101,7 +101,7 @@ docstrings); never grow them.
 
 Several tools front pluggable backends: terminal environments in `tools/environments/` (local,
 docker, ssh; `terminal_tool_backends.py`, `tool_backend_helpers.py`),
-browser (`browser_launcher.py` + `browser_session*.py`: lifecycle, cloud, cdp, real_profile, sandbox), MCP
+browser (`browser_launcher.py` + `browser_config.py` + `browser_session*.py`: lifecycle, cdp, real_profile, sandbox), MCP
 client (`mcp_tool_*.py`: config, discovery, transport, registration, content, errors), TTS
 (`tts_tool_providers.py`, `tts_command_provider.py`), skills hub sources (`skills_hub_official.py`
 `OptionalSkillSource`). Adding a backend = a new sibling or provider entry in the existing table,

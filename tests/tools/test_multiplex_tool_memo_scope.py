@@ -45,7 +45,7 @@ def test_checkpoint_paths_follow_active_profile(two_profiles):
 
 
 def test_config_caches_are_keyed_by_profile(two_profiles):
-    import tools.browser_session_cloud as bsc
+    import tools.browser_config as bsc
     import tools.file_tools as ft
     import tools.tool_output_limits as tol
     from tools.browser_session_lifecycle import cleanup_all_browsers

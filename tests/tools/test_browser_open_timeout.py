@@ -2,23 +2,23 @@
 
 import pytest
 
-from tools import browser_launcher, browser_session_cloud
+from tools import browser_launcher, browser_config
 
 
 @pytest.fixture(autouse=True)
 def _fresh_cache():
-    browser_session_cloud.reset_caches()
+    browser_config.reset_caches()
     yield
-    browser_session_cloud.reset_caches()
+    browser_config.reset_caches()
 
 
 class TestOpenCommandTimeout:
     def test_first_open_uses_longer_floor(self, monkeypatch):
-        monkeypatch.setattr(browser_session_cloud, "command_timeout", lambda: 30)
+        monkeypatch.setattr(browser_config, "command_timeout", lambda: 30)
         assert browser_launcher._launch_timeout(None) == browser_launcher._MIN_FIRST_LAUNCH_TIMEOUT_S
 
     def test_respects_config_above_floor(self, monkeypatch):
-        monkeypatch.setattr(browser_session_cloud, "command_timeout", lambda: 180)
+        monkeypatch.setattr(browser_config, "command_timeout", lambda: 180)
         assert browser_launcher._launch_timeout(None) == 180
 
 

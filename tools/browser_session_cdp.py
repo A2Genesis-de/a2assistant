@@ -104,7 +104,7 @@ def get_cdp_override_raw() -> str:
     """The *configured* CDP override, no network I/O: live ``/browser connect`` > ``BROWSER_CDP_URL`` >
     ``browser.cdp_url``. Is-it-configured gates (check_fns, local-mode checks, doctor) MUST use this:
     a 10 s discovery probe against a stale URL would stall every schema build."""
-    from tools.browser_session_cloud import browser_cfg
+    from tools.browser_config import browser_cfg
     return live_cdp_override() or env_cdp_url() or browser_cfg("cdp_url", "", lambda v: str(v or "").strip())
 
 
@@ -116,7 +116,7 @@ def get_cdp_override() -> str:
 
 def get_dialog_policy_config() -> tuple[str, float]:
     """``browser.dialog_policy`` + ``browser.dialog_timeout_s``; supervisor defaults when absent/invalid."""
-    from tools.browser_session_cloud import browser_cfg
+    from tools.browser_config import browser_cfg
     from tools.browser_supervisor_dialogs import DEFAULT_DIALOG_POLICY, DEFAULT_DIALOG_TIMEOUT_S, _VALID_POLICIES
     policy = str(browser_cfg("dialog_policy", DEFAULT_DIALOG_POLICY) or DEFAULT_DIALOG_POLICY)
     if policy not in _VALID_POLICIES:

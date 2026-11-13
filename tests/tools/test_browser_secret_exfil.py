@@ -39,7 +39,7 @@ class TestBrowserSecretExfil:
         url = "https://example.com/callback?token=opaque-oauth-code&signature=abc123"
         secret_url = "https://example.com/callback?token=" + "sk-or-v1-" + "b" * 30
         monkeypatch.setattr(browser_use_cli, "_find_cli", _never_spawn)
-        with patch("tools.browser_session_cloud.is_local_backend", return_value=False), \
+        with patch("tools.browser_config.is_local_backend", return_value=False), \
              patch("tools.browser_url_policy.check_website_access", return_value=None), \
              patch("socket.getaddrinfo", return_value=[
                  (socket.AF_INET, socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))
@@ -56,7 +56,7 @@ class TestBrowserSecretExfil:
         """Local browser/CDP sessions may navigate magic-link style URLs."""
         from tools.browser_url_policy import evaluate_url_safety
 
-        with patch("tools.browser_session_cloud.is_local_backend", return_value=True), \
+        with patch("tools.browser_config.is_local_backend", return_value=True), \
              patch("tools.browser_url_policy.check_website_access", return_value=None):
             result = evaluate_url_safety("https://example.com/callback?token=opaque-oauth-code")
 

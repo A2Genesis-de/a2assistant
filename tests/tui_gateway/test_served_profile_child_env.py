@@ -19,8 +19,7 @@ from agent.secret_scope import set_multiplex_active
 from hermes_constants import reset_hermes_home_override, set_hermes_home_override
 
 _PROBE = ("import json,os;print(json.dumps({k:os.environ.get(k) for k in "
-          "('HERMES_HOME','A_MARKER','B_MARKER','TERMINAL_ENV','HERMES_MODEL','FIRECRAWL_API_KEY',"
-          "'BROWSER_USE_API_KEY')}))")
+          "('HERMES_HOME','A_MARKER','B_MARKER','TERMINAL_ENV','HERMES_MODEL','FIRECRAWL_API_KEY')}))")
 
 
 @pytest.fixture
@@ -29,12 +28,12 @@ def mux_homes(tmp_path, monkeypatch):
     a = tmp_path / ".hermes"
     b = a / "profiles" / "b"
     b.mkdir(parents=True)
-    (a / ".env").write_text("A_MARKER=a\nHERMES_MODEL=a-model\nTERMINAL_ENV=docker\nFIRECRAWL_API_KEY=a-fc\n"
-                            "BROWSER_USE_API_KEY=a-bu\n", encoding="utf-8")
-    (b / ".env").write_text("B_MARKER=b\nFIRECRAWL_API_KEY=b-fc\nBROWSER_USE_API_KEY=b-bu\n", encoding="utf-8")
+    (a / ".env").write_text("A_MARKER=a\nHERMES_MODEL=a-model\nTERMINAL_ENV=docker\nFIRECRAWL_API_KEY=a-fc\n",
+                            encoding="utf-8")
+    (b / ".env").write_text("B_MARKER=b\nFIRECRAWL_API_KEY=b-fc\n", encoding="utf-8")
     monkeypatch.setenv("HERMES_HOME", str(a))
     for key, val in (("A_MARKER", "a"), ("HERMES_MODEL", "a-model"), ("TERMINAL_ENV", "docker"),
-                     ("FIRECRAWL_API_KEY", "a-fc"), ("BROWSER_USE_API_KEY", "a-bu")):
+                     ("FIRECRAWL_API_KEY", "a-fc")):
         monkeypatch.setenv(key, val)
     monkeypatch.delenv("B_MARKER", raising=False)
     set_multiplex_active(True)
@@ -133,8 +132,7 @@ def test_helper_children_resolve_secrets_through_the_served_profile(mux_homes):
     assert token == f"b|-|{b}"
     seen = _child_view(browser_env)
     _assert_is_b_env(seen, b, with_secrets=False)  # provider tier stays scrubbed for the browser
-    assert seen["FIRECRAWL_API_KEY"] is None and seen["BROWSER_USE_API_KEY"] is None  # no provider keys
-    # The browser_exec harness child carries its own credential: B's, never the launch profile's.
+    assert seen["FIRECRAWL_API_KEY"] is None  # no provider keys
     seen = _child_view(harness_env)
     _assert_is_b_env(seen, b, with_secrets=False)
-    assert seen["BROWSER_USE_API_KEY"] == "b-bu" and seen["FIRECRAWL_API_KEY"] is None
+    assert seen["FIRECRAWL_API_KEY"] is None

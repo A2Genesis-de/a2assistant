@@ -26,14 +26,14 @@ def _browser_config(monkeypatch, home: Path, **browser_cfg) -> None:
 def _agent_launch(monkeypatch, display: str = ":37") -> dict:
     """Create the agent's local browser session with the Bot Desktop screen up; returns the launcher call
     (``key`` + kwargs) instead of starting Chromium."""
-    from tools import browser_launcher, browser_session, browser_session_cdp, browser_session_cloud
+    from tools import browser_launcher, browser_session, browser_session_cdp, browser_config
     from tools import browser_session_lifecycle
 
     for name in ("_active_sessions", "_session_last_activity", "_session_owner_homes", "_cleanup_failures"):
         monkeypatch.setattr(browser_session, name, {})
     monkeypatch.setattr(browser_session_lifecycle, "start_cleanup_thread", lambda: None)
     monkeypatch.setattr(browser_session_cdp, "get_cdp_override", lambda: "")
-    monkeypatch.setattr(browser_session_cloud, "get_cloud_provider", lambda: None)
+    monkeypatch.setattr(browser_config, "get_cloud_provider", lambda: None)
     monkeypatch.setattr("tools.bot_desktop.runtime.tool_placement", lambda: placement.GATEWAY)  # host browser
     monkeypatch.setattr("tools.browser_session_real_profile.real_profile_cdp", lambda: (None, None))
     monkeypatch.setattr("tools.browser_lightpanda.using_lightpanda_engine", lambda: False)
@@ -178,7 +178,7 @@ def test_agent_attaches_to_human_started_browser(tmp_path, monkeypatch):
 def _install_browsers(tmp_path, monkeypatch, *, playwright: bool, system: bool):
     """A Playwright build under a private PLAYWRIGHT_BROWSERS_PATH and/or a system chromium on PATH."""
     monkeypatch.delenv("AGENT_BROWSER_EXECUTABLE_PATH", raising=False)
-    monkeypatch.setattr("tools.browser_session_cloud.executable_path", lambda: "")
+    monkeypatch.setattr("tools.browser_config.executable_path", lambda: "")
     roots = tmp_path / "pw"
     roots.mkdir(parents=True)
     monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(roots))
@@ -238,7 +238,7 @@ def test_root_dock_browser_starts_with_the_same_sandbox_args_as_the_agents_brows
     click dies while the agent's launch works."""
     from tools import browser_launcher as launcher
 
-    monkeypatch.setattr("tools.browser_session_cloud.chromium_args", list)
+    monkeypatch.setattr("tools.browser_config.chromium_args", list)
     monkeypatch.setattr(launcher.os, "geteuid", lambda: 0)
     agent_flags = _agent_sandbox_flags("/opt/chrome")
     assert agent_flags, "root must inject sandbox flags for the agent's Chromium"
@@ -293,11 +293,11 @@ def test_headless_shell_override_is_not_a_headed_browser(tmp_path, monkeypatch):
     shell.write_text("#!/bin/sh\n", encoding="utf-8")
     shell.chmod(0o755)
     _install_browsers(tmp_path, monkeypatch, playwright=False, system=False)
-    monkeypatch.setattr("tools.browser_session_cloud.executable_path", lambda: str(shell))
+    monkeypatch.setattr("tools.browser_config.executable_path", lambda: str(shell))
     assert browser.executable() is None
 
     _, sys_exe = _install_browsers(tmp_path / "with-sys", monkeypatch, playwright=False, system=True)
-    monkeypatch.setattr("tools.browser_session_cloud.executable_path", lambda: str(shell))
+    monkeypatch.setattr("tools.browser_config.executable_path", lambda: str(shell))
     assert browser.executable() == sys_exe  # a real headed browser elsewhere still wins over the override
 
 
@@ -328,12 +328,12 @@ def test_headed_chromium_spawn_asks_the_screen_to_start_but_the_env_builder_neve
     itself stays pure — it also serves the harness CLI, the Lightpanda engine and every launch, none of which
     may block on Xvnc+Xfce coming up."""
     from tools import browser_launcher, browser_lightpanda, browser_session, browser_session_cdp
-    from tools import browser_session_cloud, browser_session_lifecycle
+    from tools import browser_config, browser_session_lifecycle
 
     calls: list = []
     monkeypatch.setattr(runtime, "ensure_started_for_tool", lambda: calls.append(1))
     monkeypatch.setattr(runtime, "published_env", dict)
-    monkeypatch.setattr(browser_session_cloud, "is_headed_mode", lambda: headed)
+    monkeypatch.setattr(browser_config, "is_headed_mode", lambda: headed)
     browser_session.build_browser_env()
     assert calls == []
 
@@ -341,10 +341,10 @@ def test_headed_chromium_spawn_asks_the_screen_to_start_but_the_env_builder_neve
         monkeypatch.setattr(browser_session, name, {})
     monkeypatch.setattr(browser_session_lifecycle, "start_cleanup_thread", lambda: None)
     monkeypatch.setattr(browser_session_cdp, "get_cdp_override", lambda: "")
-    monkeypatch.setattr(browser_session_cloud, "get_cloud_provider", lambda: None)
+    monkeypatch.setattr(browser_config, "get_cloud_provider", lambda: None)
     monkeypatch.setattr("tools.bot_desktop.runtime.tool_placement", lambda: placement.GATEWAY)  # host browser
     monkeypatch.setattr("tools.browser_session_real_profile.real_profile_cdp", lambda: (None, None))
-    monkeypatch.setattr(browser_session_cloud, "get_browser_engine", lambda: engine)
+    monkeypatch.setattr(browser_config, "get_browser_engine", lambda: engine)
     monkeypatch.setattr(browser_launcher, "launch_chromium", lambda key, **kw: (
         SimpleNamespace(cdp_url="ws://127.0.0.1:41234/devtools/browser/abc", pid=4242), None))
     monkeypatch.setattr(browser_lightpanda, "launch_lightpanda", lambda name, **kw: (
@@ -395,7 +395,7 @@ def test_a_headless_shell_pin_is_replaced_while_a_screen_is_up(tmp_path, monkeyp
     headed.chmod(0o755)
     monkeypatch.setattr(runtime, "state_dir", lambda: tmp_path / "bot-desktop")
     monkeypatch.setattr(browser, "_managed_executable", lambda: str(headed))
-    monkeypatch.setattr("tools.browser_session_cloud.executable_path", lambda: str(shell))
+    monkeypatch.setattr("tools.browser_config.executable_path", lambda: str(shell))
     # Unpinned, the ubuntu runner (non-root, userns-restricted) flips executable() to
     # its own /usr/bin/google-chrome; host policy is not the subject here.
     monkeypatch.setattr(browser, "_userns_restricted", lambda: False)
@@ -416,6 +416,6 @@ def test_a_real_user_pin_is_still_honoured(tmp_path, monkeypatch):
     other.chmod(0o755)
     monkeypatch.setattr(runtime, "state_dir", lambda: tmp_path / "bot-desktop")
     monkeypatch.setattr(browser, "_managed_executable", lambda: str(other))
-    monkeypatch.setattr("tools.browser_session_cloud.executable_path", lambda: str(mine))
+    monkeypatch.setattr("tools.browser_config.executable_path", lambda: str(mine))
 
     assert _agent_launch(monkeypatch)["executable"] == str(mine)

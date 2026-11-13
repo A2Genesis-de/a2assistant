@@ -348,7 +348,7 @@ def reap_orphaned_lightpanda() -> int:
 
 def using_lightpanda_engine() -> bool:
     """True when ``browser.engine`` is ``lightpanda``."""
-    from tools.browser_session_cloud import get_browser_engine
+    from tools.browser_config import get_browser_engine
     return get_browser_engine() == "lightpanda"
 
 
@@ -361,7 +361,7 @@ def lightpanda_engine_status() -> tuple[bool, str]:
     if not using_lightpanda_engine():
         return False, ""
     from tools.browser_session_cdp import get_cdp_override_raw
-    from tools.browser_session_cloud import get_cloud_provider, use_real_profile
+    from tools.browser_config import get_cloud_provider, use_real_profile
     if get_cdp_override_raw():
         return False, "a CDP override is active (/browser connect or browser.cdp_url)"
     # Real profile before the cloud provider: browser_exec resolves it first, so it claims the session.
@@ -373,8 +373,5 @@ def lightpanda_engine_status() -> tuple[bool, str]:
         provider = None
     if provider is not None:
         name = getattr(provider, "display_name", "") or type(provider).__name__
-        return False, f"cloud provider {name} is selected (browser.cloud_provider, or auto-detected from credentials)"
-    from tools.browser_use_cli import _read_browser_cfg, is_legacy_browser_use_cloud_config
-    if is_legacy_browser_use_cloud_config(_read_browser_cfg()):
-        return False, "Browser Use cloud (BROWSER_USE_API_KEY) is selected"
+        return False, f"cloud provider {name} is selected (browser.cloud_provider)"
     return True, "A2Assistant spawns `lightpanda serve` per browser session"

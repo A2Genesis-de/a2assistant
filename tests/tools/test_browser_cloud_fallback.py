@@ -9,7 +9,7 @@ from unittest.mock import Mock
 from tools.bot_desktop import placement
 from tools import browser_launcher
 from tools import browser_session as bs
-from tools import browser_session_cloud as bs_cloud
+from tools import browser_config as bs_cloud
 
 _LOCAL_CDP = "ws://127.0.0.1:9333/devtools/browser/local"
 
