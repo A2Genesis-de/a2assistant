@@ -15,6 +15,7 @@ from types import SimpleNamespace
 import pytest
 
 import hermes_cli.auth as auth_mod
+from hermes_cli import auth_constants
 from hermes_cli import auth_codex
 from hermes_cli.auth import (
     AuthError,
@@ -77,7 +78,7 @@ class _StubClient:
 def _patch_httpx(monkeypatch, response, calls=None):
     calls = calls if calls is not None else []
     monkeypatch.setattr(
-        auth_mod.httpx, "Client", lambda **kwargs: _StubClient(calls, response)
+        auth_constants.httpx, "Client", lambda **kwargs: _StubClient(calls, response)
     )
     return calls
 
@@ -345,7 +346,7 @@ class _ExpiryAwareClient(_StubClient):
 def _patch_expiry_aware_httpx(monkeypatch, response):
     calls: list = []
     monkeypatch.setattr(
-        auth_mod.httpx, "Client", lambda **kwargs: _ExpiryAwareClient(calls, response)
+        auth_constants.httpx, "Client", lambda **kwargs: _ExpiryAwareClient(calls, response)
     )
     return calls
 

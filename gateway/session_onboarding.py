@@ -33,7 +33,7 @@ class OnboardingRefusal(RuntimeStoreError):
 
 
 class _NoModelForTheRun(Exception):
-    """The claim was blocked and nothing else can carry the run's first chat."""
+    """No provider can carry the run's first chat."""
 
 
 def handlers(connection):
@@ -53,7 +53,7 @@ async def start(connection, ref, params):
         raise RuntimeStoreError('invalid_params', detail=str(exc)) from exc
     target = _onboarding_connection(connection)
     if target is not connection:
-        # Dispatch entered the asking profile's scope; the claim, the facts and the chat's policy are default's.
+        # Dispatch entered the asking profile's scope; the facts and the chat's policy are default's.
         from gateway.session_authorities import owner_scope
         with owner_scope(target.authority):
             return await start(target, ref, params)
@@ -82,9 +82,6 @@ async def start(connection, ref, params):
                                           retire)
         finally:
             discards.ids.difference_update(plan['replaced'])
-        if plan['claimed'] is not None:
-            from hermes_cli import free_tier_bootstrap
-            await asyncio.to_thread(free_tier_bootstrap.refresh_record)
         _withdraw_setup_cards(authority, [sid for sid in plan['replaced'] if sid not in deleted])
         chat = SessionRef(authority.profile_id, stored)
         await connection.resume(chat, {})
@@ -98,17 +95,15 @@ async def start(connection, ref, params):
 
 
 def _choose_run(authority, request):
-    """A refused claim (5079) or a blocked one with nothing else to run on (5080) leaves no chat, so
-    the install stays due."""
+    """With nothing to run on (5080) no chat is opened, so the install stays due."""
     from agent.onboarding_facts import read_facts
     from agent.onboarding_flow import Facts
     from agent.onboarding_record import load, open_session_ids
     from agent.onboarding_text import opening_prompt
-    from hermes_cli.auth_constants import AuthError
     db = authority.db
     open_ids = open_session_ids(db)
     stored = None if request.rerun or request.fresh_launch else next(iter(open_ids), None)
-    plan = {'stored': stored, 'open_ids': open_ids, 'claimed': None, 'facts': None, 'opening': None,
+    plan = {'stored': stored, 'open_ids': open_ids, 'facts': None, 'opening': None,
             'replaced': [sid for sid in open_ids if sid != stored]}
     if stored is not None:
         facts = Facts.from_stored(load(db, stored)['facts'])
@@ -119,31 +114,25 @@ def _choose_run(authority, request):
     plan['facts'] = read_facts(facts_source=request.facts_source.value, locale=request.locale)
     if not request.rerun:
         try:
-            plan['claimed'] = _claim_before_run(assume_fresh=request.assume_fresh)
-        except AuthError as exc:
-            logger.info('onboarding.start: welcome trial not claimed: %s', exc)
-            raise OnboardingRefusal(5079, str(exc)) from exc
+            _prepare_run()
         except _NoModelForTheRun as exc:
             logger.info('onboarding.start: no chat opened: %s', exc)
             raise OnboardingRefusal(5080, str(exc)) from exc
     return plan
 
 
-def _claim_before_run(*, assume_fresh):
-    """``onboarding.run: true`` on disk before the welcome-trial claim, so a crash after the claim still
-    opens onboarding next launch."""
-    from hermes_cli import anon_auth
-    from hermes_cli.onboarding_run import set_run
-    from hermes_cli.welcome_trial import claim_desktop_free_tier, provider_configured
-    if not anon_auth.on_local_desktop_backend():
+def _prepare_run():
+    """``onboarding.run: true`` on disk before the run's chat, so a crash still opens onboarding next
+    launch."""
+    from hermes_cli.onboarding_run import provider_configured, set_run
+    from hermes_cli.process_identity import serves_local_desktop_now
+    if not serves_local_desktop_now():
         # A CLI or TUI holds a native ticket too: its start schedules nothing. A rerun (Settings, any
-        # Desktop) never claims and never reaches here.
+        # Desktop) never reaches here.
         raise _NoModelForTheRun('First-run onboarding starts only in the Desktop app on this machine.')
     set_run(True)
-    claimed = claim_desktop_free_tier(assume_fresh=assume_fresh)
-    if claimed is None and not (anon_auth.free_inference_active() or provider_configured()):
-        raise _NoModelForTheRun('The welcome trial is not available here, and no provider is set up.')
-    return claimed
+    if not provider_configured():
+        raise _NoModelForTheRun('No provider is set up.')
 
 
 async def _create_chat(connection):

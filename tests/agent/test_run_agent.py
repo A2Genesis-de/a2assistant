@@ -52,10 +52,6 @@ def test_is_destructive_command_treats_cp_as_mutating():
     assert _is_destructive_command("cp .env.local .env") is True
 
 
-
-
-
-
 @pytest.fixture(autouse=True)
 def _mock_plugin_discovery(monkeypatch):
     # Tool definitions are supplied by these unit fixtures. Scanning every
@@ -408,7 +404,6 @@ class TestStripThinkBlocks:
         assert "visible answer" in result
         assert "internal reasoning" not in result
 
-
     def test_single_block_removed(self, agent):
         result = agent._strip_think_blocks("<think>reasoning</think> answer")
         assert "reasoning" not in result
@@ -420,7 +415,6 @@ class TestStripThinkBlocks:
     # closing tag, leaking raw reasoning into assistant content. The open
     # tag appears at a block boundary (start of text or after a newline);
     # everything from that tag to end-of-string is stripped.
-
 
     def test_mixed_case_closed_pair_stripped(self, agent):
         """Mixed-case variants <THINK>…</THINK>, <Thinking>…</Thinking> are
@@ -438,7 +432,6 @@ class TestStripThinkBlocks:
     # standalone tool-call XML inside assistant content instead of via the
     # structured `tool_calls` field. Left unstripped, raw XML leaks to
     # gateway users (Discord/Telegram/Matrix) and the CLI.
-
 
     @pytest.mark.parametrize(
         ("text", "expected"),
@@ -508,7 +501,6 @@ class TestGetMessagesUpToLastAssistant:
 class TestMaskApiKey:
     def test_none_returns_none(self, agent):
         assert agent._mask_api_key_for_logs(None) is None
-
 
     def test_long_key_masked(self, agent):
         key = "sk-or-v1-abcdefghijklmnop"
@@ -591,7 +583,6 @@ class TestInit:
                 skip_memory=True,
             )
             assert a._use_prompt_caching is False
-
 
     def test_prompt_caching_native_anthropic(self):
         """Native Anthropic provider should enable prompt caching."""
@@ -689,7 +680,6 @@ class TestInit:
             assert should_cache is False
             assert use_native is False
             assert a._use_prompt_caching is False
-
 
     def test_constructor_max_tokens_wins_over_config(self):
         """Explicit constructor max_tokens keeps programmatic callers stable."""
@@ -842,7 +832,6 @@ class TestBuildSystemPrompt:
         assert "SOUL IDENTITY" in prompt
         assert DEFAULT_AGENT_IDENTITY not in prompt
 
-
     def test_memory_guidance_when_memory_tool_loaded(self, agent_with_memory_tool):
         agent_with_memory_tool._memory_enabled = True
         prompt = agent_with_memory_tool._build_system_prompt()
@@ -884,7 +873,6 @@ class TestBuildSystemPrompt:
         assert MEMORY_GUIDANCE not in prompt
         from agent.prompt_builder import build_memory_guidance
         assert build_memory_guidance(False, True, skill_manage_available=False) in prompt
-
 
     def test_datetime_is_date_only_not_minute_precision(self, agent):
         """Timestamp must be date-only (no HH:MM) so the system prompt
@@ -980,7 +968,6 @@ class TestBuildSystemPrompt:
 class TestToolUseEnforcementConfig:
     """Tests for the agent.tool_use_enforcement config option."""
 
-
     def test_no_tools_never_injects(self):
         """Even with enforcement=true, no injection when agent has no tools."""
         from agent.prompt_builder import TOOL_USE_ENFORCEMENT_GUIDANCE
@@ -1042,7 +1029,6 @@ class TestExecutionGuidanceConfig:
             )
             a.client = MagicMock()
             return a
-
 
     def test_config_false_suppresses(self):
         from agent.prompt_builder import OPENAI_MODEL_EXECUTION_GUIDANCE
@@ -1111,7 +1097,6 @@ class TestTaskCompletionGuidance:
         agent = self._make_agent(model="anthropic/claude-opus-4.8")
         prompt = agent._build_system_prompt()
         assert TASK_COMPLETION_GUIDANCE in prompt
-
 
     def test_no_tools_no_injection(self):
         """Same gate as tool_use_enforcement — no tools means no guidance.
@@ -1284,7 +1269,6 @@ class TestBuildApiKwargs:
 
         assert "temperature" not in kwargs
 
-
     def test_kimi_coding_endpoint_disables_thinking(self, agent):
         """When reasoning_config.enabled=False, thinking should be disabled
         and reasoning_effort should be omitted entirely — mirroring Kimi
@@ -1301,7 +1285,6 @@ class TestBuildApiKwargs:
         assert kwargs["extra_body"]["thinking"] == {"type": "disabled"}
         assert "reasoning_effort" not in kwargs
 
-
     def test_provider_preferences_injected(self, agent):
         agent.provider = "openrouter"
         agent.base_url = "https://openrouter.ai/api/v1"
@@ -1309,7 +1292,6 @@ class TestBuildApiKwargs:
         messages = [{"role": "user", "content": "hi"}]
         kwargs = agent._build_api_kwargs(messages)
         assert kwargs["extra_body"]["provider"]["only"] == ["Anthropic"]
-
 
     def test_reasoning_config_default_openrouter(self, agent):
         """Default reasoning config for OpenRouter should be medium."""
@@ -1321,14 +1303,12 @@ class TestBuildApiKwargs:
         reasoning = kwargs["extra_body"]["reasoning"]
         assert reasoning["enabled"] is True
 
-
     def test_reasoning_not_sent_for_unsupported_openrouter_model(self, agent):
         agent.base_url = "https://openrouter.ai/api/v1"
         agent.model = "minimax/minimax-m2.5"
         messages = [{"role": "user", "content": "hi"}]
         kwargs = agent._build_api_kwargs(messages)
         assert "reasoning" not in kwargs.get("extra_body", {})
-
 
     def test_qwen_portal_formats_messages_and_metadata(self, agent):
         agent.provider = "qwen-oauth"
@@ -1359,7 +1339,6 @@ class TestBuildApiKwargs:
         user_content = kwargs["messages"][1]["content"]
         assert user_content[0] == {"type": "text", "text": "hello"}
         assert user_content[1] == {"type": "text", "text": "world"}
-
 
     def test_non_custom_provider_unaffected(self, agent):
         """OpenRouter provider with effort=none should NOT inject think=false."""
@@ -1459,7 +1438,6 @@ class TestBuildAssistantMessage:
         assert result["codex_reasoning_items"] == [checkpoint]
         note_checkpoint.assert_not_called()
 
-
     def test_tool_call_extra_content_preserved(self, agent):
         """Gemini thinking models attach extra_content with thought_signature
         to tool calls. This must be preserved so subsequent API calls include it."""
@@ -1478,7 +1456,6 @@ class TestFormatToolsForSystemMessage:
     def test_no_tools_returns_empty_array(self, agent):
         agent.tools = []
         assert agent._format_tools_for_system_message() == "[]"
-
 
     def test_formats_multiple_tools(self, agent):
         agent.tools = _make_tool_defs("web_search", "terminal", "read_file")
@@ -1682,7 +1659,6 @@ class TestExecuteToolCalls:
         assert len(messages) == 1
         assert messages[0]["role"] == "tool"
 
-
     def test_run_conversation_suppresses_retry_noise_in_parseable_quiet_mode(self, agent):
         class _RateLimitError(Exception):
             status_code = 429
@@ -1819,7 +1795,6 @@ class TestRetryAfterCap:
 class TestConcurrentToolExecution:
     """Tests for _execute_tool_calls_concurrent and dispatch logic."""
 
-
     def test_concurrent_executes_all_tools(self, agent):
         """Concurrent path should execute all tools and append results in order."""
         tc1 = _mock_tool_call(name="web_search", arguments='{"q":"alpha"}', call_id="c1")
@@ -1895,7 +1870,6 @@ class TestConcurrentToolExecution:
         assert messages[1]["tool_call_id"] == "c2"
         assert "result_fast" in messages[1]["content"]
 
-
     def test_concurrent_submit_shutdown_error_returns_tool_errors(self, agent):
         """Submit-time interpreter shutdown should not escape the outer loop."""
 
@@ -1928,7 +1902,6 @@ class TestConcurrentToolExecution:
         assert messages[1]["tool_call_id"] == "c2"
         assert all("Python interpreter is shutting down" in m["content"] for m in messages)
 
-
     def test_sequential_tool_callbacks_fire_in_order(self, agent):
         tool_call = _mock_tool_call(name="web_search", arguments='{"query":"hello"}', call_id="c1")
         mock_msg = _mock_assistant_msg(content="", tool_calls=[tool_call])
@@ -1943,7 +1916,6 @@ class TestConcurrentToolExecution:
 
         assert starts == [("c1", "web_search", {"query": "hello"})]
         assert completes == [("c1", "web_search", {"query": "hello"}, '{"success": true}')]
-
 
     def test_sequential_browser_type_callbacks_redact_api_key(self, agent):
         secret = "sk-proj-ABCD1234567890EFGH"
@@ -1968,7 +1940,6 @@ class TestConcurrentToolExecution:
         assert completes[0][2]["text"].startswith("sk-pro")
         assert progress[0][2].startswith("sk-pro")
         assert secret not in repr(starts + completes + progress)
-
 
     def test_sequential_blocked_tool_skips_checkpoints_and_callbacks(self, agent, monkeypatch):
         """Sequential path: blocked tool should not trigger checkpoints or start callbacks."""
@@ -1998,7 +1969,6 @@ class TestConcurrentToolExecution:
         assert len(messages) == 1
         assert messages[0]["role"] == "tool"
         assert json.loads(messages[0]["content"]) == {"error": "Blocked by policy"}
-
 
     @pytest.mark.parametrize("concurrent", [False, True])
     def test_tool_execution_middleware_replacement_emits_one_terminal_hook(
@@ -2063,7 +2033,6 @@ class TestConcurrentToolExecution:
 
         assert json.loads(result) == {"error": "Blocked"}
         assert agent._turns_since_memory == 5
-
 
     def test_managed_tool_pipeline_rejects_second_dispatch(self, agent, monkeypatch):
         from agent import relay_tools, tool_executor
@@ -2369,8 +2338,6 @@ class TestRuntimeToolTransformToolResult:
 
 
 class TestParallelScopePathNormalization:
-
-
     def test_should_parallelize_tool_batch_rejects_same_file_with_mixed_path_spellings(self, tmp_path, monkeypatch):
         from agent.tool_dispatch_helpers import _should_parallelize_tool_batch
         monkeypatch.chdir(tmp_path)
@@ -2526,7 +2493,6 @@ class TestHandleMaxIterations:
         agent._cached_system_prompt = "You are helpful."
 
         assert agent._handle_max_iterations([{"role": "user", "content": "do stuff"}], 60) == "Summary"
-
 
     def test_summary_retries_share_relay_identity(self, agent):
         agent.client.chat.completions.create.side_effect = [
@@ -2708,7 +2674,6 @@ class TestHandleMaxIterations:
         ]
         assert len(orphan_ids) == 0, f"Orphan tool result still present: {orphan_ids}"
 
-
     def test_summary_strips_strict_schema_foreign_fields(self, agent):
         """Regression: the max-iterations summary request must NOT carry
         Chat-Completions-schema-foreign keys — tool_name (SQLite FTS
@@ -2755,7 +2720,6 @@ class TestHandleMaxIterations:
         assert messages[2]["tool_name"] == "execute_code"
         assert messages[2]["name"] == "execute_code"
         assert messages[1]["codex_reasoning_items"] == [{"id": "rs_1"}]
-
 
     def test_codex_summary_uses_interruptible_request_path(self, agent):
         """Max-iteration Codex summaries must retain request watchdogs.
@@ -3248,7 +3212,6 @@ class TestRunConversation:
         assert mock_handle_function_call.call_args.kwargs["tool_call_id"] == "c1"
         assert mock_handle_function_call.call_args.kwargs["session_id"] == agent.session_id
 
-
     def test_request_scoped_api_hooks_fire_for_each_api_call(self, agent):
         self._setup_agent(agent)
         tc = _mock_tool_call(name="web_search", arguments="{}", call_id="c1")
@@ -3328,7 +3291,6 @@ class TestRunConversation:
 
         assert result is failed_result
         assert order == ["logical", "metrics"]
-
 
     def test_request_scoped_api_hooks_skip_payload_work_without_listeners(self, agent, monkeypatch):
         self._setup_agent(agent)
@@ -3544,7 +3506,6 @@ class TestRunConversation:
         assert result["failure_reason"] == "empty_response"
         assert result["api_calls"] == 4  # legacy: 1 original + 3 retries
 
-
     def test_truly_empty_response_succeeds_on_nudge(self, agent):
         """Model produces content after being nudged for empty response."""
         self._setup_agent(agent)
@@ -3687,7 +3648,6 @@ class TestRunConversation:
         # #34452: explanation replaces the bare "(empty)" sentinel.
         assert result["final_response"] != "(empty)"
 
-
     def test_empty_response_retry_backoff_interrupted(self, agent, monkeypatch):
         """If an interrupt is requested during the empty response retry wait, we abort."""
         self._setup_agent(agent)
@@ -3769,7 +3729,6 @@ class TestRunConversation:
 
         assert sum(sleep_calls) >= 7.5
 
-
     def test_partial_stream_recovery_on_empty_stub(self, agent):
         """When stub response has no content but text was streamed, use streamed text."""
         self._setup_agent(agent)
@@ -3802,7 +3761,6 @@ class TestRunConversation:
         assert result["api_calls"] == 1  # No wasted retries
         # Should emit the stream-interrupted status, NOT the empty-retry status
         # Should NOT have retry statuses
-
 
     def test_interrupt_during_stream_preserves_partial_assistant_text(self, agent):
         """Stopping mid-response keeps the streamed reply in history (not 'forgotten')."""
@@ -4077,47 +4035,6 @@ class TestRunConversation:
         assert all(len(n) <= 64 and n.replace("_", "").replace("-", "").isalnum() for n in wire_names)
         assert [tc["function"]["name"] for tc in history[1]["tool_calls"]] == ["multi_tool_use.parallel", long_name, ""]
 
-    def test_nous_401_refreshes_after_remint_and_retries(self, agent):
-        self._setup_agent(agent)
-        agent.provider = "nous"
-        agent.api_mode = "chat_completions"
-
-        calls = {"api": 0, "refresh": 0}
-
-        class _UnauthorizedError(RuntimeError):
-            def __init__(self):
-                super().__init__("Error code: 401 - unauthorized")
-                self.status_code = 401
-
-        def _fake_api_call(api_kwargs):
-            calls["api"] += 1
-            if calls["api"] == 1:
-                raise _UnauthorizedError()
-            return _mock_response(
-                content="Recovered after remint", finish_reason="stop"
-            )
-
-        def _fake_refresh(*, force=True):
-            calls["refresh"] += 1
-            assert force is True
-            return True
-
-        with (
-            patch.object(agent, "_persist_session"),
-            patch.object(agent, "_save_trajectory"),
-            patch.object(agent, "_cleanup_task_resources"),
-            patch.object(agent, "_interruptible_api_call", side_effect=_fake_api_call),
-            patch.object(
-                agent, "_try_refresh_nous_client_credentials", side_effect=_fake_refresh
-            ),
-        ):
-            result = agent.run_conversation("hello")
-
-        assert calls["api"] == 2
-        assert calls["refresh"] == 1
-        assert result["completed"] is True
-        assert result["final_response"] == "Recovered after remint"
-
     def test_context_compression_triggered(self, agent):
         """When compressor says should_compress, compression runs."""
         self._setup_agent(agent)
@@ -4203,7 +4120,6 @@ class TestRunConversation:
         assert result["final_response"] == "Done"
         assert result["completed"] is True
 
-
     def test_glm_prompt_exceeds_max_length_triggers_compression(self, agent):
         """GLM/Z.AI uses 'Prompt exceeds max length' for context overflow."""
         self._setup_agent(agent)
@@ -4235,7 +4151,6 @@ class TestRunConversation:
         mock_compress.assert_called_once()
         assert result["final_response"] == "Recovered after compression"
         assert result["completed"] is True
-
 
     def test_length_finish_reason_requests_continuation(self, agent):
         """Normal truncation (partial real content) triggers continuation."""
@@ -4368,7 +4283,6 @@ class TestRunConversation:
         # Should have a user-friendly response (not None)
         assert result["final_response"] is not None
         assert "/reasoning" in result["final_response"]
-
 
     def test_length_with_tool_calls_returns_partial_without_executing_tools(self, agent):
         self._setup_agent(agent)
@@ -4587,7 +4501,6 @@ class TestRunConversation:
         mock_hfc.assert_called_once()
         assert result["final_response"] == "Done!"
 
-
     def test_truncated_tool_json_after_tool_batch_closes_tool_tail(self, agent):
         """finish_reason=tool_calls + truncated args after a real tool must close tool→user."""
         self._setup_agent(agent)
@@ -4622,7 +4535,6 @@ class TestRunConversation:
         msgs = result.get("messages") or []
         assert msgs[-1].get("role") == "assistant"
         assert any(isinstance(m, dict) and m.get("role") == "tool" for m in msgs)
-
 
     def test_kanban_block_called_on_iteration_exhaustion(self, agent, monkeypatch):
         """Regression: kanban worker must signal the dispatcher when its
@@ -4811,7 +4723,6 @@ class TestRunConversation:
         assert result["completed"] is True
         assert second_call["max_tokens"] <= 65_472
         assert agent.context_compressor.context_length == 200_000
-
 
     def test_wrapped_output_cap_429_not_consumed_by_eager_fallback(self, agent):
         """With a NON-EMPTY fallback chain, the eager rate-limit fallback must
@@ -5234,7 +5145,6 @@ class TestRetryExhaustion:
         # exactly one API call, no empty-response retry loop.
         assert agent.client.chat.completions.create.call_count == 1
 
-
     def test_build_api_kwargs_error_no_unbound_local(self, agent):
         """When _build_api_kwargs raises, except handler must not crash with UnboundLocalError.
 
@@ -5299,135 +5209,6 @@ class TestConversationHistoryNotMutated:
 # ---------------------------------------------------------------------------
 
 
-class TestNousCredentialRefresh:
-    """Verify Nous credential refresh rebuilds the runtime client."""
-
-    def test_try_refresh_nous_client_credentials_rebuilds_client(
-        self, agent, monkeypatch
-    ):
-        agent.provider = "nous"
-        agent.api_mode = "chat_completions"
-
-        closed = {"value": False}
-        retired = {"value": False}
-        rebuilt = {"kwargs": None}
-        captured = {}
-
-        class _ExistingClient:
-            def close(self):
-                closed["value"] = True
-
-        class _RebuiltClient:
-            pass
-
-        def _fake_resolve(**kwargs):
-            captured.update(kwargs)
-            return {
-                "api_key": "new-nous-key",
-                "base_url": "https://inference-api.nousresearch.com/v1",
-            }
-
-        def _fake_openai(**kwargs):
-            rebuilt["kwargs"] = kwargs
-            return _RebuiltClient()
-
-        monkeypatch.setattr(
-            "hermes_cli.auth.resolve_nous_runtime_credentials", _fake_resolve
-        )
-
-        existing = _ExistingClient()
-        agent.client = existing
-
-        _orig_retire = agent._retire_shared_openai_client
-
-        def _spy_retire(client, *, reason):
-            if client is existing:
-                retired["value"] = True
-            return _orig_retire(client, reason=reason)
-
-        monkeypatch.setattr(agent, "_retire_shared_openai_client", _spy_retire)
-
-        with patch("agent.process_bootstrap.OpenAI", side_effect=_fake_openai):
-            ok = agent._try_refresh_nous_client_credentials(force=True)
-
-        assert ok is True
-        # #70773: the replaced shared client is RETIRED (sockets shutdown,
-        # FD release deferred to GC), never hard-closed from the refreshing
-        # thread — close() releasing pool FDs cross-thread was the
-        # TLS-FD→SQLite corruption vector.
-        assert retired["value"] is True
-        assert closed["value"] is False
-        assert captured["force_refresh"] is True
-        assert rebuilt["kwargs"]["api_key"] == "new-nous-key"
-        assert (
-            rebuilt["kwargs"]["base_url"] == "https://inference-api.nousresearch.com/v1"
-        )
-        assert "default_headers" not in rebuilt["kwargs"]
-        assert isinstance(agent.client, _RebuiltClient)
-
-    def test_try_refresh_nous_client_credentials_rebuilds_anthropic_client(
-        self, agent, monkeypatch
-    ):
-        """Portal anthropic/* sessions hold an Anthropic client, not OpenAI.
-
-        A 401 on the Messages wire must refresh the invoke JWT into
-        ``_anthropic_api_key`` / ``_anthropic_base_url`` and rebuild that
-        client — swapping only ``agent.client`` would leave the turn stuck
-        on the expired Bearer token.
-        """
-        agent.provider = "nous"
-        agent.api_mode = "anthropic_messages"
-        agent.model = "anthropic/claude-opus-4.8"
-        agent.api_key = "stale-nous-key"
-        agent.base_url = "https://inference-api.nousresearch.com/v1"
-        agent._anthropic_api_key = "stale-nous-key"
-        agent._anthropic_base_url = "https://inference-api.nousresearch.com/v1"
-        agent._client_kwargs = {}
-        agent.client = None
-
-        captured = {}
-        rebuild_calls = {"count": 0}
-
-        class _RebuiltAnthropic:
-            pass
-
-        def _fake_resolve(**kwargs):
-            captured.update(kwargs)
-            return {
-                "api_key": "fresh-portal-jwt",
-                "base_url": "https://inference-api.nousresearch.com/v1",
-            }
-
-        def _fake_rebuild():
-            rebuild_calls["count"] += 1
-            agent._anthropic_client = _RebuiltAnthropic()
-
-        monkeypatch.setattr(
-            "hermes_cli.auth.resolve_nous_runtime_credentials", _fake_resolve
-        )
-        monkeypatch.setattr(agent, "_rebuild_anthropic_client", _fake_rebuild)
-        monkeypatch.setattr(
-            agent,
-            "_replace_primary_openai_client",
-            MagicMock(side_effect=AssertionError("OpenAI client must not be rebuilt")),
-        )
-
-        ok = agent._try_refresh_nous_client_credentials(force=True)
-
-        assert ok is True
-        assert captured["force_refresh"] is True
-        assert agent.api_key == "fresh-portal-jwt"
-        assert agent.base_url == "https://inference-api.nousresearch.com/v1"
-        assert agent._anthropic_api_key == "fresh-portal-jwt"
-        assert agent._anthropic_base_url == (
-            "https://inference-api.nousresearch.com/v1"
-        )
-        assert rebuild_calls["count"] == 1
-        assert isinstance(agent._anthropic_client, _RebuiltAnthropic)
-        assert agent.client is None
-        agent._replace_primary_openai_client.assert_not_called()
-
-
 class TestCredentialPoolRecovery:
     def test_recover_with_pool_rotates_on_402(self, agent):
         current = SimpleNamespace(label="primary")
@@ -5462,7 +5243,6 @@ class TestCredentialPoolRecovery:
         assert recovered is True
         assert retry_same is False
         agent._swap_credential.assert_called_once_with(next_entry)
-
 
     def test_recover_with_pool_retries_first_429_then_rotates(self, agent):
         next_entry = SimpleNamespace(label="secondary")
@@ -5502,7 +5282,6 @@ class TestCredentialPoolRecovery:
         assert recovered is True
         assert retry_same is False
         agent._swap_credential.assert_called_once_with(next_entry)
-
 
     def test_extract_api_error_context_uses_reset_timestamp_and_reason(self, agent):
         response = SimpleNamespace(headers={})
@@ -5555,16 +5334,6 @@ class TestMaxTokensParam:
 class TestGpt5ApiModeRouting:
     """Verify provider-specific GPT-5 API-mode routing."""
 
-
-    def test_nous_gpt5_stays_on_chat_completions(self, agent):
-        """Nous serves gpt-5.x on /chat/completions — must not upgrade to codex_responses."""
-        agent.provider = "nous"
-        agent.base_url = "https://inference-api.nousresearch.com/v1"
-        agent.api_mode = "chat_completions"
-        agent.model = "openai/gpt-5.5"
-        assert not agent._is_direct_openai_url()
-        assert not AIAgent._provider_model_requires_responses_api(agent.model, provider=agent.provider)
-
     def test_is_azure_openai_url_detection(self, agent):
         assert agent._is_azure_openai_url("https://foo.openai.azure.com/openai/v1") is True
         assert agent._is_azure_openai_url("https://api.openai.com/v1") is False
@@ -5590,7 +5359,6 @@ class TestSafeWriter:
         writer = _SafeWriter(inner)
         writer.write("hello")
         assert inner.getvalue() == "hello"
-
 
     def test_installed_in_run_conversation(self, agent):
         """run_conversation installs _SafeWriter on stdio."""
@@ -5848,7 +5616,6 @@ class TestAnthropicCredentialRefresh:
         )
         assert agent._anthropic_client is new_client
         assert agent._anthropic_api_key == "sk-ant-oat01-fresh-token"
-
 
     def test_anthropic_messages_create_preflights_refresh(self):
         with (
@@ -6497,7 +6264,6 @@ class TestStreamingApiCall:
 class TestAnthropicInterruptHandler:
     """_interruptible_api_call must handle Anthropic mode when interrupted."""
 
-
     def test_interruptible_anthropic_interrupt_never_closes_shared_client(self, agent):
         """#67142: a non-streaming Anthropic interrupt must abort the
         request-local client from the poll thread, never close/rebuild the
@@ -6785,7 +6551,6 @@ class TestNormalizeCodexDictArguments:
         parsed = json.loads(tc.function.arguments)
         assert parsed == args_dict
 
-
     def test_string_arguments_unchanged(self, agent):
         """String arguments must pass through without modification."""
         args_str = '{"query": "test"}'
@@ -6894,7 +6659,6 @@ class TestFallbackSetsOAuthFlag:
 
 class TestMemoryContextSanitization:
     """sanitize_context() helper correctness — used at provider boundaries."""
-
 
     def test_sanitize_context_strips_full_block(self):
         """Helper-level: a string with an embedded memory-context block is

@@ -15,7 +15,7 @@ def test_secondary_profile_worker_gets_no_launch_credentials(tmp_path, monkeypat
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("HERMES_HOME", str(launch))
     for key, value in {"OPENROUTER_API_KEY": "LAUNCH-or", "MY_SERVICE_TOKEN": "LAUNCH-mysvc",
-                       "NOUS_API_KEY": "LAUNCH-nous", "VAULT_ONLY_TOKEN": "LAUNCH-vault"}.items():
+                       "VAULT_ONLY_TOKEN": "LAUNCH-vault"}.items():
         monkeypatch.setenv(key, value)
     from hermes_cli import env_loader
     monkeypatch.setitem(env_loader._SECRET_SOURCES, "VAULT_ONLY_TOKEN", "bitwarden")

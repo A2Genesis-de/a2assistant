@@ -332,7 +332,7 @@ def test_benched_credential_prints_cooldown_instead_of_wizard(monkeypatch, capsy
 
 
 def test_auth_json_only_login_explains_instead_of_wizard(monkeypatch, capsys, tmp_path):
-    """auth.json-only shape: logged into Nous but no ``model.provider`` (requested "auto"). The
+    """auth.json-only shape: an OAuth login but no ``model.provider`` (requested "auto"). The
     ladder swallows the AuthError and falls through to a keyless OpenRouter fallback; the gate
     must still explain the real failure rather than treat the profile as a blank install.
     Control: the resolver's ``no_provider_configured`` still reaches the wizard."""
@@ -345,13 +345,13 @@ def test_auth_json_only_login_explains_instead_of_wizard(monkeypatch, capsys, tm
     for key in [k for k in os.environ if k.endswith("_API_KEY")]:
         monkeypatch.delenv(key, raising=False)
 
-    def _nous_fail():
-        raise AuthError("A2Assistant is not logged into Nous Portal.", provider="nous",
-                        code="nous_auth_missing", relogin_required=True)
+    def _minimax_fail():
+        raise AuthError("A2Assistant is not logged into MiniMax.", provider="qwen-oauth",
+                        code="minimax_auth_missing", relogin_required=True)
 
-    monkeypatch.setattr(rp, "resolve_provider", lambda *a, **kw: "nous")
-    monkeypatch.setitem(rp._OAUTH_RUNTIME_PROVIDERS, "nous",
-                        dataclasses.replace(rp._OAUTH_RUNTIME_PROVIDERS["nous"], resolve=_nous_fail))
+    monkeypatch.setattr(rp, "resolve_provider", lambda *a, **kw: "qwen-oauth")
+    monkeypatch.setitem(rp._OAUTH_RUNTIME_PROVIDERS, "qwen-oauth",
+                        dataclasses.replace(rp._OAUTH_RUNTIME_PROVIDERS["qwen-oauth"], resolve=_minimax_fail))
 
     cli = _import_cli()
     shell = _make_shell(cli, monkeypatch)
@@ -363,7 +363,7 @@ def test_auth_json_only_login_explains_instead_of_wizard(monkeypatch, capsys, tm
 
     shell._maybe_offer_first_run_setup()
     out = capsys.readouterr().out
-    assert "not logged into Nous Portal" in out
+    assert "not logged into MiniMax" in out
     assert t("cli.startup.first_run_no_provider") not in out
 
     offered = []

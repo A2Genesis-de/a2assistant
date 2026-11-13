@@ -36,7 +36,7 @@ def test_gateway_401_reply_names_the_provider_and_the_profile(monkeypatch, tmp_p
     monkeypatch.setenv("HERMES_HOME", str(profile_home))
 
     known = _reply_for_401("openai-codex")
-    assert "/login" in known
+    assert "/model" in known
     assert "`hermes -p codex auth add openai-codex --type oauth`" in known, known
     assert "<provider>" not in known and "{relogin}" not in known
 

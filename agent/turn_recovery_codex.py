@@ -113,6 +113,6 @@ def classify_codex_soft_failure(agent: Any, response: Any) -> tuple[Any, dict[st
     exc = _CodexSoftFailure(_codex_soft_failure_error(response))
     classified = classify_api_error(
         exc, provider=getattr(agent, "provider", "") or "", model=getattr(agent, "model", "") or "",
-        base_url=str(getattr(agent, "base_url", "") or ""), api_key=getattr(agent, "api_key", None),
+        base_url=str(getattr(agent, "base_url", "") or ""),
     )
     return classified, agent._extract_api_error_context(exc)

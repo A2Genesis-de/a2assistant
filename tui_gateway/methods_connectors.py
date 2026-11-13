@@ -81,17 +81,6 @@ def _account_gate_closed(rid):
     return _connector_rpc_error(rid, 4031, ConnectorErrorReason.connectors_unavailable, "Connectors are not available.")
 
 
-def _account_identity_error(rid):
-    """Connecting from the Connectors page is the user asking for apps: create the guest identity
-    here when the user has none. Page reads and operation polls never call this."""
-    from tools.connectors import ensure_guest_identity
-    from tui_gateway.contracts.connectors import ConnectorErrorReason
-
-    if setup_error := ensure_guest_identity():
-        return _connector_rpc_error(rid, 5034, ConnectorErrorReason.connector_request_failed, setup_error)
-    return None
-
-
 def _parse_params(rid, params, model):
     from pydantic import ValidationError
 
@@ -190,17 +179,10 @@ def _connector_rows(rows):
     ])
 
 
-# Whether each account-owned action of the Connectors page may create the guest identity.
-_ACCOUNT_CREATES_GUEST = {"status": False, "connect": True}
-
-
 def _account_connector_list(rid):
-    from hermes_cli.free_tier_offer import note_connected_apps_seen
     from tools.connectors.managed import managed_client
-    from tools.managed_gateway_auth import read_nous_access_token
 
-    rows = managed_client(creates_guest=False).list_connectors() if read_nous_access_token() else []
-    note_connected_apps_seen(rows)
+    rows = managed_client(creates_guest=False).list_connectors()
     return _ok(rid, {"available": True, "connectors": _connector_rows(rows)})
 
 
@@ -240,8 +222,6 @@ def _connector_rpc(rid, params, action):
         with _account_scope(request):
             if closed := _account_gate_closed(rid):
                 return _ok(rid, {"available": False, "connectors": []}) if action == "status" else closed
-            if _ACCOUNT_CREATES_GUEST[action] and (setup_error := _account_identity_error(rid)):
-                return setup_error
             return _account_connector_list(rid) if action == "status" else _account_connector_connect(rid, request)
 
     runtime_token = _current_runtime_session_record.set(session)

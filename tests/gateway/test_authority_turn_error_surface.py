@@ -1,15 +1,11 @@
 """A turn that fails on the session authority completes with the same ``error_surface`` the TUI
 path sends, so the Desktop renders the failure's own card (free tier at capacity, rate limit)
 instead of the generic one."""
-import io
 from types import SimpleNamespace
 
-import pytest
 
 from gateway.config import Platform
 
-_FREE_TIER_FULL = {'free_tier': {'kind': 'at_capacity', 'message': 'The free tier is full right now.'},
-                   'failure_reason': 'rate_limit', 'failure_retryable': True, 'error': 'HTTP 429'}
 _RATE_LIMITED = {'failure_reason': 'rate_limit', 'failure_retryable': True, 'failure_resets_at': 1900000000.0,
                  'error': 'HTTP 429: slow down'}
 
@@ -57,14 +53,6 @@ def _complete(response, captured):
     return completion_payload(row, {'outcome': outcome}, response, captured)
 
 
-@pytest.mark.parametrize('platform', [Platform.LOCAL, Platform.TELEGRAM])
-def test_free_tier_at_capacity_turn_completes_with_its_own_surface(platform):
-    complete = _complete(*_authority_turn(platform, _FREE_TIER_FULL))
-    assert complete['status'] == 'error'
-    assert complete['error_surface']['code'] == 'free_tier_at_capacity'
-    assert complete['error_surface']['message'] == 'The free tier is full right now.'
-
-
 def test_rate_limited_turn_completes_with_rate_limit_and_reset_time():
     from tui_gateway.contracts.registry import EVENTS
 
@@ -73,29 +61,6 @@ def test_rate_limited_turn_completes_with_rate_limit_and_reset_time():
     assert (surface['code'], surface['retryable'], surface['resets_at']) == ('rate_limit', True, 1900000000.0)
     EVENTS['message.complete'].payload.model_validate(
         {k: v for k, v in complete.items() if k not in ('content', 'admission_id', 'outcome')})
-
-
-def test_usage_window_refusal_completes_with_the_window_card():
-    limit = {'limit': 'weekly', 'suggestions': [{'model': 'nous/free-model', 'label': 'Free model'}]}
-    refusal = {'failure_reason': 'billing', 'failure_retryable': False, 'error': 'HTTP 402',
-               'usage_window_message': "You've hit your weekly limit.", 'failure_resets_at': 1900000000.0,
-               'usage_limit': limit}
-    surface = _complete(*_authority_turn(Platform.LOCAL, refusal))['error_surface']
-    assert (surface['code'], surface['message'], surface['resets_at']) == (
-        'usage_window', "You've hit your weekly limit.", 1900000000.0)
-    assert surface['usage_limit'] == limit
-
-
-def test_a_managed_worker_turn_carries_the_free_tier_failure_to_the_owner():
-    from agent.managed_worker import accept_result, encode_frame, read_frame, result_frame
-
-    raw = {'final_response': '', 'failed': True, 'completed': False, 'provider': 'nous', 'model': 'free-model',
-           'messages': [], **_FREE_TIER_FULL}
-    wire = read_frame(io.BytesIO(encode_frame({'type': 'result', 'result': result_frame(raw)})))
-    accepted, usage = accept_result(wire['result'])
-    # The owner's projection of a finished worker turn (``session_managed_worker``).
-    complete = _complete('', {'result': {**accepted, 'local_viewer': True}, 'usage': usage})
-    assert complete['error_surface']['code'] == 'free_tier_at_capacity'
 
 
 _AUTH_FAILED = {'failure_reason': 'auth', 'failure_retryable': False, 'error': 'HTTP 401: invalid api key'}

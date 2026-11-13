@@ -322,7 +322,7 @@ class TestBareCustomNoBaseUrlHealsFromConfig:
 #
 # The config-provider fallback above only heals when ``config.model.provider``
 # still points at the custom entry. A user whose global default is a built-in
-# provider (e.g. Nous) but who switched THIS session to a self-hosted model
+# provider (e.g. OpenRouter) but who switched THIS session to a self-hosted model
 # gets no heal: the bare provider is dropped, resume falls back to the default
 # provider, and the default provider's endpoint 404s with "Model '<x>' not
 # found" (the b200/hermes-ultra-sft report). The stored MODEL NAME is the one
@@ -334,7 +334,7 @@ ULTRA_URL = "http://b200-cluster:30090/v1"
 ULTRA_CONFIG = {
     # Global default deliberately points at a BUILT-IN provider — the config
     # fallback must not fire; only the model lookup can recover the entry.
-    "model": {"default": "some-nous-model", "provider": "nous"},
+    "model": {"default": "some-openrouter-model", "provider": "openrouter"},
     "providers": {
         "hermes-ultra": {
             "api": ULTRA_URL,
@@ -345,7 +345,7 @@ ULTRA_CONFIG = {
 }
 
 ULTRA_LEGACY_CONFIG = {
-    "model": {"default": "some-nous-model", "provider": "nous"},
+    "model": {"default": "some-openrouter-model", "provider": "openrouter"},
     "custom_providers": [
         {
             "name": "hermes-ultra",
@@ -938,15 +938,15 @@ class TestRuntimeModelConfigDropsStaleKeys:
         row = {
             "model": "deepseek/deepseek-v4-flash-0731",
             "model_config": json.dumps(config),
-            "billing_provider": "nous",
+            "billing_provider": "openrouter",
         }
         overrides = _stored_session_runtime_overrides(row)
 
         assert overrides["model_override"]["model"] == "deepseek/deepseek-v4-flash-0731"
         # The stale endpoint identity is gone; resume routes through the
         # billing fallback to the profile's real provider.
-        assert overrides["model_override"]["provider"] == "nous"
-        assert overrides["provider_override"] == "nous"
+        assert overrides["model_override"]["provider"] == "openrouter"
+        assert overrides["provider_override"] == "openrouter"
 
 
     def test_existing_none_returns_only_agent_identity(self):

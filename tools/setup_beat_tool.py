@@ -26,8 +26,9 @@ BEATS = ("next", *flow.BEAT_IDS, "done")
 def _connected() -> dict:
     from tools.connectors.display import connected_slugs
     from tools.connectors.gateway.client import ConnectorClient
+    from tools.connectors.gateway.config import connectors_available
 
-    return {"connected": sorted(connected_slugs(ConnectorClient()))}
+    return {"connected": sorted(connected_slugs(ConnectorClient())) if connectors_available() else []}
 
 
 def _installed() -> dict:

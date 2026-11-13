@@ -523,7 +523,7 @@ class TestZaiParallelProbe:
         last_model = coding_global[2][-1]
         # Only the LAST candidate model of coding-global succeeds.
         monkeypatch.setattr(
-            "hermes_cli.auth.httpx.post",
+            "hermes_cli.auth_constants.httpx.post",
             self._mock_post({(base, last_model): True}),
         )
         result = detect_zai_endpoint("test-key", timeout=1.0)
@@ -551,7 +551,7 @@ class TestZaiParallelProbe:
                 _time.sleep(0.15)  # first-priority endpoint finishes LAST
             return inner(url, headers=headers, json=json, timeout=timeout)
 
-        monkeypatch.setattr("hermes_cli.auth.httpx.post", _slow_first)
+        monkeypatch.setattr("hermes_cli.auth_constants.httpx.post", _slow_first)
         result = detect_zai_endpoint("test-key", timeout=1.0)
         assert result is not None
         assert result["id"] == first[0]
@@ -559,7 +559,7 @@ class TestZaiParallelProbe:
     def test_all_fail_returns_none(self, monkeypatch):
         from hermes_cli.auth import detect_zai_endpoint
 
-        monkeypatch.setattr("hermes_cli.auth.httpx.post", self._mock_post({}))
+        monkeypatch.setattr("hermes_cli.auth_constants.httpx.post", self._mock_post({}))
         assert detect_zai_endpoint("bad-key", timeout=1.0) is None
 
     def test_early_exit_does_not_wait_for_slow_losers(self, monkeypatch):
@@ -577,7 +577,7 @@ class TestZaiParallelProbe:
                 _time.sleep(2.0)  # slow lower-priority endpoints
             return inner(url, headers=headers, json=json, timeout=timeout)
 
-        monkeypatch.setattr("hermes_cli.auth.httpx.post", _slow_losers)
+        monkeypatch.setattr("hermes_cli.auth_constants.httpx.post", _slow_losers)
         t0 = _time.perf_counter()
         result = detect_zai_endpoint("test-key", timeout=5.0)
         elapsed = _time.perf_counter() - t0

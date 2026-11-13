@@ -5,7 +5,6 @@ from __future__ import annotations
 import base64
 import json
 import time
-from datetime import datetime, timezone, UTC
 
 import pytest
 
@@ -22,21 +21,6 @@ def _jwt_with_claims(claims: dict) -> str:
         return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
 
     return f"{_part({'alg': 'none', 'typ': 'JWT'})}.{_part(claims)}.sig"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def test_explicit_reset_timestamp_overrides_default_429_ttl(tmp_path, monkeypatch):
@@ -75,8 +59,6 @@ def test_explicit_reset_timestamp_overrides_default_429_ttl(tmp_path, monkeypatc
     pool = load_pool("openai-codex")
     assert pool.has_available() is False
     assert pool.select() is None
-
-
 
 
 def test_billing_rotation_marks_all_entries_sharing_failed_key(tmp_path, monkeypatch):
@@ -559,10 +541,6 @@ def test_dead_manual_entry_pruned_after_24h(tmp_path, monkeypatch):
     assert persisted[0]["id"] == "cred-ok"
 
 
-
-
-
-
 def test_load_pool_seeds_env_api_key(tmp_path, monkeypatch):
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
     monkeypatch.setenv("OPENROUTER_API_KEY", "sk-or-seeded")
@@ -576,7 +554,6 @@ def test_load_pool_seeds_env_api_key(tmp_path, monkeypatch):
     assert entry is not None
     assert entry.source == "env:OPENROUTER_API_KEY"
     assert entry.access_token == "sk-or-seeded"
-
 
 
 def test_load_pool_does_not_persist_env_seeded_secret_value(tmp_path, monkeypatch):
@@ -699,7 +676,6 @@ def test_load_pool_persists_bitwarden_origin_metadata_without_secret(tmp_path, m
     assert "access_token" not in persisted
 
 
-
 def test_load_pool_sanitizes_legacy_raw_borrowed_entry_when_value_unchanged(tmp_path, monkeypatch):
     """Existing raw env-seeded pool entries are rewritten even if the env value matches."""
     sentinel = "S3NTINEL_DO_NOT_PERSIST_LEGACY_RAW"
@@ -738,7 +714,6 @@ def test_load_pool_sanitizes_legacy_raw_borrowed_entry_when_value_unchanged(tmp_
     assert persisted["id"] == "legacy-env"
     assert "access_token" not in persisted
     assert persisted["secret_fingerprint"].startswith("sha256:")
-
 
 
 def test_pooled_credential_to_dict_strips_borrowed_secret_fields():
@@ -792,7 +767,6 @@ def test_pooled_credential_to_dict_strips_borrowed_secret_fields():
     assert payload["secret_fingerprint"].startswith("sha256:")
 
 
-
 @pytest.mark.parametrize("source", [
     "age://openrouter/api-key",
     "systemd",
@@ -825,10 +799,6 @@ def test_borrowed_source_variants_strip_secret_fields(source):
     assert "refresh_token" not in payload
     assert payload["source"] == source
     assert payload["secret_fingerprint"].startswith("sha256:")
-
-
-
-
 
 
 def test_write_credential_pool_sanitizes_borrowed_payload_at_disk_boundary(tmp_path, monkeypatch):
@@ -875,7 +845,6 @@ def test_write_credential_pool_sanitizes_borrowed_payload_at_disk_boundary(tmp_p
     assert manual["access_token"] == manual_secret
 
 
-
 def test_write_credential_pool_treats_unowned_oauth_source_as_borrowed(tmp_path, monkeypatch):
     sentinel = "S3NTINEL_DO_NOT_PERSIST_UNOWNED_OAUTH"
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
@@ -903,7 +872,6 @@ def test_write_credential_pool_treats_unowned_oauth_source_as_borrowed(tmp_path,
     assert persisted["secret_fingerprint"].startswith("sha256:")
 
 
-
 def test_write_credential_pool_preserves_known_provider_owned_oauth_state(tmp_path, monkeypatch):
     sentinel = "PROVIDER_OWNED_DEVICE_CODE_STAYS_PERSISTABLE"
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
@@ -927,7 +895,6 @@ def test_write_credential_pool_preserves_known_provider_owned_oauth_state(tmp_pa
     assert persisted["access_token"] == sentinel
     assert persisted["refresh_token"] == f"refresh-{sentinel}"
     assert persisted["agent_key"] == f"agent-{sentinel}"
-
 
 
 def test_load_pool_prefers_dotenv_over_stale_os_environ(tmp_path, monkeypatch):
@@ -985,93 +952,6 @@ def test_load_pool_falls_back_to_os_environ_when_dotenv_empty(tmp_path, monkeypa
 
     assert entry is not None
     assert entry.access_token == "sk-or-from-runtime-env"
-
-
-
-
-
-
-
-
-def test_load_pool_mirrors_nous_invoke_jwt_agent_key_runtime_api_key(tmp_path, monkeypatch):
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
-    expires_at = datetime.fromtimestamp(time.time() + 3600, tz=UTC).isoformat()
-    token = _jwt_with_claims({
-        "sub": "test-user",
-        "scope": ["inference:invoke"],
-        "exp": int(time.time() + 3600),
-    })
-    _write_auth_store(
-        tmp_path,
-        {
-            "version": 1,
-            "active_provider": "nous",
-            "providers": {
-                "nous": {
-                    "portal_base_url": "https://portal.example.com",
-                    "inference_base_url": "https://inference.example.com/v1",
-                    "client_id": "hermes-cli",
-                    "token_type": "Bearer",
-                    "scope": "inference:invoke",
-                    "access_token": token,
-                    "refresh_token": "refresh-token",
-                    "expires_at": expires_at,
-                    "agent_key": token,
-                    "agent_key_expires_at": expires_at,
-                }
-            },
-        },
-    )
-
-    from agent.credential_pool import load_pool
-
-    pool = load_pool("nous")
-    entry = pool.select()
-
-    assert entry is not None
-    assert entry.source == "device_code"
-    assert entry.agent_key == token
-    assert entry.runtime_api_key == token
-
-    auth_payload = json.loads((tmp_path / "hermes" / "auth.json").read_text())
-    pool_entry = auth_payload["credential_pool"]["nous"][0]
-    assert pool_entry["agent_key"] == token
-    assert pool_entry["agent_key_expires_at"] == expires_at
-
-
-def test_nous_runtime_api_key_rejects_opaque_agent_key():
-    from agent.credential_pool import PooledCredential
-
-    entry = PooledCredential(
-        provider="nous",
-        id="nous-opaque",
-        label="opaque",
-        auth_type="oauth",
-        priority=0,
-        source="device_code",
-        access_token="opaque-access-token",
-        refresh_token="refresh-token",
-        agent_key="opaque-agent-key",
-        agent_key_expires_at=datetime.fromtimestamp(
-            time.time() + 3600,
-            tz=UTC,
-        ).isoformat(),
-        extra={"scope": "inference:invoke"},
-    )
-
-    assert entry.runtime_api_key == ""
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def test_load_pool_api_key_path_skips_oauth_autodiscovery(tmp_path, monkeypatch):
@@ -1280,10 +1160,6 @@ def test_least_used_strategy_selects_lowest_count(tmp_path, monkeypatch):
     assert entry.access_token == "sk-or-light"
 
 
-
-
-
-
 def test_custom_endpoint_pool_seeds_from_config(tmp_path, monkeypatch):
     """Verify seeding from custom_providers api_key in config.yaml."""
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
@@ -1344,19 +1220,7 @@ def test_custom_endpoint_pool_seeds_from_model_config(tmp_path, monkeypatch):
     assert model_entries[0].access_token == "sk-model-key"
 
 
-
-
-
-
-
-
     # "custom:empty" not included because it's empty
-
-
-
-
-
-
 
 
 def test_load_pool_does_not_seed_claude_code_when_anthropic_not_configured(tmp_path, monkeypatch):
@@ -1434,91 +1298,10 @@ def test_load_pool_does_not_seed_qwen_oauth_when_no_token(tmp_path, monkeypatch)
     assert pool.entries() == []
 
 
-def test_nous_seed_from_singletons_preserves_obtained_at_timestamps(tmp_path, monkeypatch):
-    """Regression test for #15099 secondary issue.
-
-    When ``_seed_from_singletons`` materialises a device_code pool entry from
-    the ``providers.nous`` singleton, it must carry the mint/refresh
-    timestamps (``obtained_at``, ``agent_key_obtained_at``, ``expires_in``,
-    etc.) into the pool entry.  Without them, freshness-sensitive consumers
-    (self-heal hooks, pool pruning by age) treat just-minted credentials as
-    older than they actually are and evict them.
-    """
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
-    _write_auth_store(
-        tmp_path,
-        {
-            "version": 1,
-            "providers": {
-                "nous": {
-                    "access_token": "at_XXXXXXXX",
-                    "refresh_token": "rt_YYYYYYYY",
-                    "client_id": "hermes-cli",
-                    "portal_base_url": "https://portal.nousresearch.com",
-                    "inference_base_url": "https://inference.nousresearch.com/v1",
-                    "token_type": "Bearer",
-                    "scope": "openid profile",
-                    "obtained_at": "2026-04-24T10:00:00+00:00",
-                    "expires_at": "2026-04-24T11:00:00+00:00",
-                    "expires_in": 3600,
-                    "agent_key": "sk-nous-AAAA",
-                    "agent_key_id": "ak_123",
-                    "agent_key_expires_at": "2026-04-25T10:00:00+00:00",
-                    "agent_key_expires_in": 86400,
-                    "agent_key_reused": False,
-                    "agent_key_obtained_at": "2026-04-24T10:00:05+00:00",
-                    "tls": {"insecure": False, "ca_bundle": None},
-                },
-            },
-        },
-    )
-
-    from agent.credential_pool import load_pool
-
-    pool = load_pool("nous")
-    entries = pool.entries()
-
-    device_entries = [e for e in entries if e.source == "device_code"]
-    assert len(device_entries) == 1, f"expected single device_code entry; got {len(device_entries)}"
-    e = device_entries[0]
-
-    # Direct dataclass fields — must survive the singleton → pool copy.
-    assert e.access_token == "at_XXXXXXXX"
-    assert e.refresh_token == "rt_YYYYYYYY"
-    assert e.expires_at == "2026-04-24T11:00:00+00:00"
-    assert e.agent_key == "sk-nous-AAAA"
-    assert e.agent_key_expires_at == "2026-04-25T10:00:00+00:00"
-
-    # Extra fields — this is what regressed.  These must be carried through
-    # via ``extra`` dict or __getattr__, NOT silently dropped.
-    assert e.obtained_at == "2026-04-24T10:00:00+00:00", (
-        f"obtained_at was dropped during seed; got {e.obtained_at!r}. This breaks "
-        f"downstream pool-freshness consumers (#15099)."
-    )
-    assert e.agent_key_obtained_at == "2026-04-24T10:00:05+00:00"
-    assert e.expires_in == 3600
-    assert e.agent_key_id == "ak_123"
-    assert e.agent_key_expires_in == 86400
-    assert e.agent_key_reused is False
-
-
-
-
 # ── PR #10160 salvage: Nous OAuth cross-process sync tests ─────────────────
 
 
-
-
-
 # ── OpenAI Codex OAuth cross-process sync tests ────────────────────────────
-
-
-
-
-
-
-
-
 
 
 # ---------------------------------------------------------------------------
@@ -1526,27 +1309,9 @@ def test_nous_seed_from_singletons_preserves_obtained_at_timestamps(tmp_path, mo
 # ---------------------------------------------------------------------------
 
 
-
-
-
-
-
-
-
-
-
-
 # ---------------------------------------------------------------------------
 # Codex OAuth terminal error quarantine
 # ---------------------------------------------------------------------------
-
-
-
-
-
-
-
-
 
 
 def test_persist_preserves_concurrent_disk_only_entry(tmp_path, monkeypatch):
@@ -1616,8 +1381,6 @@ def test_persist_preserves_concurrent_disk_only_entry(tmp_path, monkeypatch):
     assert persisted_a["last_status"] == "exhausted"
 
 
-
-
 # ---------------------------------------------------------------------------
 # _sync_anthropic_entry_from_credentials_file — parity fix tests
 # ---------------------------------------------------------------------------
@@ -1644,12 +1407,6 @@ def _make_anthropic_claude_code_pool(tmp_path, monkeypatch, *, access_token, ref
     assert entry is not None
     assert entry.source == "claude_code"
     return pool, entry
-
-
-
-
-
-
 
 
 def test_sync_anthropic_entry_clears_all_error_fields(tmp_path, monkeypatch):
@@ -1725,8 +1482,6 @@ def _load_two_ok_pool(tmp_path, monkeypatch):
     return load_pool("anthropic")
 
 
-
-
 class TestCredentialPoolQueryLocking:
     """Public pool-state methods must run under ``self._lock``.
 
@@ -1759,7 +1514,6 @@ class TestCredentialPoolQueryLocking:
         # current(), or it deadlocks on the non-reentrant lock (found when
         # rebasing this fix over the #69843 salvage which added the method).
         pool.try_refresh_matching()
-
 
 
 def _exhausted_billing_store(tmp_path, *, age_seconds: float):

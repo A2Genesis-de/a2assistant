@@ -21,9 +21,6 @@ def ensure_launch_provider(args) -> bool:
         or getattr(args, "api_key", None)
     ):
         return True
-    from hermes_cli.free_tier_bootstrap import run_bootstrap
-
-    run_bootstrap(announce=False)
     if _has_any_provider_configured():
         return True
     _first_run_setup_guard(args)

@@ -18,17 +18,6 @@ def test_403_data_policy_denied_never_retries_or_falls_back():
     assert (result.retryable, result.should_fallback, result.should_rotate_credential) == (False, False, False)
 
 
-def test_data_policy_copy_gives_free_tier_users_a_way_out():
-    from types import SimpleNamespace
-
-    from agent.turn_failure_copy import nonretryable_copy
-
-    copy = nonretryable_copy(SimpleNamespace(reason=FailoverReason.data_policy_denied), provider="nous",
-                             model="some/model", summary="No endpoint qualifies.")
-    free_tier = copy[copy.index("free tier"):]
-    assert "'some/model'" in copy and "upgrade" in free_tier and "/compress" in free_tier and "/new" in free_tier
-
-
 def test_limit_reset_line_only_explains_a_limit():
     import time
     from types import SimpleNamespace

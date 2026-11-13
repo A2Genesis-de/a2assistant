@@ -1,6 +1,5 @@
 """Curses checklist / radiolist / single-select menus with keyboard navigation and fuzzy ``/``
 search, plus a numbered text fallback for terminals without curses."""
-import re
 import sys
 from contextvars import ContextVar, Token
 from dataclasses import dataclass
@@ -168,19 +167,9 @@ def _draw_segments(stdscr, y: int, x: int, segments, max_x: int) -> None:
 
 
 def _draw_description_line(stdscr, y: int, text: str, max_x: int) -> None:
-    """Draw a description line, highlighting ★ in yellow and ``[||||    ]`` gauges by how much is used."""
+    """Draw a plain description line."""
     import curses
-    star_attr = curses.color_pair(2) if curses.has_colors() else curses.A_NORMAL
-    segments = []
-    for i, part in enumerate(text.split("★")):
-        if i:
-            segments.append(("★", star_attr))
-        if part:
-            segments.extend(
-                (chunk, _curses_style_attr(curses, style, is_cursor=False))
-                for chunk, style in _gauge_bar_segments(part)
-            )
-    _draw_segments(stdscr, y, 0, segments, max_x)
+    _draw_segments(stdscr, y, 0, [(text, curses.A_NORMAL)], max_x)
 
 
 def _draw_radio_item(
@@ -781,42 +770,6 @@ def _radiolist_with_headings(
 
 
 _ANSI_STYLE = {"yellow": Colors.YELLOW, "dim": Colors.DIM, "green": Colors.GREEN, "red": Colors.RED}
-# Exactly the ``render_bar`` shape (``model_picker_usage.BAR_WIDTH`` = 10 cells of ``|`` then spaces), so
-# an unrelated ``[]`` / ``[ ]`` in a description is never painted as a gauge.
-_GAUGE_BAR_RE = re.compile(r"\[(?=[| ]{10}\])\|* *\]")
-
-
-def _gauge_bar_style(bar: str) -> str:
-    """Map a ``[||||    ]`` cell to green/yellow/red from how full it is (what is USED)."""
-    inner = bar[1:-1]
-    used = inner.count("|") / len(inner) if inner else 0.0
-    if used > 0.8:
-        return "red"
-    if used > 0.5:
-        return "yellow"
-    return "green"
-
-
-def _gauge_bar_segments(text: str) -> list[tuple[str, str | None]]:
-    """Split *text* so each ``[||||    ]`` is its own styled segment."""
-    segs: list[tuple[str, str | None]] = []
-    last = 0
-    for match in _GAUGE_BAR_RE.finditer(text):
-        if match.start() > last:
-            segs.append((text[last:match.start()], None))
-        segs.append((match.group(), _gauge_bar_style(match.group())))
-        last = match.end()
-    if last < len(text):
-        segs.append((text[last:], None))
-    return segs or [(text, None)]
-
-
-def colorize_gauge_bars_ansi(text: str) -> str:
-    """Color ``[||||    ]`` runs in a header/legend line (numbered-fallback path)."""
-    return "".join(
-        color(chunk, _ANSI_STYLE[style]) if style in _ANSI_STYLE else chunk
-        for chunk, style in _gauge_bar_segments(text)
-    )
 
 
 def format_radio_item_ansi(item: RadioItem) -> str:

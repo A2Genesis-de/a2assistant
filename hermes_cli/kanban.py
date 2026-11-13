@@ -854,7 +854,7 @@ def _goal_mode_handoff_rejection(task: Optional[kb.Task], evidence: str):
     try:
         # Headless handoff checks run outside any agent turn: bind the per-task relay-affinity
         # scope (mirrors kanban_specify) so the relay does not reject the judge call (#113669).
-        from agent.portal_tags import get_affinity_scope, reset_affinity_scope, set_affinity_scope
+        from agent.conversation_scope import get_affinity_scope, reset_affinity_scope, set_affinity_scope
         affinity_token = None if get_affinity_scope() else set_affinity_scope(f"kanban:{task.id}")
         try:
             verdict, reason, _, _, transport_failed = judge_goal(

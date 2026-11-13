@@ -91,7 +91,7 @@ def test_correlation_ids_go_only_with_send_consent(send):
 
 
 def test_session_header_is_the_conversation_root(monkeypatch):
-    from agent.portal_tags import reset_conversation_context, set_conversation_context
+    from agent.conversation_scope import reset_conversation_context, set_conversation_context
 
     _consent(True)
     token = set_conversation_context("root-session")
@@ -137,7 +137,6 @@ def test_each_connect_path_names_its_initiator(monkeypatch):
     from tools.connectors.run import reissue
 
     transport = _Transport(_mint_ok(["gmail"]), _mint_ok(["gmail"]), _mint_ok(["gmail"]))
-    monkeypatch.setattr(managed, "ensure_guest_identity", lambda: None)
     real = ConnectorClient
     monkeypatch.setattr("tools.connectors.gateway.client.ConnectorClient", lambda **kw: real(
         transport=transport, endpoint_resolver=lambda: "https://gw.test",
@@ -214,33 +213,13 @@ def test_a_200_whose_body_failed_is_a_warning_with_the_request_id(caplog):
     ]
 
 
-def test_portal_tools_304_is_a_success_and_a_bad_body_a_failure(caplog):
-    from tools.connectors.portal.client import NotModified, PortalConnectorClient
-    from tools.connectors.portal.errors import PortalToolsUnavailable
-
-    transport = _Transport(_Response(304, None, request_id="same-id"), _Response(200, [], request_id="bad-id"))
-    client = PortalConnectorClient(transport=transport, endpoint_resolver=lambda: "https://portal.test",
-                                   header_provider=lambda url: {"Authorization": "Bearer t"})
-    with caplog.at_level(logging.DEBUG, logger="tools.managed_gateway_identity"):
-        assert isinstance(client.tools("gmail", if_none_match="etag-1"), NotModified)
-        with pytest.raises(PortalToolsUnavailable) as raised:
-            client.tools("gmail")
-    assert raised.value.request_id == "bad-id"
-    assert _outcomes(caplog) == [
-        (logging.DEBUG, "connector portal.connectors.tools 304 - request_id=same-id dispatch=-"),
-        (logging.WARNING, "connector portal.connectors.tools 200 INVALID_RESPONSE request_id=bad-id dispatch=-"),
-    ]
-
-
 def test_try_again_keeps_the_opening_calls_ids(monkeypatch, caplog):
-    from tools.connectors import managed
     from tools.connectors.contract import Actor, TargetState
     from tools.connectors.operation import ConnectionOperation, Target
     from tools.connectors.run import reissue
 
     _consent(True)
     transport = _Transport(_mint_ok(["gmail"]))
-    monkeypatch.setattr(managed, "ensure_guest_identity", lambda: None)
     real = ConnectorClient
     monkeypatch.setattr("tools.connectors.gateway.client.ConnectorClient", lambda **kw: real(
         transport=transport, endpoint_resolver=lambda: "https://gw.test",

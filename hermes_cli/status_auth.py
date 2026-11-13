@@ -5,7 +5,6 @@ module object so tests that monkeypatch that module keep working."""
 from datetime import datetime, timezone, UTC
 
 from hermes_cli.auth import AuthError
-from hermes_cli.nous_account import get_nous_portal_account_info
 from hermes_cli import config
 from hermes_time import safe_strftime
 
@@ -90,58 +89,14 @@ def _render_auth_providers(ctx):
     _status._section("Auth Providers")
     from hermes_cli import auth
     try:
-        # Read-only display: the refresh-free snapshot, so `hermes status` never performs an OAuth
-        # refresh or burns a single-use refresh token.
-        nous_status = auth.get_nous_auth_status_local()
         statuses = {getter: getattr(auth, getter)() for _, getter, _, _ in _OAUTH_BLOCKS[:3]}
     except Exception:
-        nous_status, statuses = {}, {}
+        statuses = {}
     # xAI OAuth is guarded separately so an import failure there cannot disrupt the other rows.
     try:
         statuses["get_xai_oauth_auth_status"] = auth.get_xai_oauth_auth_status() or {}
     except Exception:
         statuses["get_xai_oauth_auth_status"] = {}
-
-    info = None
-    if any(nous_status.get(k) for k in ("logged_in", "access_token", "portal_base_url",
-                                        "inference_credential_present", "error_code")):
-        try:
-            info = get_nous_portal_account_info()
-        except Exception:
-            pass
-    logged_in = bool(nous_status.get("logged_in") or (info and info.logged_in))
-    inference = bool(
-        nous_status.get("inference_credential_present") or (info and info.inference_credential_present)
-    )
-    if nous_status.get("free_tier"):
-        # Free tier: never rendered as an account login (no account ids, no refresh row).
-        from hermes_cli.anon_auth import FREE_TIER_LABEL, GUEST_MODEL, UPGRADE_HINT
-        _status._row("Nous Portal", True, f"{FREE_TIER_LABEL} · {GUEST_MODEL}")
-        _status._detail("", UPGRADE_HINT)
-        inference_url = nous_status.get("inference_base_url")
-        if inference_url:
-            _status._detail("Inference:", inference_url)
-        for name, getter, hint, rows in _OAUTH_BLOCKS:
-            _oauth_block(name, statuses.get(getter, {}), hint, rows)
-        return
-    nous_error = nous_status.get("error")
-    _status._row("Nous Portal", logged_in,
-         "logged in" if logged_in else "not logged in (Nous inference key configured)" if inference
-         else "not logged in (run: hermes portal)")
-    portal_url = nous_status.get("portal_base_url") or "(unknown)"
-    inference_url = nous_status.get("inference_base_url") or (info.inference_base_url if info else None)
-    for label, value, show in (
-        ("Portal URL:", portal_url, logged_in or portal_url != "(unknown)" or nous_error),
-        ("Inference:", inference_url, inference and inference_url),
-        ("Access exp:", _format_iso_timestamp(nous_status.get("access_expires_at")),
-         logged_in or nous_status.get("access_expires_at")),
-        ("Key exp:", _format_iso_timestamp(nous_status.get("agent_key_expires_at")),
-         logged_in or inference or nous_status.get("agent_key_expires_at")),
-        ("Refresh:", "yes" if nous_status.get("has_refresh_token") else "no",
-         logged_in or nous_status.get("has_refresh_token")),
-        ("Error:", nous_error, nous_error)):
-        if show:
-            _status._detail(label, value)
     for name, getter, hint, rows in _OAUTH_BLOCKS:
         _oauth_block(name, statuses.get(getter, {}), hint, rows)
 

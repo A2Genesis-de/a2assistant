@@ -18,7 +18,7 @@ _OPENROUTER_REASONING_PREFIXES = (
 )
 
 # Hosts whose reasoning gate core owns: a plugin claiming one in ``hostnames`` never replaces it.
-_CORE_REASONING_GATED_HOSTS = ("nousresearch.com", "ai-gateway.vercel.sh", "ollama.com")
+_CORE_REASONING_GATED_HOSTS = ("ai-gateway.vercel.sh", "ollama.com")
 
 # Probe results cache per (model, base_url). Definitive values cache permanently; an
 # "unknown" value (empty list / None) caches 60s so a transient failure neither sticks
@@ -91,9 +91,9 @@ class ReasoningParamsMixin:
 
     def _supports_reasoning_extra_body(self) -> bool:
         """True when reasoning extra_body is safe to send: OpenRouter forwards unknown extra_body upstream and
-        some routes 400 on ``reasoning``, so gate to known reasoning-capable families and direct Nous Portal."""
+        some routes 400 on ``reasoning``, so gate to known reasoning-capable families."""
         url = self._base_url_lower
-        if base_url_host_matches(url, "nousresearch.com") or base_url_host_matches(url, "ai-gateway.vercel.sh"):
+        if base_url_host_matches(url, "ai-gateway.vercel.sh"):
             return True
         if (profile := self._reasoning_endpoint_profile()) is not None:
             # A claimed endpoint gates on its own catalog: reasoning goes out iff it declares a payload.
@@ -140,7 +140,7 @@ class ReasoningParamsMixin:
 
     def _reasoning_endpoint_profile(self):
         """The profile claiming this endpoint (``providers.profile_for_host``) that gates its reasoning, or None.
-        Endpoints core gates itself (Nous Portal, Vercel AI Gateway, LM Studio, Ollama Cloud, OpenRouter) keep
+        Endpoints core gates itself (Vercel AI Gateway, LM Studio, Ollama Cloud, OpenRouter) keep
         core's gate even when a plugin claims their host for metadata or auxiliary routing."""
         url = self._base_url_lower
         if ((self.provider or "").strip().lower() == "lmstudio" or self._is_openrouter_url()

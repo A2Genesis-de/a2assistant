@@ -108,12 +108,11 @@ def audit(event, args):
 sys.addaudithook(audit)
 from agent import skill_utils
 import providers
-from hermes_cli import free_tier_bootstrap, model_switch, profiles
+from hermes_cli import model_switch, profiles
 calls = {
     "skills": skill_utils.get_external_skills_dirs,
     "named_custom": lambda: providers._has_named_custom_provider("foo", home, "k"),
     "alias_source": model_switch._direct_alias_source_identity,
-    "free_tier": free_tier_bootstrap._config_stamp,
     "standalone": lambda: profiles.profile_is_standalone(home),
 }
 for name, call in calls.items():

@@ -11,7 +11,7 @@ from tui_gateway import server
 from agent.onboarding import PROFILE_BUILD_FLAG
 from hermes_cli import profiles
 from hermes_cli.config import read_user_config_raw
-from tests.hermes_cli.anon_portal import as_local_desktop_backend
+from tests.hermes_cli.local_desktop import as_local_desktop_backend
 
 
 @pytest.fixture

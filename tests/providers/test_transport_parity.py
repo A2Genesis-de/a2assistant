@@ -27,7 +27,6 @@ def _max_tokens_fn(n):
 class TestNvidiaParity:
     """NVIDIA NIM: default max_tokens=16384."""
 
-
     def test_user_max_tokens_overrides(self, transport):
         from providers import get_provider_profile
 
@@ -46,8 +45,6 @@ class TestNvidiaParity:
 class TestKimiParity:
     """Kimi: OMIT temperature, max_tokens=32000, thinking + reasoning_effort."""
 
-
-
     def test_thinking_enabled(self, transport):
         # xor contract (fix ce4e74b3): an explicit recognized effort sends
         # reasoning_effort ONLY — never paired with extra_body.thinking.
@@ -61,10 +58,6 @@ class TestKimiParity:
         assert kw.get("reasoning_effort") == "high"
         assert "thinking" not in kw.get("extra_body", {})
         assert "reasoning_effort" not in kw.get("extra_body", {})
-
-
-
-
 
 
 class TestOpenRouterParity:
@@ -82,29 +75,8 @@ class TestOpenRouterParity:
         assert kw["extra_body"]["provider"] == prefs
 
 
-
-
-
-class TestNousParity:
-    """Nous: product tags, reasoning passthrough (disable included)."""
-
-    def test_tags(self, transport):
-        from agent.portal_tags import nous_portal_tags
-        kw = transport.build_kwargs(
-            model="hermes-3-llama-3.1-405b",
-            messages=_simple_messages(),
-            tools=None,
-            provider_profile=get_provider_profile("nous"),
-        )
-        assert kw["extra_body"]["tags"] == nous_portal_tags()
-
-
-
-
-
 class TestQwenParity:
     """Qwen: max_tokens=65536, vl_high_resolution, metadata top-level."""
-
 
     def test_vl_high_resolution(self, transport):
         kw = transport.build_kwargs(

@@ -6,7 +6,7 @@ from __future__ import annotations
 import pytest
 
 from agent import bedrock_adapter
-from tests.hermes_cli.anon_portal import as_local_desktop_backend
+from tests.hermes_cli.local_desktop import as_local_desktop_backend
 
 _AWS_VARS = ("AWS_BEARER_TOKEN_BEDROCK", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_PROFILE",
              "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI", "AWS_WEB_IDENTITY_TOKEN_FILE")
@@ -33,6 +33,6 @@ def test_the_desktop_backends_auto_detect_skips_instance_metadata(chain, monkeyp
 
     as_local_desktop_backend(monkeypatch)
     with pytest.raises(AuthError):
-        resolve_provider("auto", skip_free_tier=True)
+        resolve_provider("auto")
 
     assert chain and all(walk.get("instance_metadata") is False for walk in chain)

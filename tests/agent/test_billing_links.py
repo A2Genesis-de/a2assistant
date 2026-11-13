@@ -6,19 +6,11 @@ few that are the whole point of the mapping (the host they must land on).
 
 from __future__ import annotations
 
-from agent.billing_links import (
-    build_billing_block,
-    is_nous_inference_route,
-)
+from agent.billing_links import build_billing_block
 
-def test_is_nous_inference_route_helper():
-    assert is_nous_inference_route("nous", "") is True
-    assert is_nous_inference_route("", "https://inference-api.nousresearch.com/v1") is True
-    assert is_nous_inference_route("openai", "https://api.openai.com/v1") is False
 
 def test_known_provider_by_slug_resolves_label_and_url():
     block = build_billing_block(provider="openai", base_url="", model="gpt-5")
-    assert block.is_nous is False
     assert block.provider_label == "OpenAI"
     assert block.billing_url is not None
     assert "openai.com" in block.billing_url

@@ -1,6 +1,6 @@
 """Who counts as the Desktop app on this machine, on the unified gateway.
 
-The welcome trial and first-run onboarding are offered only to the local Desktop. The proof is per
+First-run onboarding is offered only to the local Desktop. The proof is per
 connection: the Desktop says it is local (``client.capabilities
 {desktop_local}``), and that counts only on a connection that redeemed a native ticket.
 """
@@ -76,6 +76,7 @@ async def _request(conn, rid, method, params):
 
 @pytest.mark.asyncio
 async def test_a_fresh_install_is_offered_onboarding_once_the_desktop_says_it_is_local(tmp_path, monkeypatch):
+    monkeypatch.setattr("hermes_cli.onboarding_run.provider_configured", lambda: True)
     conn = await _connect(tmp_path, monkeypatch)
     try:
         before = await _request(conn, 1, "onboarding.state", {"assume_fresh": True})
@@ -108,12 +109,12 @@ async def test_the_declaration_counts_only_on_a_native_ticket(tmp_path, monkeypa
 
 @pytest.mark.asyncio
 async def test_a_desktop_chat_runs_its_turns_as_work_for_the_local_desktop(tmp_path, monkeypatch):
-    """The trial's free inference is resolved inside the turn, away from any request: the chat carries
-    the fact from its creation, and only a Desktop chat created on a declared connection does."""
+    """Local-Desktop work is resolved inside the turn, away from any request: the chat carries the fact
+    from its creation, and only a Desktop chat created on a declared connection does."""
     from contextlib import nullcontext
     from gateway.session_local_recovery import local_source
     from gateway.session_policy import local_desktop_turn
-    from hermes_cli.anon_auth import on_local_desktop_backend
+    from hermes_cli.process_identity import serves_local_desktop_now as on_local_desktop_backend
 
     conn = await _connect(tmp_path, monkeypatch,
                           config="model:\n  provider: openrouter\n  default: anthropic/claude-sonnet-4\n")
@@ -135,84 +136,31 @@ async def test_a_desktop_chat_runs_its_turns_as_work_for_the_local_desktop(tmp_p
         await conn.connection.close()
 
 
-
-@pytest.mark.asyncio
-async def test_a_trial_users_desktop_chat_runs_on_the_free_model(tmp_path, monkeypatch):
-    """A claimed welcome trial and no configured model: the chat freezes the free model instead of
-    no model at all (a launch policy with no model can never be restored)."""
-    from hermes_cli import anon_auth
-    guest = {"auth_method": anon_auth.ANON_AUTH_METHOD, anon_auth.WELCOME_CLAIM_FLAG: True}
-    monkeypatch.setattr(anon_auth, "current_nous_state", lambda *a, **k: guest)
-    conn = await _connect(tmp_path, monkeypatch)
-    try:
-        await _request(conn, 1, "client.capabilities", {"desktop_local": True})
-        created = await _request(conn, 2, "session.create", {"source": "gui", "request_id": "a"})
-        assert "result" in created, created
-        from hermes_state_local import local_receipt
-        receipt = local_receipt(conn.authority.db, created["result"]["stored_session_id"])
-        assert receipt["policy"]["model"] == anon_auth.GUEST_MODEL
-
-        conn.transport.desktop_local = False
-        other = await _request(conn, 3, "session.create", {"source": "gui", "request_id": "b"})
-        assert "result" in other, other
-        assert local_receipt(conn.authority.db, other["result"]["stored_session_id"])["policy"]["model"] == anon_auth.GUEST_MODEL
-    finally:
-        await conn.connection.close()
-
-
-@pytest.mark.asyncio
-async def test_a_fresh_launch_claims_the_trial_and_opens_onboarding_on_it(tmp_path, monkeypatch):
-    """The whole first launch: the claim mints the guest, and the chat it opens runs on the free model."""
-    from hermes_cli import anon_auth, welcome_trial
-    state = {}
-    guest = {"auth_method": anon_auth.ANON_AUTH_METHOD, anon_auth.WELCOME_CLAIM_FLAG: True}
-
-    def claim(**kwargs):
-        if welcome_trial.claim_blocker(assume_fresh=kwargs.get("assume_fresh", False)):
-            return None
-        state.update(guest)
-        return dict(guest)
-
-    monkeypatch.setattr(anon_auth, "current_nous_state", lambda *a, **k: dict(state) if state else None)
-    monkeypatch.setattr(welcome_trial, "claim_desktop_free_tier", claim)
-    monkeypatch.setattr(welcome_trial, "_has_nous_identity", lambda: bool(state))
-    conn = await _connect(tmp_path, monkeypatch)
-    try:
-        await _request(conn, 1, "client.capabilities", {"desktop_local": True})
-        started = await _request(conn, 2, "onboarding.start",
-                                 {"fresh_launch": True, "assume_fresh": True, "facts_source": "local", "locale": "en"})
-        assert "result" in started, started
-        resumed = await _request(conn, 3, "session.resume", {"session_id": started["result"]["stored_session_id"]})
-        assert "error" not in resumed, resumed
-    finally:
-        await conn.connection.close()
-
-
 @pytest.mark.asyncio
 async def test_the_first_local_desktop_connection_runs_the_desktop_boot_work(tmp_path, monkeypatch):
-    from hermes_cli import anon_auth, free_tier_bootstrap, onboarding_run
+    from hermes_cli import onboarding_run
+    from hermes_cli.process_identity import serves_local_desktop_now
     from tui_gateway import server
     seen = []
-    monkeypatch.setattr(onboarding_run, "latch_first_install", lambda: seen.append(anon_auth.on_local_desktop_backend()))
+    monkeypatch.setattr(onboarding_run, "latch_first_install", lambda: seen.append(serves_local_desktop_now()))
     monkeypatch.setattr(server, "_local_desktop_boot_started", False)
-    free_tier_bootstrap.reset_for_tests()
+    monkeypatch.setattr(server, "_local_desktop_boot_settled", False)
     conn = await _connect(tmp_path, monkeypatch)
     try:
         await _request(conn, 1, "client.capabilities", {"desktop_local": True})
         await _request(conn, 2, "client.capabilities", {"desktop_local": True})
-        assert free_tier_bootstrap.wait_for_record(timeout=20) is not None
+        await async_wait_until(lambda: seen, timeout=20, what="the desktop boot work ran")
         assert seen == [True]
     finally:
         await conn.connection.close()
-        free_tier_bootstrap.reset_for_tests()
 
 
 def test_the_desktop_boot_work_runs_for_the_launch_profile_whichever_profile_connects_first(tmp_path, monkeypatch):
-    """The setup record and the first-install latch belong to the launch profile. On a multiplexing
-    gateway a Desktop connection runs in its own profile's scope, so a first connection for another
-    profile must not build the launch record from that profile's home."""
+    """The first-install latch belongs to the launch profile. On a multiplexing gateway a Desktop
+    connection runs in its own profile's scope, so a first connection for another profile must not
+    record the launch profile's install from that profile's home."""
     from agent import secret_scope
-    from hermes_cli import free_tier_bootstrap, onboarding_run
+    from hermes_cli import onboarding_run
     from hermes_constants import get_hermes_home, get_process_hermes_home, set_hermes_home_override
     from tui_gateway import server
     launch = get_process_hermes_home()
@@ -221,16 +169,14 @@ def test_the_desktop_boot_work_runs_for_the_launch_profile_whichever_profile_con
     seen = []
     monkeypatch.setattr(onboarding_run, "latch_first_install", lambda: seen.append(get_hermes_home()))
     monkeypatch.setattr(server, "_local_desktop_boot_started", False)
+    monkeypatch.setattr(server, "_local_desktop_boot_settled", False)
     monkeypatch.setattr(secret_scope, "_MULTIPLEX_ACTIVE", True)
-    free_tier_bootstrap.reset_for_tests()
     token = set_hermes_home_override(secondary)
     try:
         server.begin_local_desktop_boot()
-        assert free_tier_bootstrap.wait_for_record(timeout=20) is not None
     finally:
         from hermes_constants import reset_hermes_home_override
         reset_hermes_home_override(token)
-        free_tier_bootstrap.reset_for_tests()
     assert seen == [launch]
 
 
@@ -242,7 +188,7 @@ async def test_an_exact_create_retry_from_a_socket_not_yet_declared_local_resume
     from contextlib import nullcontext
     from gateway.session_local_recovery import local_source
     from gateway.session_policy import local_desktop_turn
-    from hermes_cli.anon_auth import on_local_desktop_backend
+    from hermes_cli.process_identity import serves_local_desktop_now as on_local_desktop_backend
 
     conn = await _connect(tmp_path, monkeypatch,
                           config="model:\n  provider: openrouter\n  default: anthropic/claude-sonnet-4\n")
@@ -268,37 +214,11 @@ async def test_an_exact_create_retry_from_a_socket_not_yet_declared_local_resume
 
 
 @pytest.mark.asyncio
-async def test_a_chat_opened_on_the_trial_moves_to_the_provider_the_user_connects(tmp_path, monkeypatch):
-    """A trial-only chat runs on the free model; once the user connects a real provider, the same
-    chat's next turn runs on that provider's model instead of asking a paid route for nous/welcome."""
-    from hermes_cli import anon_auth
-    from hermes_state_local import local_receipt
-    from gateway.session_policy import restore_policy
-    guest = {"auth_method": anon_auth.ANON_AUTH_METHOD, anon_auth.WELCOME_CLAIM_FLAG: True}
-    monkeypatch.setattr(anon_auth, "current_nous_state", lambda *a, **k: guest)
-    conn = await _connect(tmp_path, monkeypatch)
-    try:
-        await _request(conn, 1, "client.capabilities", {"desktop_local": True})
-        created = await _request(conn, 2, "session.create", {"source": "gui", "request_id": "a"})
-        stored = created["result"]["stored_session_id"]
-
-        def next_model():
-            return restore_policy(local_receipt(conn.authority.db, stored)["policy"]).current_model(conn.authority)
-
-        assert next_model() == anon_auth.GUEST_MODEL
-        (Path(conn.authority.db.db_path).parent / "config.yaml").write_text(  # the owning profile's
-            "model:\n  provider: openrouter\n  default: anthropic/claude-sonnet-4\n", encoding="utf-8")
-        assert next_model() == "anthropic/claude-sonnet-4"
-    finally:
-        await conn.connection.close()
-
-
-@pytest.mark.asyncio
 async def test_a_desktop_boot_that_could_not_record_the_install_tries_again_on_the_next_connection(
         tmp_path, monkeypatch):
     """The gateway outlives app launches. A first boot whose install record failed (a locked
     config.yaml) is retried when the Desktop next connects, as the per-launch ``hermes serve`` did."""
-    from hermes_cli import free_tier_bootstrap, onboarding_run
+    from hermes_cli import onboarding_run
     from tui_gateway import server
     attempts = []
 
@@ -310,16 +230,15 @@ async def test_a_desktop_boot_that_could_not_record_the_install_tries_again_on_t
 
     monkeypatch.setattr(onboarding_run, "latch_first_install", latch)
     monkeypatch.setattr(server, "_local_desktop_boot_started", False)
-    free_tier_bootstrap.reset_for_tests()
+    monkeypatch.setattr(server, "_local_desktop_boot_settled", False)
     conn = await _connect(tmp_path, monkeypatch)
     try:
         await _request(conn, 1, "client.capabilities", {"desktop_local": True})
-        assert free_tier_bootstrap.wait_for_record(timeout=20) is not None
+        await async_wait_until(lambda: len(attempts) == 1, timeout=20, what="the first boot ran")
         await _request(conn, 2, "client.capabilities", {"desktop_local": True})
         await async_wait_until(lambda: len(attempts) == 2, timeout=20, what="the boot ran again")
     finally:
         await conn.connection.close()
-        free_tier_bootstrap.reset_for_tests()
 
 
 @pytest.mark.asyncio
@@ -333,7 +252,7 @@ async def test_a_desktop_chat_saved_before_the_mark_moved_still_resumes_and_runs
     from gateway.session_local import publish_local_policy
     from gateway.session_local_recovery import local_source
     from gateway.session_policy import local_desktop_turn
-    from hermes_cli.anon_auth import on_local_desktop_backend
+    from hermes_cli.process_identity import serves_local_desktop_now as on_local_desktop_backend
     from hermes_state_local import POLICY_PREFIX
 
     conn = await _connect(tmp_path, monkeypatch,

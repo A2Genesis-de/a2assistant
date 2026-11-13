@@ -1078,7 +1078,7 @@ class GatewayAgent:
     def _on_notice(self, payload, stream_callback, starts):
         if self.notice_callback is None:
             return
-        from agent.credits_tracker import AgentNotice
+        from agent.agent_notice import AgentNotice
         self.notice_callback(AgentNotice(text=str(payload.get("text") or ""), level=payload.get("level") or "info",
                                          kind=payload.get("kind") or "sticky", ttl_ms=payload.get("ttl_ms"),
                                          key=payload.get("key"), id=payload.get("id")))

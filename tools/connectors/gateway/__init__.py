@@ -15,8 +15,8 @@ Layering rules (enforced by review, not imports — keep them true):
 - ``names.py`` is stdlib-only: the ``connectors__<connector>__<tool>`` name
   codec. Parsing never raises — a malformed name is a per-entry error and
   sibling calls still run.
-- ``config.py``: the ``tools.connectors`` config gate. Availability fails
-  closed: config flag AND the managed Nous tools entitlement.
+- ``config.py``: the availability gate. Hosted connectors need a Nous identity,
+  which A2Assistant does not use, so the gate is always closed.
 - ``merge.py`` is PURE: partition / splice / render with no I/O and no
   exceptions. Position in the original ``calls[]`` array is the only
   correlation key — the wire ``index`` field is never trusted.
@@ -34,7 +34,6 @@ the composed ``connectors__`` name.
 
 from tools.connectors.gateway.config import (
     MAX_CALLS_PER_DISPATCH,
-    ConnectorConfig,
     connectors_available,
 )
 from tools.connectors.gateway.errors import (
@@ -58,7 +57,6 @@ __all__ = [
     "CONNECTOR_BATCH_SENTINEL",
     "CONNECTOR_NAME_PREFIX",
     "MAX_CALLS_PER_DISPATCH",
-    "ConnectorConfig",
     "ConnectorName",
     "GatewayAuthError",
     "GatewayUnavailable",

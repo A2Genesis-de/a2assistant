@@ -16,15 +16,6 @@ class OpenModel(Result):
     model_config = Result.model_config | {"extra": "allow"}
 
 
-class PlanGauge(Result):
-    """``gateway/session_usage.py::plan_gauge``: a window plan's allowance for the status bar."""
-
-    id: str
-    label: str
-    used_bp: int
-    resets_at_ms: int | None = None
-
-
 class Usage(OpenModel):
     """``tui_gateway/server.py::_get_usage`` + ``agent/context_breakdown.py::context_usage_fields``."""
 
@@ -48,10 +39,8 @@ class Usage(OpenModel):
     avg_latency_s: float | None = None
     avg_tps: float | None = None
     active_subagents: int | None = None
-    dev_credits_spent_micros: int | None = None
     cost_usd: float | None = None
     cost_status: str | None = None
-    plan_gauge: PlanGauge | None = None
 
 
 class ProjectRef(Result):
@@ -272,39 +261,9 @@ class EmptyPayload(Payload):
     pass
 
 
-class PlanUsageGauge(Result):
-    """One server allowance on ``ModelOptionProvider.plan_usage``, in the server's order. ``label`` is the
-    server's id (``day`` / ``week`` / ``month`` / ``top_tier`` have client words; any other id shows
-    ``title``). ``scope``: which models a full one stops (``all`` / ``top_tier``)."""
-
-    label: str
-    left_fraction: float
-    style: str
-    resets_at_ms: int | None = None
-    scope: str = "all"
-    title: str = ""
-
-
-class PlanUsage(Result):
-    """``hermes_cli/model_picker_usage.py::PickerUsage.to_payload`` — usage-window plan chrome."""
-
-    kind: str
-    plan: str | None = None
-    gauges: list[PlanUsageGauge] = Field(default_factory=list)
-    # Ids the gateway labels ``top_tier`` (Large).
-    top_tier_model_ids: list[str] = Field(default_factory=list)
-    # Ids billed to a subscription the account holds: ``free`` in ``usage_levels`` (never dimmed), no "Free" tag.
-    subscription_model_ids: list[str] = Field(default_factory=list)
-    featured_model_ids: list[str] = Field(default_factory=list)
-    paused_reason: str | None = None
-    # Past a full allowance, top-up credits pay (pay as you go): Keep going on credits on + a balance.
-    # False: the turn stops. None: unknown (older portal).
-    credits_pay: bool | None = None
-
-
 __all__ = [
     "TERMINAL_SUBAGENT_STATUSES", "AccountOwner", "ConnectorOwner", "EmptyPayload", "EmptyResult", "McpServerStatus",
-    "MessageReaction", "OkResult", "OpenModel", "PendingApproval", "PlanUsage", "PlanUsageGauge",
+    "MessageReaction", "OkResult", "OpenModel", "PendingApproval",
     "ProfileParams", "ProjectRef", "SessionLiveInfo", "SessionOwner", "SessionParams", "StatusResult", "StoredSessionRow",
     "SubagentStatus", "ToolLabel", "ToolLabelKind", "TranscriptMessage", "Usage",
 ]

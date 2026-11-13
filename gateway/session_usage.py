@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import contextlib
 import dataclasses
-import time
 
 _COUNTERS = (("input_tokens", "session_input_tokens"), ("output_tokens", "session_output_tokens"),
              ("cache_read_tokens", "session_cache_read_tokens"),
@@ -58,23 +57,6 @@ def _rate_limit(agent):
     return None
 
 
-def plan_gauge(agent) -> dict | None:
-    """Window plans only: the allowance the status bar shows at a glance (today's, else the one that binds),
-    from the reply headers the agent already tracks — no extra round trip, None for everyone else."""
-    with contextlib.suppress(Exception):
-        state = getattr(agent, "_credits_state", None)
-        if getattr(state, "is_usage_window", False) is True:  # `is True`: a Mock agent's attribute is not a plan
-            binding = state.binding_gauge
-            day = next((g for g in state.gauges if g.id == "day" and g.scope == "all"), None)
-            # A full allowance is what blocks, so it wins over today's; a passed reset is no longer current.
-            gauge = binding if binding is not None and binding.full else (day or binding)
-            reset = getattr(gauge, "resets_at_ms", None)
-            if gauge is not None and not (isinstance(reset, int) and 0 < reset <= int(time.time() * 1000)):
-                return {"id": gauge.id, "label": gauge.label, "used_bp": int(gauge.used_bp),
-                        "resets_at_ms": gauge.resets_at_ms}
-    return None
-
-
 def usage_stats(agent) -> dict:
     """The frozen ``session.usage`` / ``session.stats`` dict; zeros before the first turn built an agent."""
     stats: dict = {key: int(getattr(agent, attr, 0) or 0) for key, attr in _COUNTERS}
@@ -98,8 +80,6 @@ def usage_stats(agent) -> dict:
                  model=str(getattr(agent, "model", "") or ""), provider=str(getattr(agent, "provider", "") or ""),
                  fallback_model=(str(getattr(agent, "model", "") or "") or None)
                  if getattr(agent, "_fallback_activated", False) is True else None)
-    if (gauge := plan_gauge(agent)) is not None:  # absent off a window plan, as on the embedded path
-        stats["plan_gauge"] = gauge
     return stats
 
 
@@ -154,8 +134,6 @@ def tui_usage(stats: dict) -> dict:
             usage[key] = round(float(stats[source_key]), 1)
     if isinstance(stats.get("active_subagents"), int):
         usage["active_subagents"] = stats["active_subagents"]
-    if isinstance(stats.get("plan_gauge"), dict):
-        usage["plan_gauge"] = stats["plan_gauge"]
     return usage
 
 
@@ -173,8 +151,7 @@ def usage_frame(stats: dict) -> dict:
     viewer from one frame, and leaves the counters untouched for every existing consumer.
 
     ``usage`` is the standard status-bar projection of the embedded ticker's ``server._get_usage``
-    view, with two exceptions: ``dev_credits_spent_micros`` (``HERMES_DEV_CREDITS`` only) is not
-    carried, and ``avg_latency_s`` / ``avg_tps`` are rounded from the counters' two decimals rather
+    view, except that ``avg_latency_s`` / ``avg_tps`` are rounded from the counters' two decimals rather
     than the raw values, so they can differ by 0.1 at a rounding boundary. A Desktop bundle that
     reads only ``payload.usage`` fills its meters here too. The
     top-level counters on this event are deprecated: new viewers read ``usage`` (or call

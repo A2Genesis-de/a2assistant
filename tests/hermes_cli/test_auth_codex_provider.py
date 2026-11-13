@@ -388,7 +388,7 @@ def _patch_httpx(monkeypatch, response):
     def _factory(*args, **kwargs):
         return _StubHTTPClient(response)
 
-    monkeypatch.setattr("hermes_cli.auth.httpx.Client", _factory)
+    monkeypatch.setattr("hermes_cli.auth_constants.httpx.Client", _factory)
 
 
 def test_refresh_429_classified_as_quota_not_auth_failure(monkeypatch):

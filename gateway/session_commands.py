@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 # run through its real handler against a local session (website/docs/developer-guide/
 # gateway-command-parity.md); a handler that reads messaging-only state or writes config is not here.
 _READ_COMMANDS = frozenset({'help', 'commands', 'status', 'context', 'version', 'whoami',
-                            'usage', 'insights', 'profile', 'diff', 'memory', 'kanban', 'topup',
+                            'usage', 'insights', 'profile', 'diff', 'memory', 'kanban',
                             'suggestions', 'bundles', 'skills'})
 _CONTROL_COMMANDS = frozenset({'title'})
 # Authoring/workflow commands whose messaging handler (``_command_handler_table``) runs as-is for a
@@ -28,7 +28,7 @@ _CONTROL_COMMANDS = frozenset({'title'})
 # cached agent, the /debug summary upload, /blueprint's job creation. A turn the handler would have
 # pushed onto the adapter FIFO comes back as a ``send`` directive (gateway/session_command_sink.py).
 _HANDLER_CONTROLS = frozenset({'goal', 'subgoal', 'loop', 'heartbeat', 'review', 'refine', 'debug', 'curator',
-                               'login', 'autoprune'})
+                               'autoprune'})
 # Idle-path commands the messaging gateway answers by rewriting the turn (``_hm_cmd_<name>``,
 # gateway/run_inbound.py): the rewritten text is returned as the client's ``send`` directive.
 _PROMPT_COMMANDS = frozenset({'plan', 'learn', 'init', 'moa', 'blueprint', 'egress'})

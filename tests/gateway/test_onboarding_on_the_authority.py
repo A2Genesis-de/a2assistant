@@ -201,9 +201,9 @@ async def _settled(desktop, session_id):
 
 
 @pytest.mark.asyncio
-async def test_start_from_a_secondary_profile_claims_in_the_default_home(tmp_path, monkeypatch):
-    """Multiplexed host socket on a secondary profile: onboarding runs in ``default``, so the trial claim,
-    the provider check and the chat's policy read the default home, never the asking connection's."""
+async def test_start_from_a_secondary_profile_checks_the_default_home(tmp_path, monkeypatch):
+    """Multiplexed host socket on a secondary profile: onboarding runs in ``default``, so the provider
+    check and the chat's policy read the default home, never the asking connection's."""
     from gateway.session_authorities import SessionAuthorities
     from gateway.session_authority import initialize_session_authority
     from gateway.session_controls import AuthorityConnection
@@ -214,11 +214,12 @@ async def test_start_from_a_secondary_profile_claims_in_the_default_home(tmp_pat
     work = home / "profiles" / "work"
     work.mkdir(parents=True)
     (work / "config.yaml").write_text("{}\n", encoding="utf-8")  # nothing to run on in the asking profile
-    claims = []
+    probes = []
 
-    def claim(*, assume_fresh):
-        claims.append(Path(get_hermes_home()))
-    monkeypatch.setattr("hermes_cli.welcome_trial.claim_desktop_free_tier", claim)
+    def provider_configured():
+        probes.append(Path(get_hermes_home()))
+        return True
+    monkeypatch.setattr("hermes_cli.onboarding_run.provider_configured", provider_configured)
     runner = desktop.authority.runner
     runner.config = SimpleNamespace(multiplex_profiles=True)
     work_db = SessionDB(db_path=work / "state.db")
@@ -235,7 +236,7 @@ async def test_start_from_a_secondary_profile_claims_in_the_default_home(tmp_pat
         with serving_local_desktop(True):  # what ws._dispatch_request binds for the declared Desktop socket
             started = await connection.dispatch({"jsonrpc": "2.0", "id": 1, "method": "onboarding.start", "params": {}})
         assert "result" in started, started
-        assert claims == [home]
+        assert probes == [home]
         assert started["result"]["stored_session_id"] in desktop.authority.sessions
     finally:
         await connection.close()

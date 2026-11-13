@@ -17,7 +17,7 @@ import subprocess
 import sys
 from collections import OrderedDict
 from pathlib import Path
-from typing import Any, get_args, get_type_hints
+from typing import Any, get_args
 
 from pydantic import TypeAdapter
 from pydantic.json_schema import GenerateJsonSchema
@@ -27,27 +27,16 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from tui_gateway import contracts
-from tui_gateway.contracts.connectors import (
-    ConnectorAccountStatus,
-    ConnectorErrorReason,
-    ConnectorToolFacet,
-    ConnectorToolsSource,
-)
+from tui_gateway.contracts.connectors import ConnectorErrorReason
 from tui_gateway.contracts.connectors_operation import ConnectionSettleReason, ConnectionTargetState
 from tui_gateway.contracts.registry import CANONICAL_METHODS, CANONICAL_NAMESPACES, EVENTS, METHODS, SERVER_REQUESTS
 from tools.connectors.contract import SettleReason, TargetState
-from tools.connectors.gateway.wire import ConnectionStatus
-from tools.connectors.portal.tools_cache import ToolsRead
-from tools.connectors.portal.wire import ConnectorTool
 
 TS_OUT = ROOT / "apps" / "shared" / "src" / "gateway-contract.generated.ts"
 OPENRPC_OUT = ROOT / "apps" / "shared" / "src" / "gateway-contract.openrpc.json"
 _ENUM_PAIRS = (
     ("ConnectionTargetState", ConnectionTargetState, "TargetState", TargetState),
     ("ConnectionSettleReason", ConnectionSettleReason, "SettleReason", SettleReason),
-    ("ConnectorAccountStatus", ConnectorAccountStatus, "ConnectionStatus", ConnectionStatus),
-    ("ConnectorToolFacet", ConnectorToolFacet, "ConnectorTool.facet", ConnectorTool.model_fields["facet"].annotation),
-    ("ConnectorToolsSource", ConnectorToolsSource, "ToolsRead.source", get_type_hints(ToolsRead)["source"]),
 )
 
 HEADER = (

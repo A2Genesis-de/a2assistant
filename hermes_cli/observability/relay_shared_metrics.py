@@ -15,7 +15,7 @@ from typing import Any, Callable, Iterator
 
 from agent import relay_runtime
 from hermes_constants import reset_hermes_home_override, set_hermes_home_override
-from agent.portal_tags import get_conversation_context
+from agent.conversation_scope import get_conversation_context
 from hermes_cli.version_info import get_version_info
 
 from .shared_metrics import SharedMetricsStore

@@ -20,7 +20,7 @@ from agent.error_classifier import RETRYABLE_CLIENT_REASONS, FailoverReason, cla
 from agent.route_verdicts import route_visit
 from agent.turn_overflow import recover_from_overflow
 from agent.turn_recovery import (
-    _NONRETRYABLE_LABELS, abort_turn_on_interrupt, compute_error_backoff, free_tier_cooldown_ends_turn,
+    _NONRETRYABLE_LABELS, abort_turn_on_interrupt, compute_error_backoff,
     interruptible_backoff_sleep, log_api_error_attempt,
     max_retries_exhausted_result, nonretryable_client_error_result, recover_after_classification,
     recover_before_classification, route_classified_error, settle_delivered_partial,
@@ -90,19 +90,6 @@ def handle_api_error(
     status_code = getattr(api_error, "status_code", None)
     error_context = agent._extract_api_error_context(api_error)
 
-    # A Nous 402/403 carries the same x-nous-credits-* headers as a success, and a usage-window plan's
-    # "ran out for this model" / "payment paused" state is only visible on the blocking response itself
-    # (the stream path captures headers after the stream opens, which a 402 never does). Fail-open.
-    # Usage-window responses only: every other account keeps main's behaviour (no capture here).
-    if status_code in (402, 403) and getattr(agent, "provider", "") == "nous":
-        try:
-            from agent.credits_tracker import response_is_usage_window
-            response = getattr(api_error, "response", None)
-            if response_is_usage_window(response):
-                agent._capture_credits(response, refused=True)
-        except Exception:
-            logger.debug("credits ▸ header capture on %s failed (fail-open)", status_code, exc_info=True)
-
     # Process is exiting mid-flight: retries/rotation/fallbacks are futile and the
     # retry trace spams the shell. One log line.
     from tools.interpreter_shutdown import interpreter_shutting_down
@@ -127,7 +114,6 @@ def handle_api_error(
         model=getattr(agent, "model", "") or "", approx_tokens=approx_tokens,
         context_length=_ctx_len, num_messages=len(api_messages) if api_messages else 0,
         base_url=str(getattr(agent, "base_url", "") or ""),
-        api_key=getattr(agent, "api_key", None),
     )
     logger.debug(
         "Error classified: reason=%s status=%s retryable=%s compress=%s rotate=%s fallback=%s",
@@ -143,7 +129,7 @@ def handle_api_error(
         reason=classified.reason.value,
     )
 
-    _recovered, recovered_with_pool = recover_after_classification(
+    _recovered, _ = recover_after_classification(
         agent, api_error, classified, _retry, status_code=status_code, error_context=error_context,
         messages=messages, api_messages=api_messages,
     )
@@ -176,7 +162,7 @@ def handle_api_error(
 
     _ce = route_classified_error(
         agent, api_error, classified, _retry, error_msg=error_msg, error_context=error_context,
-        recovered_with_pool=recovered_with_pool, base_url=_base, model=_model, messages=messages,
+        base_url=_base, model=_model, messages=messages,
         api_messages=api_messages, system_message=system_message,
         active_system_prompt=active_system_prompt, conversation_history=conversation_history,
         retry_count=retry_count, max_retries=max_retries, compression_attempts=compression_attempts,
@@ -367,13 +353,7 @@ def settle_unrecovered_error(
             base_url=_base, model=_model, delivered=_delivered, current_turn_user_idx=current_turn_user_idx,
         ))
 
-    # An attended session on the free model does not sit through a long cooldown: end the attempt
-    # cycle now (fallback, else the reset time and the ways forward); the copy counts attempts made.
     attempts_made = min(retry_count, max_retries)
-    if is_rate_limited and retry_count < max_retries and free_tier_cooldown_ends_turn(agent, api_error, _base):
-        logger.info("%sFree-tier cooldown outlasts the attended wait — ending retries after attempt %s",
-                    agent.log_prefix, retry_count)
-        retry_count = max_retries
     if retry_count >= max_retries:
         # Before fallback, rebuild the primary client once per API call block for
         # transient transport errors (stale pool, TCP reset).

@@ -470,21 +470,17 @@ def test_frozen_launch_url_override_never_borrows_the_named_pool(tmp_path, monke
     assert (runtime['api_key'], runtime['credential_pool']) == ('no-key-required', None)
 
 
-def test_lazy_info_reports_the_free_tier_pinned_model(tmp_path, monkeypatch):
-    """A not-yet-built session with no launch model/provider runs on ``nous/welcome`` on the free
-    tier (the agent build pins it), so ``session.info`` says so; an explicit launch model stands."""
+def test_lazy_info_reports_the_configured_or_launch_model(tmp_path):
+    """A not-yet-built session reports the model its first turn will run: the configured default, or
+    an explicit launch model."""
     from dataclasses import replace
     from types import SimpleNamespace
     from gateway.session_local import _lazy_model
     from gateway.session_policy import build_policy
-    from hermes_cli import anon_auth
     authority = SimpleNamespace(runner=None, profile_id='fixture')
-    monkeypatch.setattr(anon_auth, 'free_tier_route', lambda: True)
     configured = replace(build_policy({'cwd': str(tmp_path)}, {'model': {'default': 'cfg-model'}}), model='cfg-model')
-    assert _lazy_model(authority, configured) == anon_auth.GUEST_MODEL
-    assert _lazy_model(authority, build_policy({'cwd': str(tmp_path), 'model': 'pick'}, {})) == 'pick'
-    monkeypatch.setattr(anon_auth, 'free_tier_route', lambda: False)
     assert _lazy_model(authority, configured) == 'cfg-model'
+    assert _lazy_model(authority, build_policy({'cwd': str(tmp_path), 'model': 'pick'}, {})) == 'pick'
 
 
 def test_run_budget_is_a_frozen_launch_option(tmp_path):

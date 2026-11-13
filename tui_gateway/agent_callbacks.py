@@ -162,7 +162,7 @@ def _agent_cbs(sid: str) -> dict:
         "reaction_callback": lambda kind: _emit("reaction", sid, {"kind": kind}),
         "reasoning_callback": lambda text: _emit_reasoning_delta(sid, text),
         "status_callback": lambda kind, text=None: _agent_status_update(sid, kind, text),
-        # Credits/notice spine: AgentNotice → notification.show; recovery → notification.clear.
+        # Notice spine: AgentNotice → notification.show; recovery → notification.clear.
         "notice_callback": lambda n: _agent_notice_update(sid, n),
         "notice_clear_callback": lambda key: _emit("notification.clear", sid, {"key": key}),
         "clarify_callback": lambda questions: _clarify_block(sid, questions),

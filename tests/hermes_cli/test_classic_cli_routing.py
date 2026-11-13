@@ -33,8 +33,6 @@ def routed(monkeypatch):
         monkeypatch.setattr(m, name, lambda *a, **k: None)
     monkeypatch.setattr(m, "_resolve_use_tui", lambda args: False)
     monkeypatch.setattr(m, "_has_any_provider_configured", lambda: True)
-    import hermes_cli.free_tier_bootstrap as boot
-    monkeypatch.setattr(boot, "run_bootstrap", lambda **k: None)
     import hermes_cli.observability.shared_metrics_process as proc
     monkeypatch.setattr(proc, "begin_process", lambda name: None)
     return m, calls

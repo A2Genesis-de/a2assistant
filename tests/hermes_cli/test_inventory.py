@@ -83,10 +83,6 @@ def _empty_ctx(provider="orig", model="orig-model", base_url="orig-url"):
     )
 
 
-
-
-
-
 # ─── build_models_payload ──────────────────────────────────────────────
 
 
@@ -156,12 +152,6 @@ def test_build_models_payload_hides_moa_without_raw_preset():
     ):
         payload = build_models_payload(ctx)
     assert [r["slug"] for r in payload["providers"]] == ["openrouter"]
-
-
-
-
-
-
 
 
 def test_include_unconfigured_appends_canonical_skeletons():
@@ -346,7 +336,6 @@ def test_anthropic_oauth_presence_accepts_pool_only_oauth_entry():
         ),
     ):
         assert _anthropic_oauth_credentials_present() is False
-
 
 
 # ─── picker_hints ──────────────────────────────────────────────────────
@@ -587,8 +576,6 @@ def test_aggregator_dedup_removes_overlapping_models():
     assert or_row["total_models"] == 2
 
 
-
-
 def test_flat_namespace_reseller_keeps_first_party_models_overlapping_user_proxy():
     """opencode-go / opencode-zen are flagged ``is_aggregator=True`` (their
     flat ``/v1/models`` returns bare IDs the model-switch resolver searches),
@@ -629,8 +616,6 @@ def test_flat_namespace_reseller_keeps_first_party_models_overlapping_user_proxy
     assert "anthropic/claude-sonnet-4.6" in or_row["models"]
 
 
-
-
 def test_build_models_payload_no_max_models_returns_full_list():
     """When max_models is not passed (None), build_models_payload must
     return the full model list — not truncate to the old default of 50.
@@ -660,8 +645,6 @@ def test_build_models_payload_no_max_models_returns_full_list():
 
 
 # ─── refresh flag (cache-bust) ─────────────────────────────────────────
-
-
 
 
 def test_list_authenticated_providers_refresh_busts_cache():
@@ -800,21 +783,3 @@ def test_picker_metadata_uses_one_config_read_for_real_models_dev_lookups(tmp_pa
     assert large_row["featured_models"] == []
 
 
-def test_apply_limits_skips_window_plan_rows():
-    """A window plan says its limits in ``plan_usage``; the credential-cooldown chip would add a second,
-    unrelated reset time, so ``_apply_limits`` leaves that row alone. Other pooled rows keep it."""
-    from hermes_cli import inventory
-
-    class _Pool:
-        def limit_state(self, models):
-            return {"scope": "account", "resets_at": 1_800_000_000}
-
-    rows = [
-        {"slug": "nous", "models": ["a/b"], "plan_usage": {"kind": "usage_window"}},
-        {"slug": "example", "models": ["a/b"]},
-    ]
-    with patch("hermes_cli.auth.read_credential_pool", return_value={"nous": [{}], "example": [{}]}), \
-            patch("agent.credential_pool.load_pool", return_value=_Pool()):
-        inventory._apply_limits(rows)
-    assert "limit" not in rows[0]
-    assert rows[1]["limit"]["scope"] == "account"

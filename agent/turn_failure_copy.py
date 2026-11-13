@@ -111,7 +111,7 @@ def failed_turn_notice(turn_messages: Any) -> str:
 
 
 def provider_label_for(provider: Any) -> str:
-    """Human-friendly provider name for chat copy (``"OpenRouter"``, ``"Nous Portal"``…)."""
+    """Human-friendly provider name for chat copy (``"OpenRouter"``, ``"Anthropic"``…)."""
     from hermes_cli.models import provider_label
 
     return provider_label(str(provider or ""))
@@ -254,8 +254,7 @@ _NONRETRYABLE_COPY: dict[str, str] = {
     FailoverReason.data_policy_denied.value: (
         "This conversation holds a result from a connected app that may only go to a model that "
         "does not train on your data, and '{model}' on {label} can't promise that. Switch models "
-        "with /model, run /compress to summarize the result away, or start fresh with /new. If you "
-        "are on the free tier, no free model can take this content: upgrade, or use /compress or /new."
+        "with /model, run /compress to summarize the result away, or start fresh with /new."
     ),
     FailoverReason.upstream_blocked.value: (
         "A firewall/CDN in front of {label} blocked the request before it reached the model, so "
@@ -399,10 +398,6 @@ _ONE_OFF_COPY: dict[str, str] = {
         "I ran out of steps for this turn ({limit} tool calls) before finishing, and couldn't "
         "produce a summary. Send `continue` to keep going, or raise `max_iterations` in your config."
     ),
-    "nous_rate_limit": (
-        "Wait for the reset and send /retry, or switch models with /model. To avoid waits, add "
-        "a backup provider with `hermes fallback add`."
-    ),
 }
 _SITE_COPY: dict[str, str] = {**_FAILURE_CODE_COPY, **_ONE_OFF_COPY}
 
@@ -426,7 +421,6 @@ def exhausted_copy(reason: str, *, label: str, attempts: int, summary: str, rese
     first_attempt = attempts == 1 and reason in _EXHAUSTED_FIRST_ATTEMPT_LEADS
     lead = (_EXHAUSTED_FIRST_ATTEMPT_LEADS if first_attempt else _EXHAUSTED_LEADS).get(
         reason, _EXHAUSTED_DEFAULT_LEAD).format(label=label, attempts=attempts)
-    # The free-tier cutoff (one attempt) fires on any cooldown over a minute, so it always names the reset.
     if reset_seconds is not None and (reset_seconds >= 120 or first_attempt and reset_seconds > 0):
         from agent.retry_utils import format_reset_window
         situation = (f"its usage limit resets in {format_reset_window(reset_seconds)}. "
@@ -460,8 +454,6 @@ def oauth_relogin_command(provider: Any) -> str:
     from hermes_constants import profile_cli_selector
 
     slug = str(provider or "").strip().lower()
-    if slug == "nous":
-        return f"hermes {profile_cli_selector()}portal"
     if _login_owned_by_external_cli(slug):
         # `auth add` refuses a plugin with no auth_handler; the model flow runs the vendor CLI's login.
         return f"hermes {profile_cli_selector()}model"

@@ -81,7 +81,7 @@ def is_opencode_target(provider: Optional[str], base_url: Optional[str]) -> bool
 def resolve_affinity_key(session_id: Optional[str] = None) -> str:
     """Return the normalized rotation-stable conversation affinity key ("" when unknown)."""
     try:
-        from agent.portal_tags import get_affinity_scope, get_conversation_context
+        from agent.conversation_scope import get_affinity_scope, get_conversation_context
         from agent.transports.codex import _cache_scope_from_session_id
 
         return _cache_scope_from_session_id(get_affinity_scope() or get_conversation_context() or session_id)

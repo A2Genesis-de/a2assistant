@@ -79,11 +79,8 @@ def remember_reasoning_floor(
     _FLOORED_ROUTES.add((_route_key(provider, base_url), str(rejected_kwargs.get("model") or "")))
 
 
-_NOUS_PROVIDERS = {"nous", "nous-portal", "nousresearch"}
-
-
 def _catalog_marks_mandatory(provider: Optional[str], base_url: Optional[str], model: Optional[str]) -> bool:
-    """True when the route's ``/v1/models`` catalog (OpenRouter, Nous Portal) flags *model*
+    """True when the route's ``/v1/models`` catalog (OpenRouter) flags *model*
     ``reasoning.mandatory``. Cache-only — memory, then the disk mirror — so it never blocks; a cold
     catalog is warmed in the background, and the mirror it writes answers every later call and process.
     Without this an aux-only OpenRouter route (nothing else warms that catalog) paid the 400 in every
@@ -93,8 +90,6 @@ def _catalog_marks_mandatory(provider: Optional[str], base_url: Optional[str], m
     from hermes_cli import models_reasoning_caps as caps_mod
     if provider_norm == "openrouter" or host == "openrouter.ai" or host.endswith(".openrouter.ai"):
         lookup, warm = caps_mod.openrouter_model_reasoning_capabilities, caps_mod.warm_openrouter_reasoning_caps_async
-    elif provider_norm in _NOUS_PROVIDERS:
-        lookup, warm = caps_mod.nous_model_reasoning_capabilities, caps_mod.warm_nous_reasoning_caps_async
     else:
         return False
     try:

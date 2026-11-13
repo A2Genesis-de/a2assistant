@@ -180,11 +180,7 @@ def _attach_built_agent(sid: str, current: dict, agent) -> bool:
 
 
 def _announce_built_agent(sid: str, key: str, current: dict, agent) -> None:
-    """Post-wiring tail of a build: credits seed, session services, session.info, late MCP catch-up."""
-    # Credits notices at session OPEN (notice_callback already wired) so depletion warnings show at "ready".
-    with contextlib.suppress(Exception):
-        from agent.credits_tracker import seed_credits_at_session_start
-        seed_credits_at_session_start(agent)
+    """Post-wiring tail of a build: session services, session.info, late MCP catch-up."""
     _start_session_services(sid, key, current)
     info = _session_info(agent, current)
     if cfg_warn := _probe_config_health(_load_cfg()):

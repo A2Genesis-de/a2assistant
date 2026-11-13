@@ -81,7 +81,6 @@ class TestNativeAnthropic:
         ) is False
 
 
-
 class TestOpenRouter:
     def test_claude_on_openrouter_caches_with_envelope_layout(self):
         agent = _make_agent(
@@ -115,8 +114,6 @@ class TestKimiMoonshotOnOpenRouter:
             model="moonshotai/kimi-k2.6",
         )
         assert agent._anthropic_prompt_cache_policy() == (True, False)
-
-
 
     def test_kimi_bare_release_slug_on_openrouter_caches(self):
         """Bare release slugs (k2-thinking) lack the 'kimi'/'moonshot' substring;
@@ -164,7 +161,6 @@ class TestThirdPartyAnthropicGateway:
             model="glm-4.5",
         )
         assert agent._anthropic_prompt_cache_policy() == (False, False)
-
 
     def test_bare_alias_with_explicit_prompt_caching_capability_caches(self):
         agent = _make_agent(
@@ -484,7 +480,6 @@ class TestMiniMaxAnthropicWire:
         )
         assert agent._anthropic_prompt_cache_policy() == (True, True)
 
-
     def test_custom_provider_pointed_at_minimax_host_caches(self):
         # User wires a custom provider manually at MiniMax's Anthropic URL;
         # host match alone should be sufficient to enable caching.
@@ -586,7 +581,6 @@ class TestMiniMaxAnthropicWire:
         assert agent._anthropic_prompt_cache_policy() == (True, True)
 
 
-
 class TestOpenAIWireFormatOnCustomProvider:
     """A custom provider using chat_completions (OpenAI wire) should NOT get caching."""
 
@@ -625,7 +619,6 @@ class TestQwenAlibabaFamily:
         assert should is True, "Qwen on opencode-go must cache"
         assert native is False, "opencode-go is OpenAI-wire; envelope layout"
 
-
     def test_qwen_on_opencode_zen_caches(self):
         agent = _make_agent(
             provider="opencode",
@@ -634,35 +627,6 @@ class TestQwenAlibabaFamily:
             model="qwen3-coder-plus",
         )
         assert agent._anthropic_prompt_cache_policy() == (True, False)
-
-
-
-
-
-    def test_qwen_on_nous_portal_caches_with_envelope_layout(self):
-        # Nous Portal Qwen takes the same envelope-layout cache_control
-        # path as Portal Claude. Without this, Portal-routed qwen3.6-plus
-        # falls through to the alibaba-family check (which only matches
-        # provider=opencode/alibaba) and serves 0% cache hits.
-        agent = _make_agent(
-            provider="nous",
-            base_url="https://inference-api.nousresearch.com/v1",
-            api_mode="chat_completions",
-            model="qwen3.6-plus",
-        )
-        assert agent._anthropic_prompt_cache_policy() == (True, False)
-
-
-    def test_non_qwen_non_claude_on_nous_portal_does_not_cache(self):
-        # Portal scope is narrow: Claude OR Qwen only. Other models
-        # routed through Portal keep their existing fall-through behavior.
-        agent = _make_agent(
-            provider="nous",
-            base_url="https://inference-api.nousresearch.com/v1",
-            api_mode="chat_completions",
-            model="openai/gpt-5.4",
-        )
-        assert agent._anthropic_prompt_cache_policy() == (False, False)
 
 
 class TestDeepSeekOpenCode:
@@ -972,28 +936,6 @@ class TestLiteLLMOpenAIWire:
             if isinstance(part, dict) and "cache_control" in part
         ]
         assert inner, "the OpenAI-wire grant must still place real breakpoints"
-
-
-class TestNousPortalAnthropicWire:
-    def test_portal_claude_on_the_messages_wire_uses_the_native_layout(self):
-        agent = _make_agent(
-            provider="nous",
-            base_url="https://inference-api.nousresearch.com/v1",
-            api_mode="anthropic_messages",
-            model="anthropic/claude-opus-4.8",
-        )
-        assert agent._anthropic_prompt_cache_policy() == (True, True)
-
-    def test_portal_claude_on_chat_completions_keeps_the_envelope_layout(self):
-        """The wire, not the provider, picks the layout — Portal models still on
-        /chat/completions must not be flipped to inner-block markers."""
-        agent = _make_agent(
-            provider="nous",
-            base_url="https://inference-api.nousresearch.com/v1",
-            api_mode="chat_completions",
-            model="anthropic/claude-opus-4.8",
-        )
-        assert agent._anthropic_prompt_cache_policy() == (True, False)
 
 
 class TestExplicitOverrides:

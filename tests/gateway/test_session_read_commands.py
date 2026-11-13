@@ -63,7 +63,7 @@ def test_local_session_reads_report_this_session_and_refuse_their_write_forms(tm
                     break
                 assert time.monotonic() < deadline, ('warm turn never settled', snap)
                 await asyncio.sleep(.1)
-            for command in ('usage', 'insights', 'profile', 'topup', 'diff', 'memory', 'kanban list',
+            for command in ('usage', 'insights', 'profile', 'diff', 'memory', 'kanban list',
                             'suggestions', 'bundles', 'usage reset', 'kanban create x',
                             'suggestions catalog', 'agents', 'sessions', 'platform',
                             'toolsets', 'platforms', 'skills pending', 'skills reject nope', 'skills install x',
@@ -89,7 +89,6 @@ def test_local_session_reads_report_this_session_and_refuse_their_write_forms(tm
     assert 'reads-model' in out['usage'] and 'API calls: 1' in out['usage'], out['usage']
     assert '**Sessions:** 1' in out['insights'] and '**Messages:** 2' in out['insights'], out['insights']
     assert str(home) in out['profile'] and out['dispatch profile'] == out['profile'], out['profile']
-    assert 'Nous' in out['topup'], out['topup']
     # Workspace report: the session's frozen cwd.
     assert 'SESSION_CWD_MARKER.txt' in out['diff'], out['diff']
     # Review queues and boards, read-only views.

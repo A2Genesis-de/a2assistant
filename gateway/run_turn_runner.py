@@ -73,9 +73,8 @@ _LEDGER_PASSTHROUGH_KEYS = (
     "reasoning_tokens", "total_tokens", "provider", "turn_exit_reason", "service_tier",
 )
 # Beside ``failure_reason`` and ``error``: what ``agent.error_surface.build_error_surface_from_result`` reads,
-# so the authority's ``message.complete`` carries the same error card the TUI path builds;
-# ``usage_window_message`` also marks a window-plan refusal for the chat rewording.
-_FAILURE_DESCRIPTOR_KEYS = ("free_tier", "failure_retryable", "failure_resets_at", "usage_window_message")
+# so the authority's ``message.complete`` carries the same error card the TUI path builds.
+_FAILURE_DESCRIPTOR_KEYS = ("failure_retryable", "failure_resets_at")
 
 
 def _finite_viewer_turn() -> bool:
@@ -363,27 +362,16 @@ class TurnRunner(GatewayTurnProgressMixin, GatewaySessionAgentMixin):
     # ── per-turn agent wiring ───────────────────────────────────────────────────────────────
 
     def _notice_callback_sync(self, notice) -> None:
-        """Credits / out-of-band notices (usage bands, depletion, restored) fire from the agent's
-        sync worker thread; hop onto the gateway loop. Fired-once latch lives on the cached agent."""
+        """Out-of-band notices fire from the agent's sync worker thread; hop onto the gateway loop."""
         from gateway.run import render_notice_line
         from gateway.warning_notifications import is_diagnostic_notice, render_notification
         from gateway.bot_peer_notices import automatic_notices_allowed
         if self._ctx.mute_notification_reply or not self._status_live() or not automatic_notices_allowed(self._ctx.source):
             return
-        # A usage-window limit line repeats the turn's own reply, which carries the sentence and the
-        # switch button (a chat message cannot be cleared, so it would only pile up). The 90% heads-up
-        # is a desktop / terminal nudge; in a chat it is noise (/usage has the numbers).
-        key = str(getattr(notice, "key", "") or "")
-        if key == "credits.window_limit" or key.startswith("credits.window."):
-            return
         diagnostic = is_diagnostic_notice(notice)
         def present():
             try:
                 line = render_notice_line(notice)
-                if key.startswith("credits."):
-                    # Window plans (e.g. a paused plan's line): a chat's /topup has no credits settings.
-                    from agent.plan_limits import portal_wording
-                    line = portal_wording(line)
             except Exception:
                 logger.debug("render_notice_line failed", exc_info=True)
                 return
@@ -1440,8 +1428,6 @@ class TurnRunner(GatewayTurnProgressMixin, GatewaySessionAgentMixin):
         common = {
             "messages": result.get("messages", []), "api_calls": result.get("api_calls", 0),
             "failed": result.get("failed", False), "failure_reason": result.get("failure_reason"),
-            # Usage-window limit (agent/plan_limits.py): the gateway offers the plan's model as a button.
-            "usage_limit": result.get("usage_limit"),
             "partial": result.get("partial", False), "completed": result.get("completed"),
             "interrupted": result.get("interrupted", False), "interrupt_message": result.get("interrupt_message"),
             "error": result.get("error"),

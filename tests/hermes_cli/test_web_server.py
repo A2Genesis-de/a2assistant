@@ -162,7 +162,6 @@ class TestReloadEnv:
             assert os.environ.get("TEST_RELOAD_VAR") == "hello123"
         os.environ.pop("TEST_RELOAD_VAR", None)
 
-
     def test_removes_deleted_known_vars(self, tmp_path):
         """reload_env() removes known Hermes vars not present in .env."""
         env_file = tmp_path / ".env"
@@ -190,9 +189,6 @@ class TestRedactKey:
 
     def test_short_key_fully_masked(self):
         assert redact_key("short") == "***"
-
-
-
 
     def test_session_token_resolution_preserves_loaded_app_auth(self, monkeypatch):
         import hermes_cli.web_server as ws
@@ -339,7 +335,6 @@ class TestWebServerEndpoints:
 
         monkeypatch.setattr(_web_server_sessions, "_open_session_db_for_profile", boom)
         assert self.client.get("/api/sessions?limit=1&offset=0").status_code == 500
-
 
     def test_get_sessions_leaves_auto_archive_to_owner(self):
         from hermes_cli import web_server
@@ -528,7 +523,6 @@ class TestWebServerEndpoints:
 
         assert [response.status_code for response in responses] == [503] * len(paths)
 
-
     def test_messaging_platforms_profile_scopes_gateway_reads(self, monkeypatch):
         """?profile=<name> must resolve liveness from the profile's own home.
 
@@ -571,11 +565,9 @@ class TestWebServerEndpoints:
         assert worker_home / "gateway_state.json" in seen["status_paths"]
         assert worker_home in seen["expected_homes"]
 
-
     def test_gateway_drain_bad_action_400(self):
         resp = self.client.post("/api/gateway/drain", json={"action": "explode"})
         assert resp.status_code == 400
-
 
     @staticmethod
     def _provider_field_map(payload):
@@ -674,7 +666,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         assert provider_config["api_url"] == "http://localhost:8888"
         assert "api_key" not in provider_config
 
-
     def test_post_memory_provider_setup_routes_python_deps_through_pm(self, monkeypatch):
         """Dashboard dependency setup publishes through PM, never direct pip."""
         import subprocess as _subprocess
@@ -711,7 +702,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         assert pip_rows[0]["command"] == "hermes pm install"
         assert prepared == ["flatprov"]
 
-
     def test_put_memory_provider_config_writes_config_and_secret(self):
         from hermes_constants import get_hermes_home
         from hermes_cli.config import load_config, load_env
@@ -743,7 +733,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         assert provider_config["recall_budget"] == "high"
         assert "api_key" not in provider_config
 
-
     def test_get_memory_provider_config_does_not_return_secret(self):
         self._install_flatprov()
         self.client.put(
@@ -771,7 +760,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
 
     # ── GET /api/media (remote image display) ───────────────────────────
 
-
     def test_get_media_requires_auth(self):
         from hermes_cli.web_server import _SESSION_HEADER_NAME
 
@@ -783,7 +771,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         assert resp.status_code == 401
 
     # ── GET /api/media/proxy (client-blocked CDN fallback, #74564) ──────
-
 
     def test_media_proxy_requires_auth(self):
         from hermes_cli.web_server import _SESSION_HEADER_NAME
@@ -881,7 +868,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
 
     # ── Dashboard font override ─────────────────────────────────────────
 
-
     def test_import_sessions_endpoint_imports_exported_json(self, mutation_owner):
         from hermes_state import SessionDB
 
@@ -927,7 +913,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         assert invalid.status_code == 400
         errors = invalid.json()["detail"]["errors"]
         assert [e["index"] for e in errors] == [0] and errors[0]["error"]
-
 
     def test_latest_descendant_survives_parent_cycle(self):
         """Regression for the #39140 CTE salvage: a corrupted parent chain
@@ -978,7 +963,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         resp = self.client.get("/api/sessions/primary/latest-descendant")
         assert resp.status_code == 200
         assert resp.json()["session_id"] == "primary-cont"
-
 
     def test_update_hermes_returns_docker_guidance_without_spawning(self, monkeypatch):
 
@@ -1121,7 +1105,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
             "action_id": "b" * 32,
         }
 
-
     def test_model_set_maps_unknown_vendor_to_aggregator(self, monkeypatch):
         """A bare vendor name from analytics rows (no billing_provider) is not
         a Hermes provider — keep the user's aggregator instead of writing a
@@ -1149,39 +1132,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         assert data["provider"] == "openrouter"
         assert data["model"] == "moonshotai/kimi-k2.6"
 
-
-    def test_model_set_flips_a_stale_setup_record(self, monkeypatch):
-        """POST /api/model/set landed a provider on disk; the serve process's boot record
-        (``provider_configured: false``: nothing carried inference at boot) must follow at once, with
-        the ``setup.ready`` broadcast, or the web chat stays gated on "need setup" until a restart
-        (setup.status answers from the record)."""
-        from hermes_cli import free_tier_bootstrap as fb
-
-        fb.reset_for_tests()
-        monkeypatch.setattr("hermes_cli.model_cost_guard.expensive_model_warning", lambda *_a, **_k: None)
-        monkeypatch.setattr("agent.bedrock_adapter.has_aws_credentials", lambda *_a, **_kw: False)
-        broadcasts = []
-        monkeypatch.setattr(fb, "_broadcast", broadcasts.append)
-        with fb._lock:
-            fb._record = fb.SetupRecord(provider_configured=False, inference_provider="", free_tier_account=False,
-                                        has_identity=False, other_providers=False)
-            fb._started = True
-            fb._done.set()
-        try:
-            resp = self.client.post(
-                "/api/model/set",
-                json={"scope": "main", "provider": "custom", "model": "local-model",
-                      "base_url": "http://127.0.0.1:8081/v1", "api_key": "sk-local"},
-            )
-            assert resp.status_code == 200 and resp.json()["ok"] is True
-            record = fb.current_record()
-            assert record.provider_configured is True and record.other_providers is True
-            assert record.inference_provider == "custom"
-            assert broadcasts == [record]
-        finally:
-            fb.reset_for_tests()
-
-
     def test_reveal_env_var(self, tmp_path):
         """POST /api/env/reveal should return the real unredacted value."""
         from hermes_cli.config import save_env_value
@@ -1196,7 +1146,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         data = resp.json()
         assert data["key"] == "TEST_REVEAL_KEY"
         assert data["value"] == "super-secret-value-12345"
-
 
     def test_reveal_env_var_custom_session_header_ignores_proxy_authorization(self, tmp_path):
         """A valid dashboard session header should coexist with proxy auth."""
@@ -1229,7 +1178,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         )
 
         assert resp.status_code == 200
-
 
     def test_messaging_catalog_prefers_plugin_label_over_enum_pseudo_member(self):
         """A plugin platform that leaked into Platform.__members__ as a pseudo-
@@ -1267,7 +1215,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
             Platform._value2member_map_.pop("pseudofake", None)
             Platform._member_map_.pop("PSEUDOFAKE", None)
 
-
     def test_unauthenticated_api_blocked(self):
         """API requests without the session token should be rejected."""
         from starlette.testclient import TestClient
@@ -1287,7 +1234,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         assert resp.status_code == 401
         resp = self.client.get("/api/dashboard/plugins/rescan")
         assert resp.status_code == 200
-
 
     def test_parse_model_ids_handles_openai_and_bare_shapes(self):
         """Model discovery must tolerate the common /v1/models shapes and
@@ -1316,7 +1262,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         assert _parse_model_ids(FakeResp({"data": []}, ok=False)) == []
         assert _parse_model_ids(FakeResp({"nope": 1})) == []
         assert _parse_model_ids(FakeResp(ValueError("bad json"))) == []
-
 
     def test_set_model_main_custom_persists_api_key_and_registers_provider(self):
         """A custom endpoint that requires auth must persist model.api_key (where
@@ -1356,7 +1301,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
             and e.get("model") == "gpt-oss-120b"
             for e in custom
         )
-
 
     def test_deleting_the_active_custom_endpoint_clears_its_model_mirror(self):
         """Deleting an endpoint must not leave its credential running the agent.
@@ -1400,7 +1344,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         assert not model_cfg.get("base_url"), "deleted endpoint's host still routed to"
         assert not model_cfg.get("provider")
         assert not get_env_value(env_var), "deleted endpoint's key still in .env"
-
 
     def test_numeric_yaml_provider_key_can_be_activated_and_deleted(self):
         """Hand-edited `providers: 2070:` (YAML int key) must still activate.
@@ -1514,7 +1457,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         assert self.client.request("DELETE", "/api/providers/custom-endpoints/Local%208000").status_code == 200
         assert "local-8000" not in (load_config().get("providers") or {})
 
-
     def test_custom_endpoint_save_scopes_to_the_requested_profile(self):
         """``?profile=<name>`` must write into that profile's config.yaml.
 
@@ -1567,7 +1509,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         default_list = self.client.get("/api/providers/custom-endpoints").json()
         assert not any(e["id"] == "worker-proxy" for e in default_list["endpoints"])
 
-
     def test_custom_endpoint_rejects_malformed_url_without_changing_saved_state(self):
         from hermes_cli.config import get_config_path, get_env_path
 
@@ -1613,7 +1554,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         assert "api_key" not in cfg["model"]
         assert get_env_value(env_var) == "sk-super-secret"
         assert "sk-super-secret" not in yaml.safe_dump(cfg)
-
 
     def test_custom_endpoint_save_pins_api_mode_and_resolves_reasoning_alias(self):
         """Desktop's Custom Endpoints form pins the transport and keeps alias metadata (#93622).
@@ -1794,7 +1734,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         raw = yaml.safe_load(get_config_path().read_text(encoding="utf-8"))
         assert raw["providers"]["proxy"]["api_key"] == "${MY_PROXY_KEY}"
         assert not get_env_value(custom_endpoint_key_env("proxy"))
-
 
     def test_two_endpoints_on_one_host_keep_separate_credentials(self):
         """Two local servers must not share an .env slot.
@@ -2033,7 +1972,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         resp = self.client.get("/api/sessions?limit=-1")
         assert resp.status_code == 422
 
-
     def test_get_sessions_positive_limit_still_works(self):
         from hermes_state import SessionDB
 
@@ -2056,7 +1994,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         previously bypassed the per-profile 500-row clamp entirely."""
         resp = self.client.get("/api/profiles/sessions?limit=-1")
         assert resp.status_code == 422
-
 
     def test_profiles_sessions_positive_limit_still_works(self):
         from hermes_state import SessionDB
@@ -2116,7 +2053,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
 
         resp = self.client.get("/api/sessions/neg-limit-messages/messages?limit=-1")
         assert resp.status_code == 422
-
 
     def test_get_session_messages_limit_above_500_is_capped_not_rejected(self):
         """A limit above the documented 500-row cap is silently clamped
@@ -2434,8 +2370,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
 
 
 class TestBuildSchemaFromConfig:
-
-
     def test_timezone_field_is_searchable_select(self):
         """timezone must ship as a searchable, clearable select of IANA ids.
 
@@ -2499,7 +2433,6 @@ class TestConfigRoundTrip:
         from hermes_cli.web_server import app, _SESSION_HEADER_NAME, _SESSION_TOKEN
         self.client = TestClient(app)
         self.client.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
-
 
     def test_round_trip_preserves_schema_invisible_nested_keys(self):
         """Nested keys that aren't in CONFIG_SCHEMA must also survive a
@@ -2617,7 +2550,6 @@ class TestNewEndpoints:
 
     # --- Profiles ---
 
-
     def test_profiles_create_builder_mcp_auth_is_profile_scoped(
         self, monkeypatch
     ):
@@ -2702,7 +2634,6 @@ class TestNewEndpoints:
 
     # --- New profiles endpoints: active / description / model / describe-auto ---
 
-
     def test_discord_toolsets_read_and_write_discord_platform(self):
         """Platform-restricted toolsets must not be saved as successful CLI no-ops."""
         from hermes_cli.config import load_config
@@ -2739,7 +2670,6 @@ class TestNewEndpoints:
         assert {"discord", "discord_admin"} <= set(
             config["platform_toolsets"]["discord"]
         )
-
 
     def test_get_toolset_config_returns_provider_matrix(self):
         """GET .../config returns provider rows with structured env_vars."""
@@ -2809,7 +2739,6 @@ class TestNewEndpoints:
 
     # -- Web capability split (search vs extract backends) ------------------
 
-
     def test_select_web_search_backend_matches_runtime_resolution(self, monkeypatch):
         """PUT provider with capability=search writes web.search_backend and the
         runtime search dispatcher resolves to it — while extract is untouched."""
@@ -2853,7 +2782,6 @@ class TestNewEndpoints:
 
     # -- Terminal execution backend picker ---------------------------------
 
-
     def test_terminal_ssh_probe_ready_when_configured(self, monkeypatch):
         """SSH host + user in config.yaml -> ready."""
         from hermes_cli.config import load_config, save_config
@@ -2869,7 +2797,6 @@ class TestNewEndpoints:
         ssh = next(r for r in body["backends"] if r["name"] == "ssh")
         assert ssh["status"] == "ready"
         assert "hermes@devbox.example.com" in ssh["detail"]
-
 
     def test_analytics_usage_includes_skill_breakdown(self):
         from hermes_state import SessionDB
@@ -3252,7 +3179,6 @@ class TestModelContextLength:
         assert result["model"] == "anthropic/claude-sonnet-4"
         assert result["model_context_length"] == 0
 
-
     def test_denormalize_writes_context_length_into_model_dict(self):
         """denormalize should write model_context_length back into model dict."""
         from hermes_cli.web_server_config import _denormalize_config_from_web
@@ -3339,7 +3265,6 @@ class TestDenormalizeProviderSwitch:
         # the aggregator's own endpoint instead of leaving the field blank or stale).
         assert model.get("base_url") != "http://localhost:11434/v1"
 
-
     def test_context_length_override_survives_provider_switch(self):
         """An explicit context-length override must persist alongside a
         provider switch."""
@@ -3403,7 +3328,6 @@ class TestModelInfoEndpoint:
         from hermes_cli.web_server import app
         self.client = TestClient(app)
 
-
     def test_model_info_with_dict_config(self, monkeypatch):
 
         monkeypatch.setattr(_cfg_mod, "load_config", lambda: {
@@ -3423,7 +3347,6 @@ class TestModelInfoEndpoint:
         assert data["auto_context_length"] == 200000
         assert data["config_context_length"] == 100000
         assert data["effective_context_length"] == 100000  # override wins
-
 
     def test_model_info_graceful_on_metadata_error(self, monkeypatch):
         """Endpoint should return zeros on import/resolution errors, not 500."""
@@ -3480,7 +3403,6 @@ class TestStatusRemoteGateway:
         assert data["gateway_pid"] == 999
         assert data["gateway_state"] == "running"
         assert data["gateway_health_url"] == "http://gw:8642"
-
 
     def test_status_remote_running_null_pid(self, monkeypatch):
         """Remote gateway running but PID not in response — pid should be None."""
@@ -3612,7 +3534,6 @@ class TestGatewayBusyReadout:
         self.client = TestClient(app)
         self.client.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
 
-
     def test_draining_state_is_neither_busy_nor_drainable(self, monkeypatch):
         """While draining, the gateway is not a fresh begin-drain target, and
         busy is False even with a stale active_agents>0 in the file — the state
@@ -3628,7 +3549,6 @@ class TestGatewayBusyReadout:
         data = self.client.get("/api/status").json()
         assert data["gateway_busy"] is False
         assert data["gateway_drainable"] is False
-
 
     def test_active_agents_unparseable_in_file_degrades_to_zero(self, monkeypatch):
         """A corrupt active_agents value in the status file must not 500 or
@@ -3660,7 +3580,6 @@ class TestStatusMemoryBlock:
         self.client = TestClient(app)
         self.client.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
 
-
     def test_memory_block_degrades_when_collector_raises(self, monkeypatch):
         """A broken collector must never take down the status endpoint —
         the block degrades to pressure=unknown."""
@@ -3673,7 +3592,6 @@ class TestStatusMemoryBlock:
         resp = self.client.get("/api/status")
         assert resp.status_code == 200
         assert resp.json()["memory"] == {"pressure": "unknown"}
-
 
     def test_disk_block_degrades_when_collector_raises(self, monkeypatch):
         """Same contract as the memory block: a broken collector must never
@@ -3721,7 +3639,6 @@ class TestGatewayUpdatedAtContract:
             parsed = datetime.fromisoformat(value)
             assert parsed.tzinfo is not None, f"naive timestamp leaked: {value!r}"
 
-
     def test_local_runtime_valid_epoch_becomes_iso_string(self, monkeypatch):
         """A plausible legacy epoch value is converted, not dropped."""
         from datetime import datetime, timezone
@@ -3740,7 +3657,6 @@ class TestGatewayUpdatedAtContract:
         parsed = datetime.fromisoformat(value)
         assert parsed.tzinfo is not None
         assert parsed == datetime.fromtimestamp(epoch, tz=UTC)
-
 
     def test_remote_health_numeric_updated_at_normalized(self, monkeypatch):
         """Cross-container path: the remote /health/detailed body is the
@@ -3775,7 +3691,6 @@ class TestGatewayUpdatedAtContract:
 
 class TestNormaliseThemeDefinition:
     """Tests for _normalise_theme_definition() — parses YAML theme files."""
-
 
     def test_rejects_non_dict(self):
         from hermes_cli.web_server_dashboard import _normalise_theme_definition
@@ -3828,7 +3743,6 @@ class TestDiscoverUserThemes:
         # defaults filled in
         assert "fontSans" in results[0]["typography"]
 
-
     def test_ignores_transient_profile_override(self, tmp_path, monkeypatch):
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
         themes_dir = tmp_path / "dashboard-themes"
@@ -3875,7 +3789,6 @@ class TestThemeBootstrapCSS:
             encoding="utf-8",
         )
 
-
     @staticmethod
     def _mount_spa_client(tmp_path, monkeypatch):
         from fastapi import FastAPI
@@ -3914,7 +3827,6 @@ class TestNormaliseThemeExtensions:
     componentStyles, layoutVariant) — the surfaces themes use to reskin
     the dashboard without shipping code."""
 
-
     def test_custom_css_passthrough_and_capped(self):
         from hermes_cli.web_server_dashboard import _normalise_theme_definition
         # Small CSS passes through verbatim.
@@ -3928,7 +3840,6 @@ class TestNormaliseThemeExtensions:
         huge = "/* x */ " * (40 * 1024 // 8 + 10)
         r2 = _normalise_theme_definition({"name": "t", "customCSS": huge})
         assert len(r2["customCSS"]) <= 32 * 1024
-
 
     def test_component_styles_per_bucket(self):
         from hermes_cli.web_server_dashboard import _normalise_theme_definition
@@ -4000,7 +3911,6 @@ class TestDeleteSessionEndpoint:
             return db.get_session(sid) is not None
         finally:
             db.close()
-
 
     def test_delete_absent_session_is_idempotent(self, mutation_owner):
         from gateway.session_authority import LiveSession
@@ -4149,7 +4059,6 @@ class TestBulkDeleteSessionsEndpoint:
         finally:
             db.close()
 
-
     def test_deletes_listed_sessions_only(self):
         from hermes_state import SessionDB
 
@@ -4237,7 +4146,6 @@ class TestDeleteEmptySessionsEndpoint:
         finally:
             db.close()
 
-
     def test_delete_endpoint_requires_auth(self):
         """DELETE /api/sessions/empty must 401 without the session token.
 
@@ -4246,7 +4154,6 @@ class TestDeleteEmptySessionsEndpoint:
         future refactor introduces a non-auth path."""
         resp = self.client.delete("/api/sessions/empty")
         assert resp.status_code == 401
-
 
     def test_delete_returns_count_and_removes_only_empties(self):
         """DELETE returns the deleted count and removes only the
@@ -4320,7 +4227,6 @@ class TestPluginAPIAuth:
         self.auth_client = TestClient(app)
         self.auth_client.headers[_SESSION_HEADER_NAME] = _SESSION_TOKEN
 
-
     def test_plugin_route_allows_auth(self):
         """Plugin API routes should work with a valid session token.
 
@@ -4339,7 +4245,6 @@ class TestPluginAPIAuth:
         resp = self.auth_client.get("/api/plugins/example/hello")
         assert resp.status_code == 200
 
-
     def test_plugin_patch_requires_auth(self):
         """Plugin PATCH routes should return 401 without a valid session token.
 
@@ -4352,7 +4257,6 @@ class TestPluginAPIAuth:
             json={"title": "renamed"},
         )
         assert resp.status_code == 401
-
 
     def test_non_kanban_plugin_route_requires_auth(self):
         """Auth must be plugin-agnostic, not kanban-specific.
@@ -4557,7 +4461,6 @@ class TestPtyWebSocket:
         q = {"token": tok, **params}
         return f"/api/pty?{urlencode(q)}"
 
-
     def test_tui_python_env_is_this_process_not_the_shell(self, tmp_path):
         """A dev shell's interpreter and tree never reach the TUI's gateway child."""
 
@@ -4578,7 +4481,6 @@ class TestPtyWebSocket:
 
         assert (env["HERMES_PYTHON"], env["HERMES_PYTHON_SRC_ROOT"]) == (sys.executable, str(_main_mod.PROJECT_ROOT))
 
-
     def test_unavailable_platform_closes_with_message(self, monkeypatch):
         from hermes_cli.pty_bridge import PtyUnavailableError
 
@@ -4597,7 +4499,6 @@ class TestPtyWebSocket:
             # Expect a final text frame with the error message, then close.
             msg = conn.receive_text()
             assert "pty missing" in msg or "unavailable" in msg.lower() or "pty" in msg.lower()
-
 
     def test_pub_broadcasts_to_events_subscribers(self):
         """A frame handed to _broadcast_event is sent verbatim to every
@@ -4718,7 +4619,6 @@ class TestDashboardPluginStaticAssetAllowlist:
         resp = self.client.get("/dashboard-plugins/example/plugin_api.py")
         assert resp.status_code == 404
 
-
     def test_manifest_json_still_served(self):
         """JSON files remain browser-fetchable — manifests, localized
         data, source maps, etc. all sit in this bucket."""
@@ -4728,7 +4628,6 @@ class TestDashboardPluginStaticAssetAllowlist:
         # And the body is actually the manifest, not the SPA fallback.
         body = resp.json()
         assert body.get("name") == "example"
-
 
     def test_path_traversal_still_blocked(self):
         """The allowlist is on top of the existing ``.resolve()`` /
@@ -4820,7 +4719,6 @@ class TestValidateProviderCredential:
         )
         data = self._post("OPENROUTER_API_KEY", "sk-real").json()
         assert data["ok"] is False and data["reachable"] is False
-
 
     def test_local_endpoint_forwards_api_key_as_bearer(self, monkeypatch):
         """A custom endpoint that gates /v1/models behind auth must still
@@ -5217,7 +5115,6 @@ class TestDashboardComponentHealth:
 
     # -- /api/status components ------------------------------------------
 
-
     def test_public_component_payload_carries_no_secret_bearing_fields(self):
         """PUBLIC_API_PATHS contract: counts/enums only — no paths/messages."""
         self.ws.DASHBOARD_HEALTH.record_error("RuntimeError", "/api/secret-route?token=abc")
@@ -5316,7 +5213,6 @@ class TestSessionPatchUnread:
 
         rows = self.auth_client.get("/api/sessions?limit=100").json()["sessions"]
         assert next(s for s in rows if s["id"] == "s1")["unread"] is False
-
 
     def test_patch_unread_rejects_non_bool(self):
         # NB: pydantic v2 coerces "yes"/"no"/"1"/"0"/"on"/"off" to bool, so use

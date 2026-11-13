@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass, field, replace as dataclass_replace
 from typing import Any, Callable, Optional, Sequence
 
-from tools.connectors.gateway.config import connectors_available, guest_identity_pending
+from tools.connectors.gateway.config import connectors_available
 from tools.connectors.gateway.errors import GatewayAuthError, GatewayUnavailable, ToolGatewayError
 from tools.connectors.gateway.files import FileInputError, model_parameters, save_outputs, stage_inputs
 from tools.connectors.gateway.merge import fill_remote_failure, splice_remote_results
@@ -56,8 +56,6 @@ def _default_client_factory(call: Optional[CallRef] = None):
     """The real client for the model's read and execute legs. These never create an identity."""
     from tools.connectors.gateway.client import ConnectorClient
 
-    if guest_identity_pending():
-        raise GatewayAuthError(NOT_SET_UP_MESSAGE, code=NOT_SET_UP)
     return ConnectorClient(call=call)
 
 

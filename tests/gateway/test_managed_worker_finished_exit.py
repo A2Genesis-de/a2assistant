@@ -23,7 +23,7 @@ for line in sys.stdin.buffer:
     if 'version' in frame:
         send({'type': 'result', 'result': {'final_response': 'FINISHED_ANSWER', 'model': 'm', 'failure_reason': 'billing',
               'billing_block': {'provider': 'custom', 'provider_label': 'Custom', 'model': 'm', 'billing_url': None,
-                                'is_nous': False, 'message': 'Add credits'}}})
+                                'message': 'Add credits'}}})
     elif frame == {'type': 'finish'}:
         send({'type': 'finished'})
         break

@@ -1,5 +1,5 @@
-"""Status dashboard routes: health, /api/status, system stats, curator, learning graph,
-portal and diagnostics actions.
+"""Status dashboard routes: health, /api/status, system stats, curator, learning graph and
+diagnostics actions.
 
 Extracted from ``hermes_cli.web_server``; app state and helpers are late-bound through
 :mod:`hermes_cli.web_deps` (cycle-safe, monkeypatch-friendly).
@@ -421,18 +421,6 @@ def _auth_gate_status() -> dict[str, Any]:
             "auth_flows": auth_flows}
 
 
-def _nous_session_validity() -> str:
-    """Nous bootstrap-session validity for the NAS health sweep: a hosted agent whose Nous
-    auth dies terminally looks HEALTHY to every liveness probe yet every inference turn
-    fails, and this is the ONLY signal that surfaces it (local auth-store state, no token
-    needed). Best-effort: never let auth classification break the probe."""
-    try:
-        from hermes_cli.auth import get_nous_session_validity
-        return get_nous_session_validity()
-    except Exception:
-        return "unknown"
-
-
 async def _component_health(gateway: dict[str, Any]) -> dict[str, Any]:
     """Component-level health rollup: counts and status enums only (public payload — no
     messages, paths or other detail that could carry secrets). The storage probe reuses the
@@ -495,8 +483,7 @@ def _status_local_reads() -> dict[str, Any]:
     current_ver, latest_ver = check_config_version()
     return {"version": get_version_info().base_version, "config_version": current_ver,
             "latest_config_version": latest_ver,
-            "can_update_hermes": not _dashboard_local_update_managed_externally(),
-            "nous_session_valid": _nous_session_validity()}
+            "can_update_hermes": not _dashboard_local_update_managed_externally()}
 
 
 def _fts_rebuild_status() -> Optional[dict[str, Any]]:
@@ -606,7 +593,7 @@ async def get_status(profile: Optional[str] = None,
             "gateway_drainable": derive_gateway_drainable(
                 gateway_running=gateway_running, gateway_state=gateway_state),
             "restart_drain_timeout": restart_drain_timeout, "active_sessions": active_sessions,
-            **auth, "nous_session_valid": local["nous_session_valid"]}
+            **auth}
 
         # Stable per-install identity (first call may touch disk). Omitted (not null) when
         # unpersistable so older-client behavior and the no-identity fallback stay identical.
@@ -808,37 +795,6 @@ async def update_learning_node(body: LearningNodeEdit, profile: Optional[str] = 
     from agent.learning_mutations import edit_node
     return await _learning_mutation(
         body.profile or profile, lambda: edit_node(body.id, body.content), 400, "edit failed")
-
-
-# Portal — Nous Portal auth status (read-only).
-
-
-@router.get("/api/portal")
-async def get_portal_status(profile: Optional[str] = None):
-    # load_config() + auth snapshots are disk reads on a polled endpoint —
-    # keep them off the event loop.
-    return await config_scoped_to_thread(profile, _get_portal_status_sync)
-
-
-def _get_portal_status_sync():
-    cfg = load_config() or {}
-    auth: dict[str, Any] = {}
-    try:
-        from hermes_cli.auth import get_nous_auth_status_local
-        # Refresh-free snapshot so polling never performs an OAuth refresh.
-        auth = get_nous_auth_status_local() or {}
-    except Exception:
-        auth = {}
-
-    model_cfg = cfg.get("model") if isinstance(cfg.get("model"), dict) else {}
-    return {
-        "logged_in": bool(auth.get("logged_in")), "portal_url": auth.get("portal_base_url"),
-        "inference_url": auth.get("inference_base_url"),
-        "provider": str((model_cfg or {}).get("provider") or ""),
-        # Free tier: a token exists, so logged_in stays true for callers that only ask "is there a
-        # credential"; surfaces that render an account must branch on free_tier first.
-        "free_tier": bool(auth.get("free_tier")), "account_tier": auth.get("account_tier"),
-        "subscription_url": "https://portal.nousresearch.com/manage-subscription"}
 
 
 # Diagnostics: text-output actions spawned in the background, tailed via /api/actions/<name>.

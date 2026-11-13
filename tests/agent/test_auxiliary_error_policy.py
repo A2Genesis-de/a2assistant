@@ -129,9 +129,9 @@ BEHAVIOUR = [
     ("statusless-account-wording", openai.APIError("model x-1 is not supported when using this account", _REQ,
                                                    body={"message": "gated"}), "openrouter",
      dict(fell_back=True, rotated=True)),
-    ("statusless-data-policy-denied", openai.APIError("denied", _REQ, body={"code": "data_policy_denied"}), "nous",
+    ("statusless-data-policy-denied", openai.APIError("denied", _REQ, body={"code": "data_policy_denied"}), "custom",
      dict(attempts=1, fell_back=False)),
-    ("data-policy-denied-quota-words", sdk(403, "quota exceeded", code="data_policy_denied"), "nous",
+    ("data-policy-denied-quota-words", sdk(403, "quota exceeded", code="data_policy_denied"), "custom",
      dict(attempts=1, fell_back=False, unhealthy=False, rotated=False)),
     ("content-policy-quota-words", sdk(403, "Your request was flagged by our safety system. Quota exceeded."),
      "openrouter", dict(attempts=1, fell_back=False, unhealthy=False, rotated=False)),
@@ -224,7 +224,7 @@ _MTA = "invalid tool call arguments: max_tokens must be an integer"
 ])
 def test_spent_parameter_rung(retry_errors, attempts, fell_back):
     first = sdk(400, "Unsupported parameter: 'temperature' is not supported with this model.")
-    outcome = run_ladder([first, *retry_errors], provider="nous", temperature=0.3, max_tokens=16)
+    outcome = run_ladder([first, *retry_errors], provider="custom", temperature=0.3, max_tokens=16)
     assert (outcome.attempts, outcome.fell_back, outcome.rotated) == (attempts, fell_back, False)
 
 
@@ -453,7 +453,7 @@ def test_discovered_api_key_client_classifies_on_its_concrete_provider(monkeypat
     transport = httpx.MockTransport(lambda request: httpx.Response(429, json=body, request=request))
     none = lambda *_a, **_k: (None, None)
     with (
-        patch.multiple(aux, _try_openrouter=none, _try_nous=none, _try_custom_endpoint=none),
+        patch.multiple(aux, _try_openrouter=none, _try_custom_endpoint=none),
         patch("agent.auxiliary_client._openai_http_client_kwargs", lambda _url, async_mode=False: {
             "http_client": (httpx.AsyncClient if async_mode else httpx.Client)(transport=transport)}),
         patch("agent.auxiliary_client._resolve_task_provider_model", return_value=("auto", None, None, None, None)),
@@ -475,41 +475,6 @@ def test_discovered_api_key_client_classifies_on_its_concrete_provider(monkeypat
 def _wire(handle, *, key, url="https://openrouter.ai/api/v1", is_async=False):
     sdk_client, http = (openai.AsyncOpenAI, httpx.AsyncClient) if is_async else (openai.OpenAI, httpx.Client)
     return sdk_client(api_key=key, base_url=url, max_retries=0, http_client=http(transport=httpx.MockTransport(handle)))
-
-
-def test_refreshed_nous_stream_error_falls_back():
-    """401, Nous refresh, then the refreshed key's SSE ``error`` event: classified as itself (fallback)."""
-    sse = lambda request: httpx.Response(200, content=b'data: {"error": "backend worker failed"}\n\n',
-                                         headers={"content-type": "text/event-stream"}, request=request)
-    primary = _wire(lambda r: httpx.Response(401, json={"error": {"message": "bad key"}}, request=r), key="sk-old")
-    refreshed = _wire(sse, key="sk-fresh", url="https://inference-api.nousresearch.com/v1")
-    fallback = MagicMock(base_url="https://api.example.com/v1")
-    fallback.chat.completions.create = MagicMock(return_value=_ok())
-    with (
-        patch("agent.auxiliary_client._aux_progress_active", return_value=True),
-        patch("agent.auxiliary_client._resolve_task_provider_model", return_value=("nous", "m", None, None, None)),
-        patch("agent.auxiliary_client._get_cached_client", return_value=(primary, "m")),
-        patch("agent.auxiliary_client._refresh_nous_auxiliary_client", return_value=(refreshed, "m2")),
-        patch("agent.auxiliary_client._refresh_nous_recommended_model", return_value=None),
-        patch("agent.auxiliary_client._transient_retry_count", return_value=0),
-        patch("agent.auxiliary_client._recoverable_pool_provider", return_value=None),
-        patch("agent.auxiliary_client._mark_provider_unhealthy"),
-        patch("agent.auxiliary_client._try_configured_fallback_chain", return_value=(None, None, "")),
-        patch("agent.auxiliary_client._try_main_agent_model_fallback", return_value=(fallback, "fb", "fallback")),
-    ):
-        assert call_llm(task="title_generation", messages=_MESSAGES).choices[0].message.content == "fallback"
-
-
-@pytest.mark.parametrize("is_async", [False, True], ids=["sync", "async"])
-def test_refreshed_nous_client_under_auto_classifies_as_nous(monkeypatch, is_async):
-    from agent import auxiliary_client as aux
-
-    seen = []
-    monkeypatch.setattr("hermes_cli.plugins.get_plugin_error_classification", lambda **kw: seen.append(kw["provider"]))
-    with patch.object(aux, "_resolve_nous_runtime_api", return_value=("sk-fresh", "https://inference-api.nousresearch.com/v1")):
-        client, _model = aux._refresh_nous_auxiliary_client(cache_provider="auto", model="m", async_mode=is_async)
-    aux._classify_failure(sdk(500, "down"), "auto", client, "m")
-    assert seen == ["nous"]
 
 
 def test_invalid_answer_classifies_as_incomplete_response():
@@ -617,8 +582,8 @@ def test_missing_model_on_a_candidate_hides_only_that_model(monkeypatch):
     aux._quarantine_fallback_candidate("t", "fb", "openrouter", sdk(404, "x"), reason="model not found", model="openai/gpt-retired")
     assert aux._is_provider_unhealthy("openrouter", model="gpt-retired")  # resolved name written, configured name read
     with patch.object(aux, "_get_provider_chain", return_value=[("openrouter", lambda: (MagicMock(), "openai/gpt-retired")), (
-            "nous", lambda: (MagicMock(), "m"))]), patch.object(aux, "_discovery_chain_allowed"):
-        assert aux._try_payment_fallback("zai")[2] == "nous"  # discovery skips the hidden model too
+            "custom", lambda: (MagicMock(), "m"))]), patch.object(aux, "_discovery_chain_allowed"):
+        assert aux._try_payment_fallback("zai")[2] == "custom"  # discovery skips the hidden model too
 
 
 def test_a_rebuilt_retry_is_classified_on_the_request_it_sent():  # e.g. a fast-model task rebuilt on the main model
@@ -719,7 +684,6 @@ def test_stream_watchdog_timeout_is_not_judged_by_the_error_it_cut_off():
     assert not policy.auth_refresh(verdict)
 
 
-
 _POLICY_REFUSALS = [
     (403, {"error": {"code": "data_policy_denied", "message": "No eligible data-policy route for max_tokens=16"}}),
     (400, {"error": {"message": "Your request was flagged by our safety system. Unsupported parameter: 'temperature'"}}),
@@ -745,7 +709,7 @@ def test_a_refusal_no_resend_can_change_is_sent_once(refusal, is_async, stream):
         client.chat.completions.create = (AsyncMock if is_async else MagicMock)(
             side_effect=lambda **kw: handle(None))
     with patch("agent.auxiliary_client._aux_progress_active", return_value=stream):
-        outcome = run_ladder(None, provider="nous", is_async=is_async, client=client,
+        outcome = run_ladder(None, provider="custom", is_async=is_async, client=client,
                              max_tokens=16, temperature=0.3)
     assert (len(sent), outcome.fell_back) == (1, False), outcome.result
 
@@ -806,10 +770,10 @@ _TEMPERATURE_400 = "Unsupported parameter: 'temperature' is not supported with t
 @pytest.mark.parametrize("is_async", [False, True], ids=["sync", "async"])
 @pytest.mark.parametrize("third,answer", [(200, "ok"), (400, "fallback")], ids=["refreshed-request-answers",
                                                                                   "rejected-again-falls-back"])
-@pytest.mark.parametrize("second,provider", [(401, "openrouter"), (402, "openrouter"), (401, "nous"), (429, "openrouter")],
-                         ids=["refresh", "rotation", "nous-refresh", "rate-limit-backoff"])
+@pytest.mark.parametrize("second,provider", [(401, "openrouter"), (402, "openrouter"), (429, "openrouter")],
+                         ids=["refresh", "rotation", "rate-limit-backoff"])
 def test_a_parameter_repair_survives_a_credential_refresh(is_async, third, answer, second, provider):
-    """temperature 400 -> the repaired request 401s (refresh, Nous refresh), 402s (pool rotation) or 429s (backoff):
+    """temperature 400 -> the repaired request 401s (refresh), 402s (pool rotation) or 429s (backoff):
     the resent request still omits temperature. If the provider rejects it anyway, that is a parameter-named 400
     after a spent rung: model incompatible, fall back."""
     sent, statuses = [], iter([400, second, third])
@@ -826,9 +790,7 @@ def test_a_parameter_repair_survives_a_credential_refresh(is_async, third, answe
     client = _wire(handle, key="sk-0", is_async=is_async)
     pool = CredentialPool("openrouter", [Key("openrouter", f"k{i}", f"k{i}", "api_key", i, "manual", f"sk-{i}")
                                          for i in range(2)])
-    with patch.multiple("agent.auxiliary_client", _refresh_nous_auxiliary_client=lambda **_k: (client, "fast-1"),
-                        _nous_portal_account_has_fresh_paid_access=lambda: False), \
-            patch("agent.auxiliary_rate_limit_backoff.rate_limit_wait", return_value=0.0):
+    with patch("agent.auxiliary_rate_limit_backoff.rate_limit_wait", return_value=0.0):
         assert _routed_call([client] * 2, provider=provider, is_async=is_async, temperature=0.3,
                             pool=pool if provider == "openrouter" else None) == answer
     assert len(sent) == 3 and ["temperature" in body for body in sent] == [True, False, False]

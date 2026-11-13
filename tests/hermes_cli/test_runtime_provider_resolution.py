@@ -1182,10 +1182,6 @@ def test_named_custom_provider_falls_back_to_openai_api_key(monkeypatch):
     assert resolved["requested_provider"] == "custom:local-llm"
 
 
-
-
-
-
 def test_named_custom_provider_wins_over_builtin_alias(monkeypatch):
     """A custom_providers entry named after a built-in *alias* (not a canonical
     provider name) must win over the built-in.  Regression guard for #15743:
@@ -1310,13 +1306,7 @@ def test_explicit_openrouter_config_mirror_bypasses_pool(monkeypatch):
     assert custom["base_url"] == "http://localhost:11434/v1" and custom["api_key"] != "router-key"
 
 
-
-
-
-
 # ── api_mode config override tests ──────────────────────────────────────
-
-
 
 
 def test_minimax_config_base_url_overrides_hardcoded_default(monkeypatch):
@@ -1419,46 +1409,9 @@ def test_opencode_go_explicit_key_matches_env_key_route(monkeypatch, model):
 # ------------------------------------------------------------------
 
 
-
-
-
-
-def test_auto_detected_nous_auth_failure_falls_through_to_openrouter(monkeypatch):
-    """When auto-detect picks Nous but credentials are revoked, fall through to OpenRouter."""
-    from hermes_cli.auth import AuthError
-
-    monkeypatch.setenv("OPENROUTER_API_KEY", "test-or-key")
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-    monkeypatch.delenv("OPENAI_BASE_URL", raising=False)
-    monkeypatch.delenv("OPENROUTER_BASE_URL", raising=False)
-    monkeypatch.setattr(rp, "load_config", dict)
-
-    # resolve_provider returns "nous" (stale active_provider in auth.json)
-    monkeypatch.setattr(rp, "resolve_provider", lambda *a, **k: "nous")
-    # load_pool returns empty pool so we hit the direct credential resolution
-    monkeypatch.setattr(rp, "load_pool", lambda p: type("P", (), {
-        "has_credentials": lambda self: False,
-    })())
-    # Nous credential resolution fails with revoked token
-    monkeypatch.setattr(
-        rp, "resolve_nous_runtime_credentials",
-        lambda **kw: (_ for _ in ()).throw(
-            AuthError("Refresh session has been revoked",
-                      provider="nous", code="invalid_grant", relogin_required=True)
-        ),
-    )
-
-    # With requested="auto", should fall through to OpenRouter
-    resolved = rp.resolve_runtime_provider(requested="auto")
-    assert resolved["provider"] == "openrouter"
-    assert resolved["api_key"] == "test-or-key"
-
-
 # ------------------------------------------------------------------
 # fix #7828 — custom_providers model field must propagate to runtime
 # ------------------------------------------------------------------
-
-
 
 
 # ---------------------------------------------------------------------------
@@ -1535,7 +1488,6 @@ class TestOllamaUrlSubstringLeak:
         assert resolved["api_key"] == "ol-legit-key"
 
 
-
 # =============================================================================
 # Azure Foundry — both OpenAI-style and Anthropic-style endpoints
 # =============================================================================
@@ -1553,7 +1505,6 @@ class TestAzureFoundryResolution:
             # upgrades GPT-5.x / codex deployments to codex_responses.
             "default": "gpt-4.1",
         }
-
 
     def test_azure_foundry_missing_base_url_raises(self, monkeypatch):
         monkeypatch.setenv("AZURE_FOUNDRY_API_KEY", "az-key")
@@ -1593,7 +1544,6 @@ class TestAzureFoundryResolution:
 
         assert resolved["api_mode"] == "codex_responses"
         assert resolved["base_url"] == "https://synopsisse.openai.azure.com/openai/v1"
-
 
     def test_o3_mini_upgrades(self, monkeypatch):
         monkeypatch.setenv("AZURE_FOUNDRY_API_KEY", "az-key")
@@ -1648,7 +1598,6 @@ class TestAzureAnthropicEnvVarHint:
         assert resolved["api_key"] == "from-custom-var"
         assert resolved["base_url"] == self._AZURE_URL
 
-
     def test_key_env_points_at_unset_var_falls_through(self, monkeypatch):
         """If key_env names an env var that isn't set, fall through to the
         historical fixed names rather than failing outright."""
@@ -1663,7 +1612,6 @@ class TestAzureAnthropicEnvVarHint:
         resolved = rp.resolve_runtime_provider(requested="anthropic")
 
         assert resolved["api_key"] == "fallback-works"
-
 
     def test_non_azure_anthropic_path_ignores_key_env(self, monkeypatch):
         """key_env is only consulted on Azure endpoints — non-Azure Anthropic
@@ -1714,8 +1662,6 @@ class TestProviderEntryApiKeyEnvAlias:
         assert normalized is not None
         assert normalized.get("key_env") == "MY_VENDOR_KEY"
 
-
-
     def test_extra_body_is_supported_schema(self):
         from hermes_cli.config import (
             _VALID_CUSTOM_PROVIDER_FIELDS,
@@ -1736,7 +1682,6 @@ class TestProviderEntryApiKeyEnvAlias:
 # =============================================================================
 # Tencent TokenHub — API-key provider runtime resolution
 # =============================================================================
-
 
 
 # ---------------------------------------------------------------------------
@@ -1823,10 +1768,6 @@ def test_minimax_oauth_pool_forces_anthropic_messages_despite_stale_config(monke
 # ----------------------------------------------------------------------
 
 
-
-
-
-
 def test_openai_key_only_sent_to_openai_host(monkeypatch):
     """OPENAI_API_KEY must only be forwarded to api.openai.com, not to
     arbitrary custom endpoints (issue #28660)."""
@@ -1872,18 +1813,12 @@ def test_openai_key_reaches_openai_host(monkeypatch):
     assert resolved["api_key"] == "sk-openai-secret"
 
 
-
-
 # ----------------------------------------------------------------------
 # Issue #28660 — bonus: `<VENDOR>_API_KEY` derivation from host.
 # After the host-gating fix, users with a `DEEPSEEK_API_KEY` set and
 # `base_url: https://api.deepseek.com/v1` should get the key picked up
 # without needing to configure custom_providers.key_env first.
 # ----------------------------------------------------------------------
-
-
-
-
 
 
 def test_host_derived_key_does_not_leak_to_lookalike_host(monkeypatch):
@@ -1935,8 +1870,6 @@ def test_host_derived_key_skips_already_handled_vendors(monkeypatch):
     # example.com has no EXAMPLE_API_KEY set, and OPENAI/OPENROUTER are gated
     # on their own hosts — chain falls through to no-key-required.
     assert resolved["api_key"] == "no-key-required"
-
-
 
 
 def _patch_bedrock(monkeypatch, config_default=""):
@@ -2081,10 +2014,6 @@ def test_auto_provider_lookalike_cloud_host_does_not_bypass_to_cloud(monkeypatch
 # ---------------------------------------------------------------------------
 # extra_headers support for named custom providers (#3526 salvage)
 # ---------------------------------------------------------------------------
-
-
-
-
 
 
 def test_resolve_named_custom_runtime_pool_result_includes_extra_headers(monkeypatch):

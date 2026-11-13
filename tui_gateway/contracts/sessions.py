@@ -507,12 +507,11 @@ class SessionUsageParams(SessionParams):
 
 
 class SessionUsageResult(Usage):
-    credits_lines: list[str] | None = None
-    credits_usage_window: bool | None = None
+    pass
 
 
 method("session.usage", params=SessionUsageParams, result=SessionUsageResult,
-       doc="Token / context / cost counters for the session (+ Nous credit lines when available).")
+       doc="Token / context / cost counters for the session.")
 
 
 class SessionContextBreakdownParams(SessionParams):

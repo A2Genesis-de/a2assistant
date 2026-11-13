@@ -179,20 +179,19 @@ async def _model_labels_for(provider: dict) -> list[str]:
 
 
 @pytest.mark.asyncio
-async def test_model_buttons_still_over_budget_keep_head_and_tail_with_plan_word(plain_keyboards):
+async def test_model_buttons_still_over_budget_keep_head_and_tail(plain_keyboards):
     """Ids still too long after the shared namespace goes lose their MIDDLE, so the family head and the
-    distinguishing tail stay visible next to the ``Large`` plan word; a short catalog keeps full names."""
+    distinguishing tail stay visible; a short catalog keeps full names."""
     from plugins.platforms.telegram.telegram_picker_labels import MODEL_LABEL_BUDGET
 
     ns = "ri.language-model-service..language-model."
     ids = [ns + "claude-4-5-sonnet-extended-thinking-20250929", ns + "claude-4-5-opus-extended-thinking-20251101"]
-    labels = await _model_labels_for({"slug": "palantir", "name": "P", "models": ids, "total_models": 2,
-                                      "model_labels": {ids[0]: "Large"}})
+    labels = await _model_labels_for({"slug": "palantir", "name": "P", "models": ids, "total_models": 2})
     assert len(labels) == 2 and len(set(labels)) == 2
     assert all(len(lbl) <= MODEL_LABEL_BUDGET for lbl in labels)
-    assert labels[0].startswith("claude-4-5-s") and labels[0].endswith("-20250929 · Large")
+    assert labels[0].startswith("claude-4-5-s") and labels[0].endswith("-20250929")
     assert labels[1].startswith("claude-4-5-o") and labels[1].endswith("-20251101")
-    assert "…" in labels[0] and ns not in labels[0]
+    assert ns not in labels[0]
 
     short = await _model_labels_for({"slug": "openai", "name": "O", "models": ["gpt-5.1", "gpt-5.2"], "total_models": 2})
     assert short == ["gpt-5.1", "gpt-5.2"]
@@ -266,11 +265,10 @@ async def test_long_model_ids_differing_mid_name_render_distinct_labels(plain_ke
     tail = "-70b-instruct-awq-quantized-production-20261101"
     ids = [f"custom-llama-3-{v}{tail}" for v in (1, 2)] + [f"custom-llama-3-1-70b-{w}-awq-quantized-production-20261101"
                                                           for w in ("chat-distilled-reasoning", "chat-distilled-reasoner")]
-    labels = await _model_labels_for({"slug": "custom", "name": "C", "models": ids, "total_models": 4,
-                                      "model_labels": {ids[0]: "Large"}})
+    labels = await _model_labels_for({"slug": "custom", "name": "C", "models": ids, "total_models": 4})
     assert len(set(labels)) == len(ids), labels
     assert all(len(lbl) <= MODEL_LABEL_BUDGET for lbl in labels), labels
-    assert "3-1" in labels[0] and "3-2" in labels[1] and labels[0].endswith(" · Large")
+    assert "3-1" in labels[0] and "3-2" in labels[1]
 
 
 @pytest.mark.asyncio

@@ -771,33 +771,14 @@ class CLIChatTurnMixin:
                     width=self._scrollback_box_width(),
                 ))
 
-            # Billing CTA pins the single action (Nous → /topup, others → billing page) so it
-            # stays visible instead of scrolling away inside the response prose.
-            _limit = (turn.result or {}).get("usage_limit") if turn.result else None
-            if isinstance(_limit, dict):
-                # Usage-window plan: what to do next, in commands that always work here. Hermes never
-                # switches on its own; the user picks.
-                try:
-                    from agent.plan_limits import limit_next_steps_from_payload
-                    ChatConsole().print(Panel(
-                        limit_next_steps_from_payload(_limit, markup=True),
-                        title="[#CD7F32 bold]⚡ Limit reached[/]", title_align="left", border_style="#CD7F32",
-                        box=rich_box.HORIZONTALS, padding=(1, 4), width=self._scrollback_box_width(),
-                    ))
-                except Exception:
-                    logging.getLogger(__name__).debug("Usage-limit panel rendering failed", exc_info=True)
-            elif (turn.result and turn.result.get("failure_reason") == "billing"
-                  and not turn.result.get("usage_window_message")):
-                # (A window plan's refusal already reads as its own sentence with the way on; an
-                # "Out of credits" box under it would contradict it.)
+            # Billing CTA pins the provider's billing page so it stays visible instead of
+            # scrolling away inside the response prose.
+            if turn.result and turn.result.get("failure_reason") == "billing":
                 _bb = turn.result.get("billing_block") or {}
-                if _bb.get("is_nous"):
-                    _cta_lines = [t("cli.chat.billing_cta_nous")]
-                else:
-                    _url = _bb.get("billing_url")
-                    _cta_lines = [t("cli.chat.billing_cta_provider",
-                                    provider=_bb.get("provider_label") or t("cli.chat.your_provider"))
-                                  + (f": [bold]{_url}[/]" if _url else ".")]
+                _url = _bb.get("billing_url")
+                _cta_lines = [t("cli.chat.billing_cta_provider",
+                                provider=_bb.get("provider_label") or t("cli.chat.your_provider"))
+                              + (f": [bold]{_url}[/]" if _url else ".")]
                 _cta_lines.append(t("cli.chat.billing_cta_switch"))
                 try:
                     ChatConsole().print(Panel(

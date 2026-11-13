@@ -758,13 +758,6 @@ class CLIAgentSetupMixin:
             self.agent._finite = single_query_mode  # -q/-Q: a finite gateway admission (headless clarify)
             from hermes_cli.gateway_tools import bind
             bind(self.agent)  # main's dock / status bar / /stop read this session's gateway processes
-            # Hydrate credits notices at session OPEN (parity with the TUI) so a depletion
-            # warning shows before the first message. Idempotent + fail-open in the helper.
-            try:
-                from agent.credits_tracker import seed_credits_at_session_start
-                seed_credits_at_session_start(self.agent)
-            except Exception:
-                pass
             self._active_agent_route_signature = _route_signature(effective_model, runtime)
             if getattr(self.agent, "reasoning_pushed", False):
                 # The session holds the pick now; later rebuilds (/fast, /personality, a route change)

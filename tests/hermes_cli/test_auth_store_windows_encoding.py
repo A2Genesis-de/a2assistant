@@ -1,6 +1,6 @@
 """Regression tests for auth store encoding on Windows.
 
-``_load_auth_store`` and the Codex/Nous shared-store readers previously called
+``_load_auth_store`` and the Codex shared-store readers previously called
 ``Path.read_text()`` with no ``encoding=``, so the bytes were decoded with
 ``locale.getpreferredencoding()`` — cp1252 on Windows. The store is *written* as
 UTF-8 (``_save_auth_store`` uses ``encoding="utf-8"``), so any non-ASCII byte
@@ -70,8 +70,6 @@ def windows_default_encoding(monkeypatch):
     monkeypatch.setattr(Path, "read_text", _windows_read_text)
 
 
-
-
 # --- the bug: a non-ASCII label must survive save → load -------------------
 
 class TestAuthStoreEncodingRoundTrip:
@@ -137,7 +135,6 @@ class TestAuthStoreEncodingRoundTrip:
 # --- the fix: readers pass an explicit encoding ---------------------------
 
 
-
 # --- sibling readers of the same ~/.hermes/auth.json in other modules -------
 #
 # _load_auth_store lives in hermes_cli/auth.py, but several other modules read
@@ -170,67 +167,6 @@ class TestAuthJsonSiblingReaders:
         from tools.xai_http import has_xai_credentials
 
         assert has_xai_credentials() is True
-
-    def test_auxiliary_nous_provider_reads_non_ascii_store(self, hermes_home, windows_default_encoding, monkeypatch):
-        """agent/auxiliary_client's Nous-provider lookup reads the same store.
-
-        The lookup returns None on any read failure, silently disabling Nous as
-        the auxiliary (vision/summarization) provider. A non-ASCII label must
-        not trigger that path.
-        """
-        store = {
-            "version": auth.AUTH_STORE_VERSION,
-            "active_provider": "nous",
-            "providers": {"nous": {"agent_key": "k", "label": "工作账号"}},
-        }
-        _write_utf8(hermes_home / "auth.json", store)
-
-        import agent.auxiliary_client as aux
-
-        # _AUTH_JSON_PATH is resolved at module import time, so the
-        # HERMES_HOME env from the fixture doesn't reach it — point it at
-        # the tmp store explicitly.
-        monkeypatch.setattr(aux, "_AUTH_JSON_PATH", hermes_home / "auth.json")
-
-        # _read_nous_auth consults the credential pool FIRST and returns early
-        # when a pool entry exists, never reaching the auth.json read. Force the
-        # pool-absent path so the auth.json code under test actually runs.
-        monkeypatch.setattr(aux, "_select_pool_entry", lambda _provider: (False, None))
-
-        provider = aux._read_nous_auth()
-        assert provider is not None
-        assert provider.get("agent_key") == "k"
-
-    def test_read_shared_nous_state_reads_non_ascii_store(
-        self, tmp_path, monkeypatch, windows_default_encoding
-    ):
-        """hermes_cli.auth._read_shared_nous_state must read a non-ASCII store.
-
-        The shared Nous store (``nous_auth.json``) is written as UTF-8. A
-        non-ASCII field (e.g. an accented display name) must not cause the
-        read to raise under the Windows-default-encoding fixture and be
-        silently swallowed — which would drop the user's shared OAuth
-        credentials and force a device-code re-login.
-        """
-        # The shared-store path has a seat belt that refuses to resolve to the
-        # real user's store under pytest; pin it to a tmp dir explicitly.
-        shared_dir = tmp_path / "shared"
-        monkeypatch.setenv("HERMES_SHARED_AUTH_DIR", str(shared_dir))
-
-        payload = {
-            "refresh_token": "rt",
-            "access_token": "at",
-            # Non-ASCII display name → UTF-8 bytes cp1252 cannot decode.
-            "display_name": "Réne — Noël",
-        }
-        _write_utf8(shared_dir / "nous_auth.json", payload)
-
-        provider = auth._read_shared_nous_state()
-        assert provider is not None
-        assert provider["access_token"] == "at"
-        assert provider["refresh_token"] == "rt"
-        # The non-ASCII field round-trips intact.
-        assert provider["display_name"] == "Réne — Noël"
 
     def test_has_any_provider_configured_reads_non_ascii_auth_store(
         self, hermes_home, monkeypatch, windows_default_encoding
@@ -279,33 +215,4 @@ class TestAuthJsonSiblingReaders:
 
         assert main_mod._has_any_provider_configured() is True
 
-    def test_connector_auth_reads_non_ascii_nous_state(
-        self, hermes_home, windows_default_encoding
-    ):
-        """tools.managed_gateway_auth._read_nous_provider_state reads auth.json.
-
-        The Nous provider entry can carry a non-ASCII label. Under the
-        Windows-default-encoding fixture a no-encoding read raises and the
-        broad except swallows it, returning None — so the gateway treats
-        Nous as unconfigured.
-        """
-        store = {
-            "version": auth.AUTH_STORE_VERSION,
-            "providers": {
-                "nous": {
-                    "agent_key": "k",
-                    # Non-ASCII label → UTF-8 bytes cp1252 cannot decode.
-                    "label": "工作账号",
-                }
-            },
-        }
-        _write_utf8(hermes_home / "auth.json", store)
-
-        from tools.managed_gateway_auth import _read_nous_provider_state
-
-        nous = _read_nous_provider_state()
-        assert nous is not None
-        assert nous.get("agent_key") == "k"
-        # The non-ASCII label round-trips intact.
-        assert nous.get("label") == "工作账号"
 

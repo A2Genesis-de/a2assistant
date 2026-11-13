@@ -43,18 +43,17 @@ class Failure(NamedTuple):
 
 def classify_attempt(error: Exception, provider: Optional[str], client: Any = None, model: Any = None,
                      base_url: Optional[str] = "") -> ClassifiedError:
-    """``classify_api_error`` on the backend, model, endpoint and credential ``client`` was sent to."""
+    """``classify_api_error`` on the backend, model and endpoint ``client`` was sent to."""
     slug = str(provider or "").strip().lower()
     import httpx  # late: this module sits on the bootstrap/conftest import chain, which has no httpx
 
-    url, key = getattr(client, "base_url", None), getattr(client, "api_key", None)
+    url = getattr(client, "base_url", None)
     if is_cancellation(error):  # a cancelled task: no retry, no other provider
         return ClassifiedError(_R.unknown, provider=slug, retryable=False, message=str(error),
                                error_context={"interrupted": True})
     return classify_api_error(
         error, provider="" if slug == "auto" else slug, model=model if isinstance(model, str) else "",
-        base_url=str(url) if isinstance(url, (str, httpx.URL)) and str(url) else str(base_url or ""),
-        api_key=key if isinstance(key, str) else None)
+        base_url=str(url) if isinstance(url, (str, httpx.URL)) and str(url) else str(base_url or ""))
 
 
 def same_provider_retry(verdict: ClassifiedError) -> bool:

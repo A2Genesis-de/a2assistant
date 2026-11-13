@@ -34,8 +34,6 @@ PROBES = [
     ("review_probes/notice_delivery_probe.py", ["{repo}"], "PROBE_COMPLETE", False, "#103549"),
     ("review_probes/cache_estimator_probe.py", ["{repo}"], '"preflight_should_compress": true', False, "#103476"),
     ("review_probes/rewrite_hint_probe.py", ["{repo}"], "remote_fifo", False, "#103551"),
-    ("live_ab/auth_stampede.py", ["{repo}", "12"], "server_401=0", False, "#103526"),
-    ("review_probes/credential_identity_probe.py", ["{repo}", "pr"], '"after_sub": "account-A"', False, "#103526"),
     # live (real provider calls, cents each)
     ("live_ab/goal_judge_wait.py", ["{repo}", "3"], "('wait', ", True, "#103534"),
     ("live_ab/cache_prefix_wire.py", ["{repo}", "B"], "", True, "#103476"),

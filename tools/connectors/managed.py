@@ -6,7 +6,7 @@ import time
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from tools.connectors.contract import Actor, SettleReason, TargetState, allowed
-from tools.connectors.gateway.config import ensure_guest_identity, operation_session_key
+from tools.connectors.gateway.config import operation_session_key
 from tools.connectors.gateway.errors import RateLimited, ToolGatewayError
 from tools.connectors.operation import ConnectionOperation, DetachedOperation, IllegalTransition, Target
 from tools.connectors.run import Kind, run_operation
@@ -57,34 +57,13 @@ def managed_client(*, creates_guest: bool, initiator: Optional[str] = AGENT_TOOL
     read passes False and holds a token already. ``initiator`` names who asked, so every link the
     client mints is attributed."""
     from tools.connectors.gateway.client import ConnectorClient
-    from tools.connectors.gateway.errors import ToolGatewayError
 
-    if creates_guest and (setup_error := ensure_guest_identity()):
-        raise ToolGatewayError(setup_error, code=GUEST_SETUP_FAILED, retryable=True)
     return ConnectorClient(initiator=initiator, call=call)
 
 
 def managed_kind(client: Any, action: str, force: bool) -> Kind:
-    noted: set[str] = set()
-
-    def noting(step: Callable[[ConnectionOperation], None]) -> Callable[[ConnectionOperation], None]:
-        def run(operation: ConnectionOperation) -> None:
-            step(operation)
-            _note_connected(operation, noted)
-        return run
-
-    return Kind(prepare=noting(_prepare(client, action, force)),
-                observe=noting(lambda operation: _observe(client, operation)), note=NOTE)
-
-
-def _note_connected(operation: ConnectionOperation, noted: set[str]) -> None:
-    """Each app that connects counts once toward the connector sign-in offer."""
-    fresh = {t.name for t in operation.targets if t.state == TargetState.connected} - noted
-    if fresh:
-        from hermes_cli.free_tier_offer import note_app_connected
-
-        noted.update(fresh)
-        note_app_connected()
+    return Kind(prepare=_prepare(client, action, force),
+                observe=lambda operation: _observe(client, operation), note=NOTE)
 
 
 def _status_by_slug(client: Any) -> dict[str, dict[str, Any]]:
@@ -308,9 +287,8 @@ def _prepare(client: Any, action: str, force: bool) -> Callable[[ConnectionOpera
 
 
 def portal_accounts() -> list[dict[str, Any]]:
-    from tools.connectors.portal.client import PortalConnectorClient
-
-    return PortalConnectorClient().list_accounts()
+    """Hosted account rows lived on the Nous Portal, which A2Assistant does not contact."""
+    return []
 
 
 def _alias_status(targets: list[Target]) -> Optional[dict[str, dict[str, Any]]]:
@@ -356,9 +334,6 @@ def _no_card_result(client: Any, action: str, targets: list[HostedTarget], force
 
 def _status_result(client: Any, connectors: list[str]) -> str:
     items = client.list_connectors()
-    from hermes_cli.free_tier_offer import note_connected_apps_seen
-
-    note_connected_apps_seen(items)
     known = {str(i.get("connector", "")).lower() for i in items}
     unknown = {name: _unknown_slug(name, known) for name in connectors if name not in known}
     if connectors:
@@ -398,35 +373,7 @@ def _display_result(client: Any, suggested: list[str], *, session_id: Optional[s
 
 
 def _rename_result(target: HostedTarget) -> str:
-    """Rename the one account of ``target.name`` called ``target.alias`` (or, when unnamed, labelled
-    so) to ``target.to``. Synchronous: no operation and no card."""
-    from tools.connectors.gateway.errors import GatewayUnavailable, IdempotencyConflict
-    from tools.connectors.portal.client import PortalConnectorClient
-
-    rows = [r for r in portal_accounts() if str(r.get("connector", "")).lower() == target.name]
-    matches = [r for r in rows if r.get("alias") == target.alias] or [
-        r for r in rows if not r.get("alias") and r.get("label") == target.alias]
-    if len(matches) != 1:
-        names = sorted({str(r.get("alias") or r.get("label")) for r in rows})
-        found = f"Its accounts are: {', '.join(names)}." if names else f"The user has no {target.name} account."
-        what = "No" if not matches else "More than one"
-        return tool_error(f"{what} {target.name} account is called {target.alias!r}. {found}")
-    try:
-        account = PortalConnectorClient().rename_account(matches[0]["connectionId"], target.to)
-    except IdempotencyConflict:
-        return tool_error(f"The name {target.to!r} is already used by another {target.name} account. Pick another name.")
-    except GatewayUnavailable as exc:
-        if exc.code == "connection_not_found":
-            return tool_error(f"That {target.name} account no longer exists. Use action status to list accounts.")
-        return tool_error("This Nous Portal cannot rename connector accounts yet.")
-    except ToolGatewayError as exc:
-        if exc.status == 405:
-            return tool_error("This Nous Portal cannot rename connector accounts yet.")
-        raise
-    return json.dumps({
-        "renamed": {"connector": account["connector"], "alias": account.get("alias"), "label": account["label"]},
-        "notice": f"Tell the user their {target.name} account {target.alias!r} is now called {target.to!r}.",
-    }, ensure_ascii=False)
+    return tool_error(f"Renaming {target.name} accounts is not available in A2Assistant.")
 
 
 def run_managed_action(
@@ -477,5 +424,5 @@ def run_managed_action(
             return tool_error(str(exc))
         return tool_error(
             f"The connector gateway request failed: {exc}. "
-            "If this persists, the user can manage connections in the Nous Portal."
+            "Hosted connector accounts are not available in A2Assistant."
         )

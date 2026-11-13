@@ -105,10 +105,6 @@ class ClassifiedError:
 
 # Billing exhaustion (not transient rate limit). "out of extra usage" is the
 # Anthropic OAuth Pro/Max overage bucket depleted (HTTP 400).
-# The Nous gateway's own words for "the free tier will not serve this" — a billing wall for a
-# named account, the tier refusing for an anonymous one (see ``_WELCOME_403_NAMED_PATTERNS``).
-_FREE_TIER_REFUSAL_PATTERNS = (
-    "model_not_supported_on_free_tier", "not available on the free tier", "isn't available on the free tier")
 _BILLING_PATTERNS = (
     "insufficient credits", "insufficient_quota", "insufficient balance", "credit balance",
     "credits exhausted", "credits have been exhausted", "requires available credits",
@@ -119,7 +115,7 @@ _BILLING_PATTERNS = (
     # OpenRouter org-level monthly cap arrives as 403 "Budget limit exceeded (monthly limit)" (#107166):
     # account exhaustion, not a credential problem.
     "budget limit exceeded",
-    *_FREE_TIER_REFUSAL_PATTERNS,
+    "model_not_supported_on_free_tier", "not available on the free tier", "isn't available on the free tier",
     # LiteLLM proxies word a hard cap as "hard billing limit" (structured twin:
     # ``terminal_quota_exhausted`` in _BILLING_ERROR_CODES). "terminal billing
     # limit" free text is NOT matched: substring rules can't negate the
@@ -149,13 +145,6 @@ _UNVERIFIED_BILLING_PATTERNS = ("out of extra usage",)
 # scoped on purpose: other providers' billing codes on a 403 stay auth failures.
 _XAI_SPENDING_LIMIT_ERROR_CODE = "personal-team-blocked:spending-limit"
 
-# Nous usage-window plan: included usage (or the large-model allowance) is spent AND
-# there are no top-up credits. Billing so the pool may rotate to a key the user
-# owns; the message names the reset, so it must never read as transient. Honoured
-# only on a Nous 402 (``_classify_402`` behind ``_is_nous_route``), never via
-# _BILLING_ERROR_CODES, so any other status or upstream keeps main's rules.
-_NOUS_USAGE_WINDOW_402_CODE = "usage_window_and_credits_exhausted"
-
 # Structured codes meaning the account cannot serve paid traffic.
 _BILLING_ERROR_CODES = frozenset({
     "insufficient_quota", "billing_not_active", "payment_required", "insufficient_credits",
@@ -166,8 +155,6 @@ _BILLING_ERROR_CODES = frozenset({
     # terminal for this credential until limits are raised.
     "credit_balance_exhausted", "organization_spend_limit_exceeded",
     "organization_usage_limit_exceeded", "project_spend_limit_exceeded",
-    # Nous paid model behind an empty credit balance arrives as a 404 (#115702).
-    "insufficient_credits_for_paid_model",
 })
 
 # Transient rate limiting. Bedrock "Throttling error: Too many tokens" also
@@ -349,9 +336,6 @@ _MODEL_NOT_FOUND_PATTERNS = (
     "is not a valid model", "invalid model", "model not found", "model_not_found", "does not exist",
     "no such model", "unknown model", "unsupported model", "no endpoints found that support tool use",
     "openrouter catalog",
-    # Nous 404 when the provider retires a :free route — the slug is dead for every
-    # credential, so fall back instead of burning retries (#123180). Unlike the free-tier
-    # billing wording, the account's balance/tier is not what rejected the call.
     "is no longer free",
 )
 
@@ -716,8 +700,8 @@ _OVERFLOW_AS_5XX_RULES = (
     (_CONTEXT_OVERFLOW_PATTERNS, _V_CONTEXT_OVERFLOW),
 )
 
-# 404: Nous API surfaces credit depletion as a paid model vanishing from the
-# Free Tier (billing, not missing model); policy block before model_not_found.
+# 404: some APIs surface credit depletion as a paid model vanishing (billing, not
+# missing model); policy block before model_not_found.
 _404_RULES = (
     (_403_404_WALL_PATTERNS, _V_BILLING), (_PROVIDER_POLICY_BLOCKED_PATTERNS, _V_POLICY_BLOCKED),
     (_MODEL_NOT_FOUND_PATTERNS, _V_MODEL_NOT_FOUND),
@@ -799,7 +783,6 @@ class _Ctx:
     context_length: int
     num_messages: int
     base_url: str = ""  # the route the call went to; "" when the caller did not say
-    anonymous: bool = False
 
     def __post_init__(self) -> None:
         self.error_type = type(self.error).__name__
@@ -890,64 +873,6 @@ RETRYABLE_CLIENT_REASONS = frozenset({
 })
 
 
-# A welcome-host 403 that spells one of these out is a safety block or a billing wall, not the
-# tier refusing. The free-tier refusal phrases are left OUT: on the free route they mean exactly
-# "the tier refused", and an anonymous session has no credits to check.
-_WELCOME_403_NAMED_PATTERNS = _CONTENT_POLICY_BLOCKED_PATTERNS + tuple(
-    p for p in _BILLING_PATTERNS if p not in _FREE_TIER_REFUSAL_PATTERNS)
-
-
-def _nous_welcome_tier(c: _Ctx) -> Optional[Verdict]:
-    """The Nous inference gateway's welcome-tier (free tier) refusals, read from the structured body.
-
-    A 429 carrying a fairshare ``reason`` is either a tier gate (``model_not_free`` /
-    ``feature_not_free``: the model or feature is never served on the free tier, so retrying is
-    pointless — abort this route and fall back) or capacity (``at_capacity`` / ``admission_closed``
-    / ``rate_limited``: honour ``retry_after``, never rotate the free tier's only credential). A
-    400/403 whose message names the wrong host or a dark tier is deterministic for the request.
-    The parsed refusal rides ``error_context`` so the terminal copy can say what happened.
-    """
-    from hermes_cli.anon_auth import (
-        WELCOME_TIER_GATE_REASONS, parse_welcome_refusal, route_is_welcome_host, welcome_route_refusal)
-    status = c.status_code
-    if not c.anonymous:
-        # A named credential's fairshare 429 is an ordinary rate limit, whatever its body says. The
-        # one welcome refusal it does receive is the gateway's mirror 400 on the welcome host; its
-        # reconnect copy stands, only the sign-in card is withheld (``_welcome_surface_kind``).
-        if c.provider == "nous" and status == 400 and welcome_route_refusal(status, c.msg) == "named_on_welcome_host":
-            return _v(_R.format_error, retryable=False, should_fallback=True,
-                      error_context={"welcome_route": "named_on_welcome_host"})
-        return None
-    if status == 402 and route_is_welcome_host(c.base_url):
-        # The free tier has no credits to top up: a payment wall on it is the tier refusing. Off the welcome
-        # host a free-tier JWT keeps the ordinary 402 handling (the route heal, billing copy).
-        refusal = {"reason": "refused", "retry_after": 0, "alternates": [], "upgrade_url": ""}
-        return _v(_R.auth_permanent, retryable=False, should_fallback=True,
-                  error_context={"welcome_refusal": refusal})
-    if status == 429:
-        # Every free-tier 429 is the allowance talking, so even one without a ``reason`` (header-only,
-        # quota words) is a refusal; otherwise it would fall to billing or the generic rate-limit copy.
-        from agent.nous_rate_guard import welcome_refusal_from_headers
-        refusal = parse_welcome_refusal(c.body) or welcome_refusal_from_headers(
-            c.headers, body_wait=_rate_limit_reset_seconds(c.msg, c.body, c.headers))
-        ctx = {"welcome_refusal": refusal}
-        if refusal["reason"] in WELCOME_TIER_GATE_REASONS:
-            return _v(_R.model_not_found, retryable=False, should_fallback=True, error_context=ctx)
-        if refusal["retry_after"] > 0:
-            ctx["reset_at"] = time.time() + refusal["retry_after"]
-        return _v(_R.rate_limit, should_fallback=True, error_context=ctx)
-    # The route-keyed dark-tier 403 applies only to a 403 that says nothing else: a safety refusal
-    # or a billing wall on the welcome host keeps its own classification (and its own recovery).
-    plain_403 = not any(p in c.msg for p in _WELCOME_403_NAMED_PATTERNS)
-    kind = welcome_route_refusal(status, c.msg, c.base_url if plain_403 else None)
-    if kind is None:
-        return None
-    ctx = {"welcome_route": kind}
-    if status == 403:
-        return _v(_R.auth_permanent, retryable=False, should_fallback=True, error_context=ctx)
-    return _v(_R.format_error, retryable=False, should_fallback=True, error_context=ctx)
-
-
 def _is_gemini_prompt_block(error: Exception) -> bool:
     """The native Gemini adapter's ``promptFeedback.blockReason`` error, matched on its structured code
     (a 200 with no candidates, so no status or body to classify; the message text is not trusted)."""
@@ -965,9 +890,6 @@ def _provider_special_cases(c: _Ctx) -> Optional[Verdict]:
     # Deterministic for this context: another provider would receive the same connector result.
     if c.code == "data_policy_denied":
         return _v(_R.data_policy_denied, retryable=False, should_fallback=False)
-    welcome = _nous_welcome_tier(c)
-    if welcome is not None:
-        return welcome
     # Safety refusal before status classification so a 400 block isn't downgraded
     # to format_error and a status-less block isn't left retryable (#18028).
     if any(p in msg for p in _CONTENT_POLICY_BLOCKED_PATTERNS) or _is_gemini_prompt_block(c.error):
@@ -1119,15 +1041,10 @@ def classify_api_error(
     error: Exception, *, provider: str = "", model: str = "",
     approx_tokens: int = 0, context_length: int = 200000, num_messages: int = 0,
     base_url: str = "",
-    api_key: Any = None,
 ) -> ClassifiedError:
     """Classify an API error into a structured recovery recommendation (see ``_STAGES``).
 
-    ``base_url`` (optional) is the route the call went to; the Nous welcome tier keys its
-    dark-tier 403 on it because that refusal carries no distinguishing message.
-    ``api_key`` identifies an anonymous request; a host or fairshare reason alone does not.
-    The credential is never included in the returned context."""
-    from hermes_cli.anon_auth import is_anonymous_request
+    ``base_url`` (optional) is the route the call went to."""
     status_code = _extract_status_code(error)
     # Some SDK RateLimitError / AuthenticationError classes set no .status_code; the class names it.
     if status_code is None:
@@ -1137,7 +1054,6 @@ def classify_api_error(
     c = _Ctx(
         error, status_code, body, _build_error_msg(error, body), provider, model,
         approx_tokens, context_length, num_messages, str(base_url or ""),
-        anonymous=is_anonymous_request(provider, api_key),
     )
     stage, verdict = next(((s, v) for s in _STAGES if (v := s(c)) is not None), (None, _V_UNKNOWN))
     extra = _shape_context(c, verdict, hooked=stage in (_plugin_verdict, _profile_verdict))
@@ -1286,42 +1202,12 @@ def _status_5xx(c: _Ctx) -> Verdict:
     return _first_match(c.msg, _OVERFLOW_AS_5XX_RULES) or _V_SERVER_ERROR
 
 
-def _is_nous_route(c: _Ctx) -> bool:
-    """The usage-window 402 code is Nous's: any other upstream sending it keeps main's text rules."""
-    if (c.provider or "").strip().lower() == "nous":
-        return True
-    from utils import base_url_host_matches
-    return bool(c.base_url) and base_url_host_matches(c.base_url, "nousresearch.com")
-
-
-def _classify_402(error_msg: str, result_fn: Callable[..., Any], code: str = "", body: Any = None) -> Any:
-    """Disambiguate 402: "usage limit, try again in 5 minutes" is a periodic quota, not billing.
-    The Nous usage-window code is decisive (its prose names the reset time, which must not
-    demote it to a transient rate limit); every other 402 keeps the text rules. A usage-window 402's
-    optional ``display_message`` (server-set wording) rides in ``error_context`` for the refusal line."""
-    if code == _NOUS_USAGE_WINDOW_402_CODE:
-        # Tagged so recovery skips the paid-entitlement refresh (none restores included usage before the reset).
-        context: dict[str, Any] = {"usage_window": True}
-        if display := _usage_window_display_message(body):
-            context["display_message"] = display
-        # No fallback: another model is the user's call (the limit card offers it), never automatic.
-        return result_fn(**{**_V_BILLING, "should_fallback": False}, error_context=context)
+def _classify_402(error_msg: str, result_fn: Callable[..., Any]) -> Any:
+    """Disambiguate 402: "usage limit, try again in 5 minutes" is a periodic quota, not billing."""
     transient = any(p in error_msg for p in _USAGE_LIMIT_PATTERNS) and any(
         p in error_msg for p in _USAGE_LIMIT_TRANSIENT_SIGNALS
     )
     return result_fn(**(_V_RATE_LIMIT if transient else _V_BILLING))
-
-
-def _usage_window_display_message(body: Any) -> str:
-    """The server's optional wording for a usage-window 402 (top level or under ``error``), trimmed and
-    capped; "" when absent."""
-    if not isinstance(body, dict):
-        return ""
-    for holder in (body, body.get("error")):
-        value = holder.get("display_message") if isinstance(holder, dict) else None
-        if isinstance(value, str) and value.strip():
-            return value.strip()[:500]
-    return ""
 
 
 def _has_large_inline_image(content: Any) -> bool:
@@ -1455,7 +1341,7 @@ def _classify_image_tool_422(c: _Ctx) -> Verdict:
 # read window). Unlisted 4xx → format_error, 5xx → server_error.
 _STATUS_HANDLERS: dict[int, Callable[[_Ctx], Verdict]] = {
     400: _classify_400, 401: lambda c: _V_AUTH_ROTATE,
-    402: lambda c: _classify_402(c.msg, dict, c.code if _is_nous_route(c) else "", c.body),
+    402: lambda c: _classify_402(c.msg, dict),
     403: _status_403, 404: _status_404, 408: lambda c: _V_TIMEOUT, 413: lambda c: _V_PAYLOAD_TOO_LARGE,
     422: lambda c: _classify_image_tool_422(c),
     429: _status_429, 500: _status_5xx, 502: _status_5xx,

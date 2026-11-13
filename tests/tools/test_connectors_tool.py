@@ -52,12 +52,6 @@ def test_status_lists_and_filters_connectors():
     ]
 
 
-
-
-
-
-
-
 def test_connect_without_connectors_is_a_usage_error():
     out = json.loads(
         manage_connections({"action": "connect"}, client_factory=FakeClient)
@@ -112,8 +106,6 @@ def test_mcp_actions_belong_to_mcp_targets_only():
 # ---------------------------------------------------------------------------
 
 
-
-
 # ---------------------------------------------------------------------------
 # reachability: a registered tool nobody enables is a tool nobody can call
 # ---------------------------------------------------------------------------
@@ -144,7 +136,6 @@ def _session_tool_names(enabled_toolsets, *, connectors, disabled_toolsets=None)
     return {d["function"]["name"] for d in defs}
 
 
-
 def test_cli_session_gets_the_tool_outside_a_code_workspace(tmp_path, monkeypatch):
     """The path a plain `hermes` run takes: _get_platform_tools, no git cwd."""
     from hermes_cli.tools_config import _get_platform_tools
@@ -154,8 +145,6 @@ def test_cli_session_gets_the_tool_outside_a_code_workspace(tmp_path, monkeypatc
 
     assert "connections" in enabled
     assert "manage_connections" in _session_tool_names(enabled, connectors=True)
-
-
 
 
 def test_tui_and_desktop_sessions_get_the_tool(monkeypatch):
@@ -182,31 +171,6 @@ def test_focus_mode_coding_posture_gets_the_tool(monkeypatch):
     )
     assert selection == ["coding"]  # posture collapse still collapses
     assert "manage_connections" in _session_tool_names(selection, connectors=True)
-
-
-def test_session_the_portal_has_not_enabled_never_receives_the_tool(tmp_path, monkeypatch):
-    """The portal gate is the tool's check_fn: a session whose account the portal has not enabled
-    for connectors does not get ``manage_connections`` in its schema on any surface, so the
-    model cannot call it and read the gateway's 404 back to the user. The handler keeps the same
-    gate for the direct RPC path."""
-    from hermes_cli.tools_config import _get_platform_tools
-    from tools.registry import registry
-    from tui_gateway.server import _load_enabled_toolsets
-
-    monkeypatch.chdir(tmp_path)
-    monkeypatch.delenv("HERMES_TUI_TOOLSETS", raising=False)
-    selections = [
-        sorted(_get_platform_tools({}, "cli", include_default_mcp_servers=True)),
-        _load_enabled_toolsets("tui"),
-        _load_enabled_toolsets("desktop"),
-        ["coding"],
-    ]
-    for selection in selections:
-        assert "manage_connections" not in _session_tool_names(selection, connectors=False), selection
-
-    with patch("tools.connectors.gateway.config.connectors_available", return_value=False):
-        out = json.loads(registry.dispatch("manage_connections", {"action": "status"}))
-    assert "not available in this session" in out["error"]
 
 
 def test_operator_can_still_turn_it_off(tmp_path, monkeypatch):

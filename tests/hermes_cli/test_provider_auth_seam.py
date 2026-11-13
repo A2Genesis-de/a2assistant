@@ -190,4 +190,3 @@ def test_external_process_plugin_relogin_hint_never_names_a_failing_auth_add(ins
     # Handler-shipping plugins and built-ins keep their `hermes auth add` command.
     install_provider("fake-auth")
     assert oauth_relogin_command("fake-auth") == "hermes auth add fake-auth --type oauth"
-    assert oauth_relogin_command("nous") == "hermes portal"

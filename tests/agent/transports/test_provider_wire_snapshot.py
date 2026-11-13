@@ -55,7 +55,7 @@ MESSAGES = [
 
 # A representative model per provider (else the profile's first curated model).
 MODELS = {
-    "nous": "anthropic/claude-opus-5.5", "openai-codex": "gpt-5.5", "openai-api": "gpt-5.5",
+    "openai-codex": "gpt-5.5", "openai-api": "gpt-5.5",
     "xai-oauth": "grok-4", "qwen-oauth": "qwen3-coder-plus", "lmstudio": "qwen/qwen3-8b",
     "gemini": "gemini-3-pro", "kimi-coding": "kimi-k3", "kimi-coding-cn": "kimi-k2.5",
     "stepfun": "step-3", "arcee": "trinity-large", "actual": "actual-1", "minimax": "MiniMax-M3",
@@ -83,7 +83,6 @@ BASE_URLS = {
 # and local endpoints. Keys are ``base-url:<label>``; they sit outside the registry coverage check.
 BASE_URL_ONLY = {
     "base-url:openrouter": ("anthropic/claude-opus-5.5", "https://openrouter.ai/api/v1"),
-    "base-url:nous": ("anthropic/claude-opus-5.5", "https://inference-api.nousresearch.com/v1"),
     "base-url:kimi": ("kimi-k3", "https://api.moonshot.ai/v1"),
     "base-url:kimi-coding": ("kimi-k3", "https://api.kimi.com/coding/v1"),
     "base-url:tokenhub": ("hunyuan-t1", "https://tokenhub.tencentmaas.com/v1"),

@@ -53,8 +53,6 @@ def _make_mock_parent(depth=0):
     return parent
 
 
-
-
 class TestStripBlockedTools(unittest.TestCase):
     def test_removes_blocked_toolsets(self):
         result = _strip_blocked_tools(["terminal", "file", "delegation", "clarify", "memory", "code_execution"])
@@ -178,7 +176,6 @@ class TestDelegateTask(unittest.TestCase):
         result = json.loads(delegate_task(goal="test", parent_agent=parent))
         self.assertIn("error", result)
         self.assertIn("depth limit", result["error"].lower())
-
 
     def test_child_inherits_runtime_credentials(self):
         parent = _make_mock_parent(depth=0)
@@ -329,60 +326,6 @@ class TestDelegateTask(unittest.TestCase):
                     child_db.close()
                 parent_db.close()
 
-    def test_nous_child_rederives_api_mode_from_model(self):
-        """Portal is dual-wire — same provider + different model prefix must
-        not inherit the parent's Messages/chat_completions mode verbatim.
-        Native wire selected (opt-in since 2026-09-06, ``nous.anthropic_wire``)."""
-        with patch("hermes_cli.providers._nous_anthropic_wire", return_value="native"):
-            self._nous_child_rederives_api_mode_from_model()
-
-    def _nous_child_rederives_api_mode_from_model(self):
-        parent = _make_mock_parent(depth=0)
-        parent.base_url = "https://inference-api.nousresearch.com/v1"
-        parent.api_key = "portal-jwt"
-        parent.provider = "nous"
-        parent.api_mode = "anthropic_messages"
-        parent.model = "anthropic/claude-opus-4.8"
-
-        with patch("run_agent.AIAgent") as MockAgent:
-            mock_child = MagicMock()
-            MockAgent.return_value = mock_child
-
-            _build_child_agent(
-                task_index=0,
-                goal="Stay on chat completions",
-                context=None,
-                toolsets=None,
-                model="hermes-4-405b",
-                max_iterations=10,
-                parent_agent=parent,
-                task_count=1,
-            )
-
-            _, kwargs = MockAgent.call_args
-            self.assertEqual(kwargs["provider"], "nous")
-            self.assertEqual(kwargs["model"], "hermes-4-405b")
-            self.assertEqual(kwargs["api_mode"], "chat_completions")
-
-        with patch("run_agent.AIAgent") as MockAgent:
-            mock_child = MagicMock()
-            MockAgent.return_value = mock_child
-            parent.api_mode = "chat_completions"
-            parent.model = "hermes-4-405b"
-
-            _build_child_agent(
-                task_index=0,
-                goal="Move onto Messages",
-                context=None,
-                toolsets=None,
-                model="anthropic/claude-opus-4.8",
-                max_iterations=10,
-                parent_agent=parent,
-                task_count=1,
-            )
-
-            _, kwargs = MockAgent.call_args
-            self.assertEqual(kwargs["api_mode"], "anthropic_messages")
 
 class TestToolNamePreservation(unittest.TestCase):
     """Verify _last_resolved_tool_names is restored after subagent runs."""
@@ -407,8 +350,6 @@ class TestToolNamePreservation(unittest.TestCase):
             delegate_task(goal="Test tool preservation", parent_agent=parent)
 
         self.assertEqual(model_tools._last_resolved_tool_names, original_tools)
-
-
 
 
 class TestDelegateObservability(unittest.TestCase):
@@ -661,8 +602,6 @@ class TestDelegateFailedChildStatus(unittest.TestCase):
             )
             return result["results"][0]
 
-
-
     def test_error_without_failed_flag_marks_failed(self):
         """A child result that carries a non-empty error string but OMITS the
         ``failed`` key entirely (not ``failed=False`` — the key is absent, as in
@@ -883,7 +822,6 @@ class TestDelegationCredentialResolution(unittest.TestCase):
         self.assertEqual(creds["api_key"], "foundry-key")
         self.assertEqual(creds["api_mode"], "anthropic_messages")
 
-
     @patch("hermes_cli.runtime_provider.resolve_runtime_provider")
     def test_base_url_with_provider_carries_runtime_request_overrides(self, mock_resolve):
         """#65035: the base_url short-circuit must not drop the configured
@@ -913,7 +851,6 @@ class TestDelegationCredentialResolution(unittest.TestCase):
             {"extra_body": {"thinking": {"type": "disabled"}}},
         )
         self.assertNotIn("max_output_tokens", creds)
-
 
     @patch("hermes_cli.runtime_provider.resolve_runtime_provider")
     def test_base_url_survives_runtime_resolution_failure(self, mock_resolve):
@@ -982,7 +919,6 @@ class TestDelegationCredentialResolution(unittest.TestCase):
 class TestDelegationProviderIntegration(unittest.TestCase):
     """Integration tests: delegation config → _run_single_child → AIAgent construction."""
 
-
     @patch("tools.delegate_tool._load_config")
     @patch("tools.delegate_tool._resolve_delegation_credentials")
     def test_cross_provider_delegation(self, mock_creds, mock_cfg):
@@ -1020,7 +956,6 @@ class TestDelegationProviderIntegration(unittest.TestCase):
             self.assertEqual(kwargs["api_key"], "sk-or-key")
             self.assertNotEqual(kwargs["base_url"], parent.base_url)
             self.assertNotEqual(kwargs["api_key"], parent.api_key)
-
 
     @patch("tools.delegate_tool._load_config")
     @patch("tools.delegate_tool._resolve_delegation_credentials")
@@ -1159,7 +1094,6 @@ class TestChildCredentialPoolResolution(unittest.TestCase):
         loaded.assert_called_once()
         self.assertIn("open-ai", key)
         self.assertNotIn("claude", key)
-
 
     @patch(
         "tools.delegate_tool._load_config",
@@ -1558,7 +1492,6 @@ class TestDispatchDelegateTask(unittest.TestCase):
         self.assertNotIn("acp_args", captured["tasks"][0])
 
 
-
 class TestConcurrencyDefaults(unittest.TestCase):
     """Tests for the concurrency default and no hard ceiling."""
 
@@ -1588,7 +1521,6 @@ class TestConcurrencyDefaults(unittest.TestCase):
                 self.assertEqual(_load_config()["max_concurrent_children"], 50)
                 self.assertEqual(_get_max_concurrent_children(), 50)
 
-
     @patch("tools.delegate_tool._load_config",
            return_value={"max_concurrent_children": 0})
     def test_zero_clamped_to_one(self, mock_cfg):
@@ -1597,7 +1529,6 @@ class TestConcurrencyDefaults(unittest.TestCase):
 
 class TestAsyncCapUnified(unittest.TestCase):
     """max_async_children is deprecated: the async cap IS max_concurrent_children."""
-
 
     @patch("tools.delegate_tool._load_config",
            return_value={"max_concurrent_children": 15, "max_async_children": 3})
@@ -1612,7 +1543,6 @@ class TestAsyncCapUnified(unittest.TestCase):
 
 class TestMaxSpawnDepth(unittest.TestCase):
     """Tests for _get_max_spawn_depth clamping and fallback behavior."""
-
 
     @patch("tools.delegate_tool._load_config",
            return_value={"max_spawn_depth": 0})
@@ -1669,7 +1599,6 @@ class TestOrchestratorRoleSchema(unittest.TestCase):
         # Legacy explicit role='leaf' does not override the depth derivation.
         child = self._run_with_mock_child("leaf")
         self.assertEqual(child._delegate_role, "orchestrator")
-
 
     def test_schema_omits_acp_transport_fields(self):
         props = DELEGATE_TASK_SCHEMA["parameters"]["properties"]
@@ -1756,7 +1685,6 @@ class TestOrchestratorRoleBehavior(unittest.TestCase):
 
 
     # ── Role-aware system prompt ────────────────────────────────────────
-
 
 
 class TestOrchestratorEndToEnd(unittest.TestCase):

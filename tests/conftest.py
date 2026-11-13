@@ -1421,15 +1421,12 @@ def _audio_playback_guard(request, monkeypatch):
 # already handles. Every Python client (httpx, urllib, requests, aiohttp, asyncio)
 # resolves through socket.getaddrinfo, so the whole class closes in one place.
 #
-# The Nous domains were the first instance: a test home has no Nous identity, so a hosted
-# connector action minted a REAL guest on the production Portal on every CI run. Every
-# other host behaved the same way: building an agent fetched OpenRouter, models.dev and
+# Building an agent fetched OpenRouter, models.dev and
 # model-catalog metadata live, a stand-in agent's title request went to openrouter.ai, and
 # verdicts followed whatever those services (or a filtering DNS resolver) answered that day.
 #
 # Serve what a test needs from a fixture instead: a server on 127.0.0.1, a stubbed
-# transport (tests/hermes_cli/anon_portal.py routes httpx at a fake Portal), a seeded
-# cache, or a patched resolver seam (``tools.url_safety._getaddrinfo`` for the SSRF
+# transport, a seeded cache, or a patched resolver seam (``tools.url_safety._getaddrinfo`` for the SSRF
 # guards). Address literals resolve without a lookup and stay allowed. Live canaries opt
 # in with ``@pytest.mark.live``, the PM tests that download real toolchains and wheels on
 # purpose with ``@pytest.mark.allow_network``. Processes a test spawns are outside the fence.

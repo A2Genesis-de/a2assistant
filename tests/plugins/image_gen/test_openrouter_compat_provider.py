@@ -63,8 +63,6 @@ def _openrouter():
 
 
 class TestProviderClass:
-
-
     def test_capabilities_support_image_input(self):
         caps = _openrouter().capabilities()
         assert "image" in caps["modalities"]
@@ -73,8 +71,6 @@ class TestProviderClass:
     def test_is_available_with_key(self):
         with patch(_RUNTIME, return_value=_runtime_ok()):
             assert _openrouter().is_available() is True
-
-
 
     def test_default_model_ignores_runtime_overrides(self, monkeypatch):
         """Catalog defaults must not inherit another provider's saved model."""
@@ -87,20 +83,10 @@ class TestProviderClass:
             assert provider.default_model() == DEFAULT_MODEL
             assert provider._resolve_model() == "custom/provider-image-model"
 
-
     def test_model_env_override(self, monkeypatch):
         monkeypatch.setenv("OPENROUTER_IMAGE_MODEL", "black-forest-labs/flux.2-pro")
         assert _openrouter()._resolve_model() == "black-forest-labs/flux.2-pro"
         assert _openrouter()._resolve_model_chain() == ["black-forest-labs/flux.2-pro"]
-
-
-    def test_nous_honors_top_level_model(self):
-        from plugins.image_gen.openrouter import _build_providers
-
-        cfg = {"model": "openai/gpt-image-2"}
-        nous = {p.name: p for p in _build_providers()}["nous"]
-        with patch("plugins.image_gen.openrouter._load_image_gen_config", return_value=cfg):
-            assert nous._resolve_model_chain() == ["openai/gpt-image-2"]
 
     def test_explicit_model_kwarg_wins_over_config(self):
         cfg = {"model": "openai/gpt-image-2"}
@@ -220,18 +206,6 @@ class TestLiveCatalog:
         assert "google/gemini-3-pro-image" in ids          # chat-catalog model present
         assert len(ids) == len(set(ids))                   # deduped
 
-    def test_nous_portal_picker_excludes_image_api_catalog(self):
-        """Nous Portal has no /images route; its picker must not offer
-        Image-API-only models it cannot serve."""
-        from plugins.image_gen.openrouter import _build_providers
-
-        nous = {p.name: p for p in _build_providers()}["nous"]
-        with patch(_RUNTIME, side_effect=RuntimeError("no creds")):
-            ids = [m["id"] for m in nous.list_models()]
-        from plugins.image_gen.openrouter import DEFAULT_MODEL, _FALLBACK_MODEL
-
-        assert ids == [DEFAULT_MODEL, _FALLBACK_MODEL]
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -245,7 +219,6 @@ class TestHelpers:
         assert _to_image_url_part("https://x/y.png") == "https://x/y.png"
         assert _to_image_url_part("data:image/png;base64,AAAA") == "data:image/png;base64,AAAA"
 
-
     def test_to_image_url_part_blocks_credential_store(self, tmp_path, monkeypatch):
         from plugins.image_gen.openrouter import _to_image_url_part
 
@@ -258,7 +231,6 @@ class TestHelpers:
         with pytest.raises(ValueError, match="credential store"):
             _to_image_url_part(str(auth_json))
 
-
     def test_extract_images(self):
         from plugins.image_gen.openrouter import _extract_images
 
@@ -268,7 +240,6 @@ class TestHelpers:
             ]
         }
         assert _extract_images(payload) == ["data:image/png;base64,AA"]
-
 
     def test_access_error_hint_for_gated_openai_model(self):
         from plugins.image_gen.openrouter import _FALLBACK_MODEL, _access_error_hint
@@ -309,7 +280,6 @@ class TestGenerate:
         assert result["image"] == str(Path("/tmp/openrouter_gen.png"))
         assert result["provider"] == "openrouter"
         mock_save.assert_called_once()
-
 
     def test_empty_response(self):
         with patch(_RUNTIME, return_value=_runtime_ok()), \
@@ -360,24 +330,6 @@ class TestGenerate:
         assert result["success"] is True
         assert result["model"] == "openai/gpt-image-2"
         assert mock_post.call_args.kwargs["json"]["model"] == "openai/gpt-image-2"
-
-    def test_posts_to_resolved_base_url(self):
-        """Nous routes to its own base URL — proves the same code serves both."""
-        nous_runtime = _runtime_ok(
-            provider="nous", base_url="https://inference.nousresearch.com/v1", api_key="nous-tok"
-        )
-        with patch(_RUNTIME, return_value=nous_runtime), \
-             patch("requests.post", return_value=_mock_chat_response([_PNG_DATA_URI])) as mock_post, \
-             patch("plugins.image_gen.openrouter.save_b64_image", return_value=Path("/tmp/x.png")):
-            from plugins.image_gen.openrouter import _build_providers
-
-            nous = {p.name: p for p in _build_providers()}["nous"]
-            result = nous.generate(prompt="a pet")
-
-        assert result["success"] is True
-        assert result["provider"] == "nous"
-        url = mock_post.call_args[0][0]
-        assert url == "https://inference.nousresearch.com/v1/chat/completions"
 
     def test_api_error(self):
         import requests as req_lib
@@ -552,21 +504,6 @@ class TestImageApiSurface:
         assert result["success"] is True
         assert mock_post.call_args[0][0].endswith("/chat/completions")
 
-    def test_nous_never_uses_the_image_api(self):
-        """Nous Portal proxies chat-completions and has no /images route."""
-        from plugins.image_gen.openrouter import _build_providers
-
-        nous_runtime = _runtime_ok(
-            provider="nous", base_url="https://inference.nousresearch.com/v1", api_key="nous-tok"
-        )
-        with patch(_RUNTIME, return_value=nous_runtime), \
-             patch("requests.post", return_value=_mock_chat_response([_PNG_DATA_URI])) as mock_post, \
-             patch("plugins.image_gen.openrouter.save_b64_image", return_value=Path("/tmp/x.png")):
-            nous = {p.name: p for p in _build_providers()}["nous"]
-            result = nous.generate(prompt="a pet", model="openai/gpt-image-2")
-
-        assert result["success"] is True
-        assert mock_post.call_args[0][0] == "https://inference.nousresearch.com/v1/chat/completions"
 
     # -- per-model parameter filtering ------------------------------------
 
@@ -752,7 +689,6 @@ class TestImageApiSurface:
         assert kwargs["billing_provider"] == "openrouter"
         assert (kwargs["input_tokens"], kwargs["output_tokens"]) == (1000, 128)
 
-
     def test_multiple_images_land_in_additional_images(self):
         entries = [
             {"b64_json": "AA==", "media_type": "image/png"},
@@ -805,30 +741,17 @@ class TestImageApiSurface:
         assert result["error_type"] == "auth_error"
         assert "_retryable" not in result
 
-    def test_catalog_models_are_offered_only_by_openrouter(self):
-        from plugins.image_gen.openrouter import _IMAGE_API_MODELS, _build_providers
-
-        by_name = {p.name: p for p in _build_providers()}
-        # The tables' contract, not OpenRouter's live catalog: offline, list_models serves them.
-        with patch("requests.get", side_effect=OSError("offline")):
-            openrouter_ids = {m["id"] for m in by_name["openrouter"].list_models()}
-            nous_ids = {m["id"] for m in by_name["nous"].list_models()}
-        assert set(_IMAGE_API_MODELS) <= openrouter_ids
-        assert not (set(_IMAGE_API_MODELS) & nous_ids)
-
-
 
 class TestRegistration:
-    def test_register_both(self):
+    def test_register_openrouter(self):
         from plugins.image_gen.openrouter import register
 
         ctx = MagicMock()
         register(ctx)
         registered = [c.args[0].name for c in ctx.register_image_gen_provider.call_args_list]
-        assert set(registered) == {"openrouter", "nous"}
+        assert registered == ["openrouter"]
 
-    def test_both_are_reference_capable_for_pets(self):
+    def test_openrouter_is_reference_capable_for_pets(self):
         from agent.pet.generate.imagegen import _REF_CAPABLE
 
         assert "openrouter" in _REF_CAPABLE
-        assert "nous" in _REF_CAPABLE

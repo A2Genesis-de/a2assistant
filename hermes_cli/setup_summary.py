@@ -189,9 +189,8 @@ def _print_setup_summary(config: dict, hermes_home):
     except Exception:
         print()
         _setup.print_warning("No inference provider is configured — A2Assistant cannot chat yet.")
-        _setup._info("  Finish this one step with either of:",
-              "    hermes model            (pick any provider/model)",
-              "    hermes setup --portal   (Nous Portal OAuth, no API key)")
+        _setup._info("  Finish this one step with:",
+              "    hermes model            (pick any provider/model)")
 
     print()
     _setup.print_header("Tool Availability Summary")

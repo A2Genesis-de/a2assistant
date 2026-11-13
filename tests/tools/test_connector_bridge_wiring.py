@@ -24,6 +24,11 @@ from tools.tool_search import (
 from tools.tool_search_validation import normalize_tool_call_entries
 
 
+@pytest.fixture(autouse=True)
+def _hosted_connectors_on(monkeypatch):
+    monkeypatch.setattr("tools.connectors.gateway.config.connectors_available", lambda *a, **k: True)
+
+
 def _tool_search_description(tool_defs):
     # session_search is in the default defer set, so the bridge activates in
     # both arms for the same reason: a deferrable local tool exists.
@@ -621,26 +626,6 @@ def _recording_client_factory(transport):
 
 def _sent_tools(transport):
     return [request["json"]["call"] for request in transport.requests if request["url"].endswith("/execute")]
-
-
-def test_hook_rewrite_and_restored_vendor_slug_reach_the_gateway_request_body(monkeypatch):
-    from hermes_cli import plugins
-
-    transport = _RecordingTransport()
-    _connectors_on(monkeypatch, _recording_client_factory(transport))
-    # A pre_tool_call redaction pass: the secret must never leave the process.
-    monkeypatch.setattr(plugins, "_dispatch_pre_tool_call_hooks",
-                        lambda name, args, **kw: (None, {**args, "body": "[REDACTED]"}))
-
-    out = _tool_call([{"name": "connectors__gmail__SEND_EMAIL",
-                       "arguments": {"to": "x@example.com", "body": "sk-secret"}}])
-
-    assert _sent_tools(transport) == [
-        {"connector": "gmail", "tool": "GMAIL_SEND_EMAIL",
-         "arguments": {"to": "x@example.com", "body": "[REDACTED]"}},
-    ]
-    assert "sk-secret" not in json.dumps([request["json"] for request in transport.requests])
-    assert out["results"][0]["response"] == "ok"  # correlation survives the rewrite
 
 
 # ---------------------------------------------------------------------------

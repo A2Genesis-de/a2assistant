@@ -115,7 +115,7 @@ from agent.api_error_summary import ApiErrorSummaryMixin, is_provider_stream_par
 from agent.interrupt_control import InterruptControlMixin
 from agent.turn_explainers import TurnExplainersMixin
 from agent.activity_tracking import ActivityTrackingMixin
-from agent.rate_limit_credits import RateLimitCreditsMixin
+from agent.rate_limit_capture import RateLimitCaptureMixin
 from agent.session_persistence import SessionPersistenceMixin
 from agent.compression_facade import CompressionFacadeMixin
 from agent.turn_facade import TurnFacadeMixin
@@ -213,7 +213,7 @@ class _StreamErrorEvent(Exception):
 
 class AIAgent(
     ClientLifecycleMixin, StreamDeliveryMixin, StatusOutputMixin, ApiRequestHooksMixin, ApiErrorSummaryMixin,
-    InterruptControlMixin, TurnExplainersMixin, ActivityTrackingMixin, RateLimitCreditsMixin,
+    InterruptControlMixin, TurnExplainersMixin, ActivityTrackingMixin, RateLimitCaptureMixin,
     SessionPersistenceMixin, CompressionFacadeMixin, TurnFacadeMixin, VisionMessagePrepMixin, ReasoningParamsMixin,
 ):
     """AI Agent with tool calling capabilities."""
@@ -643,9 +643,9 @@ class AIAgent(
         """Return True when this provider/model pair should use Responses API."""
         from hermes_cli.providers import is_actual_route
         normalized_provider = (provider or "").strip().lower()
-        # Nous serves GPT-5.x via chat completions (its /v1/responses returns 404); generic custom endpoints
-        # may relay GPT-5 without full Responses semantics — only direct OpenAI/xAI URLs auto-upgrade.
-        if normalized_provider in ("nous", "custom") or is_actual_route(provider):
+        # Generic custom endpoints may relay GPT-5 without full Responses semantics — only direct
+        # OpenAI/xAI URLs auto-upgrade.
+        if normalized_provider == "custom" or is_actual_route(provider):
             return False
         # ACP facades expose the OpenAI-compatible chat.completions shape regardless of model
         # family and have no ``responses`` attribute, so neither primary routing nor GPT-5
@@ -1385,8 +1385,8 @@ class AIAgent(
     _handle_max_iterations = _forward("agent.chat_completion_helpers", "handle_max_iterations")
 
     def _conversation_root_id(self) -> Optional[str]:
-        """Session-lineage ROOT id for Portal usage attribution, so one conversation keeps a single
-        ``conversation=`` tag across compression rotation; subagents resolve via ``_parent_session_id``."""
+        """Session-lineage ROOT id, so one conversation keeps a single ``conversation=`` tag across
+        compression rotation; subagents resolve via ``_parent_session_id``."""
         cached = getattr(self, "_cached_conversation_root", None)
         if cached:
             return str(cached)

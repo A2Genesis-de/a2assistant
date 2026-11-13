@@ -1,8 +1,7 @@
 #!/usr/bin/env -S bash -c 'exec "$BASH" "$(dirname "$0")/run-in-hermes-env" python3 "$0" "$@"'
 """Build the Hermes Model Catalog — a centralized JSON manifest of curated models.
 
-This script reads the in-repo hardcoded curated lists (``OPENROUTER_MODELS``,
-``_PROVIDER_MODELS["nous"]``) and writes them to a JSON manifest that the
+This script reads the in-repo hardcoded curated list (``OPENROUTER_MODELS``) and writes them to a JSON manifest that the
 Hermes CLI fetches at runtime. Publishing the catalog through the docs site
 lets maintainers update model lists without shipping a Hermes release.
 
@@ -36,7 +35,6 @@ os.environ.setdefault("HERMES_HOME", os.path.join(os.path.expanduser("~"), ".her
 from hermes_cli.models import (
     OPENROUTER_MODELS,
     PREFERRED_SILENT_DEFAULT_MODEL,
-    _PROVIDER_MODELS,
 )
 
 OUTPUT_PATH = os.path.join(REPO_ROOT, "website", "static", "api", "model-catalog.json")
@@ -47,13 +45,6 @@ def _openrouter_entry(mid: str, desc: str) -> dict:
     entry: dict = {"id": mid, "description": desc}
     if mid == PREFERRED_SILENT_DEFAULT_MODEL:
         entry["description"] = desc or "default"
-        entry["default"] = True
-    return entry
-
-
-def _nous_entry(mid: str) -> dict:
-    entry: dict = {"id": mid}
-    if mid == PREFERRED_SILENT_DEFAULT_MODEL:
         entry["default"] = True
     return entry
 
@@ -80,19 +71,6 @@ def build_catalog() -> dict:
                 "models": [
                     _openrouter_entry(mid, desc)
                     for mid, desc in OPENROUTER_MODELS
-                ],
-            },
-            "nous": {
-                "metadata": {
-                    "display_name": "Nous Portal",
-                    "note": (
-                        'The entry labeled "default": true is the model A2Assistant '
-                        "silently lands on when the user never picked one."
-                    ),
-                },
-                "models": [
-                    _nous_entry(mid)
-                    for mid in _PROVIDER_MODELS.get("nous", [])
                 ],
             },
         },

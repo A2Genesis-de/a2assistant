@@ -15,7 +15,6 @@ from agent.error_classifier import (
     _extract_error_code,
     _classify_402,
 )
-from tests.hermes_cli.anon_portal import make_jwt
 
 
 # ── Helper: mock API errors ────────────────────────────────────────────
@@ -52,7 +51,6 @@ class ServerDisconnectedError(MockTransportError):
 # ── Test: FailoverReason enum ──────────────────────────────────────────
 
 
-
 # ── Test: ClassifiedError ──────────────────────────────────────────────
 
 class TestClassifiedError:
@@ -65,7 +63,6 @@ class TestClassifiedError:
 
         e3 = ClassifiedError(reason=FailoverReason.billing)
         assert e3.is_auth is False
-
 
 
 # ── Test: Status code extraction ───────────────────────────────────────
@@ -82,8 +79,6 @@ class TestExtractStatusCode:
         outer = Exception("outer")
         outer.__cause__ = inner
         assert _extract_status_code(outer) == 401
-
-
 
 
 # ── Test: Error body extraction ────────────────────────────────────────
@@ -145,8 +140,6 @@ class TestClassify402:
         assert result.reason == FailoverReason.rate_limit
 
 
-
-
 # ── Test: Full classification pipeline ─────────────────────────────────
 
 class TestClassifyApiError:
@@ -181,9 +174,6 @@ class TestClassifyApiError:
         assert result.should_rotate_credential is False
 
 
-
-
-
     # ── Billing ──
 
     def test_402_plain_billing(self):
@@ -191,8 +181,6 @@ class TestClassifyApiError:
         result = classify_api_error(e)
         assert result.reason == FailoverReason.billing
         assert result.retryable is False
-
-
 
 
     def test_404_free_tier_model_block_is_billing(self):
@@ -593,8 +581,6 @@ class TestClassifyApiError:
     # loop hammers the identical bad request into a flood.
 
 
-
-
     def test_non_json_stream_validation_error_is_non_retryable(self):
         e = MockAPIError(
             "Provider stream returned non-JSON SSE data",
@@ -639,8 +625,6 @@ class TestClassifyApiError:
     # status instead of the standard 400/413. These must route into the
     # compression-and-retry path, not the blind server_error/overloaded retry
     # that exhausts and drops the turn.
-
-
 
 
     # ── Model not found ──
@@ -697,8 +681,6 @@ class TestClassifyApiError:
         assert result.retryable is True
 
     # ── Provider policy-block (OpenRouter privacy/guardrail) ──
-
-
 
 
     # ── Provider content-policy block (per-prompt safety filter) ──
@@ -758,10 +740,6 @@ class TestClassifyApiError:
         assert result.should_compress is False
 
 
-
-
-
-
     # ── Payload too large ──
 
     def test_413_payload_too_large(self):
@@ -771,11 +749,6 @@ class TestClassifyApiError:
         assert result.should_compress is True
 
     # ── Context overflow ──
-
-
-
-
-
 
 
     # ── Local-inference memory ceiling (oMLX/MLX prefill guard, #52261) ──
@@ -822,16 +795,7 @@ class TestClassifyApiError:
     # ── Server disconnect + large session ──
 
 
-
-
     # ── Provider-specific: Anthropic thinking signature ──
-
-
-
-
-
-
-
 
 
     @pytest.mark.parametrize("error_code", ["Invalid_Encrypted_Content", "INVALID_ENCRYPTED_CONTENT"])
@@ -1110,8 +1074,6 @@ class TestClassifyApiError:
     # ── Provider-specific: Anthropic OAuth 1M-context beta forbidden ──
 
 
-
-
     # ── Transport errors ──
 
     def test_read_timeout(self):
@@ -1136,18 +1098,10 @@ class TestClassifyApiError:
         assert result.reason == FailoverReason.timeout
 
 
-
-
     # ── Error code classification ──
 
 
-
-
-
     # ── Message-only patterns (no status code) ──
-
-
-
 
 
     def test_message_account_id_token_extraction_failure_is_auth(self):
@@ -1164,22 +1118,10 @@ class TestClassifyApiError:
     # ── Message-only usage limit disambiguation (no status code) ──
 
 
-
-
-
     # ── Unknown / fallback ──
 
 
     # ── Format error ──
-
-
-
-
-
-
-
-
-
 
 
     def test_400_litellm_invalid_request_body_shape(self, caplog):
@@ -1262,10 +1204,6 @@ class TestClassifyApiError:
     # ── vLLM / local inference server error messages ──
 
 
-
-
-
-
     # ── Result metadata ──
 
 
@@ -1297,7 +1235,6 @@ class TestAdversarialEdgeCases:
             body = "just a string"
         result = classify_api_error(StringBodyError("bad"))
         assert result.reason == FailoverReason.format_error
-
 
 
     def test_three_level_cause_chain(self):
@@ -1407,20 +1344,10 @@ class TestAdversarialEdgeCases:
         assert result.reason == FailoverReason.billing
 
 
-
-
-
-
-
     # ── Regression: dict-typed message field (Issue #11233) ──
 
 
-
-
     # Broader non-string type guards — defense against other provider quirks.
-
-
-
 
 
 # ── Test: SSL/TLS transient errors ─────────────────────────────────────
@@ -1444,10 +1371,6 @@ class TestSSLTransientPatterns:
         assert result.should_compress is False
 
 
-
-
-
-
     def test_plain_disconnect_on_large_session_still_compresses(self):
         """Regression guard: the context-overflow-via-disconnect path
         (non-SSL disconnects on large sessions) must still trigger
@@ -1462,7 +1385,6 @@ class TestSSLTransientPatterns:
         )
         assert result.reason == FailoverReason.context_overflow
         assert result.should_compress is True
-
 
 
 # ── Test: SSL certificate verification failures (fail fast) ────────────
@@ -1488,9 +1410,6 @@ class TestSSLCertVerificationFailFast:
         assert result.reason == FailoverReason.ssl_cert_verification
         assert result.retryable is False
         assert result.should_compress is False
-
-
-
 
 
     def test_transient_ssl_alert_still_retries(self):
@@ -1573,7 +1492,6 @@ class TestRateLimitErrorWithoutStatusCode:
         assert result.reason != FailoverReason.rate_limit
 
 
-
 # ── Test: multimodal_tool_content_unsupported pattern ───────────────────
 
 class TestMultimodalToolContentUnsupported:
@@ -1591,9 +1509,6 @@ class TestMultimodalToolContentUnsupported:
         result = classify_api_error(e, provider="xiaomi", model="mimo-v2.5")
         assert result.reason == FailoverReason.multimodal_tool_content_unsupported
         assert result.retryable is True
-
-
-
 
 
     def test_unrelated_400_is_not_misclassified(self):
@@ -1693,9 +1608,6 @@ class TestCommandCodeUpstreamUnavailable:
         assert result.should_rotate_credential is True
 
 
-
-
-
 # ── HTTP 408 request timeout ────────────────────────────────────────────
 
 class Test408RequestTimeout:
@@ -1732,8 +1644,6 @@ class Test408RequestTimeout:
         assert result.reason == FailoverReason.timeout
         assert result.retryable is True
         assert result.should_compress is False
-
-
 
 
     def test_stale_breaker_runtime_error_triggers_fallback_not_retry(self):
@@ -2033,80 +1943,7 @@ class TestServerInjectedParameterRejection:
         assert result.retryable is False
 
 
-
-
 # ── Test: Nous welcome tier (free tier) refusals ───────────────────────
-
-class TestNousWelcomeTier:
-    """The Nous gateway's welcome-tier contract: a structured 429 body carries ``reason`` /
-    ``retry_after`` / ``alternates`` / ``upgrade_url``; a 400/403 names the wrong host or a
-    dark tier in its message. The parsed refusal rides ``error_context``."""
-
-    @staticmethod
-    def _refusal(reason, retry_after=0, **extra):
-        body = {"status": 429, "message": "refused", "reason": reason, "retry_after": retry_after, **extra}
-        return MockAPIError(f"Error code: 429 - {body}", status_code=429, body=body,
-                            headers={"retry-after": str(retry_after)})
-
-    def test_model_not_free_is_a_non_retryable_gate_with_fallback(self):
-        err = self._refusal("model_not_free", alternates=["nous/welcome"], upgrade_url="https://portal.example/upgrade")
-        result = classify_api_error(err, provider="nous", api_key=make_jwt(), model="gpt-5")
-        assert result.reason == FailoverReason.model_not_found
-        assert result.retryable is False
-        assert result.should_fallback is True
-        assert result.should_rotate_credential is False
-        refusal = result.error_context["welcome_refusal"]
-        assert refusal["reason"] == "model_not_free"
-        assert refusal["alternates"] == ["nous/welcome"]
-        assert refusal["upgrade_url"] == "https://portal.example/upgrade"
-
-    def test_feature_not_free_is_the_same_gate(self):
-        result = classify_api_error(self._refusal("feature_not_free"), provider="nous", api_key=make_jwt())
-        assert result.reason == FailoverReason.model_not_found
-        assert result.retryable is False
-
-    @pytest.mark.parametrize("reason", ["at_capacity", "admission_closed", "rate_limited"])
-    def test_capacity_refusals_are_rate_limits_that_honour_retry_after(self, reason):
-        result = classify_api_error(self._refusal(reason, retry_after=30), provider="nous", api_key=make_jwt(), model="nous/welcome")
-        assert result.reason == FailoverReason.rate_limit
-        assert result.retryable is True
-        assert result.should_fallback is True
-        ctx = result.error_context
-        assert ctx["welcome_refusal"]["retry_after"] == 30
-        assert ctx["reset_at"] > 0
-
-    def test_retry_after_zero_carries_no_reset(self):
-        result = classify_api_error(self._refusal("at_capacity", retry_after=0), provider="nous", api_key=make_jwt())
-        assert "reset_at" not in result.error_context
-
-    def test_anonymous_jwt_on_the_paid_host_is_deterministic(self):
-        body = {"status": 400, "message": "Anonymous accounts must use https://welcome-api.nousresearch.com for inference."}
-        err = MockAPIError(f"Error code: 400 - {body}", status_code=400, body=body)
-        result = classify_api_error(err, provider="nous", api_key=make_jwt(), model="nous/welcome")
-        assert result.reason == FailoverReason.format_error
-        assert result.retryable is False and result.should_fallback is True
-        assert result.error_context["welcome_route"] == "anon_on_paid_host"
-
-    def test_named_caller_on_the_welcome_host_is_deterministic(self):
-        body = {"status": 400, "message": "This endpoint serves anonymous Hermes Agent accounts only. Use https://inference-api.nousresearch.com with your API key or signed-in account."}
-        err = MockAPIError(f"Error code: 400 - {body}", status_code=400, body=body)
-        result = classify_api_error(err, provider="nous", api_key=make_jwt(account_tier="free"))
-        assert result.error_context["welcome_route"] == "named_on_welcome_host"
-        assert result.retryable is False
-
-    def test_dark_tier_403_never_triggers_a_credential_refresh(self):
-        body = {"status": 403, "message": "Anonymous accounts are not accepted by this API right now."}
-        err = MockAPIError(f"Error code: 403 - {body}", status_code=403, body=body)
-        result = classify_api_error(err, provider="nous", api_key=make_jwt(), model="nous/welcome")
-        assert result.reason == FailoverReason.auth_permanent
-        assert result.retryable is False and result.should_fallback is True
-        assert result.should_rotate_credential is False
-        assert result.error_context["welcome_route"] == "tier_disabled"
-
-    def test_ordinary_403_is_untouched(self):
-        result = classify_api_error(MockAPIError("forbidden", status_code=403, body={"message": "forbidden"}), provider="nous", api_key=make_jwt())
-        assert result.reason == FailoverReason.auth
-        assert "welcome_route" not in result.error_context
 
 
 class TestAuthErrorNamesOffRouteEndpoint:

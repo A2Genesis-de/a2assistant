@@ -14,7 +14,6 @@ import os
 import threading
 import time
 
-import httpx
 import pytest
 
 from agent.secret_scope import build_profile_secret_scope, reset_secret_scope, set_secret_scope
@@ -56,7 +55,7 @@ def homes(tmp_path, monkeypatch):
     for home in (a, b):
         (home / "cache").mkdir(parents=True)
     monkeypatch.setenv("HERMES_HOME", str(a))
-    for var in ("DEEPINFRA_API_KEY", "DEEPINFRA_BASE_URL", "NOUS_INFERENCE_BASE_URL"):
+    for var in ("DEEPINFRA_API_KEY", "DEEPINFRA_BASE_URL"):
         monkeypatch.delenv(var, raising=False)
     return a, b
 
@@ -79,29 +78,6 @@ def test_deepinfra_catalog_is_fetched_with_each_profiles_key(homes, monkeypatch)
         assert models._fetch_deepinfra_models() == ["di/model-A"]
     with _Scoped(b):
         assert models._fetch_deepinfra_models() == ["di/model-B"]
-
-
-def test_nous_reasoning_caps_follow_each_profiles_portal(homes, monkeypatch):
-    a, b = homes
-    (a / ".env").write_text("NOUS_INFERENCE_BASE_URL=https://portal-a.example/v1\n", encoding="utf-8")
-    (b / ".env").write_text("NOUS_INFERENCE_BASE_URL=https://portal-b.example/v1\n", encoding="utf-8")
-    from hermes_cli import models
-    import hermes_cli.models_reasoning_caps as caps
-
-    for attr, value in (("_nous_reasoning_caps_cache", None), ("_nous_reasoning_caps_failed_at", None),
-                        ("_nous_caps_disk_checked", False), ("_nous_caps_warm_started", False)):
-        monkeypatch.setattr(models, attr, value)
-
-    def transport(req, *, timeout, **kw):
-        effort = "low" if "portal-a" in req.full_url else "high"
-        return _json_resp({"data": [{"id": "nous/m", "supported_parameters": ["reasoning"],
-                                     "reasoning": {"supported_efforts": [effort]}}]})
-
-    monkeypatch.setattr(models, "_urlopen_model_catalog_request", transport)
-    with _Scoped(a):
-        assert caps.nous_model_reasoning_capabilities("nous/m", allow_fetch=True)["supported_efforts"] == ["low"]
-    with _Scoped(b):
-        assert caps.nous_model_reasoning_capabilities("nous/m", allow_fetch=True)["supported_efforts"] == ["high"]
 
 
 def test_swr_refresh_runs_as_the_profile_that_spawned_it(homes):
@@ -184,34 +160,6 @@ def test_banner_skills_are_the_routed_profiles(homes):
             assert sorted(itertools.chain.from_iterable(banner.get_available_skills().values())) == ["skill_b"]
     finally:
         banner._available_skills_cache = None
-
-
-def test_failed_guest_mint_only_suppresses_that_profile(homes, monkeypatch, tmp_path):
-    a, b = homes
-    monkeypatch.setenv("HERMES_SHARED_AUTH_DIR", str(tmp_path / "shared"))
-    import hermes_cli.anon_auth as anon
-    from hermes_cli import auth_nous
-
-    anon.reset_mint_memo_for_tests()
-    status = {"code": 429}
-    attempts: list[str] = []
-
-    def client(timeout_seconds, verify):
-        def handler(request):
-            attempts.append(str(get_hermes_home()))
-            if status["code"] == 429:
-                return httpx.Response(429, json={"error": "rate"})
-            return httpx.Response(201, json={"token": "anon_b", "user_id": "u", "org_id": "o"})
-        return httpx.Client(transport=httpx.MockTransport(handler))
-
-    monkeypatch.setattr(auth_nous, "_nous_http_client", client)
-    with _Scoped(a), pytest.raises(Exception):
-        anon.ensure_portal_identity(explicit=True, timeout_seconds=1)
-    assert attempts == [str(a)]
-    status["code"] = 201
-    with _Scoped(b):
-        assert anon.ensure_portal_identity(explicit=True, timeout_seconds=1) is not None
-    assert attempts[-1] == str(b)
 
 
 def test_active_skin_is_per_profile_and_leaves_launch_slot_alone(homes):

@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from agent.portal_tags import get_affinity_scope, get_conversation_context
+from agent.conversation_scope import get_affinity_scope, get_conversation_context
 from agent.prompt_cache_scope import GROK_AGGREGATOR_MODEL_PREFIXES, is_fork_cache_scope
 from agent.reasoning_effort import codex_supported_efforts
 from agent.transports.codex import _cache_scope_from_session_id

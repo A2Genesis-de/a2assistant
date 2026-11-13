@@ -18,8 +18,8 @@ from __future__ import annotations
 from pydantic import Field
 
 from .base import JsonValue, Payload, WireEnum
-from .common import MessageReaction, PlanGauge, SessionLiveInfo, SubagentStatus, ToolLabel, ToolLabelKind, Usage
-from .config_free_tier_control import FreeTierChallengePayload, SessionControlSnapshot
+from .common import MessageReaction, SessionLiveInfo, SubagentStatus, ToolLabel, ToolLabelKind, Usage
+from .config_control import SessionControlSnapshot
 from .registry import event
 
 
@@ -66,23 +66,6 @@ event("skin.changed", SkinPayload,
       doc="The active skin moved (name switch or live colour edit); repaint from this palette.")
 
 
-class SetupReadyPayload(OpenPayload):
-    """``hermes_cli/free_tier_bootstrap.py::SetupRecord.as_payload``."""
-
-    provider_configured: bool
-    inference_provider: str
-    free_tier_account: bool
-    free_tier_route: bool
-    has_identity: bool
-    other_providers: bool
-    error: str = ""
-    # Present only when the free-tier mint did not happen (``anon_auth.MintFailure.as_payload``).
-    error_code: str | None = None
-    retryable: bool | None = None
-    retry_after: int | None = None
-    finished_at: float
-
-
 class OnboardingOutcome(WireEnum):
     done = "done"
     skipped = "skipped"
@@ -102,15 +85,6 @@ class OnboardingEndedPayload(Payload):
 
 event("onboarding.ended", OnboardingEndedPayload,
       doc="A first-run onboarding run ended; sent to every connected window.")
-event("setup.ready", SetupReadyPayload,
-      doc="The free-tier bootstrap finished (broadcast); the desktop's setup gate reads the record.")
-
-
-event("free_tier.challenge", FreeTierChallengePayload,
-      doc="The account service wants a browser challenge cleared before the free-tier token exchange "
-          "(broadcast); the desktop loads ``url`` in a hidden window.")
-
-
 class ErrorPayload(Payload):
     """Every ``_emit("error", …)`` site sets exactly ``message``."""
 
@@ -203,40 +177,9 @@ class TurnStatus(WireEnum):
     interrupted = "interrupted"
 
 
-class UsageLimitSuggestion(Payload):
-    """``agent/plan_limits.py::ModelSuggestion`` — a recommended model that still works past the limit."""
-
-    model: str
-    label: str
-    note: str                    # "free" | "included"
-    provider: str = "nous"
-
-
-class UsageLimitCredits(Payload):
-    """``agent/plan_limits.py::CreditsOption`` — ``use_credits`` (turn on Keep going), ``add_credits``, or
-    ``add_credits_and_keep_going`` (both: Keep going is off and there is no balance)."""
-
-    action: str
-
-
-class UsageLimit(Payload):
-    """``agent/plan_limits.py::LimitHit`` — a usage-window plan's limit: what ran out, when it resets, and
-    the one-click ways on (switch to a recommended model, use / add credits)."""
-
-    gauge_id: str
-    scope: str
-    limit_name: str
-    resets_at_ms: int | None = None
-    message: str
-    suggestions: list[UsageLimitSuggestion] = Field(default_factory=list)
-    credits: UsageLimitCredits | None = None
-    current_model: str = ""
-
-
 class ErrorSurface(Payload):
     """``agent/error_surface.py::_surface`` — advisory {layer, code, retryable} (+ identity, + auth hint,
-    + ``resets_at`` epoch seconds when the provider named when its limit lifts, + ``usage_limit`` on a
-    usage-window plan's limit)."""
+    + ``resets_at`` epoch seconds when the provider named when its limit lifts)."""
 
     layer: str
     code: str
@@ -244,7 +187,6 @@ class ErrorSurface(Payload):
     provider: str | None = None
     model: str | None = None
     resets_at: float | None = None
-    usage_limit: UsageLimit | None = None
     model_config = Payload.model_config | {"extra": "allow"}
 
 
@@ -255,7 +197,6 @@ class BillingBlock(Payload):
     provider_label: str
     model: str
     billing_url: str | None
-    is_nous: bool
     message: str
     unverified: bool | None = None
 
@@ -348,7 +289,6 @@ class SessionUsagePayload(Payload):
     model: str | None = None
     provider: str | None = None
     fallback_model: str | None = None
-    plan_gauge: PlanGauge | None = None
 
 
 event("session.usage", SessionUsagePayload, doc="Mid-turn usage tick; message.complete carries the authoritative final usage.")
@@ -484,7 +424,7 @@ event("todo.updated", TodoUpdatedPayload, doc="Full todo snapshot after a todo t
 
 
 class NotificationShowPayload(Payload):
-    """``agent/credits_tracker.py::AgentNotice`` via notice_callback, and ``server._await_agent_ready``'s
+    """``agent/agent_notice.py::AgentNotice`` via notice_callback, and ``server._await_agent_ready``'s
     slow-build notice. ``level``: info | warn | error | success; ``kind``: sticky | ttl | agent.
     ``detail``: the full text behind a short ``text`` (the low-disk auto-prune question): Desktop shows
     it in the toast's expandable body, the Ink TUI prints it into the transcript."""
@@ -581,17 +521,6 @@ class SessionControlUpdatePayload(Payload):
 
 
 event("session.control.update", SessionControlUpdatePayload, doc="Persisted goal / loop / heartbeat state changed.")
-
-
-class BillingStepUpVerificationPayload(Payload):
-    """``methods_session`` billing.step_up on_verification."""
-
-    verification_url: str
-    user_code: str
-
-
-event("billing.step_up.verification", BillingStepUpVerificationPayload,
-      doc="Device-flow URL + code for the billing scope step-up; the client opens the browser.")
 
 
 # ── side agents (methods_prompt._spawn_side_agent) ────────────────────────────────────────────
@@ -869,8 +798,8 @@ event("bot_relay.outbox.pending", ChangeSignalPayload, doc="A bot-relay outbox e
 
 
 __all__ = [
-    "BillingBlock", "BillingStepUpVerificationPayload", "BrowserProgressPayload", "ChangeSignalPayload", "ErrorPayload",
-    "ErrorSurface", "FreeTierChallengePayload", "GatewayReadyPayload",
+    "BillingBlock", "BrowserProgressPayload", "ChangeSignalPayload", "ErrorPayload",
+    "ErrorSurface", "GatewayReadyPayload",
     "MessageCompletePayload", "MessageInterimPayload", "MessageReaction", "MessageReactionPayload", "MoaAggregatingPayload",
     "MoaPhasePayload", "MoaProgressPayload", "MoaReferencePayload", "NoticePayload",
     "NotificationClearPayload", "NotificationShowPayload", "OpenPayload", "PaneRevealPayload",
@@ -878,7 +807,7 @@ __all__ = [
     "PreviewOpenPayload", "PreviewRestartProgressPayload", "ReactionPayload", "ResumePhaseStatus",
     "ReviewSummaryPayload", "SessionControlSnapshot", "SessionControlUpdatePayload",
     "SessionReclaimedPayload", "SessionResumeProgressPayload", "SessionTitlePayload", "SessionUsagePayload",
-    "SetupReadyPayload", "SideAgentCompletePayload", "SkinPayload", "StatusUpdatePayload",
+    "SideAgentCompletePayload", "SkinPayload", "StatusUpdatePayload",
     "StreamDeltaPayload", "SubagentEventPayload", "SubagentOutputTailEntry", "TerminalClosePayload",
     "TerminalOutputPayload", "TipShowPayload", "TodoUpdatedPayload", "ToolCompletePayload",
     "ToolGeneratingPayload", "ToolLabel", "ToolLabelKind", "ToolOutputRiskPayload", "ToolProgressPayload",

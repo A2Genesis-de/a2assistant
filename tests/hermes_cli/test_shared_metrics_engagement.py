@@ -8,7 +8,7 @@ from datetime import datetime, timezone, UTC
 
 import pytest
 
-from agent.portal_tags import reset_conversation_context, set_conversation_context
+from agent.conversation_scope import reset_conversation_context, set_conversation_context
 from hermes_cli import lifecycle
 from hermes_cli.observability import relay_shared_metrics
 from hermes_cli.observability import shared_metrics_engagement as engagement

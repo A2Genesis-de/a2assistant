@@ -2,11 +2,11 @@
 module is listed here so the generator and the runtime see the same catalog."""
 
 from . import (
-    billing_delegation_pets,
     common,
-    config_free_tier_control,
+    config_control,
     connectors,
     connectors_operation,
+    delegation_pets,
     display,
     events,
     groups_bot_relay,

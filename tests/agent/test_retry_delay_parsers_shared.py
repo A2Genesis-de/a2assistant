@@ -19,18 +19,14 @@ def _http_date(seconds_ahead: int) -> str:
 
 class TestRetryAfterHeaderOneParser:
     def test_http_date_header_parsed_identically_at_formerly_divergent_sites(self):
-        """The error-context extractor and nous_rate_guard used to float() the header and silently
-        drop the RFC 7231 date form; both must now agree with the canonical."""
+        """The error-context extractor used to float() the header and silently drop the RFC 7231
+        date form; it must now agree with the canonical."""
         from agent.agent_runtime_helpers import extract_api_error_context
-        from agent.nous_rate_guard import _parse_reset_seconds
         import time
 
         header = _http_date(90)
         canonical = parse_retry_after_seconds(header)
         assert 85 <= canonical <= 90
-
-        guard = _parse_reset_seconds({"Retry-After": header})
-        assert guard is not None and abs(guard - canonical) < 2
 
         err = Exception("rate limited")
         err.response = SimpleNamespace(headers={"Retry-After": header})

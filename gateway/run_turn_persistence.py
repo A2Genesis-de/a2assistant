@@ -646,31 +646,17 @@ class GatewayTurnPersistenceMixin:
             with suppress(Exception):
                 self._evict_cached_agent(session_key)
 
-    @staticmethod
-    def _usage_window_chat_wording(agent_result: dict, response: str) -> str:
-        """A usage-window refusal sent to a chat: credits steps point at the Portal (a chat's /topup has no
-        Keep going control) and the reset reads as a duration (the gateway's clock is not the reader's).
-        Every other reply is returned unchanged."""
-        if not (agent_result.get("usage_window_message") and response):
-            return response
-        from agent.plan_limits import chat_refusal_wording
-        return chat_refusal_wording(response, agent_result.get("failure_resets_at"))
-
-    async def _deliver_turn_response_then_limit_offer(
+    async def _deliver_turn_response_noting_reply(
         self, event, source, session_entry, session_key, run_generation,
         agent_result, agent_messages, response, footer_line, intentional_silence,
     ):
-        """``_hmwa_deliver_turn_response``, then, for a usage-window refusal, the limit offer: the limit
-        sentence is the reply, and the button follows it once it lands."""
+        """``_hmwa_deliver_turn_response``, then record the bot reply for the room."""
         delivered = await self._hmwa_deliver_turn_response(
             event, source, session_entry, session_key, run_generation,
             agent_result, agent_messages, response, footer_line, intentional_silence,
         )
         if (delivered or agent_result.get("already_sent")) and not intentional_silence:
             self._note_bot_reply(source)
-        if isinstance(agent_result.get("usage_limit"), dict):
-            self._schedule_usage_limit_offer(event, agent_result["usage_limit"], session_key=session_key,
-                                             generation=run_generation)
         return delivered
 
     async def _hmwa_deliver_turn_response(

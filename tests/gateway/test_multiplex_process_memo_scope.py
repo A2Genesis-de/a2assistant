@@ -3,7 +3,6 @@
 
 from __future__ import annotations
 
-import json
 import os
 from pathlib import Path
 from types import SimpleNamespace
@@ -56,21 +55,6 @@ def test_max_turns_and_fallback_chain_follow_routed_profile(two_homes, monkeypat
     assert _under(b, refresh) == [{"provider": "openrouter", "model": "B/fallback"}]
     # Back on the default profile the chain is A's again (per-home last-known-good, not last writer).
     assert refresh() == [{"provider": "openrouter", "model": "A/fallback"}]
-
-
-def test_aux_nous_auth_reads_routed_profile_auth_json(two_homes, monkeypatch):
-    a, b = two_homes
-    import agent.auxiliary_client as aux
-
-    for home, token in ((a, "TOKEN_A"), (b, "TOKEN_B")):
-        (home / "auth.json").write_text(json.dumps({
-            "version": 1, "active_provider": "nous",
-            "providers": {"nous": {"agent_key": token, "access_token": token}},
-        }), encoding="utf-8")
-    monkeypatch.setattr(aux, "_select_pool_entry", lambda _provider: (False, None))
-
-    assert (aux._read_nous_auth() or {}).get("access_token") == "TOKEN_A"
-    assert (_under(b, aux._read_nous_auth) or {}).get("access_token") == "TOKEN_B"
 
 
 def _write_hook(home: Path, name: str) -> None:

@@ -4148,11 +4148,9 @@ class TelegramAdapter(TelegramContactMixin, TelegramHeldInboundMixin, TelegramRe
         return self._paged_keyboard(page_buttons, page_meta, "mpv", [InlineKeyboardButton(t("platform.telegram.picker.cancel"), callback_data="mx")])
 
     def _build_model_keyboard(self, models: list, page: int, provider: Optional[dict] = None) -> tuple:
-        """Build paginated model buttons. Returns (keyboard, page_info_text). Window plans: each button
-        carries the plan word (``model-b · Large``) from the provider row; other accounts are unchanged."""
-        from hermes_cli.model_picker_usage import picker_row_suffix
+        """Build paginated model buttons. Returns (keyboard, page_info_text)."""
         page_models, page_meta = self._format_choice_page(models, page, self._MODEL_PAGE_SIZE)
-        labels = model_button_labels([str(m) for m in models], lambda m: picker_row_suffix(provider, m))
+        labels = model_button_labels([str(m) for m in models])
         buttons = [InlineKeyboardButton(labels[page_meta["start"] + i], callback_data=f"mm:{page_meta['start'] + i}") for i in range(len(page_models))]
         return self._paged_keyboard(buttons, page_meta, "mg", self._picker_back_cancel_row(), columns=1)
 
@@ -4176,12 +4174,10 @@ class TelegramAdapter(TelegramContactMixin, TelegramHeldInboundMixin, TelegramRe
         total = provider.get("total_models", len(models)) if provider else len(models)
         shown = len(models)
         extra = f"\n*{t('platform.telegram.picker.more_available', count=str(total - shown))}*" if total > shown else ""
-        # Window plans: the limit line under the provider (absent for every other account).
-        plan_line = f"\n⚠️ {provider['plan_line']}" if provider and provider.get("plan_line") else ""
         await self._picker_edit(
             query,
             f"⚙ *{t('platform.telegram.picker.title')}*\n\n"
-            f"{t('platform.telegram.picker.provider_label', provider=f'*{pname}*')}{page_info}{plan_line}\n"
+            f"{t('platform.telegram.picker.provider_label', provider=f'*{pname}*')}{page_info}\n"
             f"{t('platform.telegram.picker.select_model')}{extra}",
             keyboard)
 

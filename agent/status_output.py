@@ -136,7 +136,7 @@ class StatusOutputMixin:
             return
         import zlib
 
-        from agent.credits_tracker import AgentNotice
+        from agent.agent_notice import AgentNotice
 
         key = f"startup-warning.{zlib.crc32(message.encode()):08x}"
         level = "success" if message.startswith("✓") else "warn"  # a recovered provider is good news

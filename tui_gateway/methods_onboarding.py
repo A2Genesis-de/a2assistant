@@ -29,51 +29,41 @@ def _(rid, params: dict) -> dict:
 def _run_state(*, assume_fresh: bool = False) -> dict:
     """``run``: the root config says so, else this OS user never used Hermes (or the unpackaged
     desktop's ``--fresh-install`` says to assume that). ``eligible``: this is the desktop's local
-    backend and something can carry the first chat (the welcome trial or a configured provider);
-    remote backends answer at once and run onboarding only from Settings. On the local backend the
-    answer comes from the boot computation (``onboarding_due``); ``--fresh-install`` asks live."""
+    backend and a configured provider can carry the first chat; remote backends answer at once and
+    run onboarding only from Settings. On the local backend the answer comes from the boot computation
+    (``onboarding_due``); ``--fresh-install`` asks live."""
     from hermes_cli import onboarding_due
-    from hermes_cli.anon_auth import on_local_desktop_backend
     from hermes_cli.onboarding_run import should_run
+    from hermes_cli.process_identity import serves_local_desktop_now
 
-    if not on_local_desktop_backend():
+    if not serves_local_desktop_now():
         return {"run": should_run(assume_fresh=assume_fresh), "eligible": False, **_active_run()}
     due = _due_now(assume_fresh=True) if assume_fresh else onboarding_due.read(_due_now, stamp=_due_stamp)
     return {**due, **_active_run()}
 
 
 def _due_now(*, assume_fresh: bool = False) -> dict[str, bool]:
-    from hermes_cli.onboarding_run import should_run
-    from hermes_cli.welcome_trial import inference_available
+    from hermes_cli.onboarding_run import provider_configured, should_run
 
     # Read in the default profile, where onboarding runs, not the launch profile.
     home = _profile_home("default")
     with _session_profile_runtime_scope({"profile_home": str(home) if home else None}):
-        eligible = inference_available(assume_fresh=assume_fresh)
+        eligible = provider_configured()
     return {"run": should_run(assume_fresh=assume_fresh), "eligible": eligible}
 
 
 def _due_stamp() -> tuple:
     """The files the due answer reads, by their config-cache signature: the root config
     (``onboarding.run``), the default profile's config, ``.env`` and ``auth.json`` (what carries a
-    first chat), the shared Nous store (another profile's sign-in or connector guest) and the managed
-    layer's ``config.yaml`` and ``.env`` (an admin's onboarding or provider policy)."""
+    first chat) and the managed layer's ``config.yaml`` and ``.env`` (an admin's onboarding or provider
+    policy)."""
     from hermes_cli import managed_scope
     from hermes_constants import get_default_hermes_root
     home = Path(_profile_home("default") or get_default_hermes_root())
     managed = managed_scope.get_managed_dir()
     paths = (get_default_hermes_root() / "config.yaml", home / "config.yaml", home / ".env", home / "auth.json",
-             *_shared_nous_store(), *((managed / "config.yaml", managed / ".env") if managed else ()))
+             *((managed / "config.yaml", managed / ".env") if managed else ()))
     return tuple(_version(path) for path in paths)
-
-
-def _shared_nous_store() -> tuple[Path, ...]:
-    """The shared Nous store as ``_read_shared_nous_state`` finds it: none when the test seat belt trips."""
-    from hermes_cli.auth_nous import _nous_shared_store_path
-    try:
-        return (_nous_shared_store_path(),)
-    except RuntimeError:
-        return ()
 
 
 def _version(path):
@@ -85,45 +75,46 @@ def _version(path):
 
 
 def start_due_boot() -> None:
-    """Work out the local Desktop's due answer off the RPC path, after the setup bootstrap has recorded
-    a fresh install (``begin_local_desktop_boot``)."""
+    """Work out the local Desktop's due answer off the RPC path, after a fresh install was recorded
+    (``begin_local_desktop_boot``)."""
     from agent.memory_provider import spawn_context_thread
-    from hermes_cli import free_tier_bootstrap, onboarding_due
+    from hermes_cli import onboarding_due
 
     finish = onboarding_due.begin_boot(_due_stamp)
-
-    def compute() -> dict[str, bool]:
-        free_tier_bootstrap.wait_for_record()
-        return _due_now()
-
     # finish() marks the boot done even when compute raises, so no reader waits on a dead thread.
-    spawn_context_thread(finish, name="onboarding-due", args=(compute,)).start()
+    spawn_context_thread(finish, name="onboarding-due", args=(_due_now,)).start()
 
 
 _local_desktop_boot_lock = threading.Lock()
 _local_desktop_boot_started = False
+_local_desktop_boot_settled = False
 
 
 def begin_local_desktop_boot() -> None:
-    """An accepted local Desktop connection to this process: record a fresh install, settle an
-    interrupted claim, the setup record and the due answer, once, as work for that Desktop. This
-    process outlives app launches, so a later connection retries the install steps a failed boot
-    left unsettled."""
-    global _local_desktop_boot_started
-    from agent.memory_provider import spawn_context_thread
-    from hermes_cli import free_tier_bootstrap
+    """An accepted local Desktop connection to this process: record a fresh install and work out the
+    due answer, once, as work for that Desktop. This process outlives app launches, so a later
+    connection retries the install record a failed boot left unwritten."""
+    global _local_desktop_boot_started, _local_desktop_boot_settled
+    from hermes_cli.onboarding_run import latch_first_install
     from hermes_cli.process_identity import serving_local_desktop
     from tui_gateway.launch_profile_policy import launch_profile_scope_if_multiplexed
 
     with _local_desktop_boot_lock:
         first, _local_desktop_boot_started = not _local_desktop_boot_started, True
-    # The record and the latch are the launch profile's; the connecting profile may be another one.
-    with launch_profile_scope_if_multiplexed(), serving_local_desktop(True):  # threads copy this context
-        if not first:
-            spawn_context_thread(free_tier_bootstrap.resettle_after_failed_boot, name="free-tier-resettle").start()
+        if not first and _local_desktop_boot_settled:
             return
-        free_tier_bootstrap.start_background_bootstrap()
-        start_due_boot()
+    # The latch is the launch profile's; the connecting profile may be another one.
+    with launch_profile_scope_if_multiplexed(), serving_local_desktop(True):  # threads copy this context
+        try:
+            latch_first_install()
+            settled = True
+        except Exception:
+            settled = False
+            logger.warning("onboarding: could not record the first-install decision", exc_info=True)
+        with _local_desktop_boot_lock:
+            _local_desktop_boot_settled = settled
+        if first:
+            start_due_boot()
 
 
 # ── first-run onboarding: one chat in the default profile, driven by setup_beat ───────────────
@@ -143,26 +134,21 @@ def _active_run() -> dict:
 
 
 class _NoModelForTheRun(Exception):
-    """The claim was blocked and nothing else can carry the run's first chat."""
+    """No provider can carry the run's first chat."""
 
 
-def _claim_before_run(scope: dict, *, assume_fresh: bool):
-    """Claim the welcome trial with ``onboarding.run: true`` already on disk, so a crash after the claim
-    makes this machine read as used still opens onboarding next launch. The run's chat comes after:
-    a refused claim (error 5079) leaves no guest and no chat, and the install still due. A blocked claim
-    (another install took the trial since the due check) with no trial or provider to run on is error
-    5080, with no chat either: the desktop lands on provider setup and sign-in, not a chat that fails."""
-    from hermes_cli import anon_auth
-    from hermes_cli.onboarding_run import set_run
-    from hermes_cli.welcome_trial import claim_desktop_free_tier, provider_configured
-    if not anon_auth.on_local_desktop_backend():  # gateway/session_onboarding.py::_claim_before_run
+def _prepare_run(scope: dict) -> None:
+    """Write ``onboarding.run: true`` before the run's chat exists, so a crash still opens onboarding
+    next launch. With no provider to run on it is error 5080 and no chat: the desktop lands on
+    provider setup, not a chat that fails."""
+    from hermes_cli.onboarding_run import provider_configured, set_run
+    from hermes_cli.process_identity import serves_local_desktop_now
+    if not serves_local_desktop_now():
         raise _NoModelForTheRun("First-run onboarding starts only in the Desktop app on this machine.")
     set_run(True)
     with _session_profile_runtime_scope(scope):
-        claimed = claim_desktop_free_tier(assume_fresh=assume_fresh)
-        if claimed is None and not (anon_auth.free_inference_active() or provider_configured()):
-            raise _NoModelForTheRun("The welcome trial is not available here, and no provider is set up.")
-    return claimed
+        if not provider_configured():
+            raise _NoModelForTheRun("No provider is set up.")
 
 
 @method("onboarding.start")
@@ -171,14 +157,11 @@ def _(rid, params: dict) -> dict:
     from agent.onboarding_flow import End, Facts
     from agent.onboarding_record import advance, load, open_session_ids, start
     from agent.onboarding_text import CHAT_TITLE, opening_prompt
-    from hermes_cli.auth_constants import AuthError
-    from hermes_cli import free_tier_bootstrap
     # The app's once-per-launch start: closing the app mid-run does not count, so that run's chat goes
     # and the run starts over. A second window or a reconnect sends no flag and gets the run back.
     fresh_launch = bool(params.get("fresh_launch"))
     # Held through the opening submit: two windows pressing start at once get one chat and one opening.
     with _onboarding_start_lock:
-        claimed = None
         try:
             with _profile_db(_ONBOARDING_PROFILE, writer=True) as db:
                 if db is None:
@@ -192,8 +175,8 @@ def _(rid, params: dict) -> dict:
                     scope = {"profile_home": str(home) if home else None}
                     with _session_profile_runtime_scope(scope, hydrate_secrets=False):
                         facts = read_facts(facts_source=params.get("facts_source") or "local", locale=params.get("locale"))
-                    if not params.get("rerun"):  # a rerun never claims: it runs on the configured model
-                        claimed = _claim_before_run(scope, assume_fresh=bool(params.get("assume_fresh")))
+                    if not params.get("rerun"):
+                        _prepare_run(scope)
                     stored = db.create_session(new_session_id(), "desktop")
                     # The record exists before the agent is built, so the build folds the onboarding toolset in.
                     start(db, stored, facts)
@@ -213,20 +196,12 @@ def _(rid, params: dict) -> dict:
                     db.set_session_title(stored, db.get_next_title_in_lineage(CHAT_TITLE))
                 # A chat with no messages never got its opening (a restart between start and the first turn).
                 opening = None if (db.get_session(stored) or {}).get("message_count") else opening_prompt(facts)
-        except AuthError as e:
-            # The trial claim failed (portal down, rate limited): no guest and no chat, so the next
-            # launch is still a first install and tries again.
-            logger.info("onboarding.start: welcome trial not claimed: %s", e)
-            return _err(rid, 5079, str(e))
         except _NoModelForTheRun as e:
             logger.info("onboarding.start: no chat opened: %s", e)
             return _err(rid, 5080, str(e))
         except Exception as e:
             logger.exception("onboarding.start failed")
             return _err(rid, 5078, str(e))
-        if claimed is not None:
-            # Outside the default-profile scope: setup.status serves the launch profile's record.
-            free_tier_bootstrap.refresh_record()
         _withdraw_setup_cards([] if fresh_launch else replaced)
         resumed = _methods["session.resume"](rid, {**_ONBOARDING_PROFILE, "session_id": stored, "source": "desktop"})
         if "error" in resumed:

@@ -4,7 +4,7 @@ import functools
 import logging
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
-from tools.connectors.gateway.bridge import NOT_SET_UP, NOT_SET_UP_MESSAGE, SIGN_IN_EXPIRED, UNREACHABLE
+from tools.connectors.gateway.bridge import NOT_SET_UP, NOT_SET_UP_MESSAGE, UNREACHABLE
 from tools.connectors.gateway.names import format_connector_name, is_connector_name, vendor_slug_candidates
 from tools.tool_search_catalog import CatalogEntry, _fn, _tokenize
 
@@ -12,26 +12,22 @@ logger = logging.getLogger(__name__)
 
 
 def connections_in_scope(tool_defs: Iterable[dict[str, Any]]) -> bool:
-    return any(_fn(td).get("name") == "manage_connections" for td in tool_defs)
+    from tools.connectors.gateway.config import connectors_available
+
+    return connectors_available() and any(_fn(td).get("name") == "manage_connections" for td in tool_defs)
 
 
 def connectors_unavailable(failure: str, *, verb: str,
                            names: Optional[list[str]] = None) -> dict[str, Any]:
     if failure == NOT_SET_UP:
-        from tools.connectors.gateway.config import guest_setup_failure
-
         hint = (f"{NOT_SET_UP_MESSAGE} Hosted apps (Gmail, Calendar, Notion and more) are then searchable. "
                 "If the request is better served by the tools above, use those instead.")
-        if last_failure := guest_setup_failure():
-            hint += f" The last attempt failed, so tell the user before retrying: {last_failure}"
         field: dict[str, Any] = {"status": NOT_SET_UP, "hint": hint}
         if names:
             field["names"] = names
         return field
     hint = (f"Hosted connector tools could not be {verb} right now. "
             "Do not conclude the app is missing.")
-    if failure == SIGN_IN_EXPIRED:
-        hint += " The user must sign in to Nous again."
     field = {"status": "unavailable", "reason": failure, "hint": hint}
     if names:
         field["names"] = names

@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-"""Connection lifecycle tool for managed gateway accounts and local MCP servers.
-
-Disconnecting accounts remains a portal-only user decision.
-"""
+"""Connection lifecycle tool for local MCP servers (hosted gateway accounts stay behind
+``gateway.config.connectors_available``, which is always off in A2Assistant)."""
 
 from typing import Any, Callable, Dict, Optional
 
@@ -51,7 +49,10 @@ def manage_connections(
 MANAGE_CONNECTIONS_SCHEMA = {
     "name": "manage_connections",
     "description": (
-        "Connect the user to apps. Two kinds: a hosted connector account (Gmail, Notion, ...) "
+        "Connect the user to local MCP servers from the bundled catalog. Pass every target as "
+        "{\"name\": \"<server>\", \"mcp\": true}. Hosted connector accounts are not "
+        "available in A2Assistant; hosted actions answer that connectors are unavailable. "
+        "Two kinds exist in the schema: a hosted connector account (Gmail, Notion, ...) "
         "served through the tool gateway, and a local MCP server from the bundled catalog. "
         "Targets go in 'connectors': a bare slug or {\"name\": \"gmail\"} is a hosted connector "
         "account; {\"name\": \"linear\", \"mcp\": true} is a local MCP server. Many names exist on "
@@ -85,7 +86,7 @@ MANAGE_CONNECTIONS_SCHEMA = {
         "callable at once through tool_describe/tool_call. Where no card exists an MCP target runs at once and the result says what "
         "happened, with a link for the user to open when one is needed. This tool can NOT "
         "disconnect, delete, or revoke an account — that is deliberately user-only. When asked, say so and direct the user to the "
-        "Nous Portal (their org's Connectors page) or the desktop app."
+        "desktop app."
     ),
     "parameters": {
         "type": "object",
@@ -154,16 +155,10 @@ registry.register(
     name="manage_connections",
     toolset="connections",
     schema=MANAGE_CONNECTIONS_SCHEMA,
-    # The portal gate decides schema presence: an account the portal has not enabled for
-    # connectors never sees the tool, so the model cannot call it and read the gateway's
-    # 404 back to them. The handler runs the same gate so the RPC path (methods_connectors) and
-    # a cached schema agree. Read as a module attribute so tests patch
-    # ``gateway.config.connectors_available`` at one seam.
     handler=lambda args, **kw: manage_connections(
         args, session_id=kw.get("session_id"), tool_call_id=kw.get("tool_call_id"),
         connectors_available=gateway_config.connectors_available,
     ),
-    check_fn=lambda: gateway_config.connectors_available(),
     emoji="🔗",
 )
 

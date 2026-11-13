@@ -66,24 +66,6 @@ def test_content_filter_stream_fallback_names_reason_and_logs(caplog):
     assert _switch_lines(caplog) == ["Content filter terminated the stream — switched to fallback"]
 
 
-def test_nous_rate_guard_fallback_logs(monkeypatch, caplog):
-    from agent import nous_rate_guard
-    from agent.turn_api_call import nous_rate_limit_guard
-
-    monkeypatch.setattr(nous_rate_guard, "nous_rate_limit_remaining", lambda **kw: 600)
-    monkeypatch.setattr("hermes_cli.anon_auth.is_anonymous_agent", lambda agent: False)
-    monkeypatch.setattr("hermes_cli.anon_auth.apply_model_switch", lambda agent: None)
-    monkeypatch.setattr("agent.conversation_loop._arm_fallback_restart", lambda *a: "sys")
-    agent = _agent(switches=True)
-    with caplog.at_level(logging.WARNING, logger="agent.conversation_loop"):
-        verdict = nous_rate_limit_guard(
-            agent, _retry=TurnRetryState(), api_messages=[], messages=[], conversation_history=[],
-            active_system_prompt="system", retry_count=0, compression_attempts=0, api_call_count=0,
-        )
-    assert verdict.action == "break"
-    assert len(_switch_lines(caplog)) == 1 and _switch_lines(caplog)[0].startswith("Nous rate limit recorded")
-
-
 def test_codex_app_server_fallback_logs_its_trigger(caplog):
     from agent.turn_recovery import activate_codex_app_server_fallback
 

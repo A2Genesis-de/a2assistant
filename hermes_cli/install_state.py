@@ -1,12 +1,10 @@
 """Has this OS user already used Hermes on this computer?
 
-The desktop's welcome trial goes only to a first install, once per OS user, so ``onboarding.start``
-asks this before it claims one. The answer is about the OS user, not the active profile: it looks at
+First-run onboarding opens only for a first install, once per OS user. The answer is about the OS user, not the active profile: it looks at
 every Hermes root the machine names (default roots, channel and package roots, the roots gateway
 services and the ``hermes`` launcher point at) and at a marker file no Hermes setting can move.
 
-This is product gating, not security: the inference API's limits stop abuse. So it reads only small
-known files, never scans the disk, never writes into a Hermes root, and treats doubt as "used".
+This is product gating, not security. So it reads only small known files, never scans the disk, never writes into a Hermes root, and treats doubt as "used".
 """
 
 from __future__ import annotations
@@ -18,7 +16,6 @@ import os
 import re
 import sqlite3
 import sys
-import threading
 from collections.abc import Callable, Iterable, Iterator
 from dataclasses import dataclass
 from functools import cache, cached_property
@@ -32,12 +29,12 @@ _MAX_FILE_BYTES = 1 << 20
 class Evidence(enum.Enum):
     """Why the machine counts as used. For logs and tests; never shown to users."""
 
-    MACHINE_MARKER = "machine-marker"      # an earlier probe or trial claim on this machine
+    MACHINE_MARKER = "machine-marker"      # an earlier probe on this machine
     ONBOARDING_DONE = "onboarding-done"    # a root's config has ``onboarding.run: false``
     NAMED_PROFILE = "named-profile"        # a live profile someone created
     PROVIDER_CONFIG = "provider-config"    # config.yaml picks a provider other than auto
     PROVIDER_KEY = "provider-key"          # .env holds a provider, tool, messaging or skill key
-    PROVIDER_LOGIN = "provider-login"      # auth.json / nous_auth.json holds a login or a guest
+    PROVIDER_LOGIN = "provider-login"      # auth.json holds a login
     MESSAGES = "messages"                  # state.db holds a message
     UNREADABLE = "unreadable"              # a root we could not, or must not, read
 
@@ -96,7 +93,7 @@ def probe() -> InstallState:
         return InstallState((Finding(Evidence.MACHINE_MARKER, marker),))
     for root in candidate_roots(places):
         if finding := root_evidence(root, places):
-            if finding.evidence is not Evidence.UNREADABLE:  # doubt blocks the trial, never marks
+            if finding.evidence is not Evidence.UNREADABLE:  # doubt counts as used, never marks
                 _write_marker({}, answer_moved=False)  # this probe is the answer; nothing to recompute
             return InstallState((finding,))
     return InstallState(())
@@ -107,43 +104,8 @@ def existing_install() -> bool:
 
 
 def mark_machine_used() -> None:
-    """Record that this OS user has a used install, or just claimed the trial. Atomic, idempotent.
-    Overwrites a reservation (:func:`reserve_trial`): a claim consumes it."""
+    """Record that this OS user has a used install. Atomic, idempotent."""
     _write_marker({})
-
-
-_TRIAL_RESERVED = {"trial": "reserved"}
-# Covers a claim's checks, its mint (bounded by its own auth lock and HTTP timeouts) and the marker write.
-CLAIM_LOCK_TIMEOUT_SECONDS = 30.0
-_claim_lock_holder = threading.local()
-
-
-@contextlib.contextmanager
-def claim_lock() -> Iterator[None]:
-    """One welcome-trial claim at a time for this OS user, whichever Hermes data root it runs from
-    (stable and canary started together hold different auth locks). Beside the marker it guards, and
-    taken before any auth lock."""
-    places = machine_places()
-    if not places.markers:
-        yield
-        return
-    from hermes_cli.auth import _file_lock
-
-    lock_path = places.markers[0].with_name(places.markers[0].name + ".lock")
-    with _file_lock(lock_path, _claim_lock_holder, CLAIM_LOCK_TIMEOUT_SECONDS,
-                    f"Timed out waiting for the welcome-trial claim lock ({lock_path})"):
-        yield
-
-
-def reserve_trial() -> None:
-    """The first desktop boot found a fresh install: keep the trial for it, so a later use (a chat
-    before onboarding ran, a key added) does not take it away. The marker also makes the probe read
-    "used" from now on; :func:`trial_reserved` is what the claim checks instead."""
-    _write_marker(_TRIAL_RESERVED)
-
-
-def trial_reserved() -> bool:
-    return any(_read_marker(marker) == _TRIAL_RESERVED for marker in machine_places().markers)
 
 
 def _write_marker(content: dict[str, str], *, answer_moved: bool = True) -> None:
@@ -354,9 +316,7 @@ class _Root:
 
     @cached_property
     def auth_stores(self) -> tuple[dict[str, Any], ...]:
-        # The shared-auth override names the directory itself, so its file sits at the top.
-        names = ("auth.json", "shared/nous_auth.json", "nous_auth.json")
-        return tuple(_read_mapping(self.file(name), json.loads) for name in names)
+        return (_read_mapping(self.file("auth.json"), json.loads),)
 
 
 def _unprotected(path: Path, protected: tuple[Path, ...]) -> Path:
@@ -392,8 +352,6 @@ def _provider_config(home: _Root) -> bool:
     return isinstance(provider, str) and provider.strip() not in ("", "auto")
 
 
-# A deployment secret, not something a user entered.
-_IGNORED_ENV_KEYS = frozenset({"HERMES_ANON_API_SECRET"})
 _USER_ENV_CATEGORIES = frozenset({"provider", "tool", "messaging", "skill"})
 
 
@@ -406,21 +364,17 @@ def _provider_key(home: _Root) -> bool:
     if not path.is_file():
         return False
     _read_text(path)  # too large or unreadable raises, so doubt counts as used; the tokenizer swallows both
-    return any(value and key not in _IGNORED_ENV_KEYS
-               and (OPTIONAL_ENV_VARS.get(key) or {}).get("category") in _USER_ENV_CATEGORIES
+    return any(value and (OPTIONAL_ENV_VARS.get(key) or {}).get("category") in _USER_ENV_CATEGORIES
                for key, value in load_env_file(path).items())
 
 
 def _provider_login(home: _Root) -> bool:
-    """A login, an active provider or a guest (only a connector action or a trial claim makes one),
-    or a credential the user added by hand. Pool rows Hermes seeds on its own (shell env keys, other
+    """A login, an active provider, or a credential the user added by hand. Pool rows Hermes seeds on its own (shell env keys, other
     tools' CLI logins) prove nothing."""
     for store in home.auth_stores:
         providers = store.get("providers")
         if store.get("active_provider") or (isinstance(providers, dict) and any(providers.values())):
             return True
-        if store.get("auth_method") or store.get("anon_token") or store.get("refresh_token"):
-            return True  # nous_auth.json holds one provider state at its top level
         pool = store.get("credential_pool")
         rows = (row for rows in (pool.values() if isinstance(pool, dict) else ()) if isinstance(rows, list)
                 for row in rows if isinstance(row, dict))
@@ -445,7 +399,7 @@ def _messages(home: _Root) -> bool:
             return conn.execute("SELECT 1 FROM messages LIMIT 1").fetchone() is not None
     except sqlite3.OperationalError as exc:
         # Still locked after sqlite's own retries: a first boot is creating or healing this database
-        # right now. A lock is not a message, and reading it as "unreadable" would cost a new user the trial.
+        # right now. A lock is not a message, and reading it as "unreadable" would cost a new user first-run onboarding.
         if getattr(exc, "sqlite_errorname", "") in _DB_BUSY_ERRORS:
             return False
         raise

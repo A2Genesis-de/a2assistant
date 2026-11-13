@@ -99,7 +99,7 @@ class TestGatewayConnectionErrorReply:
 
     def test_auth_and_rate_limit_preserved(self):
         auth_reply = _gateway_provider_error_reply("provider authentication failed")
-        assert "sign-in" in auth_reply.lower() and "/login" in auth_reply
+        assert "sign-in" in auth_reply.lower() and "/model" in auth_reply
         assert "rate-limiting" in _gateway_provider_error_reply(
             "rate limited after 3 retries"
         ).lower()
@@ -111,7 +111,7 @@ class TestGatewayConnectionErrorReply:
         from gateway.run import _PROVIDER_ERROR_REPLIES
         replies = [t(reply_key) for _, reply_key in _PROVIDER_ERROR_REPLIES] + [_gateway_provider_error_reply("zzz")]
         for reply in replies:
-            assert any(cmd in reply for cmd in ("/login", "/retry", "/model")), reply
+            assert any(cmd in reply for cmd in ("/retry", "/model")), reply
             assert "provider" not in reply.lower(), reply
 
 
@@ -176,7 +176,7 @@ class TestQuotaExhaustedIsNotAnAuthFailure:
         reply = _gateway_provider_error_reply(
             "⚠️ Provider authentication failed: Codex provider quota exhausted (429); "
             "retry after 116168s. Credentials are still valid.")
-        assert "/login" not in reply and "resets in ~33h" in reply
+        assert "sign-in" not in reply.lower() and "resets in ~33h" in reply
         body_reply = _gateway_provider_error_reply(
             "API call failed after 3 retries: Error code: 429 - "
             "{'error': {'type': 'usage_limit_reached', 'resets_in_seconds': 30995}}")
@@ -185,9 +185,9 @@ class TestQuotaExhaustedIsNotAnAuthFailure:
         # A bare 401 inside a timestamp is not a sign-in failure; every real 401 envelope still is,
         # including the ``HTTP 401: Unauthorized`` shape _summarize_api_error emits (control).
         assert "rate-limiting" in _gateway_provider_error_reply("API call failed at 05:14:15,401 status 429")
-        assert "/login" not in _gateway_provider_error_reply("request 05:14:15,401 failed")
+        assert "sign-in" not in _gateway_provider_error_reply("request 05:14:15,401 failed").lower()
         for text in ("HTTP 401: Unauthorized", "returned 401.", "HTTP 401, re-authenticate", "Error code: 401 - token rejected"):
-            assert "/login" in _gateway_provider_error_reply(text), text
+            assert "/model" in _gateway_provider_error_reply(text), text
 
     def test_turn_runner_resolution_quota_failure_names_reset_window_not_login(self, monkeypatch):
         """Production entry: TurnRunner.run_sync with credential resolution raising the quota
@@ -216,13 +216,13 @@ class TestQuotaExhaustedIsNotAnAuthFailure:
                           session_key="slack:C1", user_config={}, message="Hi")
         result = TurnRunner(runner, ctx).run_sync()
         reply = result["final_response"]
-        assert "/login" not in reply and "resets in ~33h" in reply and result["api_calls"] == 0
+        assert "sign-in" not in reply.lower() and "resets in ~33h" in reply and result["api_calls"] == 0
 
     def test_turn_runner_resolution_failure_is_a_failed_turn_with_local_detail(self, monkeypatch):
         """A pre-agent resolution failure is a FAILED result (one-shot exits non-zero, the turn
         is closed in the transcript), and a LOCAL session sees the resolver's own diagnosis —
         ``hermes chat -q`` on a bare ``custom`` must print the no-credentials error and exit
-        non-zero, not ``rc 0`` with a /login hint (C11 bare_custom_without_base_url_fails_fast)."""
+        non-zero, not ``rc 0`` with a sign-in hint (C11 bare_custom_without_base_url_fails_fast)."""
         from types import SimpleNamespace
         import gateway.run as gateway_run
         from gateway.config import Platform
@@ -246,14 +246,14 @@ class TestQuotaExhaustedIsNotAnAuthFailure:
             assert result["failed"] is True and result["completed"] is False and result["api_calls"] == 0
             assert result["failure_reason"] and result["error"] == detail
             if platform == Platform.LOCAL:
-                assert detail in result["final_response"] and "/login" not in result["final_response"]
+                assert detail in result["final_response"] and "sign-in" not in result["final_response"].lower()
             else:
-                assert detail not in result["final_response"] and "/login" in result["final_response"]
+                assert detail not in result["final_response"] and "sign-in" in result["final_response"].lower()
 
 
 def test_turn_runner_host_side_resolution_failure_does_not_send_user_to_login(monkeypatch):
     """A local OSError under resolution (the CA bundle deleted by an install-environment rotation)
-    is not a credential verdict: messaging users get the gateway-log reply, never /login (#140344).
+    is not a credential verdict: messaging users get the gateway-log reply, never a sign-in hint (#140344).
     An AuthError in the chain keeps the sign-in reply, also when it wraps a network OSError."""
     from types import SimpleNamespace
     import gateway.run as gateway_run
@@ -295,9 +295,9 @@ def test_turn_runner_host_side_resolution_failure_does_not_send_user_to_login(mo
         result = TurnRunner(runner, ctx).run_sync()
         assert result["failed"] is True and result["api_calls"] == 0
         replies[label] = (result["final_response"], result["failure_reason"], result["failure_retryable"])
-    assert "/login" not in replies["oserror"][0] and "hermes logs" in replies["oserror"][0]
+    assert "sign-in" not in replies["oserror"][0].lower() and "hermes logs" in replies["oserror"][0]
     assert replies["oserror"][1:] == ("host_error", False)
     from agent.error_surface import LAYER_GATEWAY, _REASON_TO_LAYER
     assert _REASON_TO_LAYER["host_error"] == LAYER_GATEWAY  # no "Switch provider" for a host fault
     for label in ("auth", "mixed"):  # an AuthError anywhere in the chain is a credential verdict
-        assert "/login" in replies[label][0] and replies[label][1] == "auth_permanent", label
+        assert "sign-in" in replies[label][0].lower() and replies[label][1] == "auth_permanent", label

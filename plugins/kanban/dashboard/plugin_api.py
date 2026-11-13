@@ -1099,7 +1099,7 @@ def _run_estimate(title: str, body: Optional[str], *, task_id: Optional[str]) ->
     # Headless like specify/decompose's _call_aux: without a bound affinity scope the relay-affinity
     # headers are omitted and the OpenCode Go relay answers 400 MissingSessionID (#112043). The
     # create dialog has no task yet, so it shares one stable key.
-    from agent.portal_tags import get_affinity_scope, reset_affinity_scope, set_affinity_scope
+    from agent.conversation_scope import get_affinity_scope, reset_affinity_scope, set_affinity_scope
     affinity_token = None if get_affinity_scope() else set_affinity_scope(f"kanban:{task_id or 'estimate'}")
     try:
         resp = call_llm(

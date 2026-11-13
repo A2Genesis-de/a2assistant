@@ -40,14 +40,26 @@ def _explicit_run() -> bool | None:
 
 def latch_first_install() -> bool:
     """The desktop backend's first boot on a fresh install records the decision: ``onboarding.run:
-    true`` and the trial reserved. A launch that misses the run (a late answer, the app closed, the
-    user chatting first) then stays due until a run ends. True when it wrote them."""
-    from hermes_cli.install_state import probe, reserve_trial
+    true`` and the machine marked used. A launch that misses the run (a late answer, the app closed,
+    the user chatting first) then stays due until a run ends. True when it wrote them."""
+    from hermes_cli.install_state import mark_machine_used, probe
 
     if _explicit_run() is not None or not probe().fresh:
         return False
-    set_run(True)  # first: a crash before the reservation still leaves a fresh probe for the claim
-    reserve_trial()
+    set_run(True)
+    mark_machine_used()
+    return True
+
+
+def provider_configured() -> bool:
+    """Something carries inference: a key, a config pin, a sign-in, a host credential."""
+    from hermes_cli.auth import resolve_provider
+    from hermes_cli.auth_constants import AuthError
+
+    try:
+        resolve_provider("auto")
+    except AuthError:
+        return False
     return True
 
 

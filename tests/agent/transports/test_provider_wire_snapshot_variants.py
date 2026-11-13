@@ -117,7 +117,6 @@ AUX_CELLS: list[tuple[str, str, str, str | None, dict[str, Any]]] = [
     ("aux:openrouter", "openrouter", "anthropic/claude-opus-5.5", "https://openrouter.ai/api/v1", {}),
     # OpenRouter forwards max_tokens; an OpenAI-family model name turns it into max_completion_tokens.
     ("aux:openrouter-gpt-5.5", "openrouter", "openai/gpt-5.5", "https://openrouter.ai/api/v1", {}),
-    ("aux:nous", "nous", "anthropic/claude-opus-5.5", "https://inference-api.nousresearch.com/v1", {}),
     ("aux:kimi-coding", "kimi-coding", "kimi-k2-turbo-preview", "https://api.kimi.com/coding/v1", {}),
     ("aux:zai", "zai", "glm-4.5-flash", "https://api.z.ai/api/paas/v4", {}),
     ("aux:deepseek", "deepseek", "deepseek-flash", "https://api.deepseek.com/v1", {}),

@@ -10,7 +10,6 @@ from __future__ import annotations
 import os
 import re
 from collections import defaultdict
-from typing import Callable
 
 MODEL_LABEL_BUDGET = 44
 _NAMESPACE_DOT = re.compile(r"\.")
@@ -34,23 +33,15 @@ def _strip(model_id: str, prefix: str) -> str:
     return short.split("/")[-1]
 
 
-def _with_suffix(short: str, suffix: str) -> str:
-    return f"{short} · {suffix}" if suffix else short
-
-
-def _room(suffix: str) -> int:
-    return MODEL_LABEL_BUDGET - (len(suffix) + 3 if suffix else 0)
-
-
-def model_button_label(model_id: str, prefix: str, suffix: str = "") -> str:
+def model_button_label(model_id: str, prefix: str) -> str:
     """``model_id`` without the shared namespace; over budget, the middle goes so the
     distinguishing tail (family, version, date) stays visible."""
     short = _strip(model_id, prefix)
-    room = _room(suffix)
+    room = MODEL_LABEL_BUDGET
     if len(short) > room:
         head = max(room // 3, 4)
         short = f"{short[:head]}…{short[-(room - head - 1):]}"
-    return _with_suffix(short, suffix)
+    return short
 
 
 def _around_difference(name: str, others: list[str], room: int) -> str:
@@ -76,7 +67,7 @@ def _clashes(labels: list[str]) -> list[list[int]]:
     return [g for g in groups.values() if len(g) > 1]
 
 
-def model_button_labels(model_ids: list[str], suffix_for: Callable[[str], str]) -> list[str]:
+def model_button_labels(model_ids: list[str]) -> list[str]:
     """Labels for the WHOLE catalog (stable across pages), unique within it: ids whose head/tail
     names collide are re-shortened around the span where they differ, and an ordinal is the last
     resort so two buttons never read the same while selecting different models."""
@@ -84,15 +75,13 @@ def model_button_labels(model_ids: list[str], suffix_for: Callable[[str], str]) 
     # Clashes resolve on full ids: ``org/`` can be all that differs (OpenRouter ``meta-llama/`` vs
     # ``nousresearch/``, Ollama ``hf.co/<org>/``).
     names = list(model_ids)
-    suffixes = [suffix_for(m) for m in model_ids]
-    labels = [model_button_label(m, prefix, s) for m, s in zip(model_ids, suffixes)]
-    # Compare names without the plan word: ``a…tail · Large`` beside ``a…tail`` is still ambiguous.
-    for group in _clashes([model_button_label(m, prefix) for m in model_ids]):
+    labels = [model_button_label(m, prefix) for m in model_ids]
+    for group in _clashes(labels):
         for i in group:
             others = [names[j] for j in group if names[j] != names[i]] or [""]
-            labels[i] = _with_suffix(_around_difference(names[i], others, _room(suffixes[i])), suffixes[i])
+            labels[i] = _around_difference(names[i], others, MODEL_LABEL_BUDGET)
     for group in _clashes(labels):
         for i in group:
             tag = f" #{i + 1}"  # catalog position: unique across groups, stable across pages
-            labels[i] = _with_suffix(_around_difference(names[i], [""], _room(suffixes[i]) - len(tag)) + tag, suffixes[i])
+            labels[i] = _around_difference(names[i], [""], MODEL_LABEL_BUDGET - len(tag)) + tag
     return labels

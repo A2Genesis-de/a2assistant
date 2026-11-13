@@ -1,24 +1,12 @@
 """No test reaches a host off this machine unless it is a ``live`` canary (``tests/conftest.py``).
 
-A test home has no Nous identity, so a hosted connector action used to mint a real guest on
-the production Portal: seconds per test, red when the Portal was slow, and a new production
-guest on every CI run. Every other live host had the same shape: building an agent fetched
-OpenRouter / models.dev / model-catalog metadata, and verdicts followed whatever came back.
+Building an agent used to fetch OpenRouter / models.dev / model-catalog metadata, and verdicts
+followed whatever came back.
 """
 
 import socket
 
 import pytest
-
-
-def test_first_connector_action_in_a_test_home_mints_no_portal_guest():
-    from hermes_cli import anon_auth
-    from tools.connectors.gateway.config import ensure_guest_identity
-
-    failure = ensure_guest_identity()
-
-    assert failure and failure.startswith("Hosted connectors could not be set up.")
-    assert not anon_auth.has_guest()
 
 
 @pytest.mark.parametrize("host", [

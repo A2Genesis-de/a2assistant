@@ -85,7 +85,7 @@ def _send_consented() -> bool:
 
 
 def _conversation_id() -> Optional[str]:
-    from agent.portal_tags import get_conversation_context
+    from agent.conversation_scope import get_conversation_context
     from gateway.session_context import get_session_env
 
     return get_conversation_context() or get_session_env("HERMES_SESSION_ID", "") or None

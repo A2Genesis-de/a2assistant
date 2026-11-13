@@ -14,7 +14,7 @@ from typing import Literal
 from pydantic import Field
 
 from .base import JsonValue, Params, Result
-from .common import McpServerStatus, OpenModel, PlanGauge, ProfileParams, ProjectRef, Usage
+from .common import McpServerStatus, OpenModel, ProfileParams, ProjectRef, Usage
 from .events import SkinPayload
 from .groups_bot_relay import (
     GroupsPeerInviteResult, GroupsPeerRegisterResult, GroupsPeerRevokeResult, RoomParams, RoomTaskReceipt,
@@ -253,7 +253,6 @@ class SessionStats(Result):
     model: str
     provider: str
     fallback_model: str | None = None
-    plan_gauge: PlanGauge | None = None
 
 
 canonical_method("session.stats", params=SessionStatsParams, result=SessionStats,
