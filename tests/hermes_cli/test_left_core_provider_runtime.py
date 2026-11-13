@@ -28,8 +28,8 @@ def _fresh(monkeypatch):
 def installs(monkeypatch):
     calls = []
 
-    def fake_install(identifier, *, force, enable, catalog_name=None, assume_deps_consent=None, **kw):
-        calls.append((catalog_name, assume_deps_consent))
+    def fake_install(identifier, *, force, enable, assume_deps_consent=None, **kw):
+        calls.append((identifier, assume_deps_consent))
         return {"ok": False, "error": "fatal: unable to access the catalog repo"}
     import hermes_cli.plugins_cmd as pc
     monkeypatch.setattr(pc, "dashboard_install_plugin", fake_install)
@@ -195,10 +195,10 @@ def test_doctor_in_a_terminal_front_end_leaves_kept_notices_for_the_next_agent(t
 def installs_ok(monkeypatch):
     calls = []
 
-    def fake_install(identifier, *, force, enable, catalog_name=None, assume_deps_consent=None, **kw):
+    def fake_install(identifier, *, force, enable, assume_deps_consent=None, **kw):
         from hermes_constants import get_hermes_home
-        calls.append(catalog_name)
-        (Path(get_hermes_home()) / "plugins" / catalog_name).mkdir(parents=True)
+        calls.append(identifier)
+        (Path(get_hermes_home()) / "plugins" / identifier).mkdir(parents=True)
         return {"ok": True}
     import hermes_cli.plugins_cmd as pc
     monkeypatch.setattr(pc, "dashboard_install_plugin", fake_install)
@@ -283,7 +283,7 @@ def test_a_provider_installed_during_resolution_resolves_in_that_same_call(tmp_p
     monkeypatch.setenv("COPILOT_GITHUB_TOKEN", "stand-in-token")
     monkeypatch.setattr(providers, "_HOME_LAYERS", {})
 
-    def install(identifier, *, force, enable, catalog_name=None, assume_deps_consent=None, **kw):
+    def install(identifier, *, force, enable, assume_deps_consent=None, **kw):
         plugin = home / "plugins" / "github-copilot"
         plugin.mkdir(parents=True)
         (plugin / "plugin.yaml").write_text("name: github-copilot\nkind: model-provider\n", encoding="utf-8")

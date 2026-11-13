@@ -198,43 +198,16 @@ def test_load_pack_missing_file_errors():
 
 
 # ---------------------------------------------------------------------------
-# Resolution (bare catalog names) — catalog mocked, no network
+# Resolution
 # ---------------------------------------------------------------------------
 
-def _fake_catalog_entry(name):
-    from hermes_cli.plugin_catalog import CatalogCapabilities, PluginCatalogEntry
-    return PluginCatalogEntry(
-        name=name, repo="https://github.com/idx-owner/idx-repo", sha=SHA_B, description="d", maintainer="idx-owner",
-        capabilities=CatalogCapabilities(provides_tools=["tools"]))
-
-
-def test_resolve_pack_plugins_uses_catalog_for_bare_names():
+def test_resolve_pack_plugins_keeps_repo_entries_and_refuses_bare_names():
     pack = parse_pack(_pack_yaml())
-    bare_name = pack.plugins[1].name
-    fake_entry = _fake_catalog_entry(bare_name)
-    with mock.patch(
-        "hermes_cli.plugin_catalog.load_catalog_live",
-        return_value=[fake_entry],
-    ):
-        resolved = resolve_pack_plugins(pack)
+    resolved = resolve_pack_plugins(pack)
 
-    assert resolved[0].identifier == "owner/tts-plugin"  # repo entries skip the catalog
-    assert resolved[1].identifier == "https://github.com/idx-owner/idx-repo"
-    assert resolved[1].index_capabilities == ["tools"]
-
-
-def test_resolve_pack_plugins_carries_catalog_miss_as_error():
-    pack = parse_pack(
-        yaml.safe_dump(
-            {"name": "p", "plugins": [{"name": "ghost", "ref": SHA_A}]}
-        )
-    )
-    with mock.patch(
-        "hermes_cli.plugin_catalog.load_catalog_live", return_value=[]
-    ):
-        resolved = resolve_pack_plugins(pack)
-    assert resolved[0].identifier is None
-    assert "not found" in resolved[0].resolve_error
+    assert resolved[0].identifier == "owner/tts-plugin"
+    assert resolved[1].identifier is None
+    assert "no repo" in resolved[1].resolve_error
 
 
 # ---------------------------------------------------------------------------

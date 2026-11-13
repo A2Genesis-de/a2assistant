@@ -584,7 +584,6 @@ from hermes_cli.setup_terminal import setup_terminal_backend
 from hermes_cli.setup_platforms import setup_gateway
 from hermes_cli.setup_summary import _print_setup_summary
 from hermes_cli.setup_migration import _skip_configured_section
-from hermes_cli.setup_agent_import import offer_agent_import
 from hermes_cli.setup_quick import _run_portal_one_shot, _run_quick_setup
 
 
@@ -734,10 +733,6 @@ def _run_setup_wizard_impl(args):
         print()
         if reconfigure_requested or quick_requested:
             _info("No existing configuration found — running first-time setup.", None)
-        # Before configuration begins. The plugin install and the import write config.yaml from
-        # outside this dict (the import from another process), so reload it.
-        imported_from = offer_agent_import(hermes_home)
-        config = load_config()
         setup_mode = prompt_choice("How would you like to set up A2Assistant?", [label for label, _ in _FIRST_TIME_MODES], 0)
         label, runner = _FIRST_TIME_MODES[setup_mode]
         if runner is not None:

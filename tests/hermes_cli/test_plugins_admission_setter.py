@@ -18,12 +18,12 @@ def test_failed_publication_preserves_selection_and_imports(plugin_world, monkey
 
     world = plugin_world
     origin, sha = world.origin()
-    world.command("install", identifier=origin.as_uri(), ref=sha, no_enable=True, allow_removed=True)
+    world.command("install", identifier=origin.as_uri(), ref=sha, no_enable=True)
     world.command("enable", name="plugin-worker-proof", no_allow_tool_override=True)
     world.imports()
     selected = world.selected()
     origin, sha = world.origin(name="publication-candidate")
-    world.command("install", identifier=origin.as_uri(), ref=sha, no_enable=True, allow_removed=True)
+    world.command("install", identifier=origin.as_uri(), ref=sha, no_enable=True)
     config = world.home / "config.yaml"
     watched = [config, paths.runtime_facts_path()]
     before = {path: path.read_bytes() for path in watched}
@@ -82,10 +82,10 @@ def test_ui_conflict_is_reported_without_changing_selection(plugin_world, surfac
 
     world = plugin_world
     origin, sha = world.origin()
-    world.command("install", identifier=origin.as_uri(), ref=sha, no_enable=True, allow_removed=True)
+    world.command("install", identifier=origin.as_uri(), ref=sha, no_enable=True)
     world.command("enable", name="plugin-worker-proof", no_allow_tool_override=True)
     origin, sha = world.origin(name="conflicting-ui-plugin", pin="2.0")
-    world.command("install", identifier=origin.as_uri(), ref=sha, no_enable=True, allow_removed=True)
+    world.command("install", identifier=origin.as_uri(), ref=sha, no_enable=True)
     watched = [world.home / "config.yaml", paths.runtime_facts_path()]
     before = {path: path.read_bytes() for path in watched}
     if surface == "dashboard":
@@ -105,7 +105,7 @@ def test_core_conflict_names_the_plugin_and_keeps_selection(plugin_world, capsys
     world = plugin_world
     # Core pins plugin-core-dep==1.0; this plugin demands 2.0, so no union can resolve.
     origin, sha = world.origin(name="core-conflict-plugin", dependency="plugin-core-dep", pin="2.0")
-    world.command("install", identifier=origin.as_uri(), ref=sha, no_enable=True, allow_removed=True)
+    world.command("install", identifier=origin.as_uri(), ref=sha, no_enable=True)
     watched = [world.home / "config.yaml", paths.runtime_facts_path()]
     before = {path: path.read_bytes() for path in watched if path.exists()}
     capsys.readouterr()

@@ -14,8 +14,7 @@ What it cannot see in a process boundary it flags:
 * gateway platform adapters (``kind: platform``), model-provider profiles that build their own SDK
   client (``create_client``), and dashboard APIs that stream (the host bridge buffers responses).
 
-``hermes plugins validate`` prints the verdict; ``evals/plugin_isolation/audit_catalog.py`` runs it
-over every catalog entry.
+``hermes plugins validate`` prints the verdict.
 """
 
 from __future__ import annotations

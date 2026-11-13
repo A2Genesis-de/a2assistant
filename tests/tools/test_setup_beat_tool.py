@@ -15,7 +15,7 @@ from hermes_state import SessionDB
 from tools.registry import registry
 
 SID = "onb-session"
-FACTS = Facts(os="macos", arch="arm64", machine_kind="Mac", plugins=("blender",))
+FACTS = Facts(os="macos", arch="arm64", machine_kind="Mac")
 
 
 @pytest.fixture
@@ -30,11 +30,10 @@ def db(tmp_path, monkeypatch):
 
 @pytest.fixture(autouse=True)
 def machine(monkeypatch):
-    """What this machine has connected and installed right now, read when a card closes without its answer."""
-    present = {"connected": ["slack"], "installed": ["blender"]}
+    """What this machine has connected right now, read when a card closes without its answer."""
+    present = {"connected": ["slack"]}
     monkeypatch.setattr("tools.setup_beat_tool._PRESENT", {
-        "connectors": lambda: {"connected": present["connected"]},
-        "plugins": lambda: {"installed": present["installed"]}})
+        "connectors": lambda: {"connected": present["connected"]}})
     # No connector list unless a test gives one: suggestions are not checked.
     monkeypatch.setattr("tools.setup_beat_tool._connector_slugs", lambda: None)
     return present
@@ -100,17 +99,15 @@ def test_a_message_sent_while_a_card_waits_closes_it_unanswered_and_ends_the_tur
     assert record["waiting"] is None and record["beats"]["layout"] == "shown"
 
 
-def test_a_card_closed_by_words_a_value_or_the_deadline_reports_what_is_connected_and_installed(db, desktop):
+def test_a_card_closed_by_words_or_a_value_reports_what_is_connected(db, desktop):
     onboarding_record.start(db, SID, FACTS)
-    timed_out = call(db, desktop, beat="plugins")
     call(db, desktop, beat="connectors", call_id="call_2")  # refused once: the look-around offer
     desktop.replies.append({"wrote_instead": True})
     wrote = call(db, desktop, beat="connectors", call_id="call_3")
     continued = call(db, desktop, beat="connectors", value="continue")
 
-    assert timed_out["installed"] == ["blender"] and wrote["connected"] == ["slack"]
+    assert wrote["connected"] == ["slack"]
     assert continued["connected"] == ["slack"] and "Connected: slack" in continued["reminder"]
-    assert onboarding_record.load(db, SID)["picks"]["installed"] == ["blender"]
 
 
 def test_suggest_pins_connectors_and_value_or_skip_records_without_a_card(db, desktop):
@@ -118,7 +115,7 @@ def test_suggest_pins_connectors_and_value_or_skip_records_without_a_card(db, de
     desktop.replies.append({"answer": {"connected": ["slack"], "newly_connected": ["slack"]}})
     call(db, desktop, beat="connectors", suggest=["slack", "linear"])
     recorded = call(db, desktop, beat="tour", value="skip")
-    skipped = call(db, desktop, beat="plugins", skip=True)
+    skipped = call(db, desktop, beat="theme", skip=True)
 
     assert desktop.shown[0]["card"] == {"suggested": ["slack", "linear"]} and len(desktop.shown) == 1
     assert recorded["recorded"] == "tour" and "No tour" in recorded["reminder"]
@@ -154,7 +151,7 @@ def test_next_to_the_connectors_card_before_the_offer_is_refused_without_a_card(
     assert refused["error"] == "offer first" and "beat" not in refused
     assert "offer once to look around" in refused["reminder"]
     assert [card["beat"] for card in desktop.shown] == ["connectors"]
-    assert shown["answer"] == {"connected": [], "newly_connected": []} and shown["next"] == "plugins"
+    assert shown["answer"] == {"connected": [], "newly_connected": []} and shown["next"] == "tour"
 
 
 def test_skip_setup_during_a_card_returns_skipped_all(db, desktop):

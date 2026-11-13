@@ -527,7 +527,7 @@ def test_install_deps_probe_imports_from_the_synced_environment(tmp_path: Path, 
 
     import pm
     from pm import environments
-    from hermes_cli.plugins_cmd_catalog import cmd_validate
+    from hermes_cli.plugin_validate import cmd_validate
 
     deps = tmp_path / "synced-site-packages"
     deps.mkdir()

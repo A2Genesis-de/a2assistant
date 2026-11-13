@@ -69,7 +69,6 @@ class SetupBeat(WireEnum):
     theme = "theme"
     layout = "layout"
     connectors = "connectors"
-    plugins = "plugins"
     tour = "tour"
     build = "build"
 
@@ -95,19 +94,15 @@ class SetupConnectorsCard(Params):
     suggested: list[str]
 
 
-class SetupPluginsCard(Params):
-    plugins: list[str]
-
-
 class SetupBeatRequestParams(ServerRequestParams):
-    """``card`` is the beat's data (``agent/onboarding_flow.py::BEATS``): name, theme, connectors and
-    plugins have their own shape; layout, tour and build carry ``options``. ``tool_call_id`` is the
+    """``card`` is the beat's data (``agent/onboarding_flow.py::BEATS``): name, theme and connectors
+    have their own shape; layout, tour and build carry ``options``. ``tool_call_id`` is the
     setup_beat call the card belongs to: only that transcript row draws it."""
 
     beat: SetupBeat
     question: str | None = None
     tool_call_id: str | None = None
-    card: SetupNameCard | SetupThemeCard | SetupOptionsCard | SetupConnectorsCard | SetupPluginsCard
+    card: SetupNameCard | SetupThemeCard | SetupOptionsCard | SetupConnectorsCard
 
 
 class SetupNameAnswer(Result):
@@ -128,11 +123,6 @@ class SetupConnectorsAnswer(Result):
     newly_connected: list[str] = Field(default_factory=list)
 
 
-class SetupPluginsAnswer(Result):
-    installed: list[str]
-    label: str | None = None  # what the card showed, for the transcript; never recorded
-
-
 class SetupTourAnswer(Result):
     tour: str
     label: str | None = None
@@ -150,7 +140,7 @@ class SetupBeatResult(Result):
     client sends that message as the next one. A response with none of these, or none within 300 s,
     closes the card unanswered."""
 
-    answer: (SetupNameAnswer | SetupThemeAnswer | SetupLayoutAnswer | SetupConnectorsAnswer | SetupPluginsAnswer
+    answer: (SetupNameAnswer | SetupThemeAnswer | SetupLayoutAnswer | SetupConnectorsAnswer
              | SetupTourAnswer | SetupBuildAnswer | None) = None
     said: str | None = None
     wrote_instead: bool = False

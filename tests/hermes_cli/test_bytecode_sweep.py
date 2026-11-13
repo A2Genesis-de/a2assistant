@@ -53,35 +53,6 @@ def test_sweep_clears_pycache_when_checkout_changed(monkeypatch, tmp_path):
     assert recorded.strip().endswith("b" * 40)
 
 
-
-
-
-
-
-# ---------------------------------------------------------------------------
-# Plugin-update sibling site: __pycache__ under ~/.hermes/plugins/<name>
-# ---------------------------------------------------------------------------
-
-def test_clear_plugin_bytecode_removes_nested_caches(tmp_path):
-    from hermes_cli import plugins_cmd
-
-    plugin = tmp_path / "myplugin"
-    top = plugin / "__pycache__"
-    nested = plugin / "sub" / "__pycache__"
-    top.mkdir(parents=True)
-    nested.mkdir(parents=True)
-    (top / "a.pyc").write_bytes(b"stale")
-    (nested / "b.pyc").write_bytes(b"stale")
-
-    removed = plugins_cmd._clear_plugin_bytecode(plugin)
-
-    assert removed == 2
-    assert not top.exists()
-    assert not nested.exists()
-
-
-
-
 def test_a_package_the_checkout_moved_leaves_no_directory_behind(monkeypatch, tmp_path):
     """Git removes a moved package's files but keeps its directory while ``__pycache__`` is in it;
     the sweep emptied it, and the empty directory imported as a namespace package that hid the

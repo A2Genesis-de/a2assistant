@@ -100,6 +100,6 @@ def test_a_linked_plugin_slot_is_already_installed_not_a_bad_manifest(monkeypatc
     (tmp_path / "elsewhere").mkdir()
     (home / "plugins" / "demo").symlink_to(tmp_path / "elsewhere", target_is_directory=True)
 
-    with pytest.raises(plugins_cmd.PluginOperationError, match="already installed outside the catalog") as exc:
+    with pytest.raises(plugins_cmd.PluginOperationError, match="already installed elsewhere") as exc:
         plugins_cmd._install_plugin_core(repo.as_uri(), force=False)
     assert exc.value.failure_class == "already_installed"

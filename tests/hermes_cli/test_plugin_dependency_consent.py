@@ -31,7 +31,7 @@ def test_install_only_requests_relevant_python_consent(admission_env, monkeypatc
     monkeypatch.setattr(plugins_cmd.sys.stdin, 'isatty', lambda: False)
     config_path = home / 'config.yaml'
     before = config_path.read_bytes()
-    plugins_cmd.cmd_install(source.as_uri(), enable=True, allow_removed=True)
+    plugins_cmd.cmd_install(source.as_uri(), enable=True)
     installed = home / 'plugins' / 'sidecar-plugin'
     assert (installed / 'package.json').is_file()
     assert not (installed / 'node_modules').exists()
@@ -62,7 +62,7 @@ def test_empty_python_dependencies_install_and_enable_without_consent(admission_
         subprocess.run(['git', *args], cwd=source, env=env, check=True, capture_output=True, timeout=30)
     monkeypatch.setattr(plugins_cmd.sys.stdin, 'isatty', lambda: False)
 
-    plugins_cmd.cmd_install(source.as_uri(), enable=True, allow_removed=True)
+    plugins_cmd.cmd_install(source.as_uri(), enable=True)
 
     enabled = yaml.safe_load((home / 'config.yaml').read_text(encoding='utf-8'))['plugins']['enabled']
     output = capsys.readouterr().out
@@ -107,7 +107,7 @@ def test_yes_deps_carries_consent_through_non_interactive_install(admission_env,
         subprocess.run(['git', *args], cwd=source, env=env, check=True, capture_output=True, timeout=30)
     monkeypatch.setattr(plugins_cmd.sys.stdin, 'isatty', lambda: False)
 
-    plugins_cmd.cmd_install(source.as_uri(), enable=True, allow_removed=True, yes_deps=True)
+    plugins_cmd.cmd_install(source.as_uri(), enable=True, yes_deps=True)
 
     enabled = yaml.safe_load((home / 'config.yaml').read_text(encoding='utf-8'))['plugins']['enabled']
     output = capsys.readouterr().out

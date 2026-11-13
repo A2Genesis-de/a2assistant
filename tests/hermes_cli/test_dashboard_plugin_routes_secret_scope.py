@@ -1,6 +1,6 @@
 """Dashboard agent-plugin mutations run in the request's profile scope, off the event loop.
 
-Regression for #115256: install/update reached ``git_credentials._github_token`` →
+Regression for #115256: install reached ``git_credentials._github_token`` →
 ``get_secret("GITHUB_TOKEN")`` with no profile secret scope bound. Once the process serves more
 than its launch profile (any cross-profile request flips multi-profile hosting on) that read fails
 closed with ``UnscopedSecretError``, so both routes answered a bare 500 for every repo-backed
@@ -75,19 +75,11 @@ def test_install_route_reads_the_git_credential_in_profile_scope(client, multipl
     assert seen["on_event_loop"] is False  # the clone/pull body runs off the event loop
 
 
-def test_update_route_reads_the_git_credential_in_profile_scope(client, multiplexed, monkeypatch):
-    seen: dict = {}
-    _stub_action(monkeypatch, "dashboard_update_user_plugin", seen)
-
-    resp = client.post("/api/dashboard/agent-plugins/probe/update")
-
-    assert resp.status_code == 200, resp.text
-    assert seen["token"] == "ghp_launch_token"
 
 
 def test_failure_and_request_shape_errors_are_unchanged(client, multiplexed, monkeypatch):
     """Backward compat: a failed action is still a 400 carrying its own message, and the
-    identifier/catalog_name check still precedes the scoped body."""
+    identifier check still precedes the scoped body."""
     seen: dict = {}
     _stub_action(monkeypatch, "dashboard_install_plugin", seen,
                  result={"ok": False, "error": "Install failed: no such plugin."})
@@ -98,4 +90,4 @@ def test_failure_and_request_shape_errors_are_unchanged(client, multiplexed, mon
 
     malformed = client.post("/api/dashboard/agent-plugins/install", json={"identifier": ""})
     assert malformed.status_code == 400
-    assert "catalog_name" in malformed.json()["detail"]
+    assert "identifier" in malformed.json()["detail"]

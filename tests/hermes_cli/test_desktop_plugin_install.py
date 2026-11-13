@@ -261,36 +261,10 @@ def test_a_package_named_like_a_windows_drive_path_is_refused(home, repo):
     assert not any(_root(home).iterdir())
 
 
-def _catalog(monkeypatch, sha: str) -> None:
-    from hermes_cli import plugins_cmd_catalog
-    entry = SimpleNamespace(install_identifier=URL, sha=sha)
-    monkeypatch.setattr(plugins_cmd_catalog, "get_live_catalog_entry", lambda name: entry if name == "gizmo" else None)
 
 
-def test_a_catalog_pin_naming_an_annotated_tag_installs_the_commit_it_points_at(home, repo, monkeypatch):
-    # The catalog publishes `git rev-parse v1.0` (the tag object); inspect reports the commit it peels to.
-    reviewed = _commit(repo, {"plugin.js": "export default { v: 1 }\n"})
-    _git(repo, "-c", "user.email=t@example.invalid", "-c", "user.name=t", "tag", "-a", "v1.0", reviewed, "-m", "v1.0")
-    _commit(repo, {"plugin.js": "export default { v: 2 }\n"})
-    tag_object = _git(repo, "rev-parse", "v1.0")
-    assert tag_object != reviewed
-    _catalog(monkeypatch, tag_object)
-
-    result = install.install_desktop_plugin(URL, ref=reviewed, catalog_name="gizmo")
-
-    assert result["ok"] is True, result
-    assert "v: 1" in (_root(home) / "gizmo" / "plugin.js").read_text(encoding="utf-8")
 
 
-def test_a_catalog_pin_that_moved_since_the_review_is_refused(home, repo, monkeypatch):
-    reviewed = _commit(repo, {"plugin.js": "export default { v: 1 }\n"})
-    _catalog(monkeypatch, _commit(repo, {"plugin.js": "export default { v: 2 }\n"}))
-
-    result = install.install_desktop_plugin(URL, ref=reviewed, catalog_name="gizmo")
-
-    assert result["ok"] is False and "inspect it again" in result["error"], result
-    assert result.get("source_moved") is True  # the client re-reads the source instead of resending
-    assert not (_root(home) / "gizmo").exists()
 
 
 def test_the_published_plugin_carries_no_git_metadata(home, repo):

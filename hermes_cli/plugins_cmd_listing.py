@@ -49,29 +49,21 @@ def cmd_list(args: Any | None = None) -> None:
     enabled = _pc()._get_enabled_set()
     disabled = _pc()._get_disabled_set()
     entries = _filter_plugin_entries(entries, args, enabled, disabled)
-    from hermes_cli import plugins_cmd_catalog as catalog
-    # Source shows catalog provenance (``catalog:<tier>@<sha8>``) or a ``--ref`` pin
-    # (``git pinned@<sha8>``) so a team can eyeball that everyone runs the same commit.
     pins = _pc()._read_install_metadata()
-    # One kill-list resolution for the whole listing: resolving per row costs a live-catalog
-    # fetch per installed plugin when the catalog host is slow or unreachable.
-    removed_entries = catalog.resolved_removed_entries()
     active = _pc()._category_active_names()
     rows = [
         (name, _pc()._plugin_status(name, enabled, disabled, key=key, source=source, dir_path=_dir, active=active),
-         str(version), description,
-         catalog.catalog_annotation(_dir) or _pc()._pin_annotation(name, pins) or source,
-         catalog.removed_annotation(name, _dir, removed_entries))
+         str(version), description, _pc()._pin_annotation(name, pins) or source)
         for name, version, description, source, _dir, key in entries
     ]
 
     if getattr(args, "json", False):
-        keys = ("name", "status", "version", "description", "source", "removed")
+        keys = ("name", "status", "version", "description", "source")
         print(json.dumps([dict(zip(keys, row)) for row in rows], indent=2))
         return
 
     if getattr(args, "plain", False):
-        for name, status, version, _description, source, _removed in rows:
+        for name, status, version, _description, source in rows:
             print(f"{status:12} {source:8} {version:8} {name}")
         return
 
@@ -89,13 +81,9 @@ def cmd_list(args: Any | None = None) -> None:
         p.name: p.klass.value for p in plugins_provenance(_pc()._plugins_dir())
     }
 
-    removed_lines = []
-    for name, status_name, version, description, source, removed in rows:
+    for name, status_name, version, description, source in rows:
         klass = prov_classes.get(name)
         status = _STATUS_MARKUP.get(status_name, "[yellow]not enabled[/yellow]")
-        if removed:
-            name = f"[red]{name} ✗[/red]"
-            removed_lines.append(f"[red]✗ {name}[/red] was removed from the plugin catalog: {removed}")
         table.add_row(name, status, version, description, source)
         # class line rides the Source column for user plugins
         if source in {"user", "git"}:
@@ -105,8 +93,6 @@ def cmd_list(args: Any | None = None) -> None:
                 )
     console.print()
     console.print(table)
-    for line in removed_lines:
-        console.print(line)
     console.print()
     console.print("[dim]Compact view:[/dim] hermes plugins list --plain --no-bundled")
     console.print("[dim]Interactive toggle:[/dim] hermes plugins")

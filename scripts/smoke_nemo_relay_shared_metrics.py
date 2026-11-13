@@ -915,7 +915,7 @@ def main() -> int:
                 "missing = (Path.cwd() / 'no-such-plugin-repo').as_uri()",
                 "try:",
                 "    recorded_install(lambda: _install_plugin_core(missing, force=False),",
-                "                     catalog_name=None, identifier=missing)",
+                "                     identifier=missing)",
                 "    raise SystemExit('bogus plugin install succeeded')",
                 "except PluginOperationError:",
                 "    pass",

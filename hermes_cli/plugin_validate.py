@@ -1,8 +1,6 @@
 """``hermes plugins validate`` — admission checks for a plugin directory.
 
-This is the command the plugin-catalog admission CI (and the
-``.github/actions/plugin-validate`` composite action) runs against a
-candidate plugin. It performs static manifest checks plus a
+It performs static manifest checks plus a
 subprocess-isolated capability probe: the plugin is imported and its
 ``register(ctx)`` called against a minimal recording stub context in a
 scratch child process (with a throwaway ``HERMES_HOME``), so a crashing or
@@ -691,3 +689,42 @@ def _validate_portable_plugin(report: ValidationReport, plugin_dir: Path) -> Val
     from hermes_cli.plugin_isolation_audit import audit_plugin_dir
     report.isolation = audit_plugin_dir(plugin_dir, manifest).to_dict()
     return report
+
+
+def cmd_validate(path: str, as_json: bool = False, install_deps: bool = False) -> None:
+    """Validate a plugin directory; exits 0/1. *install_deps*
+    installs the declared Python deps first so the capability probe imports what an install would."""
+    from hermes_cli.plugins_cmd import _console
+    probe = None
+    if install_deps:
+        import pm
+        from pm import paths
+        from pm.environments import activation_environment, project_python, selected_venv, venv_command
+        from pm.plugin_inputs import Candidates
+        try:
+            pm.sync_venv(plugins=Candidates([Path(path)]))
+            root = paths.repo_root()
+            if project_python(root).is_file():
+                probe = (venv_command(root, selected_venv(root)), activation_environment(root))
+        except Exception as exc:
+            print(f"dependency preparation failed: {exc}", file=sys.stderr)
+    report = validate_plugin_dir(Path(path), probe)
+    if as_json:
+        print(json.dumps(report.to_dict(), indent=2))
+        sys.exit(report.exit_code)
+    console = _console()
+    console.print()
+    for check_name, ok, detail in report.checks:
+        console.print(f"{'[green]✓[/green]' if ok else '[red]✗[/red]'} {check_name}"
+                      + (f" [dim]— {detail}[/dim]" if detail else ""))
+    for warning in report.warnings:
+        console.print(f"[yellow]⚠ {warning}[/yellow]")
+    if report.isolation:
+        from hermes_cli.plugin_isolation_audit import IsolationReport
+        iso = IsolationReport(report.isolation["verdict"], report.isolation["reasons"], report.isolation["notes"])
+        console.print(f"{'[green]◆[/green]' if iso.host_ready else '[dim]◇[/dim]'} Isolation [dim]— {iso.summary()}[/dim]")
+        for note in iso.notes:
+            console.print(f"  [dim]· {note}[/dim]")
+    console.print()
+    console.print("[green bold]Validation passed.[/green bold]" if report.ok else "[red bold]Validation failed.[/red bold]")
+    sys.exit(report.exit_code)

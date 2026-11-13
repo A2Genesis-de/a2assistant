@@ -34,7 +34,6 @@
     "hermes_cli/main_install_repair.py": 1,
     "hermes_cli/mcp_catalog.py": 1,
     "hermes_cli/observability/shared_metrics_contract.py": 1,
-    "hermes_cli/plugin_catalog.py": 1,
     "hermes_cli/plugin_host.py": 1,
     "hermes_cli/plugin_host_profiles.py": 1,
     "hermes_cli/plugin_validate.py": 1,

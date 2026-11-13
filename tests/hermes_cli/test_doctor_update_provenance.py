@@ -51,11 +51,8 @@ def test_mixed_provenance_diagnostic_is_read_only(tmp_path, monkeypatch, capsys)
     cases = [
         ('drifty', {'source': 'git', 'update_url': url}, False, None, 'warn', 'reinstall'),
         ('dropped', None, False, None, 'info', 'manually'),
-        ('cloned', None, True, None, 'info', 'adopt'),
+        ('cloned', None, True, None, 'info', 'reinstall'),
         ('fine', {'source': 'git', 'update_url': url}, True, url, 'ok', 'good standing'),
-        ('sneaky', {'source': 'git'}, True, 'https://evil.example/x', 'warn', 'no url was saved'),
-        ('swapped', {'source': 'git', 'update_url': url}, True, 'https://evil.example/x', 'warn', 'update_url mismatch'),
-        ('removed', {'source': 'git', 'update_url': url}, True, None, 'warn', 'update_url mismatch'),
     ]
     for name, sidecar, git, manifest, *_ in cases:
         _make_plugin(plugins, name, sidecar=sidecar, git=git, manifest_update_url=manifest)

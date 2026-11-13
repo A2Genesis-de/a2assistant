@@ -12,7 +12,6 @@ from pydantic import Field
 
 from .base import JsonValue, Params, Result, WireEnum
 from .common import OpenModel, ProfileParams, SessionLiveInfo
-from .connectors_operation import CatalogAppState, CatalogTier
 from .registry import method
 
 
@@ -621,28 +620,19 @@ class PluginsAction(WireEnum):
     inspect = "inspect"
     install_desktop = "install_desktop"
     remove_desktop = "remove_desktop"
-    update = "update"
     remove = "remove"
     settings = "settings"
-    onboarding = "onboarding"
-    presence = "presence"
-    update_all = "update_all"
-    auto_update = "auto_update"
 
 
 class PluginsManageParams(ProfileParams):
-    """``toggle``: ``key``/``name`` + ``enable``; ``install``: ``identifier``/``repo`` or ``catalog_name``
-    (+ ``force``, ``enable``, ``ref``, ``inspected_sha`` = the commit ``inspect`` read: a custom source with no
-    ``ref`` whose branch moved since is refused); ``inspect``: ``identifier``/``repo`` or ``catalog_name``;
-    ``install_desktop``: ``identifier``/``repo`` (any source ``install`` takes) or ``catalog_name``, always
+    """``toggle``: ``key``/``name`` + ``enable``; ``install``: ``identifier``/``repo``
+    (+ ``force``, ``enable``, ``ref``, ``inspected_sha`` = the commit ``inspect`` read: a source with no
+    ``ref`` whose branch moved since is refused); ``inspect``: ``identifier``/``repo``;
+    ``install_desktop``: ``identifier``/``repo`` (any source ``install`` takes), always
     with ``ref`` (the commit ``inspect`` read and the dialog showed; another commit is refused) (+ ``force``) — the desktop half onto
     the host that serves this client; ``remove_desktop``: ``name``
-    (+ ``force`` for a package's own half); ``update``: ``name`` (+ ``accept_capabilities`` to apply a re-pin
-    that widened the plugin after the user confirmed the ``delta``, + ``force`` to apply an update whose
-    security scan returned caution after the user saw the findings); ``remove``: ``name`` (user installs only);
-    ``settings``: ``key`` + ``values`` (``{setting_key: value}``, non-secret schema keys only);
-    ``presence``: ``names`` (catalog names, answered in that order); ``update_all``: no fields;
-    ``auto_update``: ``enable`` to set ``plugins.auto_apply`` (omit to read it)."""
+    (+ ``force`` for a package's own half); ``remove``: ``name`` (user installs only);
+    ``settings``: ``key`` + ``values`` (``{setting_key: value}``, non-secret schema keys only)."""
 
     action: PluginsAction = PluginsAction.list
     key: str | None = None
@@ -650,13 +640,10 @@ class PluginsManageParams(ProfileParams):
     enable: bool | None = None
     identifier: str | None = None
     repo: str | None = None
-    catalog_name: str | None = None
     force: bool | None = None
     ref: str | None = None
     inspected_sha: str | None = None
-    accept_capabilities: bool | None = None
     values: dict[str, JsonValue] | None = None
-    names: list[str] | None = None
 
 
 class PluginSettingFieldType(WireEnum):
@@ -704,7 +691,7 @@ class PluginServerRow(Result):
 
 
 class AgentPluginRow(Result):
-    """``methods_tools._plugin_rows`` + ``plugins_cmd_catalog.catalog_row_fields`` provenance."""
+    """``methods_tools._plugin_rows``."""
 
     name: str
     key: str
@@ -716,15 +703,6 @@ class AgentPluginRow(Result):
     install_dir: str
     has_desktop_half: bool
     servers: list[PluginServerRow]
-    catalog_name: str | None = None
-    catalog_tier: str | None = None
-    installed_sha: str | None = None
-    catalog_sha: str | None = None
-    catalog_version: str | None = None
-    update_available: bool | None = None
-    # git installs: what the last update check found to move to, a commit or a feed version
-    # (``update_available`` is then True).
-    update_target: str | None = None
     pinned_sha: str | None = None
     settings_schema: list[PluginSettingField] | None = None
     # Exact tool names this package's own code registered (native + its MCP servers' tools):
@@ -779,32 +757,6 @@ class PluginActivation(Result):
     missing_in: list[PluginRestartTarget] = Field(default_factory=list)
 
 
-class OnboardingCatalogPlugin(Result):
-    """A catalog plugin curated for the onboarding card (``onboarding: true``) that this OS runs.
-    ``app_state`` is the pinned ``plugin.json`` declaration judged on this host; ``sentence`` names what
-    is missing (empty when present or unknown)."""
-
-    name: str
-    title: str
-    description: str
-    tier: CatalogTier
-    platforms: list[str]
-    app_state: CatalogAppState
-    sentence: str
-
-
-class CatalogPluginPresence(Result):
-    """A named catalog plugin this OS runs. ``state`` is the pinned ``plugin.json`` app declaration judged
-    on this host; ``sentence`` names what is missing (empty when present or unknown); ``disclosure`` is the
-    catalog description's ``Disclosure:`` sentence (empty when it has none)."""
-
-    name: str
-    title: str
-    state: CatalogAppState
-    sentence: str
-    disclosure: str
-
-
 class PluginScanFinding(Result):
     """One security-scan finding (``tools.plugin_guard``) on a plugin tree the scan blocked."""
 
@@ -816,37 +768,15 @@ class PluginScanFinding(Result):
     description: str
 
 
-class PluginUpdateAllStatus(WireEnum):
-    updated = "updated"
-    current = "current"
-    failed = "failed"
-    needs_review = "needs_review"
-
-
-class PluginUpdateAllRow(Result):
-    """One plugin ``update_all`` tried. ``needs_review``: nothing changed because the update widens the
-    plugin or its scan returned caution; the plugin's own ``update`` walks that review."""
-
-    name: str
-    status: PluginUpdateAllStatus
-    detail: str = ""
-
-
-class PluginUpdateAllSkip(Result):
-    name: str
-    reason: str
-
-
 class PluginsManageResult(Result):
     """``list`` → ``plugins`` + counts; ``toggle`` → ``ok``/``unchanged``/``restart_required``/``name``
     (the canonical key written)/``plugin``; ``install`` → ``hermes_cli.plugins_cmd.dashboard_install_plugin``'s
     ok payload; ``inspect`` → ``ok``/``agent``/``desktop``/``agent_name``/``desktop_name``/``sha`` (the commit
-    read)/``warnings``/``insecure`` or ``ok=false`` + ``error``; ``toggle``/``install``/``update`` that loaded a plugin also carry ``gateway_reloaded`` (the
+    read)/``warnings``/``insecure`` or ``ok=false`` + ``error``; ``toggle``/``install`` that loaded a plugin also carry ``gateway_reloaded`` (the
     running gateway picked it up and re-wired its handlers) and ``activation`` — the honest split of what is
     live now vs deferred, so ``restart_required`` is True only when no gateway answered or the running
-    gateway/backend cannot import the plugin's Python dependencies (``activation.missing_dependencies``); ``update`` → ``ok``/``unchanged``/``sha``, or ``ok=false`` + ``consent_required`` with the
-    ``delta`` (``{surface: [added...]}``) / ``delta_lines`` a widened pin adds — nothing changed until the
-    client retries with ``accept_capabilities`` — or ``ok=false`` + ``scan_blocked`` with ``scan_verdict`` /
+    gateway/backend cannot import the plugin's Python dependencies (``activation.missing_dependencies``);
+    an ``install`` the security scan blocked answers ``ok=false`` + ``scan_blocked`` with ``scan_verdict`` /
     ``scan_findings`` (retry a caution verdict with ``force``); ``remove`` → ``ok``/``name`` plus
     ``cleared_memory_provider`` when the removed plugin was the live ``memory.provider``."""
 
@@ -866,25 +796,14 @@ class PluginsManageResult(Result):
     missing_env: list[str] | None = None
     # ``install`` → the manifest's ``python_dependencies`` the installer applied (``[]`` when none).
     python_dependencies: list[str] | None = None
-    # ``install`` from the catalog → the entry's informational ``known_issues`` (``[]`` when none).
-    known_issues: list[str] | None = None
     after_install_path: str | None = None
     enabled: bool | None = None
     sha: str | None = None
-    consent_required: bool | None = None
-    delta: dict[str, list[str]] | None = None
-    delta_lines: list[str] | None = None
-    # ``update`` of a git install whose new code the security scan blocked: nothing changed. A ``caution``
-    # verdict can be retried with ``force`` once the user saw ``scan_findings``; ``dangerous`` cannot.
     scan_blocked: bool | None = None
     scan_verdict: str | None = None
     scan_findings: list[PluginScanFinding] | None = None
     error: str | None = None
     written: list[str] | None = None
-    # ``onboarding`` → the curated catalog plugins for the onboarding card.
-    onboarding: list[OnboardingCatalogPlugin] | None = None
-    # ``presence`` → the named catalog plugins this OS runs, in the order asked; unknown names dropped.
-    presence: list[CatalogPluginPresence] | None = None
     # ``inspect`` → which halves the source ships (``ok`` + ``warnings``, or ``ok=false`` + ``error``),
     # the commit it read (``sha``) and whether its URL scheme is insecure; nothing was installed
     # (``hermes_cli.plugins_cmd_inspect``).
@@ -900,50 +819,7 @@ class PluginsManageResult(Result):
     path: str | None = None
     paired_with_agent: bool | None = None
     unpaired_from: str | None = None
-    # ``update_all`` → one row per plugin it tried, the ones it could not move (with why) and how many
-    # were already current.
-    results: list[PluginUpdateAllRow] | None = None
-    skipped: list[PluginUpdateAllSkip] | None = None
-    current: int | None = None
-    # ``auto_update`` → the profile's ``plugins.auto_apply`` and ``plugins.auto_update_check_hours``.
-    auto_apply: bool | None = None
-    check_hours: float | None = None
 
 
 method("plugins.manage", params=PluginsManageParams, result=PluginsManageResult,
-       doc="Plugins Hub backend: list installed plugins, toggle, git-install, re-pin a catalog install, "
-           "or remove a user install.")
-
-
-class PluginCatalogLookupStatus(WireEnum):
-    found = "found"
-    invalid_name = "invalid_name"
-    unknown = "unknown"
-    unavailable = "unavailable"
-
-
-class PluginCatalogLookupParams(ProfileParams):
-    name: str
-
-
-class PluginCatalogLookupEntry(Result):
-    """The fields an install needs: the same ones the embedded catalog picker posts on a pick."""
-
-    name: str
-    repo: str
-    sha: str
-    subdir: str
-    tier: str = "community"
-
-
-class PluginCatalogLookupResult(Result):
-    """``found`` carries ``entry``. ``unknown`` covers a name the catalog doesn't list and one it removed;
-    ``unavailable`` means neither the live catalog nor the in-tree fallback could be read."""
-
-    status: PluginCatalogLookupStatus
-    entry: PluginCatalogLookupEntry | None = None
-
-
-method("plugins.catalog.lookup", params=PluginCatalogLookupParams, result=PluginCatalogLookupResult,
-       doc="One curated plugin-catalog entry by name, from the backend's live catalog (cached, with the "
-           "in-tree fallback and kill list); backs hermes://plugin/install?catalog= deep links.")
+       doc="Plugins Hub backend: list installed plugins, toggle, git-install or remove a user install.")

@@ -27,7 +27,7 @@ def test_yes_at_the_enable_prompt_activates_the_plugin_in_running_processes(admi
     activated = []
     monkeypatch.setattr(plugins_activation, 'report_activation', lambda console, name: activated.append(name))
 
-    plugins_cmd.cmd_install(source.as_uri(), allow_removed=True)
+    plugins_cmd.cmd_install(source.as_uri())
 
     enabled = yaml.safe_load((home / 'config.yaml').read_text(encoding='utf-8'))['plugins']['enabled']
     assert 'prompt-enabled-plugin' in enabled

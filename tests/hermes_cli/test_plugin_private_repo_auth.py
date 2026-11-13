@@ -118,12 +118,10 @@ def test_public_clone_attempts_anonymously_when_credential_resolves(tmp_path, mo
     assert "ghp_fake" not in str(clone_calls)
 
 
-@pytest.mark.parametrize("verb", ["fetch", "pull"])
 @pytest.mark.parametrize("outcome", ["ok", "refused", "not_found"])
-def test_ref_fetch_and_update_pull_attach_credential_only_after_anonymous_refusal(
-        tmp_path, monkeypatch, verb, outcome):
-    """The pinned-ref fetch (``--ref`` install) and ``hermes plugins update``'s pull are the
-    clone's siblings: with a stored GitHub credential resolvable they still run anonymously
+def test_ref_fetch_attaches_credential_only_after_anonymous_refusal(tmp_path, monkeypatch, outcome):
+    """The pinned-ref fetch (``--ref`` install) is the clone's sibling: with a stored GitHub
+    credential resolvable it still runs anonymously
     against a public remote, attach the credential only after the remote refuses, and surface a
     failure that is not about credentials (missing repo, bad commit, network) as-is — the stored
     credential is then never even resolved, let alone sent."""
@@ -139,7 +137,7 @@ def test_ref_fetch_and_update_pull_attach_credential_only_after_anonymous_refusa
     real_run = subprocess.run
 
     def spy_run(argv, *a, **kw):
-        if verb not in argv:
+        if "fetch" not in argv:
             return real_run(argv, *a, **kw)
         attempts.append(_auth_headers_for(kw.get("env") or {}, "https://github.com"))
         if outcome == "refused" and len(attempts) == 1:
@@ -158,15 +156,11 @@ def test_ref_fetch_and_update_pull_attach_credential_only_after_anonymous_refusa
     else:
         monkeypatch.setattr(git_credentials, "resolve_git_basic_auth", lambda url: ("x-access-token", "ghp_fake"))
 
-    if verb == "fetch" and outcome == "not_found":
+    if outcome == "not_found":
         with pytest.raises(plugins_cmd.PluginOperationError, match="not found"):
             plugins_cmd._checkout_exact_revision(repo, "git", revision, source_url=public_url)
-    elif verb == "fetch":
-        plugins_cmd._checkout_exact_revision(repo, "git", revision, source_url=public_url)
     else:
-        ok, message = plugins_cmd._git_pull_plugin_dir(repo)
-        assert ok is (outcome != "not_found"), message
-        assert ("not found" in message) is (outcome == "not_found")
+        plugins_cmd._checkout_exact_revision(repo, "git", revision, source_url=public_url)
 
     expected = base64.b64encode(b"x-access-token:ghp_fake").decode()
     assert attempts == ([[], [f"Authorization: basic {expected}"]] if outcome == "refused" else [[]])

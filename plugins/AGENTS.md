@@ -62,24 +62,14 @@ command. A hook with no concrete consumer is speculative infrastructure and is r
   `plugin-llm-example`, `plugin-llm-async-example`) live in
   [`hermes-example-plugins`](https://github.com/NousResearch/hermes-example-plugins), not here.
 
-## Plugin catalog (`plugin-catalog/`, Sep 2026)
+## Out-of-tree plugins
 
-The ONLY discovery system for out-of-tree plugins. One YAML per entry, 40-hex SHA pin mandatory,
-human-merged via PR (`plugin-catalog/README.md` = admission policy, mirrored word for word in
-`website/docs/developer-guide/plugins/catalog-submission.md` with the submission guide; `plugin-catalog-ci.yml` clones
-each changed entry at its pin and runs `hermes plugins validate`). `removed.yaml` is the kill list —
-every install path (CLI, dashboard, TUI) refuses matches (repo URLs compared by canonical
-`host/owner/repo`, so `git@`/`ssh://`/`www.` spellings match); only the CLI has a loud
-`--allow-removed`, which is recorded on the install record and is the only thing that exempts an
-installed plugin from the same check at `update`, `enable` and load (`gate_manifest`). Catalog
-provenance lives on the installer-owned `.install-metadata.json` record (`catalog` block, sha =
-checked-out commit), NEVER in the tree: the in-tree `.hermes-catalog.json` is a convenience copy the
-Desktop reads for "Install here"; Python never trusts it (a repo can ship a forged one).
-Code: `hermes_cli/plugin_catalog.py` (loader, live refresh from
-`/docs/api/plugin-catalog.json` published by the docs build, in-tree fallback),
-`hermes_cli/plugins_cmd_catalog.py` (resolution, `.hermes-catalog.json` provenance sidecar,
-search/info/validate, re-pin on `update`, dashboard/TUI payloads). Never add a second name index:
-bare names resolve through the catalog or error.
+There is no plugin catalog: out-of-tree plugins are installed from a Git URL, `owner/repo` or a
+local path (`hermes plugins install`), stay at the revision they were installed at and are replaced
+with `hermes plugins install --force`. Nothing checks them for updates. Install provenance lives on
+the installer-owned `.install-metadata.json` record; a `.hermes-catalog.json` left in an older
+install is ignored. The `LEFT_CORE` / memory-provider migrations below find no catalog any more and
+only print install hints.
 
 ## Plugin kinds and their discovery systems
 
@@ -131,8 +121,7 @@ Invariants:
   import. A new user-code loader MUST do the same.
 - **What cannot cross is one table:** `plugin_isolation.HOST_UNSUPPORTED_CTX_METHODS` (live gateway /
   adapter objects). The runtime refusal and the static audit (`plugin_isolation_audit.py`, shown by
-  `hermes plugins validate/show`) both read it; `evals/plugin_isolation/audit_catalog.py` re-measures
-  the catalog.
+  `hermes plugins validate/show`) both read it.
 - **Values keep the provider ABC's declared types across the wire:** JSON carries dicts, lists and
   scalars, so `plugin_host_wire.restore` rebuilds arguments (child) and results (parent) from the ABC's
   annotations (`FetchResult`, `Path`, enums, a returned engine as a proxy). A value a core consumer

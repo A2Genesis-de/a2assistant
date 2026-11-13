@@ -17,7 +17,6 @@ from agent.onboarding_first_tasks import FIXED_ID, OWN_ID, card_options, pick_er
 PENDING, SHOWN, DONE, SKIPPED = "pending", "shown", "done", "skipped"
 ONBOARDING, COMPLETE, PHASE_SKIPPED = "onboarding", "complete", "skipped"
 CARD_TIMEOUT_S = 300
-MAX_PLUGINS = 5
 
 LAYOUT_OPTIONS = ({"id": "sidebar-left", "label": "Basic"}, {"id": "terminal-deck", "label": "Elite"})
 TOUR_OPTIONS = ({"id": "quick", "label": "Quick tour"}, {"id": "full", "label": "Show me everything"},
@@ -35,20 +34,18 @@ class Facts:
     nvidia_platform: str | None = None  # rtx_spark | dgx_spark | discrete
     facts_source: str = "local"  # local | remote: whose computer these facts describe
     locale: str | None = None
-    plugins: tuple[str, ...] = ()  # onboarding catalog plugins this OS runs
     tours: bool = True
     full_name: str | None = field(default=None, compare=False)
 
     def stored(self) -> dict:
         data = asdict(self)
         data.pop("full_name")
-        data["plugins"] = list(self.plugins)
         return data
 
     @classmethod
     def from_stored(cls, data: Mapping[str, Any]) -> Facts:
         known = {key: data[key] for key in cls.__dataclass_fields__ if key in data and key != "full_name"}
-        return cls(**{**known, "plugins": tuple(known.get("plugins") or ())})
+        return cls(**known)
 
 
 # ── events ────────────────────────────────────────────────────────────────────────────────────
@@ -75,8 +72,8 @@ class Answered:
     said: str = ""
 
 
-# ``present`` on the events below: the beat's picks as this machine has them now (the apps connected,
-# the plugins installed), so a card closed without its own answer still reports them.
+# ``present`` on the events below: the beat's picks as this machine has them now (the apps connected),
+# so a card closed without its own answer still reports them.
 
 
 @dataclass(frozen=True)
@@ -177,8 +174,6 @@ BEATS: tuple[Beat, ...] = (
     Beat("layout", lambda facts, picks: {"options": list(LAYOUT_OPTIONS)}, picks=("layout",), value="layout",
          values=lambda facts, picks: _option_ids(LAYOUT_OPTIONS)),
     Beat("connectors", lambda facts, picks: {}, picks=("connected", "newly_connected")),
-    Beat("plugins", lambda facts, picks: {"plugins": list(facts.plugins[:MAX_PLUGINS])}, picks=("installed",),
-         when=lambda facts, picks: bool(facts.plugins)),
     Beat("tour", lambda facts, picks: {"options": list(TOUR_OPTIONS)}, picks=("tour",), value="tour",
          values=lambda facts, picks: _option_ids(TOUR_OPTIONS), when=lambda facts, picks: facts.tours),
     Beat("build", lambda facts, picks: {"options": card_options(picks.get("build_options"))}, picks=("build",),
@@ -283,8 +278,6 @@ def valid_answer(beat: str, answer: Mapping[str, Any], facts: Facts, picks: Mapp
         return isinstance(answer.get("name"), str) and bool(answer["name"].strip())
     if beat == "theme":
         return all(value is None or isinstance(value, str) for value in answer.values())
-    if beat == "plugins":
-        return _is_names(answer.get("installed")) and set(answer["installed"]) <= set(facts.plugins)
     return "connected" in answer and all(_is_names(value) for value in answer.values())
 
 

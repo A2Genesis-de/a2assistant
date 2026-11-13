@@ -2,7 +2,7 @@
 plugin once, and its core-era ``browser`` toolset (Camofox's browser_* tools then; browser_exec now) becomes
 the plugin's ``camofox`` toolset, a one-time conversion a later run never undoes.
 
-Real config/.env files under temp homes, a fixture catalog dir; the network install is a stand-in.
+Real config/.env files under temp homes, a stand-in catalog lookup; the network install is a stand-in.
 """
 
 from __future__ import annotations
@@ -15,23 +15,6 @@ import hermes_cli.left_core_migration as lcm
 import hermes_yaml as yaml
 from hermes_cli.config_defaults import DEFAULT_CONFIG
 
-_CATALOG_ENTRY = """\
-name: camofox
-repo: https://github.com/NousResearch/hermes-official-plugins
-sha: 0123456789abcdef0123456789abcdef01234567
-subdir: camofox
-description: Camofox anti-detection browser backend (fixture).
-maintainer: NousResearch
-tier: official
-category: tools
-capabilities:
-  provides_tools: [browser_navigate]
-  provides_hooks: []
-  provides_middleware: []
-  requires_env: []
-"""
-
-
 @pytest.fixture(autouse=True)
 def _fresh(monkeypatch, tmp_path):
     monkeypatch.setattr(lcm, "_attempted", set())
@@ -40,13 +23,10 @@ def _fresh(monkeypatch, tmp_path):
     managed = tmp_path / "managed"
     managed.mkdir()
     monkeypatch.setenv("HERMES_MANAGED_DIR", str(managed))
-    from hermes_cli import plugin_catalog
-    catalog = tmp_path / "catalog"
-    catalog.mkdir()
-    (catalog / "camofox.yaml").write_text(_CATALOG_ENTRY, encoding="utf-8")
-    monkeypatch.setattr(plugin_catalog, "get_catalog_dir", lambda: catalog)
-    monkeypatch.setattr(plugin_catalog, "fetch_live_catalog", lambda **_: None)
-    return catalog
+    from hermes_cli import memory_provider_migration as mpm
+    shipped = {"camofox"}
+    monkeypatch.setattr(mpm, "catalog_source", lambda name: name if name in shipped else None)
+    return shipped
 
 
 def _home(tmp_path: Path, name: str = "home", *, env: str = "", config: dict | None = None) -> Path:
@@ -342,7 +322,7 @@ def test_a_stamped_camofox_home_without_the_plugin_is_told_where_it_went(tmp_pat
 
 
 def test_catalog_miss_names_the_install_command(tmp_path, _fresh):
-    (_fresh / "camofox.yaml").unlink()
+    _fresh.clear()
     home = _home(tmp_path, env="CAMOFOX_URL=http://localhost:9377\n", config={"_config_version": 51})
     said = []
     assert lcm.migrate_home(home, install=lambda name: pytest.fail("no catalog entry"), say=said.append) == []

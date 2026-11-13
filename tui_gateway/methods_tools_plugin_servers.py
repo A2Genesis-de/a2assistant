@@ -12,7 +12,6 @@ from .method_ctx import bind_module
 
 def _plugin_server_rows(
     plugin_dir: Path | None, key: str, *, portable: bool,
-    catalog_titles: dict[str, str] | None = None,
 ) -> list[dict]:
     if not portable or plugin_dir is None:
         return []
@@ -25,17 +24,7 @@ def _plugin_server_rows(
     liveness = _tools_mod("tools.mcp_liveness")
     core = _tools_mod("tools.mcp_tool_common")._core
     resolve_key = _tools_mod("tools.mcp_tool_scope")._resolve_server_key
-    # The server sentence's app name: the curated catalog title when the package is a catalog
-    # install, else the manifest name, else the server slug the declaration carries — a raw
-    # slug reads like an error code (#119975). *catalog_titles* is pre-resolved by the caller
-    # (one live-catalog resolution per listing): a per-plugin ``get_live_catalog_entry`` would
-    # re-resolve the whole catalog once per installed plugin.
     display_name = str(package.manifest.get("name") or "") or None
-    sidecar = _tools_mod("hermes_cli.plugins_cmd_catalog").catalog_install_record(plugin_dir)
-    if sidecar:
-        title = (catalog_titles or {}).get(str(sidecar.get("catalog_name") or ""))
-        if title:
-            display_name = title
     rows = []
     for name in sorted(declared):
         internal_name = server_name_for(key, name)

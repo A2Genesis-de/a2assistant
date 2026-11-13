@@ -1700,13 +1700,6 @@ DEFAULT_CONFIG = {
         # skipped with the reason "load timed out" and the rest keep loading; the stuck worker thread is
         # abandoned. 0 = no deadline (load inline). Max 600.
         "load_timeout_seconds": 10,
-        # Read-only plugin update-check cadence, hours (gateway tick; 0 disables). Applying stays
-        # explicit: `hermes plugins update <name>`, or auto_apply below (catalog and tracked git
-        # plugins, scan-gated by that same pipeline).
-        "auto_update_check_hours": 24,
-        # Opt-in unattended apply (`hermes plugins auto-update on`, Desktop's Plugins tab): catalog +
-        # tracked git plugins, same scan/consent pipeline as the manual update (never a widened pin).
-        "auto_apply": False,
         # Where third-party Python plugins run. in_process: imported into Hermes (default).
         # host: one plugin-host process per profile runs them and they reach Hermes only through
         # ctx (a crashing or hanging plugin takes down its host, which restarts; Hermes keeps

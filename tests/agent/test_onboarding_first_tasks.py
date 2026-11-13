@@ -19,14 +19,7 @@ def ids(facts: Facts, **picks) -> list[str]:
 
 def test_every_pill_fits_and_how_hermes_works_is_never_pickable():
     assert all(len(task.label) <= 32 for task in FIRST_TASKS)
-    assert "hermes" not in ids(MAC, installed=["blender"], connected=["gmail"])
-
-
-@pytest.mark.parametrize(("plugin", "row"), [("nvidia-app", "games"), ("nvidia-broadcast", "broadcast"),
-                                            ("blender", "blender")])
-def test_a_plugin_row_needs_its_plugin_installed(plugin, row):
-    assert row in ids(PC, installed=[plugin])
-    assert row not in ids(PC, installed=[])
+    assert "hermes" not in ids(MAC, connected=["gmail"])
 
 
 def test_brief_and_week_need_an_app_connected_this_run_and_mac_helpers_need_macos():
@@ -42,10 +35,6 @@ def test_a_task_reminder_opens_with_its_skills_and_drops_a_bundled_skill_this_in
     assert goal.startswith('They picked "Explain a topic I care about". Your job: ')
     assert skills == ("Load these skills with skill_view first: grounded-citations, claude-design, "
                       "blocked-page-recovery, humanizer.")
-    # A plugin skill is named as it registered; a typed task starts from hermes-agent.
-    registered = {"nvidia-app:nvidia-app": "agent-plugin-nvidia-app-f9a26bc6:nvidia-app"}
-    assert reminder("build_games", new_record(PC), PC, resolve_skill=registered.get).split("\n")[1] == (
-        "Load these skills with skill_view first: agent-plugin-nvidia-app-f9a26bc6:nvidia-app.")
     assert reminder("build_own", new_record(MAC), MAC).split("\n")[:2] == [
         "Your job: build the task they named in their own words.",
         "Load these skills with skill_view first: hermes-agent, humanizer."]
@@ -81,7 +70,7 @@ def test_how_hermes_works_reads_the_docs_and_builds_three_screens():
                          ids=["mac", "windows", "linux", "remote"])
 def test_every_host_shows_results_in_the_preview_pane_and_never_opens_a_browser(facts):
     call = 'tool_call {"calls":[{"name":"desktop_preview","arguments":{"action":"open","url":"<file>"}}]}'
-    for row in ("hermes", "site", "blender"):
+    for row in ("hermes", "site"):
         text = reminder(f"build_{row}", new_record(facts), facts)
 
         assert call in text and "Say it is open only after the call succeeds." in text
@@ -94,7 +83,7 @@ def test_every_host_shows_results_in_the_preview_pane_and_never_opens_a_browser(
 def test_the_page_guidance_rides_only_the_tasks_that_make_a_page():
     assert "When you make a page:" in reminder("build_hermes", new_record(MAC), MAC)
     assert "When you make a page:" in reminder("build_explain", new_record(MAC), MAC)
-    for row in ("blender", "games", "notes"):
+    for row in ("notes",):
         assert "When you make a page:" not in reminder(f"build_{row}", new_record(PC), PC), row
 
 
