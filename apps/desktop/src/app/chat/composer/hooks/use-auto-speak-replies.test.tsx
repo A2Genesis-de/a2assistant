@@ -36,14 +36,14 @@ function assistantMessage(id: string, text: string): ChatMessage {
   return { id, parts: [assistantTextPart(text)], role: 'assistant' }
 }
 
-// #93515 — Edge TTS has no chunked-PCM API, so the WS attempt in
-// playSpeechText's fallback ladder settles 'fallback' before any audio plays
+// #93515 — a TTS backend without a chunked-PCM API makes the WS attempt in
+// playSpeechText's fallback ladder settle 'fallback' before any audio plays
 // and the client retries over the POST endpoint. While that POST round-trip
 // is in flight, the backend can rewrite the just-completed reply's renderer
 // id (`assistant-stream-*`) to its durable id. The issue claims
 // `resolveSpokenReply()` fails to follow that rewrite and the reply gets
 // spoken a second time once `$voicePlayback` goes idle.
-describe('useAutoSpeakReplies — Edge TTS fallback chain (#93515)', () => {
+describe('useAutoSpeakReplies — non-streaming TTS fallback chain (#93515)', () => {
   afterEach(() => {
     cleanup()
     clearSpokenRepliesForTests()

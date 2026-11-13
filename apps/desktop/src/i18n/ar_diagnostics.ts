@@ -57,8 +57,6 @@ export const arDiagnostics = {
       disableFailed: name => `تعذّر تعطيل ${name} MCP.`
     },
     errors: {
-      elevenLabsNeedsKey: 'يتطلب ElevenLabs STT المفتاح ELEVENLABS_API_KEY.',
-      elevenLabsRejectedKey: 'رفض ElevenLabs مفتاح API (401).',
       diskFull: 'القرص ممتلئ — حرّر مساحة ثم أعد المحاولة.',
       methodNotAllowed: 'رفضت خلفية سطح المكتب هذا الطلب (405 Method Not Allowed). جرب إعادة تشغيل A2Assistant Desktop.',
       microphonePermission: 'تم رفض إذن الميكروفون.',

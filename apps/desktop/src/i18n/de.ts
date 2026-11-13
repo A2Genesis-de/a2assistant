@@ -445,8 +445,6 @@ const deBaseOverrides = {
       disableFailed: name => `${name} MCP konnte nicht deaktiviert werden.`
     },
     errors: {
-      elevenLabsNeedsKey: 'ElevenLabs-STT braucht ELEVENLABS_API_KEY.',
-      elevenLabsRejectedKey: 'ElevenLabs hat den API-Key abgelehnt (401).',
       diskFull: 'Festplatte voll – geben Sie Speicherplatz frei und versuchen Sie es dann erneut.',
       storageFailure:
         'A2Assistant konnte nicht in seinen Datenordner speichern. Öffnen Sie die Wartung, um das Problem zu prüfen und zu beheben.',
@@ -1231,57 +1229,13 @@ const deBaseOverrides = {
         },
         openai: {
           model: 'OpenAI-STT-Modell'
-        },
-        groq: {
-          model: 'Groq-STT-Modell'
-        },
-        mistral: {
-          model: 'Mistral-STT-Modell'
-        },
-        elevenlabs: {
-          modelId: 'ElevenLabs-STT-Modell',
-          languageCode: 'ElevenLabs-Sprache',
-          tagAudioEvents: 'Audio-Ereignisse markieren',
-          diarize: 'Sprecher-Diarisierung'
         }
       },
       tts: {
         provider: 'Text-zu-Sprache-Anbieter',
-        edge: {
-          voice: 'Edge-Stimme'
-        },
         openai: {
           model: 'OpenAI-TTS-Modell',
           voice: 'OpenAI-Stimme'
-        },
-        elevenlabs: {
-          voiceId: 'ElevenLabs-Stimme',
-          modelId: 'ElevenLabs-Modell'
-        },
-        xai: {
-          voiceId: 'xAI (Grok) Stimme',
-          language: 'xAI-Sprache',
-          speed: 'xAI-Wiedergabegeschwindigkeit',
-          autoSpeechTags: 'xAI automatische Sprach-Tags',
-          optimizeStreamingLatency: 'xAI Streaming-Latenz-Optimierung',
-          sampleRate: 'xAI-Abtastrate',
-          bitRate: 'xAI-Bitrate'
-        },
-        minimax: {
-          model: 'MiniMax-TTS-Modell',
-          voiceId: 'MiniMax-Stimme'
-        },
-        mistral: {
-          model: 'Mistral-TTS-Modell',
-          voiceId: 'Mistral-Stimme'
-        },
-        gemini: {
-          model: 'Gemini-TTS-Modell',
-          voice: 'Gemini-Stimme'
-        },
-        neutts: {
-          model: 'NeuTTS-Modell',
-          device: 'NeuTTS-Gerät'
         },
         kittentts: {
           model: 'KittenTTS-Modell',
@@ -1289,10 +1243,6 @@ const deBaseOverrides = {
         },
         piper: {
           voice: 'Piper-Stimme'
-        },
-        deepinfra: {
-          model: 'DeepInfra-TTS-Modell',
-          voice: 'DeepInfra-Stimme'
         }
       },
       memory: {
@@ -1399,27 +1349,9 @@ const deBaseOverrides = {
             'Zusätzliche Sätze für die Live-Sprachpersona (Ton, Tempo, Sprache). A2Assistant behält seinen eigenen System-Prompt.'
         }
       },
-      tts: {
-        xai: {
-          voiceId: 'xAI-Stimm-ID (z. B. eve) oder eine benutzerdefinierte Stimm-ID.',
-          language: 'Sprachcode (z. B. en, pt-BR) oder „auto“ für automatische Erkennung.',
-          speed: 'Wiedergabegeschwindigkeit. 0,7 = langsamer, 1,0 = normal, 1,5 = schneller.',
-          autoSpeechTags:
-            'Ein LLM expressive Audio-Tags ([laughing], [sighs]) vor der Synthese in das Skript einfügen lassen.',
-          optimizeStreamingLatency: 'Latenz- vs. Qualitäts-Abwägung. 0 = beste Qualität, 2 = niedrigste Latenz.',
-          sampleRate: 'Audio-Abtastrate in Hz. Höher = bessere Qualität, größere Dateien.',
-          bitRate: 'MP3-Bitrate in bps. Gilt nur, wenn der Codec mp3 ist.'
-        },
-        neutts: {
-          device: 'Lokales Inferenzgerät für NeuTTS.'
-        }
-      },
       stt: {
         enabled: 'Lokale oder anbieterbasierte Sprachtranskription aktivieren.',
-        echoTranscripts: 'Das rohe 🎙️-Transkript von Sprachnachrichten zurück in den Chat posten.',
-        elevenlabs: {
-          languageCode: 'Optionaler ISO-639-3-Sprachcode. Leer lässt ElevenLabs automatisch erkennen.'
-        }
+        echoTranscripts: 'Das rohe 🎙️-Transkript von Sprachnachrichten zurück in den Chat posten.'
       },
       updates: {
         nonInteractiveLocalChanges:

@@ -65,17 +65,6 @@ export interface AudioSttLeaseResponse {
   error?: string
 }
 
-export interface ElevenLabsVoice {
-  label: string
-  name: string
-  voice_id: string
-}
-
-export interface ElevenLabsVoicesResponse {
-  available: boolean
-  voices: ElevenLabsVoice[]
-}
-
 export interface OAuthProviderStatus {
   /** Nous only: the tier name the token resolves to, when the backend knows
    *  one. Null for a free-tier identity and for older backends. */

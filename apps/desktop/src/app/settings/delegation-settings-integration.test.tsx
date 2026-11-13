@@ -17,7 +17,6 @@ vi.mock('@/hermes', async () => ({
   ...(await vi.importActual('@/api/client')),
   ...(await vi.importActual('@/api/config')),
   ...(await vi.importActual('@/api/models')),
-  getElevenLabsVoices: async () => ({ available: false }),
   getProfiles: async () => ({ profiles: [] })
 }))
 vi.mock('@/store/connections', () => ({ $activeConnectionId: atom<string | null>('connection-A') }))

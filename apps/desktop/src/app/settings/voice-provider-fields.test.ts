@@ -10,24 +10,13 @@ describe('voiceProviderKeys', () => {
     // Every provider key the backend TOOL_CATEGORIES["tts"] rows can carry
     // (tts_provider values) must resolve to at least one config field, so the
     // Capabilities panel never renders a silently-empty settings block.
-    for (const provider of [
-      'edge',
-      'openai',
-      'xai',
-      'elevenlabs',
-      'mistral',
-      'gemini',
-      'kittentts',
-      'piper',
-      'deepinfra',
-      'minimax'
-    ]) {
+    for (const provider of ['openai', 'kittentts', 'piper']) {
       expect(voiceProviderKeys('tts', provider).length, provider).toBeGreaterThan(0)
     }
   })
 
   it('scopes to the exact provider segment (no prefix bleed)', () => {
-    expect(voiceProviderKeys('tts', 'mini')).toEqual([])
+    expect(voiceProviderKeys('tts', 'pip')).toEqual([])
     expect(voiceProviderKeys('stt', 'openai')).toEqual(['stt.openai.model', 'stt.openai.streaming_model'])
   })
 })

@@ -138,8 +138,6 @@ export const ruOverrides = {
       disableFailed: name => `Не удалось отключить ${name} MCP.`
     },
     errors: {
-      elevenLabsNeedsKey: 'Для STT ElevenLabs нужен ELEVENLABS_API_KEY.',
-      elevenLabsRejectedKey: 'ElevenLabs отклонил API-ключ (401).',
       diskFull: 'Диск заполнен — освободите место и повторите.',
       gatewayAuthFailed: 'Аутентификация шлюза не удалась — проверьте API_SERVER_KEY.',
       methodNotAllowed:
@@ -703,57 +701,13 @@ export const ruOverrides = {
         },
         openai: {
           model: 'Модель STT OpenAI'
-        },
-        groq: {
-          model: 'Модель STT Groq'
-        },
-        mistral: {
-          model: 'Модель STT Mistral'
-        },
-        elevenlabs: {
-          modelId: 'Модель STT ElevenLabs',
-          languageCode: 'Язык ElevenLabs',
-          tagAudioEvents: 'Метки звуковых событий',
-          diarize: 'Разделение спикеров'
         }
       },
       tts: {
         provider: 'Провайдер синтеза речи',
-        edge: {
-          voice: 'Голос Edge'
-        },
         openai: {
           model: 'Модель TTS OpenAI',
           voice: 'Голос OpenAI'
-        },
-        elevenlabs: {
-          voiceId: 'Голос ElevenLabs',
-          modelId: 'Модель ElevenLabs'
-        },
-        xai: {
-          voiceId: 'Голос xAI (Grok)',
-          language: 'Язык xAI',
-          speed: 'Скорость воспроизведения xAI',
-          autoSpeechTags: 'Автомаркеры речи xAI',
-          optimizeStreamingLatency: 'Оптимизация задержки стриминга xAI',
-          sampleRate: 'Частота дискретизации xAI',
-          bitRate: 'Битрейт xAI'
-        },
-        minimax: {
-          model: 'Модель TTS MiniMax',
-          voiceId: 'Голос MiniMax'
-        },
-        mistral: {
-          model: 'Модель TTS Mistral',
-          voiceId: 'Голос Mistral'
-        },
-        gemini: {
-          model: 'Модель TTS Gemini',
-          voice: 'Голос Gemini'
-        },
-        neutts: {
-          model: 'Модель NeuTTS',
-          device: 'Устройство NeuTTS'
         },
         kittentts: {
           model: 'Модель KittenTTS',
@@ -761,10 +715,6 @@ export const ruOverrides = {
         },
         piper: {
           voice: 'Голос Piper'
-        },
-        deepinfra: {
-          model: 'Модель TTS DeepInfra',
-          voice: 'Голос DeepInfra'
         }
       },
       memory: {
@@ -861,28 +811,9 @@ export const ruOverrides = {
       voice: {
         autoTts: 'Автоматически зачитывать ответы ассистента.'
       },
-      tts: {
-        xai: {
-          voiceId: 'ID голоса xAI (например, eve) или ID пользовательского голоса.',
-          language: 'Код языка речи (например, en, pt-BR) или «auto» для автоопределения.',
-          speed: 'Скорость воспроизведения. 0.7 = медленнее, 1.0 = нормально, 1.5 = быстрее.',
-          autoSpeechTags:
-            'Позволить LLM вставлять выразительные звуковые теги ([laughing], [sighs]) в сценарий перед синтезом.',
-          optimizeStreamingLatency:
-            'Компромисс между задержкой и качеством. 0 = лучшее качество, 2 = минимальная задержка.',
-          sampleRate: 'Частота дискретизации аудио в Гц. Выше = лучшее качество, большие файлы.',
-          bitRate: 'Битрейт MP3 в бит/с. Действует только когда кодек — mp3.'
-        },
-        neutts: {
-          device: 'Локальное устройство инференса для NeuTTS.'
-        }
-      },
       stt: {
         enabled: 'Включать локальное или провайдерное распознавание речи.',
-        echoTranscripts: 'Возвращать в чат «сырую» 🎙️ расшифровку голосовых сообщений.',
-        elevenlabs: {
-          languageCode: 'Необязательный код языка ISO-639-3. Пустое значение — автоопределение ElevenLabs.'
-        }
+        echoTranscripts: 'Возвращать в чат «сырую» 🎙️ расшифровку голосовых сообщений.'
       },
       updates: {
         nonInteractiveLocalChanges:

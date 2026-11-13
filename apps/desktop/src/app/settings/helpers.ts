@@ -190,9 +190,9 @@ export function voiceFieldVisible(key: string, config: HermesConfigRecord): bool
   }
 
   const selected = String(getNested(config, `${domain}.provider`) ?? '')
-  // Backend defaults when the key is unset: TTS → edge, STT → local.
+  // Backend defaults when the key is unset: TTS → openai, STT → local.
   // An empty string used to hide every nested model field.
-  const fallback = domain === 'tts' ? 'edge' : 'local'
+  const fallback = domain === 'tts' ? 'openai' : 'local'
 
   return provider === (selected || fallback)
 }
@@ -315,37 +315,16 @@ function personalityOptions(config: HermesConfigRecord): string[] {
 // `transcription_tools.py:BUILTIN_STT_PROVIDERS`. The runtime rejects a built-in
 // name as a command provider before any config lookup
 // (`_resolve_command_provider_config`: `key = provider.lower().strip()`, then
-// `if key in BUILTIN_*_PROVIDERS: return None`), so a ``providers.edge`` block
-// declaring ``type: command`` still dispatches to native Edge.
+// `if key in BUILTIN_*_PROVIDERS: return None`), so a ``providers.openai`` block
+// declaring ``type: command`` still dispatches to native OpenAI.
 //
 // These are deliberately NOT derived from `ENUM_OPTIONS`, which is a *display*
-// list and already drifts from the runtime sets: it omits `deepinfra` (TTS) and
-// `deepinfra`/`local_command` (STT). Filtering on the display list would offer
-// those names as command providers that the runtime would never honour.
-const BUILTIN_TTS_PROVIDERS = new Set([
-  'edge',
-  'elevenlabs',
-  'openai',
-  'minimax',
-  'xai',
-  'mistral',
-  'gemini',
-  'neutts',
-  'kittentts',
-  'piper',
-  'deepinfra'
-])
+// list and drifts from the runtime sets: it omits `local_command` (STT).
+// Filtering on the display list would offer that name as a command provider
+// that the runtime would never honour.
+const BUILTIN_TTS_PROVIDERS = new Set(['openai', 'kittentts', 'piper'])
 
-const BUILTIN_STT_PROVIDERS = new Set([
-  'local',
-  'local_command',
-  'groq',
-  'openai',
-  'mistral',
-  'xai',
-  'elevenlabs',
-  'deepinfra'
-])
+const BUILTIN_STT_PROVIDERS = new Set(['local', 'local_command', 'openai'])
 
 // A user-declared command provider, mirroring the runtime discriminator
 // (`tts_tool.py:_is_command_provider_config` / `transcription_tools.py`): `type`
@@ -410,19 +389,14 @@ function commandProviderNames(config: HermesConfigRecord, section: 'tts' | 'stt'
 // union (the field is free-input anyway — this only narrows suggestions).
 const OPENAI_TTS1_VOICES = new Set(['alloy', 'ash', 'coral', 'echo', 'fable', 'nova', 'onyx', 'sage', 'shimmer'])
 
-export function enumOptionsFor(
-  key: string,
-  value: unknown,
-  config: HermesConfigRecord,
-  dynamicOptions?: string[]
-): string[] | undefined {
-  let opts = dynamicOptions ?? (key === 'display.personality' ? personalityOptions(config) : ENUM_OPTIONS[key])
+export function enumOptionsFor(key: string, value: unknown, config: HermesConfigRecord): string[] | undefined {
+  let opts = key === 'display.personality' ? personalityOptions(config) : ENUM_OPTIONS[key]
 
   // Merge in user-defined command-type providers so custom local TTS/STT
   // backends declared in config.yaml are selectable, not just the built-ins.
   // The `includes` guard keeps the list duplicate-free should the display list
   // ever carry a name we also enumerate.
-  if (!dynamicOptions && opts && (key === 'tts.provider' || key === 'stt.provider')) {
+  if (opts && (key === 'tts.provider' || key === 'stt.provider')) {
     const section = key.slice(0, 3) as 'tts' | 'stt'
     const custom = commandProviderNames(config, section).filter(name => !opts!.includes(name))
 
@@ -433,7 +407,7 @@ export function enumOptionsFor(
 
   // Narrow OpenAI voice suggestions to what the selected model actually
   // accepts — offering `marin` against tts-1 would 400 at the API.
-  if (!dynamicOptions && opts && key === 'tts.openai.voice') {
+  if (opts && key === 'tts.openai.voice') {
     const model = asText(getNested(config, 'tts.openai.model'))
 
     if (model === 'tts-1' || model === 'tts-1-hd') {

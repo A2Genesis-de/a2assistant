@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   checkHermesUpdate,
   getActionStatus,
-  getElevenLabsVoices,
   getMemoryProviderConfig,
   getStatus,
   restartGateway,
@@ -63,7 +62,7 @@ describe('backend action helpers are profile-scoped', () => {
     }
   })
 
-  // Audio endpoints (transcribe / speak / voices) write to the active
+  // Audio endpoints (transcribe / speak) write to the active
   // profile's config in the settings UI but historically called the backend
   // without a profile scope, so playback used the default profile's TTS/voice
   // config instead of the active one (#53441).
@@ -72,9 +71,8 @@ describe('backend action helpers are profile-scoped', () => {
 
     void transcribeAudio('data:audio/webm;base64,AAAA', 'audio/webm')
     void speakText('hello')
-    void getElevenLabsVoices()
 
-    expect(api.mock.calls).toHaveLength(3)
+    expect(api.mock.calls).toHaveLength(2)
 
     for (const call of api.mock.calls) {
       expect(call[0].profile).toBe('jarvis')

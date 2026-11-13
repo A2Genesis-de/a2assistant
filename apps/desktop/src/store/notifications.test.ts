@@ -44,14 +44,6 @@ test('provider invalid_api_key error maps to the OpenAI summary and deep-links t
   expect($routeRequest.get()?.path).toBe('/settings?tab=keys&key=OPENAI_API_KEY')
 })
 
-test('ELEVENLABS_API_KEY not set toasts plain copy with an Open Keys action for that key', () => {
-  notifyError(new Error('ELEVENLABS_API_KEY not set'), 'Voice failed')
-
-  expect(lastMessage()).not.toMatch(/ELEVENLABS_API_KEY|STT/)
-  $notifications.get()[0]?.action?.onClick()
-  expect($routeRequest.get()?.path).toBe('/settings?tab=keys&key=ELEVENLABS_API_KEY')
-})
-
 test('structured storage_* error codes route to Maintenance', () => {
   notifyError(new Error('500 {"detail":{"message":"database is locked","code":"storage_locked"}}'), 'Prompt failed')
 

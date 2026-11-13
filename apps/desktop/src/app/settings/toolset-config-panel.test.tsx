@@ -46,7 +46,6 @@ const getHermesConfigRecord = vi.fn()
 const getHermesConfigSchema = vi.fn()
 const saveHermesConfig = vi.fn()
 const saveHermesConfigRecord = vi.fn()
-const getElevenLabsVoices = vi.fn()
 
 vi.mock('@/hermes', () => ({
   // useHermesConfigRecord (via VoiceProviderFields) reads these from the barrel.
@@ -70,7 +69,6 @@ vi.mock('@/hermes', () => ({
   getHermesConfigSchema: () => getHermesConfigSchema(),
   saveHermesConfig: (config: unknown) => saveHermesConfig(config),
   saveHermesConfigRecord: (config: unknown, profile?: unknown) => saveHermesConfigRecord(config, profile),
-  getElevenLabsVoices: () => getElevenLabsVoices(),
   // use-config-record keys its query cache by scope via profileScopeKey; a
   // scoped panel reaches it, so the full-replacement mock must provide it.
   profileScopeKey: (scope?: { profile?: string; connectionId?: string } | string) =>
@@ -100,7 +98,7 @@ function config(overrides: Partial<ToolsetConfig> = {}): ToolsetConfig {
     active_provider: null,
     providers: [
       {
-        name: 'Microsoft Edge TTS',
+        name: 'Piper',
         badge: 'free',
         tag: 'No API key needed',
         env_vars: [],
@@ -109,11 +107,11 @@ function config(overrides: Partial<ToolsetConfig> = {}): ToolsetConfig {
         is_active: false
       },
       {
-        name: 'ElevenLabs',
+        name: 'OpenAI TTS',
         badge: 'paid',
-        tag: 'Most natural voices',
+        tag: 'High quality voices',
         env_vars: [
-          { key: 'ELEVENLABS_API_KEY', prompt: 'ElevenLabs API key', url: 'https://x', default: null, is_set: false }
+          { key: 'VOICE_TOOLS_OPENAI_KEY', prompt: 'OpenAI API key', url: 'https://x', default: null, is_set: false }
         ],
         post_setup: null,
         requires_nous_auth: false,
@@ -150,21 +148,19 @@ beforeEach(() => {
     default: null
   })
   selectToolsetModel.mockResolvedValue({ ok: true, name: 'image_gen', model: 'z-image-turbo' })
-  selectToolsetProvider.mockResolvedValue({ ok: true, name: 'tts', provider: 'ElevenLabs' })
+  selectToolsetProvider.mockResolvedValue({ ok: true, name: 'tts', provider: 'OpenAI TTS' })
   setEnvVar.mockResolvedValue({ ok: true })
   deleteEnvVar.mockResolvedValue({ ok: true })
   getHermesConfigRecord.mockResolvedValue({
     tts: {
-      provider: 'edge',
-      edge: { voice: 'en-US-AriaNeural' },
-      openai: { model: 'gpt-4o-mini-tts', voice: 'alloy' },
-      elevenlabs: { voice_id: 'pNInz6obpgDQGcFmaJgB', model_id: 'eleven_multilingual_v2' }
+      provider: 'piper',
+      piper: { voice: 'en_US-lessac-medium' },
+      openai: { model: 'gpt-4o-mini-tts', voice: 'alloy' }
     }
   })
   getHermesConfigSchema.mockResolvedValue({ fields: {}, category_order: [] })
   saveHermesConfig.mockResolvedValue({ ok: true })
   saveHermesConfigRecord.mockResolvedValue({ ok: true })
-  getElevenLabsVoices.mockResolvedValue({ available: false, voices: [] })
 })
 
 afterEach(() => {
@@ -260,14 +256,14 @@ describe('ToolsetConfigPanel', () => {
     render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
     // Row click only expands — browsing details must not rewrite config.
-    const elevenlabs = await screen.findByRole('button', { name: /ElevenLabs/ })
-    fireEvent.click(elevenlabs)
+    const openaiTts = await screen.findByRole('button', { name: /OpenAI TTS/ })
+    fireEvent.click(openaiTts)
     expect(selectToolsetProvider).not.toHaveBeenCalled()
 
     // The explicit activation button is what persists the backend choice.
     fireEvent.click(await screen.findByRole('button', { name: /Use this backend/ }))
 
-    await waitFor(() => expect(selectToolsetProvider).toHaveBeenCalledWith('tts', 'ElevenLabs'))
+    await waitFor(() => expect(selectToolsetProvider).toHaveBeenCalledWith('tts', 'OpenAI TTS'))
   })
 
   it('serializes provider selection while a previous choice is pending', async () => {
@@ -281,20 +277,20 @@ describe('ToolsetConfigPanel', () => {
 
     render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
-    // Edge auto-expands (first configured provider); activate it explicitly.
-    await screen.findByRole('button', { name: /Microsoft Edge TTS/ })
+    // Piper auto-expands (first configured provider); activate it explicitly.
+    await screen.findByRole('button', { name: /Piper/ })
     const useBackend = await screen.findByRole('button', { name: /Use this backend/ })
     fireEvent.click(useBackend)
 
-    await waitFor(() => expect(selectToolsetProvider).toHaveBeenCalledWith('tts', 'Microsoft Edge TTS'))
+    await waitFor(() => expect(selectToolsetProvider).toHaveBeenCalledWith('tts', 'Piper'))
     // While the first selection is pending, the activation CTA is disabled —
     // a second click must not fire another PUT.
     expect(useBackend.hasAttribute('disabled')).toBe(true)
     fireEvent.click(useBackend)
     expect(selectToolsetProvider).toHaveBeenCalledTimes(1)
 
-    resolveSelection({ name: 'tts', ok: true, provider: 'Microsoft Edge TTS' })
-    // Edge is now the active backend — its expanded panel shows the active
+    resolveSelection({ name: 'tts', ok: true, provider: 'Piper' })
+    // Piper is now the active backend — its expanded panel shows the active
     // hint instead of the activation button.
     await waitFor(() => expect(screen.getByText('This is your active backend')).toBeTruthy())
   })
@@ -346,33 +342,33 @@ describe('ToolsetConfigPanel', () => {
     render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
     // Select the keyed provider so its env vars render.
-    const elevenlabs = await screen.findByRole('button', { name: /ElevenLabs/ })
-    fireEvent.click(elevenlabs)
+    const openaiTts = await screen.findByRole('button', { name: /OpenAI TTS/ })
+    fireEvent.click(openaiTts)
 
     // Open the credential actions menu (Radix opens on pointerdown), then "Set".
     const trigger = await screen.findByRole('button', { name: /^Actions$/ })
     fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false, pointerType: 'mouse' })
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Set' }))
 
-    const input = await screen.findByPlaceholderText('ElevenLabs API key')
+    const input = await screen.findByPlaceholderText('OpenAI API key')
     fireEvent.change(input, { target: { value: 'sk-test-123' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
-    await waitFor(() => expect(setEnvVar).toHaveBeenCalledWith('ELEVENLABS_API_KEY', 'sk-test-123'))
+    await waitFor(() => expect(setEnvVar).toHaveBeenCalledWith('VOICE_TOOLS_OPENAI_KEY', 'sk-test-123'))
   })
 
   it('expands the active provider on load, not just the first configured one', async () => {
-    // ElevenLabs is the active provider per config, even though the keyless
-    // Edge TTS provider sorts first and is also "configured". The panel must
-    // honor is_active and expand ElevenLabs (so its API-key field renders)
+    // OpenAI TTS is the active provider per config, even though the keyless
+    // Piper provider sorts first and is also "configured". The panel must
+    // honor is_active and expand OpenAI TTS (so its API-key field renders)
     // rather than defaulting to the first keyless provider. Regression test
     // for the GUI showing the wrong provider selected after relaunch.
     getToolsetConfig.mockResolvedValue(
       config({
-        active_provider: 'ElevenLabs',
+        active_provider: 'OpenAI TTS',
         providers: [
           {
-            name: 'Microsoft Edge TTS',
+            name: 'Piper',
             badge: 'free',
             tag: 'No API key needed',
             env_vars: [],
@@ -381,13 +377,13 @@ describe('ToolsetConfigPanel', () => {
             is_active: false
           },
           {
-            name: 'ElevenLabs',
+            name: 'OpenAI TTS',
             badge: 'paid',
-            tag: 'Most natural voices',
+            tag: 'High quality voices',
             env_vars: [
               {
-                key: 'ELEVENLABS_API_KEY',
-                prompt: 'ElevenLabs API key',
+                key: 'VOICE_TOOLS_OPENAI_KEY',
+                prompt: 'OpenAI API key',
                 url: 'https://x',
                 default: null,
                 is_set: true
@@ -404,8 +400,8 @@ describe('ToolsetConfigPanel', () => {
     render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
     // The active provider's env-var field only renders when it's the expanded
-    // one — so finding it proves ElevenLabs (not Edge TTS) was auto-expanded.
-    expect(await screen.findByText('ELEVENLABS_API_KEY')).toBeTruthy()
+    // one — so finding it proves OpenAI TTS (not Piper) was auto-expanded.
+    expect(await screen.findByText('VOICE_TOOLS_OPENAI_KEY')).toBeTruthy()
     // No provider selection was triggered — this is purely reflecting state.
     expect(selectToolsetProvider).not.toHaveBeenCalled()
   })
@@ -512,7 +508,7 @@ describe('ToolsetConfigPanel', () => {
         config({
           providers: [
             {
-              name: 'Microsoft Edge TTS',
+              name: 'Piper',
               badge: 'free',
               tag: 'No API key needed',
               env_vars: [],
@@ -547,8 +543,8 @@ describe('ToolsetConfigPanel', () => {
 
       render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
-      await screen.findByText('Microsoft Edge TTS')
-      // Edge is the active backend — its row pill reads Active (which
+      await screen.findByText('Piper')
+      // Piper is the active backend — its row pill reads Active (which
       // subsumes Ready); the other rows keep their warn pills.
       expect(screen.getAllByText('Active')).toHaveLength(1)
       expect(screen.queryByText('Ready')).toBeNull()
@@ -562,8 +558,8 @@ describe('ToolsetConfigPanel', () => {
       // desktop and backend update on separate clocks.
       render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
-      await screen.findByText('Microsoft Edge TTS')
-      // Default config(): keyless Edge TTS (ready) + unset ElevenLabs (not).
+      await screen.findByText('Piper')
+      // Default config(): keyless Piper (ready) + unset OpenAI TTS (not).
       expect(screen.getAllByText('Ready')).toHaveLength(1)
       expect(screen.queryByText('Needs sign-in')).toBeNull()
       expect(screen.queryByText('Setup required')).toBeNull()
@@ -575,13 +571,13 @@ describe('ToolsetConfigPanel', () => {
           active_provider: null,
           providers: [
             {
-              name: 'ElevenLabs',
+              name: 'OpenAI TTS',
               badge: 'paid',
-              tag: 'Most natural voices',
+              tag: 'High quality voices',
               env_vars: [
                 {
-                  key: 'ELEVENLABS_API_KEY',
-                  prompt: 'ElevenLabs API key',
+                  key: 'VOICE_TOOLS_OPENAI_KEY',
+                  prompt: 'OpenAI API key',
                   url: 'https://x',
                   default: null,
                   is_set: false
@@ -598,7 +594,7 @@ describe('ToolsetConfigPanel', () => {
 
       render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
-      expect(await screen.findByText('ELEVENLABS_API_KEY')).toBeTruthy()
+      expect(await screen.findByText('VOICE_TOOLS_OPENAI_KEY')).toBeTruthy()
       expect(screen.queryByText('Ready')).toBeNull()
 
       // Save a key: the pill must go Ready from the local envState patch even
@@ -606,7 +602,7 @@ describe('ToolsetConfigPanel', () => {
       const trigger = await screen.findByRole('button', { name: /^Actions$/ })
       fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false, pointerType: 'mouse' })
       fireEvent.click(await screen.findByRole('menuitem', { name: 'Set' }))
-      fireEvent.change(await screen.findByPlaceholderText('ElevenLabs API key'), { target: { value: 'sk-live' } })
+      fireEvent.change(await screen.findByPlaceholderText('OpenAI API key'), { target: { value: 'sk-live' } })
       fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
       await waitFor(() => expect(screen.getByText('Ready')).toBeTruthy())
@@ -818,16 +814,16 @@ describe('ToolsetConfigPanel', () => {
     it('offers "Manage in API Keys" on a set key and navigates to Settings → Keys', async () => {
       getToolsetConfig.mockResolvedValue(
         config({
-          active_provider: 'ElevenLabs',
+          active_provider: 'OpenAI TTS',
           providers: [
             {
-              name: 'ElevenLabs',
+              name: 'OpenAI TTS',
               badge: 'paid',
-              tag: 'Most natural voices',
+              tag: 'High quality voices',
               env_vars: [
                 {
-                  key: 'ELEVENLABS_API_KEY',
-                  prompt: 'ElevenLabs API key',
+                  key: 'VOICE_TOOLS_OPENAI_KEY',
+                  prompt: 'OpenAI API key',
                   url: 'https://x',
                   default: null,
                   is_set: true
@@ -848,20 +844,20 @@ describe('ToolsetConfigPanel', () => {
       fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false, pointerType: 'mouse' })
       fireEvent.click(await screen.findByRole('menuitem', { name: 'Manage in API Keys' }))
 
-      await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith('/settings?tab=keys&key=ELEVENLABS_API_KEY'))
+      await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith('/settings?tab=keys&key=VOICE_TOOLS_OPENAI_KEY'))
     })
 
     it('hides "Manage in API Keys" while the key is unset', async () => {
-      // Default config(): ElevenLabs key is not set. An unset key is managed
+      // Default config(): OpenAI TTS key is not set. An unset key is managed
       // right here via Set — no point bouncing the user to another page.
       render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
       // Expand the keyed provider so its env row renders. Wait for the
       // selection to commit: on a freshly loaded panel this races the default
       // provider initializer, and user intent must win that race.
-      const elevenLabs = await screen.findByRole('button', { name: /ElevenLabs/ })
-      fireEvent.click(elevenLabs)
-      await waitFor(() => expect(elevenLabs.getAttribute('aria-expanded')).toBe('true'))
+      const openaiTts = await screen.findByRole('button', { name: /OpenAI TTS/ })
+      fireEvent.click(openaiTts)
+      await waitFor(() => expect(openaiTts.getAttribute('aria-expanded')).toBe('true'))
 
       const trigger = await screen.findByRole('button', { name: /^Actions$/ })
       fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false, pointerType: 'mouse' })

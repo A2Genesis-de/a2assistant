@@ -21,7 +21,7 @@ import { getApiRequestConnection, getApiRequestProfile, hermesApi } from '@/herm
 
 export interface DirectSttConfig {
   mode: 'direct'
-  wire: 'elevenlabs-stt' | 'openai-multipart' | 'xai-stt'
+  wire: 'openai-multipart'
   provider: string
   base_url: string
   api_key: string
@@ -36,7 +36,7 @@ export interface DirectSttConfig {
 
 export interface DirectTtsConfig {
   mode: 'direct'
-  wire: 'elevenlabs-tts' | 'openai-speech'
+  wire: 'openai-speech'
   provider: string
   base_url: string
   api_key: string
@@ -172,8 +172,8 @@ async function providerErrorText(response: Response): Promise<string> {
 /**
  * Normalize an OpenAI-compatible transcription HTTP body to spoken text.
  *
- * Groq and OpenAI honor `response_format=text` and return a bare string.
- * Mistral Voxtral ignores that flag and returns JSON
+ * OpenAI honors `response_format=text` and returns a bare string. Some
+ * OpenAI-compatible servers ignore that flag and return JSON
  * `{ text, model, usage, ... }` — dumping that object into the Desktop
  * composer is the dictation regression (plain speech becomes raw JSON).
  */
@@ -267,24 +267,6 @@ async function sttFetch(stt: DirectSttConfig, url: string, init: RequestInit): P
   }
 }
 
-/** Multipart body for xAI `POST /v1/stt`. */
-function xaiSttForm(audio: Blob, stt: DirectSttConfig): FormData {
-  const form = new FormData()
-  form.set('file', audio, sttFileName(audio))
-
-  if (stt.model) {
-    form.set('model', stt.model)
-  }
-
-  // xAI rejects format=true without a language (HTTP 400), so auto-detect drops the flag.
-  if (stt.language) {
-    form.set('language', stt.language)
-    form.set('format', 'true')
-  }
-
-  return form
-}
-
 /**
  * Transcribe provider-direct. Returns the transcript ('' = silence), or null
  * when the profile's provider isn't client-callable — the caller relays.
@@ -333,55 +315,6 @@ export async function transcribeAudioClientDirect(audio: Blob, owner?: ResolvedO
     return isSttSilenceHallucination(transcript, stt.hallucination_filter) ? '' : transcript
   }
 
-  if (stt.wire === 'xai-stt') {
-    const response = await sttFetch(stt, `${stt.base_url.replace(/\/+$/, '')}/stt`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${stt.api_key}` },
-      body: xaiSttForm(audio, stt),
-      signal: AbortSignal.timeout(STT_REQUEST_TIMEOUT_MS)
-    })
-
-    if (!response.ok) {
-      throw new Error(`xAI STT error (HTTP ${response.status}): ${await providerErrorText(response)}`)
-    }
-
-    const result = (await response.json()) as { text?: string }
-    const transcript = (result.text || '').trim()
-
-    // Silence hallucination: same contract as the relay endpoint.
-    return isSttSilenceHallucination(transcript, stt.hallucination_filter) ? '' : transcript
-  }
-
-  if (stt.wire === 'elevenlabs-stt') {
-    const form = new FormData()
-    form.set('file', audio, sttFileName(audio))
-
-    if (stt.model) {
-      form.set('model_id', stt.model)
-    }
-
-    if (stt.language) {
-      form.set('language_code', stt.language)
-    }
-
-    const response = await sttFetch(stt, `${stt.base_url.replace(/\/+$/, '')}/speech-to-text`, {
-      method: 'POST',
-      headers: { 'xi-api-key': stt.api_key },
-      body: form,
-      signal: AbortSignal.timeout(STT_REQUEST_TIMEOUT_MS)
-    })
-
-    if (!response.ok) {
-      throw new Error(`ElevenLabs STT error (HTTP ${response.status}): ${await providerErrorText(response)}`)
-    }
-
-    const result = (await response.json()) as { text?: string }
-    const transcript = (result.text || '').trim()
-
-    // Silence hallucination: same contract as the relay endpoint.
-    return isSttSilenceHallucination(transcript, stt.hallucination_filter) ? '' : transcript
-  }
-
   return null
 }
 
@@ -423,27 +356,6 @@ export async function synthesizeSpeechClientDirect(tts: DirectTtsConfig, text: s
 
     if (!response.ok) {
       throw new Error(`${tts.provider} TTS error (HTTP ${response.status}): ${await providerErrorText(response)}`)
-    }
-
-    return response.arrayBuffer()
-  }
-
-  if (tts.wire === 'elevenlabs-tts') {
-    const response = await fetch(
-      `${tts.base_url.replace(/\/+$/, '')}/text-to-speech/${encodeURIComponent(tts.voice || '')}`,
-      {
-        method: 'POST',
-        headers: {
-          'xi-api-key': tts.api_key,
-          'Content-Type': 'application/json',
-          Accept: 'audio/mpeg'
-        },
-        body: JSON.stringify({ text, model_id: tts.model })
-      }
-    )
-
-    if (!response.ok) {
-      throw new Error(`ElevenLabs TTS error (HTTP ${response.status}): ${await providerErrorText(response)}`)
     }
 
     return response.arrayBuffer()

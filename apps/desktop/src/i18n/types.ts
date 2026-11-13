@@ -460,8 +460,6 @@ export interface Translations extends NoticeTranslations {
       disableFailed: (name: string) => string
     }
     errors: {
-      elevenLabsNeedsKey: string
-      elevenLabsRejectedKey: string
       diskFull: string
       storageFailure: string
       gatewayAuthFailed: string
