@@ -20,8 +20,6 @@ from hermes_cli.config import DEFAULT_CONFIG, cfg_get
 from hermes_cli.local_runtime.endpoint import LLAMACPP_ALIASES
 from hermes_cli.observability.shared_metrics_busy import observe_running_chats
 
-if TYPE_CHECKING:  # string annotations only; never imported at runtime (cycle)
-    pass
 
 # Log-record parity with the origin module.
 logger = logging.getLogger("gateway.run")
