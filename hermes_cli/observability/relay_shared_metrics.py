@@ -252,9 +252,6 @@ class _Runtime:
         self._cold_lock = threading.Lock()
         self._task_creation_lock = threading.RLock()
         self._task_sessions_lock = threading.RLock()
-        # Guards the opt-in send pass: at most one in flight per process.
-        self._send_lock = threading.RLock()
-        self._send_thread: threading.Thread | None = None
         # Flushing is a process-wide Relay barrier. Keep it off interactive turn threads while
         # coalescing concurrent finish hooks into one worker.
         self._flush_lock = threading.RLock()
@@ -691,25 +688,8 @@ class _Runtime:
         self._release()
 
     def _release(self) -> None:
-        """Let an in-flight send finish briefly, then drop the atexit hook.
-
-        A short-lived CLI process would otherwise exit and kill the daemon send thread
-        mid-request — the common case for this feature's one cadence.
-        """
-        self._join_send_thread()
         with contextlib.suppress(Exception):
             atexit.unregister(self.shutdown)
-
-    def _join_send_thread(self, timeout: float = 2.0) -> None:
-        """Bounded on purpose: pending packages stay in SQLite and go out next run, so
-        blocking on a slow network is the wrong trade; the daemon thread dies with the process."""
-        with self._send_lock:
-            thread = self._send_thread
-        if thread is not None and thread.is_alive():
-            try:
-                thread.join(timeout)
-            except Exception:
-                logger.debug("Shared-metrics send thread join failed", exc_info=True)
 
     def _session(self, event: dict[str, Any]) -> _MetricsSession | None:
         with self._sessions_lock:
@@ -1269,50 +1249,7 @@ class _Runtime:
             )
 
     def _export(self) -> None:
-        exported = self._safe(self.subscriber.store.create_and_export_package_if_due)
-        # Sending must never delay the caller: _export runs on finish_task, the user's
-        # interactive path. The thread is about latency, not correctness.
-        if exported is not None:
-            self._safe(self._send_exported_packages)
-
-    def _send_exported_packages(self) -> None:
-        try:
-            resolved = _resolved_send_config()
-        except Exception:
-            logger.debug("Unable to read shared-metrics send policy", exc_info=True)
-            return
-
-        # Observe the consent EDGE before deciding whether to send: the dominant revocation
-        # case is "sending turned off while no pass is running", invisible to the send loop.
-        # Failures never break the export hook but log at warning (privacy-relevant).
-        self._guarded(
-            "Unable to record a shared-metrics consent transition",
-            _reconcile_store_consent, self.subscriber.store, resolved.send,
-        )
-        if not resolved.send:
-            return
-
-        with self._send_lock:
-            # One in-flight pass per process; the next hook fire picks up what is pending.
-            if self._send_thread is None or not self._send_thread.is_alive():
-                from agent.memory_provider import spawn_context_thread
-
-                # Context copy: the pass re-checks consent (still_consented) in THIS profile's scope.
-                self._send_thread = spawn_context_thread(
-                    self._run_send_pass, name="hermes-shared-metrics-send", args=(resolved.endpoint,)
-                )
-                self._send_thread.start()
-
-    def _run_send_pass(self, endpoint: str) -> None:
-        from hermes_cli.observability.shared_metrics_sender import SharedMetricsSender
-
-        def still_consented() -> bool:
-            """Re-read consent so revoking `send` stops an in-flight pass."""
-            resolved = _resolved_send_config()
-            return resolved.send and resolved.endpoint == endpoint
-
-        sender = SharedMetricsSender(self.subscriber.store, endpoint, consent_check=still_consented)
-        self._guarded("Shared-metrics send pass failed", sender.send_pending)
+        self._safe(self.subscriber.store.create_and_export_package_if_due)
 
     def _event_metadata(self) -> dict[str, str]:
         return {
@@ -1346,22 +1283,6 @@ def _raw_config() -> dict[str, Any]:
     return read_raw_config_readonly() or {}
 
 
-def _resolved_send_config():
-    """Resolve the opt-in send policy from the read-only config snapshot."""
-    from hermes_cli.observability.shared_metrics_send_config import resolve_send_config
-
-    return resolve_send_config(_raw_config())
-
-
-def _reconcile_store_consent(store: SharedMetricsStore, send_enabled: bool) -> None:
-    from hermes_cli.observability.shared_metrics_sender import reconcile_send_consent
-    from hermes_cli.sqlite_util import write_txn
-
-    with store._connection() as connection:
-        with write_txn(connection):
-            reconcile_send_consent(connection, send_enabled)
-
-
 def enabled() -> bool:
     """Return the shared-metrics policy for the active Hermes profile."""
     profile_key = relay_runtime.current_profile_key()
@@ -1387,37 +1308,6 @@ def handles_hook(hook_name: str) -> bool:
     return hook_name in HANDLED_HOOKS and enabled()
 
 
-_consent_reconcile_done = False
-
-
-def _reconcile_send_consent_once() -> None:
-    """Reconcile consent windows with config, once per process.
-
-    Runs BEFORE and INDEPENDENT of the collection gate, so a user with ``enabled: false``
-    still gets send-consent windows reconciled. Skipped only when there is no store on disk
-    AND consent is off: nothing to protect, and creating ``~/.hermes/telemetry`` for every
-    fully-disabled user would be the wrong behaviour change.
-    """
-    global _consent_reconcile_done
-    if _consent_reconcile_done:
-        return
-    _consent_reconcile_done = True
-    try:
-        # Lazy: tests patch ``shared_metrics.SharedMetricsStore`` at its origin.
-        from hermes_cli.observability.shared_metrics import SharedMetricsStore
-        from hermes_constants import get_hermes_home
-
-        resolved = _resolved_send_config()
-        # Probe WITHOUT constructing a store: the constructor creates the directory and
-        # schema as a side effect, which would make the skip below dead code.
-        default_path = get_hermes_home() / "telemetry" / "shared_metrics" / "metrics.sqlite3"
-        if not resolved.send and not default_path.exists():
-            return
-        _reconcile_store_consent(SharedMetricsStore(), resolved.send)
-    except Exception:
-        logger.warning("Unable to reconcile shared-metrics send consent", exc_info=True)
-
-
 # Hooks whose only effect is a process mark (no task, no scope): gated like record_process_mark.
 _PROCESS_MARK_HOOKS = frozenset({"post_auxiliary_call"})
 
@@ -1435,7 +1325,6 @@ def _process_marks_admitted() -> bool:
 
 def observe_lifecycle(hook_name: str, **kwargs: Any) -> None:
     """Project one Hermes lifecycle event into the core Relay integration."""
-    _reconcile_send_consent_once()
     if not handles_hook(hook_name):
         return
     if not (

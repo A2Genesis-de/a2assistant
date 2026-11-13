@@ -23,7 +23,6 @@ import { frPluginUpdate } from './fr_plugin_update'
 import { frPluginUpdateAll } from './fr_plugin_update_all'
 import { frPreviewWeb } from './fr_preview_web'
 import { frProjects } from './fr_projects'
-import { frSharedMetrics } from './fr_shared_metrics'
 import { frThemePicker } from './fr_theme_picker'
 import { frUpdateChannel } from './fr_update_channel'
 import { introFr } from './intro-fr'
@@ -34,7 +33,6 @@ export const frOverrides = {
     lookupFailed: "Impossible de retrouver ce groupe sur la passerelle. Réessayez.",
     missing: "Cette discussion de groupe n’existe plus."
   },
-  sharedMetrics: frSharedMetrics,
   firstRun: frFirstRun,
   intro: introFr,
   connectors: frConnectorCard,
@@ -511,29 +509,6 @@ export const frOverrides = {
     }
   },
   ...frNotices,
-  sendDiagnostics: {
-    title: 'Envoyer les diagnostics à Nous',
-    privacyNotice:
-      "Cela téléverse un paquet de débogage vers un stockage interne de Nous, et non vers un service de partage public. Il contient des informations système (système d'exploitation, versions, fournisseur et clés API configurées — jamais les clés elles-mêmes) ainsi que les journaux complets de l'agent, du gateway et du Desktop (jusqu'à 512 Ko chacun), susceptibles de contenir des conversations, des résultats d'outils et des chemins de fichiers. Les secrets sont expurgés avant l'envoi. Seuls le personnel de Nous et les modérateurs Discord autorisés peuvent consulter le paquet, qui est automatiquement supprimé après 14 jours.",
-    upload: 'Envoyer',
-    uploading: 'Envoi en cours…',
-    cancel: 'Annuler',
-    close: 'Fermer',
-    copyLink: 'Copier le lien',
-    uploadIdFallback: id => `Aucun lien de consultation renvoyé — indiquez l'identifiant ${id} au support`,
-    doneTitle: 'Diagnostics envoyés',
-    doneDescription:
-      "Votre paquet a été téléversé de manière privée. Partagez le lien ci-dessous dans votre fil d'assistance afin que l'équipe puisse consulter vos journaux.",
-    failedTitle: "Échec de l'envoi",
-    failedHint:
-      'Vous pouvez également exécuter `hermes debug share --nous` dans un terminal, ou `hermes debug share --local` pour afficher le rapport sans le téléverser.',
-    handoffLead: 'Poursuivez la discussion sur :',
-    links: {
-      github: 'Issues GitHub',
-      portal: 'Assistance du portail Nous',
-      discord: 'Discord'
-    }
-  },
   titlebar: {
     hideSidebar: 'Masquer la barre latérale',
     showSidebar: 'Afficher la barre latérale',
@@ -2880,12 +2855,6 @@ export const frOverrides = {
       securityAuditDesc: 'Analyser la configuration et les skills à la recherche de paramètres risqués',
       backup: 'Créer une sauvegarde',
       backupDesc: 'Archiver en zip la configuration, les mémoires, les skills et les sessions',
-      debugShare: 'Partage de débogage',
-      debugShareDesc:
-        'Téléverser un rapport expurgé + journaux, obtenir des liens partageables (auto-suppression après 6h)',
-      debugShareRunning: 'Téléversement du rapport de débogage...',
-      debugShareLinks: 'Liens de partage',
-      debugShareFailed: 'Échec du partage de débogage',
       copyLink: 'Copier le lien',
       linkCopied: 'Lien copié',
       curator: 'Curateur de skills',
@@ -5120,7 +5089,6 @@ export const frOverrides = {
       errorOpenLogs: 'Ouvrir les journaux',
       errorOpenLogsFailed: "Impossible d'ouvrir le dossier des journaux",
       errorOpenDesktopLogs: 'Ouvrir les journaux du Desktop',
-      errorSendDiagnostics: 'Envoyer les diagnostics',
       filesChanged: count => (count === 1 ? '1 fichier modifié' : `${count} fichiers modifiés`),
       reviewChanges: 'Examiner',
       readAloudFailed: 'Échec de la lecture à voix haute',
@@ -5590,7 +5558,6 @@ export const frOverrides = {
     boundaryTitle: "Un problème est survenu dans l'interface",
     boundaryDesc: 'La vue a rencontré une erreur inattendue. Vos conversations et vos paramètres sont en sécurité.',
     boundaryDetails: 'Détails',
-    sendDiagnostics: 'Envoyer les diagnostics',
     reloadWindow: 'Recharger la fenêtre',
     openLogs: 'Ouvrir les journaux'
   },

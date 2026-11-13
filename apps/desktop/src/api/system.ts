@@ -7,7 +7,6 @@ import type {
   AudioTtsLeaseResponse,
   BackendUpdateCheckResponse,
   CuratorStatusResponse,
-  DebugShareResponse,
   ElevenLabsVoicesResponse,
   MemoryProviderConfig,
   MemoryProviderOAuthStatus,
@@ -269,14 +268,13 @@ export function getElevenLabsVoices(profile?: null | string): Promise<ElevenLabs
 
 // ---------------------------------------------------------------------------
 // Maintenance operations (parity with `hermes doctor` / `hermes security
-// audit` / `hermes backup` / `hermes debug share` and the dashboard System
-// page). All except debug share are spawn-based background actions tailed via
-// getActionStatus().
+// audit` / `hermes backup` and the dashboard System page): spawn-based
+// background actions tailed via getActionStatus().
 //
 // Every one carries the ambient profile: Electron pins the whole /api/ops
 // family to the shared primary backend (connection-config's
 // LOCAL_PRIMARY_SCOPED_ROUTES), so an unprofiled call acts on that backend's
-// LAUNCH profile — and debug share uploads a home's logs and config.
+// LAUNCH profile.
 // ---------------------------------------------------------------------------
 
 export function runDoctor(): Promise<ActionResponse> {
@@ -301,13 +299,3 @@ export function runBackup(): Promise<ActionResponse & { archive?: string }> {
   })
 }
 
-export function runDebugShare(): Promise<DebugShareResponse> {
-  return hermesApi<DebugShareResponse>({
-    ...profileScoped(),
-    path: '/api/ops/debug-share',
-    method: 'POST',
-    body: {},
-    // Synchronous upload of report + logs to the paste service.
-    timeoutMs: 120_000
-  })
-}

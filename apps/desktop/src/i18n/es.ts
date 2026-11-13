@@ -23,7 +23,6 @@ import { esPluginUpdate } from './es_plugin_update'
 import { esPluginUpdateAll } from './es_plugin_update_all'
 import { esPreviewWeb } from './es_preview_web'
 import { esProjects } from './es_projects'
-import { esSharedMetrics } from './es_shared_metrics'
 import { esThemePicker } from './es_theme_picker'
 import { esUpdateChannel } from './es_update_channel'
 import { introEs } from './intro-es'
@@ -34,7 +33,6 @@ export const esOverrides = {
     lookupFailed: "No se pudo encontrar este grupo en la pasarela. Inténtalo de nuevo.",
     missing: "Este chat de grupo ya no existe."
   },
-  sharedMetrics: esSharedMetrics,
   firstRun: esFirstRun,
   intro: introEs,
   connectors: esConnectorCard,
@@ -514,29 +512,6 @@ export const esOverrides = {
     }
   },
   ...esNotices,
-  sendDiagnostics: {
-    title: 'Enviar diagnóstico a Nous',
-    privacyNotice:
-      'Esto sube un paquete de depuración a un almacenamiento interno de Nous (no a un sitio público). Incluye información del sistema (SO, versiones, proveedor y qué claves API están configuradas, nunca las claves en sí) y los registros completos del agente, del gateway y de la app de escritorio (hasta 512 KB cada uno), que probablemente contengan contenido de conversaciones, salidas de herramientas y rutas de archivos. Los secretos se ocultan antes de subirlo. Solo el personal de Nous y los moderadores autorizados de Discord pueden ver el paquete, que se elimina automáticamente a los 14 días.',
-    upload: 'Subir',
-    uploading: 'Subiendo…',
-    cancel: 'Cancelar',
-    close: 'Cerrar',
-    copyLink: 'Copiar enlace',
-    uploadIdFallback: id => `No se devolvió un enlace para verlo: indica el ID de subida ${id} al equipo de soporte`,
-    doneTitle: 'Diagnóstico enviado',
-    doneDescription:
-      'Tu paquete se subió de forma privada. Comparte el enlace de abajo en tu hilo de soporte para que el equipo pueda ver tus registros.',
-    failedTitle: 'Error al subir',
-    failedHint:
-      'También puedes ejecutar `hermes debug share --nous` desde una terminal, o `hermes debug share --local` para mostrar el informe sin subirlo.',
-    handoffLead: 'Continúa la conversación en:',
-    links: {
-      github: 'Issues de GitHub',
-      portal: 'Soporte de Nous Portal',
-      discord: 'Discord'
-    }
-  },
   titlebar: {
     hideSidebar: 'Ocultar barra lateral',
     showSidebar: 'Mostrar barra lateral',
@@ -2862,12 +2837,6 @@ export const esOverrides = {
       securityAuditDesc: 'Analizar la configuración y las skills en busca de ajustes riesgosos',
       backup: 'Crear copia de seguridad',
       backupDesc: 'Comprimir la configuración, memorias, skills y sesiones en un archivo ZIP',
-      debugShare: 'Compartir datos de depuración',
-      debugShareDesc:
-        'Sube un informe y registros con datos sensibles ocultos y obtén enlaces para compartir (se eliminan automáticamente en 6 h)',
-      debugShareRunning: 'Subiendo informe de depuración…',
-      debugShareLinks: 'Enlaces para compartir',
-      debugShareFailed: 'No se pudieron compartir los datos de depuración',
       copyLink: 'Copiar enlace',
       linkCopied: 'Enlace copiado',
       curator: 'Curador de skills',
@@ -5095,7 +5064,6 @@ export const esOverrides = {
       errorOpenLogs: 'Abrir registros',
       errorOpenLogsFailed: 'No se pudo abrir la carpeta de registros',
       errorOpenDesktopLogs: 'Abrir registros de Desktop',
-      errorSendDiagnostics: 'Enviar diagnóstico',
       filesChanged: count => (count === 1 ? '1 archivo cambiado' : `${count} archivos cambiados`),
       reviewChanges: 'Revisar',
       readAloudFailed: 'Falló la lectura en voz alta',
@@ -5565,7 +5533,6 @@ export const esOverrides = {
     boundaryTitle: 'Algo se rompió en la interfaz',
     boundaryDesc: 'La vista encontró un error inesperado. Tus chats y configuración están a salvo.',
     boundaryDetails: 'Detalles',
-    sendDiagnostics: 'Enviar diagnóstico',
     reloadWindow: 'Recargar ventana',
     openLogs: 'Abrir registros'
   },

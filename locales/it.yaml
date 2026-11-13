@@ -161,13 +161,7 @@ gateway:
     codex_compacted: "🗜️ Thread dell'app-server Codex compattato (thread/compact). La copia della trascrizione resta invariata per design — ora è l'app-server a contenere il contesto compattato."
     codex_incomplete: "⚠️ La compattazione dell'app-server Codex non è stata completata — il thread è invariato. Controlla i log dell'app-server, riprova /compress oppure usa /reset per una sessione pulita."
   debug:
-    upload_failed: "✗ Caricamento del report di debug non riuscito: {error}"
-    header: "**Report di debug caricato:**"
-    auto_delete: "⏱ I paste verranno eliminati automaticamente tra 6 ore."
-    full_logs_hint: "Per il caricamento dei log completi, usa `a2assistant debug share` dalla CLI."
-    share_hint: "Condividi questi link con il team A2Assistant per ricevere supporto."
-    report_label: "Report"
-    local_refused: "`/debug local` mantiene il report sulla macchina che esegue A2Assistant, quindi non è disponibile da una chat. Invia `/debug` per caricare il report riepilogativo."
+    chat_refused: "Il report di debug resta sulla macchina su cui gira A2Assistant. Esegui lì `hermes debug share`."
   deny:
     stale: "❌ Comando negato (l'approvazione era obsoleta)."
     no_pending: "Nessun comando in attesa da negare."
@@ -1705,7 +1699,7 @@ slash:
   version:
     description: "Mostra la versione di A2Assistant"
   debug:
-    description: "Carica un report di debug (info di sistema + log) e ottieni link condivisibili"
+    description: "Mostra un report di debug oscurato (info di sistema + log)"
   quit:
     description: "Esci dalla CLI (usa --delete per eliminare anche la cronologia della sessione)"
 cli:

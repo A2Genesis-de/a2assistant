@@ -129,7 +129,7 @@ Examples:
     hermes logs -f                Follow agent.log in real time
     hermes logs errors            View errors.log
     hermes logs --since 1h        Lines from the last hour
-    hermes debug share             Upload debug report for support
+    hermes debug share             Print debug report for support
     hermes console                Open the safe A2Assistant command console
     hermes update                 Update to latest version
     hermes dashboard              Start web UI dashboard (port 9119)

@@ -161,13 +161,7 @@ gateway:
     codex_compacted: "🗜️ Codex app-server のスレッドを圧縮しました (thread/compact)。トランスクリプトのミラーは設計上変更されません。圧縮後のコンテキストは app-server が保持します。"
     codex_incomplete: "⚠️ Codex app-server の圧縮が完了しなかったため、スレッドは変更されていません。app-server のログを確認し、/compress を再試行するか、/reset でクリーンなセッションを始めてください。"
   debug:
-    upload_failed: "✗ デバッグレポートのアップロードに失敗しました: {error}"
-    header: "**デバッグレポートをアップロードしました:**"
-    auto_delete: "⏱ ペーストは 6 時間後に自動削除されます。"
-    full_logs_hint: "完全なログのアップロードには、CLI から `a2assistant debug share` を使用してください。"
-    share_hint: "サポートを受けるには、このリンクを A2Assistant チームに共有してください。"
-    report_label: "レポート"
-    local_refused: "`/debug local` はレポートを A2Assistant を実行しているマシン上に保持するため、チャットからは使えません。要約レポートをアップロードするには `/debug` を送信してください。"
+    chat_refused: "デバッグレポートは A2Assistant を実行しているマシンに残ります。そのマシンで `hermes debug share` を実行してください。"
   deny:
     stale: "❌ コマンドを拒否しました (承認は期限切れでした)。"
     no_pending: "拒否待ちのコマンドはありません。"
@@ -1705,7 +1699,7 @@ slash:
   version:
     description: "A2Assistant のバージョンを表示"
   debug:
-    description: "デバッグレポート（システム情報 + ログ）をアップロードして共有リンクを取得"
+    description: "秘匿化したデバッグレポート（システム情報＋ログ）を表示"
   quit:
     description: "CLI を終了（--delete でセッション履歴も削除）"
 cli:

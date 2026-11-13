@@ -236,11 +236,6 @@ class LearningNodeEdit(BaseModel):
     content: str
     profile: Optional[str] = None
 
-class DebugShareRequest(BaseModel):
-    # Redaction scrubs credential-shaped tokens before logs leave the machine; opt-out only.
-    redact: bool = True
-    lines: int = 200  # recent log lines in the summary tail (full logs are separate)
-
 class TTSSpeakRequest(BaseModel):
     text: str
 

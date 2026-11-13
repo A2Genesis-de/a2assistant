@@ -22,7 +22,6 @@ import { ruPluginSettings, ruPluginsTab } from './ru_plugins'
 import { RU_NOUN, RU_PLURAL } from './ru_plural'
 import { ruPreviewWeb } from './ru_preview_web'
 import { ruProjects } from './ru_projects'
-import { ruSharedMetrics } from './ru_shared_metrics'
 import { ruThemePicker } from './ru_theme_picker'
 import { ruUpdateChannel } from './ru_update_channel'
 
@@ -34,7 +33,6 @@ export const ruOverrides = {
   },
   catalog: ruCatalog,
   connectors: ruConnectors.connectors,
-  sharedMetrics: ruSharedMetrics,
   firstRun: ruFirstRun,
   sessionImport: ruConnectors.sessionImport,
   common: {
@@ -1772,11 +1770,6 @@ export const ruOverrides = {
       securityAuditDesc: 'Сканирование конфигурации и навыков на предмет рискованных настроек',
       backup: 'Создать резервную копию',
       backupDesc: 'Сжатие конфигурации, памяти, навыков и сеансов в zip',
-      debugShare: 'Поделиться отладкой',
-      debugShareDesc: 'Загрузка анонимизированного отчёта + журналов, получение ссылок (автоудаление через 6 ч)',
-      debugShareRunning: 'Загрузка отладочного отчёта...',
-      debugShareLinks: 'Ссылки для шаринга',
-      debugShareFailed: 'Ошибка шаринга отладки',
       copyLink: 'Скопировать ссылку',
       linkCopied: 'Ссылка скопирована',
       curator: 'Курир навыков',

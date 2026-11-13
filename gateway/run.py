@@ -4306,13 +4306,6 @@ def _housekeeping_channel_directory(adapters, loop) -> None:
             fut.result(timeout=30)
 
 
-def _housekeeping_paste_sweep() -> None:
-    from hermes_cli.debug import _sweep_expired_pastes
-    deleted, remaining = _sweep_expired_pastes()
-    if deleted:
-        logger.info("Paste sweep: deleted %d expired paste(s), %d pending", deleted, remaining)
-
-
 def _housekeeping_misfire_catch_up(cron_provider, adapters, loop) -> None:
     """External cron providers only: fire jobs whose time passed with no external fire delivered (dead
     loopback hop). No-op for the built-in ticker; enforces misfire_grace_minutes; CAS claim de-dupes."""
@@ -4474,8 +4467,7 @@ def _start_gateway_housekeeping(
         chores.append((1, DRAIN_LABEL, lambda: _drain_restart_safe_cron_deliveries(adapters, loop, runner)))
     chores += [
         (5, "Channel directory refresh", lambda: adapters and _housekeeping_channel_directory(adapters, loop)),
-        (60, "Media cache cleanup", housekeeping_media_caches),
-        (60, "Paste sweep", _housekeeping_paste_sweep)]
+        (60, "Media cache cleanup", housekeeping_media_caches)]
     # Low disk + auto-prune undecided: ask on the home channel (two syscalls; snoozed per post).
     chores.append((1, "Auto-prune low-disk prompt", lambda: maybe_post_auto_prune_prompt(runner, loop)))
     if cron_provider is not None:

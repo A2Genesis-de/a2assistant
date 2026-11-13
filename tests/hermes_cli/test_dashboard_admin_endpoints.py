@@ -876,67 +876,6 @@ class TestUpdateCheckEndpoint:
         assert refused["update_command"] == ""
 
 
-class TestDebugShareEndpoint:
-    """POST /api/ops/debug-share returns the paste URLs synchronously so the
-    dashboard can render them as copyable links (not a backgrounded log tail)."""
-
-    @pytest.fixture(autouse=True)
-    def _setup(self, _isolate_hermes_home):
-        self.client, self.header = _client()
-        from hermes_constants import get_hermes_home
-
-        logs = get_hermes_home() / "logs"
-        logs.mkdir(parents=True, exist_ok=True)
-        (logs / "agent.log").write_text("agent line\n")
-        (logs / "errors.log").write_text("err line\n")
-        (logs / "gateway.log").write_text("gw line\n")
-
-
-    def test_redact_false_is_honored(self, monkeypatch):
-        import hermes_cli.debug as dbg
-
-        monkeypatch.setattr(
-            dbg, "upload_to_pastebin", lambda c, expiry_days=7: "https://paste.rs/x"
-        )
-        monkeypatch.setattr(dbg, "_schedule_auto_delete", lambda *a, **k: None)
-        monkeypatch.setattr(dbg, "_best_effort_sweep_expired_pastes", lambda: None)
-        monkeypatch.setattr("hermes_cli.dump.run_dump", lambda a: None)
-
-        r = self.client.post("/api/ops/debug-share", json={"redact": False})
-        assert r.status_code == 200
-        assert r.json()["redacted"] is False
-
-    def test_default_body_redacts(self, monkeypatch):
-        import hermes_cli.debug as dbg
-
-        monkeypatch.setattr(
-            dbg, "upload_to_pastebin", lambda c, expiry_days=7: "https://paste.rs/x"
-        )
-        monkeypatch.setattr(dbg, "_schedule_auto_delete", lambda *a, **k: None)
-        monkeypatch.setattr(dbg, "_best_effort_sweep_expired_pastes", lambda: None)
-        monkeypatch.setattr("hermes_cli.dump.run_dump", lambda a: None)
-
-        # No JSON body at all — should default redact=True.
-        r = self.client.post("/api/ops/debug-share")
-        assert r.status_code == 200
-        assert r.json()["redacted"] is True
-
-    def test_upload_failure_returns_502(self, monkeypatch):
-        import hermes_cli.debug as dbg
-
-        monkeypatch.setattr(
-            dbg,
-            "upload_to_pastebin",
-            lambda c, expiry_days=7: (_ for _ in ()).throw(RuntimeError("down")),
-        )
-        monkeypatch.setattr(dbg, "_schedule_auto_delete", lambda *a, **k: None)
-        monkeypatch.setattr(dbg, "_best_effort_sweep_expired_pastes", lambda: None)
-        monkeypatch.setattr("hermes_cli.dump.run_dump", lambda a: None)
-
-        r = self.client.post("/api/ops/debug-share", json={"redact": True})
-        assert r.status_code == 502
-
-
 class TestToolsConfigEndpoints:
     """Provider selection, API-key save, and post-setup spawn for toolsets —
     the dashboard surface that replicates the `hermes tools` configurator."""

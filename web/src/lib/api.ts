@@ -176,8 +176,6 @@ const PROFILE_SCOPED_PREFIXES = [
   "/api/dashboard/font",
   "/api/dashboard/plugins",
   "/api/plugins/", // a plugin's backend: the selected profile's copy, as its bundle is (PLG-3)
-  // The shared-metrics answer is one per profile (telemetry.shared_metrics in its config.yaml).
-  "/api/shared-metrics",
 ];
 
 // The dashboard's own profile when nothing else named one. The backend injects it only
@@ -670,14 +668,6 @@ export const api = {
         body: JSON.stringify(body),
       },
     ),
-  getSharedMetricsConsent: (profile = getManagementProfile()) =>
-    fetchJSON<SharedMetricsConsent>(appendProfileParam("/api/shared-metrics/consent", profile)),
-  saveSharedMetricsConsent: (answer: { enabled: boolean; send: boolean }, profile = getManagementProfile()) =>
-    fetchJSON<SharedMetricsConsent>(appendProfileParam("/api/shared-metrics/consent", profile), {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(answer),
-    }),
   saveConfig: (config: Record<string, unknown>, profile = getManagementProfile()) =>
     fetchJSON<{ ok: boolean }>(appendProfileParam("/api/config", profile), {
       method: "PUT",
@@ -1443,15 +1433,6 @@ export const api = {
   runDump: () => fetchJSON<ActionResponse>("/api/ops/dump", { method: "POST" }),
   runConfigMigrate: () =>
     fetchJSON<ActionResponse>("/api/ops/config-migrate", { method: "POST" }),
-  runDebugShare: (opts?: { redact?: boolean; lines?: number }) =>
-    fetchJSON<DebugShareResponse>("/api/ops/debug-share", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        redact: opts?.redact ?? true,
-        lines: opts?.lines ?? 200,
-      }),
-    }),
 
 
   getCheckpoints: () => fetchJSON<CheckpointsResponse>("/api/ops/checkpoints"),
@@ -1534,16 +1515,6 @@ export interface ActionResponse {
   message?: string;
   uploaded_bytes?: number;
   update_command?: string;
-}
-
-export interface DebugShareResponse {
-  ok: boolean;
-  // label -> paste URL, e.g. { Report: "https://paste.rs/abc", "agent.log": "..." }
-  urls: Record<string, string>;
-  // "label: error" strings for optional full-log uploads that failed.
-  failures: string[];
-  redacted: boolean;
-  auto_delete_seconds: number;
 }
 
 export interface SessionStoreStats {
@@ -1995,15 +1966,6 @@ export interface PlatformStatus {
   error_message?: string;
   state: string;
   updated_at: string;
-}
-
-/** One profile's shared-metrics answer; `reask` = a pre-fix "off" asked once more. */
-export interface SharedMetricsConsent {
-  enabled: boolean;
-  send: boolean;
-  decided: boolean;
-  managed: boolean;
-  reask?: boolean;
 }
 
 export interface StatusResponse {

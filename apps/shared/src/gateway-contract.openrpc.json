@@ -763,24 +763,6 @@
       }
     },
     {
-      "name": "diagnostics.share_nous",
-      "summary": "Upload a force-redacted debug bundle to Nous-internal diagnostics storage.",
-      "params": [
-        {
-          "name": "params",
-          "schema": {
-            "$ref": "#/components/schemas/DiagnosticsShareNousParams"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "$ref": "#/components/schemas/DiagnosticsShareNousResult"
-        }
-      }
-    },
-    {
       "name": "display.install",
       "summary": "Run the distro package install on the gateway host; progress streams as display.install.log/.done.",
       "params": [
@@ -3877,24 +3859,6 @@
       }
     },
     {
-      "name": "shared_metrics.set",
-      "summary": "Write both shared-metrics opt-ins at once (send requires collection) and reconcile consent windows.",
-      "params": [
-        {
-          "name": "params",
-          "schema": {
-            "$ref": "#/components/schemas/SharedMetricsSetParams"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "$ref": "#/components/schemas/SharedMetricsConsentResult"
-        }
-      }
-    },
-    {
       "name": "shared_metrics.slash_command",
       "summary": "Count one user-typed slash command (fire-and-forget; a no-op unless shared metrics are on).",
       "params": [
@@ -3932,7 +3896,7 @@
     },
     {
       "name": "shared_metrics.status",
-      "summary": "Pure read of the focused profile's shared-metrics opt-ins (collection, upload, answered).",
+      "summary": "Read the focused profile's local shared-metrics collection switch.",
       "params": [
         {
           "name": "params",
@@ -3944,7 +3908,7 @@
       "result": {
         "name": "result",
         "schema": {
-          "$ref": "#/components/schemas/SharedMetricsConsentResult"
+          "$ref": "#/components/schemas/SharedMetricsStatusResult"
         }
       }
     },
@@ -17100,115 +17064,6 @@
           "max_concurrent_children"
         ],
         "title": "DelegationStatusResult",
-        "type": "object"
-      },
-      "DiagnosticsShareNousParams": {
-        "additionalProperties": false,
-        "properties": {
-          "error_context": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Error Context"
-          },
-          "extra_files": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "type": "string"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Extra Files"
-          },
-          "log_lines": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Log Lines"
-          }
-        },
-        "title": "DiagnosticsShareNousParams",
-        "type": "object"
-      },
-      "DiagnosticsShareNousResult": {
-        "additionalProperties": false,
-        "description": "Structured envelope: ``ok=False`` + ``error`` renders inline instead of failing the RPC.",
-        "properties": {
-          "ok": {
-            "title": "Ok",
-            "type": "boolean"
-          },
-          "view_url": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "View Url"
-          },
-          "upload_id": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Upload Id"
-          },
-          "expires_at": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Expires At"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Error"
-          }
-        },
-        "required": [
-          "ok"
-        ],
-        "title": "DiagnosticsShareNousResult",
         "type": "object"
       },
       "DiscoveredRepo": {
@@ -41800,36 +41655,6 @@
         "title": "SetupTourAnswer",
         "type": "object"
       },
-      "SharedMetricsConsentResult": {
-        "additionalProperties": false,
-        "description": "The focused profile's ``telemetry.shared_metrics`` opt-ins. ``send`` is never true while\n``enabled`` is false; ``decided`` = either key is written in config.yaml (the shipped defaults\nare not an answer) and it is not a ``reask``: an \"off\" from before the type-ahead fix, offered\nonce more with the reason.",
-        "properties": {
-          "enabled": {
-            "title": "Enabled",
-            "type": "boolean"
-          },
-          "send": {
-            "title": "Send",
-            "type": "boolean"
-          },
-          "decided": {
-            "title": "Decided",
-            "type": "boolean"
-          },
-          "reask": {
-            "default": false,
-            "title": "Reask",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "enabled",
-          "send",
-          "decided"
-        ],
-        "title": "SharedMetricsConsentResult",
-        "type": "object"
-      },
       "SharedMetricsDesktopActionDay": {
         "additionalProperties": false,
         "properties": {
@@ -42083,43 +41908,6 @@
         "title": "SharedMetricsDesktopOnboardingParams",
         "type": "object"
       },
-      "SharedMetricsSetParams": {
-        "additionalProperties": false,
-        "description": "``send`` is ignored unless ``enabled``; ``first_run`` marks the Desktop first-run answer.",
-        "properties": {
-          "profile": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Profile"
-          },
-          "enabled": {
-            "title": "Enabled",
-            "type": "boolean"
-          },
-          "send": {
-            "default": false,
-            "title": "Send",
-            "type": "boolean"
-          },
-          "first_run": {
-            "default": false,
-            "title": "First Run",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "enabled"
-        ],
-        "title": "SharedMetricsSetParams",
-        "type": "object"
-      },
       "SharedMetricsSlashCommandParams": {
         "additionalProperties": false,
         "description": "``command`` is the raw typed name (no leading ``/``, no args); the backend canonicalizes it\nagainst the published registry. ``session_id`` scopes the count to that session's profile.",
@@ -42240,6 +42028,21 @@
           "ok"
         ],
         "title": "SharedMetricsStartupLatencyResult",
+        "type": "object"
+      },
+      "SharedMetricsStatusResult": {
+        "additionalProperties": false,
+        "description": "Whether the focused profile collects shared metrics locally (``telemetry.shared_metrics.enabled``).",
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "SharedMetricsStatusResult",
         "type": "object"
       },
       "SharedMetricsUpdateRunParams": {

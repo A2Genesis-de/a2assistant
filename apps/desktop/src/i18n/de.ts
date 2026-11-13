@@ -25,7 +25,6 @@ import { dePluginUpdate } from './de_plugin_update'
 import { dePluginUpdateAll } from './de_plugin_update_all'
 import { dePreviewWeb } from './de_preview_web'
 import { deProjects } from './de_projects'
-import { deSharedMetrics } from './de_shared_metrics'
 import { deThemePicker } from './de_theme_picker'
 import { deUpdateChannel } from './de_update_channel'
 import { defineLocale, type TranslationOverrides } from './define-locale'
@@ -37,7 +36,6 @@ const deBaseOverrides = {
     lookupFailed: "Diese Gruppe konnte auf dem Gateway nicht gefunden werden. Versuche es erneut.",
     missing: "Dieser Gruppenchat existiert nicht mehr."
   },
-  sharedMetrics: deSharedMetrics,
   firstRun: deFirstRun,
   intro: introDe,
   connectors: deConnectorCard,
@@ -514,29 +512,6 @@ const deBaseOverrides = {
     }
   },
   ...deNotices,
-  sendDiagnostics: {
-    title: 'Diagnosedaten an Nous senden',
-    privacyNotice:
-      'Damit laden Sie ein Debug-Paket in den internen Nous-Speicher hoch (kein öffentliches Paste). Es enthält Systeminfos (Betriebssystem, Versionen, Provider, welche API-Keys konfiguriert sind – niemals die Keys selbst) sowie vollständige Agent-, Gateway- und Desktop-Logs (bis zu 512 KB je Datei), die sehr wahrscheinlich Gesprächsinhalte, Tool-Ausgaben und Dateipfade enthalten. Geheimnisse werden vor dem Upload geschwärzt. Das Paket ist nur für Nous-Mitarbeitende und freigeschaltete Discord-Moderatoren einsehbar und wird nach 14 Tagen automatisch gelöscht.',
-    upload: 'Hochladen',
-    uploading: 'Wird hochgeladen…',
-    cancel: 'Abbrechen',
-    close: 'Schließen',
-    copyLink: 'Link kopieren',
-    uploadIdFallback: id => `Kein Link zurückgegeben — zitiere die Upload-ID ${id} im Support`,
-    doneTitle: 'Diagnosedaten gesendet',
-    doneDescription:
-      'Ihr Paket wurde privat hochgeladen. Teilen Sie den Link unten in Ihrem Support-Thread, damit das Team Ihre Logs sehen kann.',
-    failedTitle: 'Hochladen fehlgeschlagen',
-    failedHint:
-      'Sie können auch `hermes debug share --nous` im Terminal ausführen oder `hermes debug share --local`, um den Bericht ohne Hochladen auszugeben.',
-    handoffLead: 'Diskussion hier fortsetzen:',
-    links: {
-      github: 'GitHub Issues',
-      portal: 'Nous-Portal-Support',
-      discord: 'Discord'
-    }
-  },
   titlebar: {
     hideSidebar: 'Sidebar ausblenden',
     showSidebar: 'Sidebar einblenden',
@@ -2874,12 +2849,6 @@ const deBaseOverrides = {
       securityAuditDesc: 'Konfiguration und Skills auf riskante Einstellungen scannen',
       backup: 'Backup erstellen',
       backupDesc: 'Konfiguration, Memories, Skills und Sessions als ZIP packen',
-      debugShare: 'Debug-Freigabe',
-      debugShareDesc:
-        'Einen geschwärzten Bericht + Logs hochladen, teilbare Links erhalten (wird nach 6h automatisch gelöscht)',
-      debugShareRunning: 'Debug-Bericht wird hochgeladen...',
-      debugShareLinks: 'Freigabelinks',
-      debugShareFailed: 'Debug-Freigabe fehlgeschlagen',
       copyLink: 'Link kopieren',
       linkCopied: 'Link kopiert',
       curator: 'Skill-Curator',
@@ -5115,7 +5084,6 @@ const deBaseOverrides = {
       errorOpenLogs: 'Logs öffnen',
       errorOpenLogsFailed: 'Der Logs-Ordner konnte nicht geöffnet werden',
       errorOpenDesktopLogs: 'Desktop-Logs öffnen',
-      errorSendDiagnostics: 'Diagnose senden',
       filesChanged: count => (count === 1 ? '1 Datei geändert' : `${count} Dateien geändert`),
       reviewChanges: 'Prüfen',
       readAloudFailed: 'Vorlesen fehlgeschlagen',
@@ -5585,7 +5553,6 @@ const deBaseOverrides = {
     boundaryDesc:
       'In dieser Ansicht ist ein unerwarteter Fehler aufgetreten. Ihre Chats und Einstellungen sind sicher.',
     boundaryDetails: 'Details',
-    sendDiagnostics: 'Diagnosedaten senden',
     reloadWindow: 'Fenster neu laden',
     openLogs: 'Logs öffnen'
   },

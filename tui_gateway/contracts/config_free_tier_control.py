@@ -1,7 +1,7 @@
 """Contracts: config, setup readiness, free tier, model inventory, connectors, diagnostics,
 image generation and structured session control.
 
-Handlers: ``tui_gateway/methods_config.py`` (``config.get``, ``setup.*``, ``diagnostics.share_nous``),
+Handlers: ``tui_gateway/methods_config.py`` (``config.get``, ``setup.*``),
 ``methods_config_set.py`` (``config.set``), ``methods_free_tier.py``, ``methods_shared_metrics.py``,
 ``methods_complete.py``
 (``model.options``), ``methods_connectors.py``, ``methods_images.py``, ``methods_session_control.py``
@@ -151,29 +151,6 @@ method("setup.runtime_check", params=SetupRuntimeCheckParams, result=SetupRuntim
        doc="Strict provider check through the same runtime resolution the agent uses on session creation.")
 
 
-# ── diagnostics.share_nous ────────────────────────────────────────────────────────────────────
-
-
-class DiagnosticsShareNousParams(Params):
-    error_context: str | None = None
-    extra_files: dict[str, str] | None = None
-    log_lines: int | None = None
-
-
-class DiagnosticsShareNousResult(Result):
-    """Structured envelope: ``ok=False`` + ``error`` renders inline instead of failing the RPC."""
-
-    ok: bool
-    view_url: str | None = None
-    upload_id: str | None = None
-    expires_at: str | None = None
-    error: str | None = None
-
-
-method("diagnostics.share_nous", params=DiagnosticsShareNousParams, result=DiagnosticsShareNousResult,
-       doc="Upload a force-redacted debug bundle to Nous-internal diagnostics storage.")
-
-
 # ── free tier ─────────────────────────────────────────────────────────────────────────────────
 
 
@@ -264,35 +241,17 @@ method("free_tier.claim_nudge", params=FreeTierClaimNudgeParams, result=FreeTier
        doc="Claim the due sign-in offer; true for exactly one caller each time an offer comes due.")
 
 
-# ── shared metrics consent ────────────────────────────────────────────────────────────────────
+# ── shared metrics ──────────────────────────────────────────────────────────────────────────────
 
 
-class SharedMetricsConsentResult(Result):
-    """The focused profile's ``telemetry.shared_metrics`` opt-ins. ``send`` is never true while
-    ``enabled`` is false; ``decided`` = either key is written in config.yaml (the shipped defaults
-    are not an answer) and it is not a ``reask``: an "off" from before the type-ahead fix, offered
-    once more with the reason."""
+class SharedMetricsStatusResult(Result):
+    """Whether the focused profile collects shared metrics locally (``telemetry.shared_metrics.enabled``)."""
 
     enabled: bool
-    send: bool
-    decided: bool
-    reask: bool = False
 
 
-method("shared_metrics.status", params=ProfileParams, result=SharedMetricsConsentResult,
-       doc="Pure read of the focused profile's shared-metrics opt-ins (collection, upload, answered).")
-
-
-class SharedMetricsSetParams(ProfileParams):
-    """``send`` is ignored unless ``enabled``; ``first_run`` marks the Desktop first-run answer."""
-
-    enabled: bool
-    send: bool = False
-    first_run: bool = False
-
-
-method("shared_metrics.set", params=SharedMetricsSetParams, result=SharedMetricsConsentResult,
-       doc="Write both shared-metrics opt-ins at once (send requires collection) and reconcile consent windows.")
+method("shared_metrics.status", params=ProfileParams, result=SharedMetricsStatusResult,
+       doc="Read the focused profile's local shared-metrics collection switch.")
 
 
 class SharedMetricsSlashCommandParams(ProfileParams):

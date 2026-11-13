@@ -187,13 +187,7 @@ gateway:
     codex_compacted: "🗜️ Fil app-server Codex compacté (thread/compact). Le miroir de la transcription est volontairement inchangé — c'est désormais l'app-server qui porte le contexte compacté."
     codex_incomplete: "⚠️ La compaction app-server Codex ne s'est pas terminée — le fil est inchangé. Consultez les journaux de l'app-server, relancez /compress, ou /reset pour une session propre."
   debug:
-    upload_failed: "✗ Échec de l'envoi du rapport de débogage : {error}"
-    header: "**Rapport de débogage envoyé :**"
-    auto_delete: "⏱ Les pastes s'effaceront automatiquement dans 6 heures."
-    full_logs_hint: "Pour envoyer les journaux complets, utilisez `a2assistant debug share` depuis la CLI."
-    share_hint: "Partagez ces liens avec l'équipe A2Assistant pour obtenir de l'aide."
-    report_label: "Rapport"
-    local_refused: "`/debug local` garde le rapport sur la machine qui exécute A2Assistant ; il n'est donc pas disponible depuis une discussion. Envoyez `/debug` pour téléverser le rapport de synthèse."
+    chat_refused: "Le rapport de débogage reste sur la machine qui exécute A2Assistant. Lancez `hermes debug share` sur cette machine."
   deny:
     stale: "❌ Commande refusée (l'approbation était périmée)."
     no_pending: "Aucune commande en attente de refus."
@@ -1957,7 +1951,7 @@ slash:
   version:
     description: "Afficher la version de A2Assistant"
   debug:
-    description: "Envoyer un rapport de débogage (infos système + journaux) et obtenir des liens partageables"
+    description: "Afficher un rapport de débogage expurgé (infos système + journaux)"
   quit:
     description: "Quitter la CLI (--delete supprime aussi l'historique de session)"
 cli:

@@ -17,9 +17,8 @@ import logging
 import os
 import platform
 import re
-import shutil
 import threading
-from datetime import date, datetime, timedelta, timezone, UTC
+from datetime import date, datetime, timedelta, UTC
 from typing import Any
 
 from . import shared_metrics_contract as contract
@@ -119,13 +118,6 @@ def _claim_onboarding(step: str, event: str) -> bool:
     except FileExistsError:
         return False
     return True
-
-
-def purge_onboarding_latches() -> None:
-    """Collection turned off: drop the per-profile onboarding latches like the renderer drops its copy."""
-    from hermes_constants import get_hermes_home
-
-    shutil.rmtree(get_hermes_home() / "telemetry" / "shared_metrics" / ONBOARDING_LATCH_DIRNAME, ignore_errors=True)
 
 
 def _onboarding_fields(*, step: Any, event: Any) -> dict[str, str] | None:

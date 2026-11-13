@@ -2,12 +2,12 @@
  "counts": {
   "http": {
    "keep-host-wide": 1,
-   "undecided": 343
+   "undecided": 340
   },
   "rpc": {
    "authority": 108,
    "keep-host-wide": 1,
-   "undecided": 182
+   "undecided": 180
   },
   "websocket": {
    "undecided": 10
@@ -167,7 +167,6 @@
   {"current_path": "hermes_cli.web_routers.sessions:get_session_messages_around", "decision": "undecided", "handler": "GET /api/sessions/{session_id}/messages/around", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.sessions:get_session_mutation_snapshot", "decision": "undecided", "handler": "GET /api/sessions/{session_id}/mutation-snapshot", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.sessions:get_session_timeline", "decision": "undecided", "handler": "GET /api/sessions/{session_id}/timeline", "kind": "http", "ref": ""},
-  {"current_path": "hermes_cli.web_routers.shared_metrics:get_shared_metrics_consent", "decision": "undecided", "handler": "GET /api/shared-metrics/consent", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.skills:get_skills", "decision": "undecided", "handler": "GET /api/skills", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.skills:get_skill_content", "decision": "undecided", "handler": "GET /api/skills/content", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.skills:list_official_skills", "decision": "undecided", "handler": "GET /api/skills/hub/official", "kind": "http", "ref": ""},
@@ -288,7 +287,6 @@
   {"current_path": "hermes_cli.web_routers.ops:run_backup", "decision": "undecided", "handler": "POST /api/ops/backup", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.ops:prune_checkpoints", "decision": "undecided", "handler": "POST /api/ops/checkpoints/prune", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.status:run_config_migrate", "decision": "undecided", "handler": "POST /api/ops/config-migrate", "kind": "http", "ref": ""},
-  {"current_path": "hermes_cli.web_routers.status:run_debug_share_endpoint", "decision": "undecided", "handler": "POST /api/ops/debug-share", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.ops:run_doctor", "decision": "undecided", "handler": "POST /api/ops/doctor", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.status:run_dump", "decision": "undecided", "handler": "POST /api/ops/dump", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.ops:create_hook", "decision": "undecided", "handler": "POST /api/ops/hooks", "kind": "http", "ref": ""},
@@ -356,7 +354,6 @@
   {"current_path": "hermes_cli.web_routers.profiles:update_profile_description_endpoint", "decision": "undecided", "handler": "PUT /api/profiles/{name}/description", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.profiles:update_profile_model_endpoint", "decision": "undecided", "handler": "PUT /api/profiles/{name}/model", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.profiles:update_profile_soul", "decision": "undecided", "handler": "PUT /api/profiles/{name}/soul", "kind": "http", "ref": ""},
-  {"current_path": "hermes_cli.web_routers.shared_metrics:put_shared_metrics_consent", "decision": "undecided", "handler": "PUT /api/shared-metrics/consent", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.skills:update_skill_content", "decision": "undecided", "handler": "PUT /api/skills/content", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.skills:lock_skill", "decision": "undecided", "handler": "PUT /api/skills/lock", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.skills:toggle_skill", "decision": "undecided", "handler": "PUT /api/skills/toggle", "kind": "http", "ref": ""},
@@ -427,7 +424,6 @@
   {"current_path": "authority; standalone: unknown method", "decision": "authority", "handler": "cron.submit", "kind": "rpc", "ref": ""},
   {"current_path": "authority; standalone: legacy server.dispatch", "decision": "authority", "handler": "delegation.pause", "kind": "rpc", "ref": ""},
   {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "delegation.status", "kind": "rpc", "ref": "D3"},
-  {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "diagnostics.share_nous", "kind": "rpc", "ref": "D3"},
   {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "display.install", "kind": "rpc", "ref": "D3"},
   {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "display.lease.acquire", "kind": "rpc", "ref": "D3"},
   {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "display.lease.release", "kind": "rpc", "ref": "D3"},
@@ -617,7 +613,6 @@
   {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "shared_metrics.desktop_feature_use", "kind": "rpc", "ref": "D3"},
   {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "shared_metrics.desktop_friction", "kind": "rpc", "ref": "D3"},
   {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "shared_metrics.desktop_onboarding", "kind": "rpc", "ref": "D3"},
-  {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "shared_metrics.set", "kind": "rpc", "ref": "D3"},
   {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "shared_metrics.slash_command", "kind": "rpc", "ref": "D3"},
   {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "shared_metrics.startup_latency", "kind": "rpc", "ref": "D3"},
   {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "shared_metrics.status", "kind": "rpc", "ref": "D3"},

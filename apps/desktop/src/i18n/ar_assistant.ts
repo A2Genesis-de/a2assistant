@@ -260,7 +260,6 @@ export const arAssistant = {
       errorOpenLogs: 'فتح السجلات',
       errorOpenLogsFailed: 'تعذّر فتح مجلد السجلات',
       errorOpenDesktopLogs: 'فتح سجلات سطح المكتب',
-      errorSendDiagnostics: 'إرسال التشخيصات',
       filesChanged: count => `${count} ملفات تم تغييرها`,
       reviewChanges: 'مراجعة',
       readAloudFailed: 'فشلت القراءة بصوت عال',

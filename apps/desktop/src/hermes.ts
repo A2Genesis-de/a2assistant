@@ -64,7 +64,6 @@ export type {
   CustomEndpointsResponse,
   CustomEndpointUpdate,
   CustomEndpointValidationResponse,
-  DebugShareResponse,
   ElevenLabsVoice,
   ElevenLabsVoicesResponse,
   EnvVarInfo,

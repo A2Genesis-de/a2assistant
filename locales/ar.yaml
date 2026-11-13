@@ -161,13 +161,7 @@ gateway:
     codex_compacted: "🗜️ تم ضغط سلسلة Codex app-server (thread/compact). نسخة النص المرآتية لم تتغيّر عن قصد — يحمل الـ app-server الآن السياق المضغوط."
     codex_incomplete: "⚠️ لم يكتمل ضغط Codex app-server — السلسلة لم تتغيّر. راجع سجلات الـ app-server، أو أعد المحاولة بـ /compress، أو استخدم /reset لجلسة نظيفة."
   debug:
-    upload_failed: "✗ فشل رفع تقرير التصحيح: {error}"
-    header: "**تم رفع تقرير التصحيح:**"
-    auto_delete: "⏱ ستُحذف اللصقات تلقائيًا خلال 6 ساعات."
-    full_logs_hint: "لرفع السجلات الكاملة، استخدم `a2assistant debug share` من واجهة الأوامر."
-    share_hint: "شارك هذه الروابط مع فريق A2Assistant للحصول على الدعم."
-    report_label: "تقرير"
-    local_refused: "يُبقي `/debug local` التقرير على الجهاز الذي يشغّل A2Assistant، لذا فهو غير متاح من المحادثة. أرسل `/debug` لرفع التقرير الموجز."
+    chat_refused: "يبقى تقرير التصحيح على الجهاز الذي يعمل عليه A2Assistant. شغّل `hermes debug share` هناك."
   deny:
     stale: "❌ رُفض الأمر (الموافقة كانت قديمة)."
     no_pending: "لا يوجد أمر معلّق لرفضه."
@@ -1705,7 +1699,7 @@ slash:
   version:
     description: "عرض إصدار A2Assistant"
   debug:
-    description: "رفع تقرير تصحيح الأخطاء (معلومات النظام والسجلات) والحصول على روابط قابلة للمشاركة"
+    description: "عرض تقرير تصحيح منقّح (معلومات النظام + السجلات)"
   quit:
     description: "الخروج من واجهة سطر الأوامر (استخدم --delete لحذف سجل الجلسة أيضًا)"
 cli:

@@ -28,7 +28,6 @@ import { enPluginUpdate } from './en_plugin_update'
 import { enPluginUpdateAll } from './en_plugin_update_all'
 import { enPreviewWeb } from './en_preview_web'
 import { enProjects } from './en_projects'
-import { enSharedMetrics } from './en_shared_metrics'
 import { enThemePicker } from './en_theme_picker'
 import { enUninstallSection } from './en_uninstall_section'
 import { enUpdateChannel } from './en_update_channel'
@@ -36,7 +35,6 @@ import type { Translations } from './types'
 
 export const en: Translations = {
   externalOpenFailed: enExternalOpenFailed,
-  sharedMetrics: enSharedMetrics,
   appTour: enAppTour,
   firstRun: enFirstRun,
   // English editorial copy stays in the shipped JSONL; other locales override it.
@@ -499,29 +497,6 @@ export const en: Translations = {
 
   ...enBilling,
 
-  sendDiagnostics: {
-    title: 'Send diagnostics to Nous',
-    privacyNotice:
-      'This uploads a debug bundle to Nous-internal storage (not a public paste). It includes system info (OS, versions, provider, which API keys are configured — never the keys themselves) and full agent, gateway, and desktop logs (up to 512 KB each), which likely contain conversation content, tool outputs, and file paths. Secrets are redacted before upload. The bundle is viewable only by Nous staff and allowlisted Discord moderators, and auto-deletes after 14 days.',
-    upload: 'Upload',
-    uploading: 'Uploading…',
-    cancel: 'Cancel',
-    close: 'Close',
-    copyLink: 'Copy link',
-    uploadIdFallback: id => `No view link returned — quote upload ID ${id} to support`,
-    doneTitle: 'Diagnostics sent',
-    doneDescription:
-      'Your bundle was uploaded privately. Share the link below in your support thread so the team can see your logs.',
-    failedTitle: 'Upload failed',
-    failedHint:
-      'You can also run `hermes debug share --nous` from a terminal, or `hermes debug share --local` to print the report without uploading.',
-    handoffLead: 'Pick up the discussion in:',
-    links: {
-      github: 'GitHub Issues',
-      portal: 'Nous Portal Support',
-      discord: 'Discord'
-    }
-  },
 
   titlebar: {
     hideSidebar: 'Hide sidebar',
@@ -2476,11 +2451,6 @@ export const en: Translations = {
       securityAuditDesc: 'Scan config and skills for risky settings',
       backup: 'Create backup',
       backupDesc: 'Zip config, memories, skills, and sessions',
-      debugShare: 'Debug share',
-      debugShareDesc: 'Upload a redacted report + logs, get shareable links (auto-deletes in 6h)',
-      debugShareRunning: 'Uploading debug report...',
-      debugShareLinks: 'Share links',
-      debugShareFailed: 'Debug share failed',
       copyLink: 'Copy link',
       linkCopied: 'Link copied',
       curator: 'Skill curator',
@@ -4535,7 +4505,6 @@ export const en: Translations = {
       errorOpenLogs: 'Open logs',
       errorOpenLogsFailed: 'Could not open the logs folder',
       errorOpenDesktopLogs: 'Open Desktop logs',
-      errorSendDiagnostics: 'Send diagnostics',
       filesChanged: count => (count === 1 ? '1 file changed' : `${count} files changed`),
       reviewChanges: 'Review',
       readAloudFailed: 'Read aloud failed',
@@ -4905,7 +4874,6 @@ export const en: Translations = {
     boundaryTitle: 'Something broke in the interface',
     boundaryDesc: 'The view hit an unexpected error. Your chats and settings are safe.',
     boundaryDetails: 'Details',
-    sendDiagnostics: 'Send diagnostics',
     reloadWindow: 'Reload window',
     openLogs: 'Open logs'
   },

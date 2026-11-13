@@ -145,7 +145,7 @@ class TestCollectDebugReport:
 
 
 class TestCollectShareBundle:
-    """The upload bundle (paste.rs + --nous) carries the full update logs."""
+    """The share bundle carries the full update logs."""
 
     def test_bundle_includes_update_logs_when_present(self, home_with_update_logs):
         from hermes_cli.debug import collect_share_bundle
@@ -167,36 +167,16 @@ class TestCollectShareBundle:
 
         assert "update.log" not in bundle
         assert "desktop-update-handoff.log" not in bundle
-        # The classic five keep uploading.
         assert "agent.log" in bundle
 
 
-class TestFullLogUploadLabels:
-    """build_debug_share uploads every bundle log — including the new pair."""
-
-    def test_upload_label_list_includes_update_logs(self):
-        """The paste-upload loop must not silently skip the new labels.
-
-        Asserts the label tuple (source-derived behavior contract: the
-        bundle keys are only reachable for upload if listed here).
-        """
-        import inspect
-
-        from hermes_cli import debug
-
-        source = inspect.getsource(debug.build_debug_share)
-        assert '"update.log"' in source
-        assert '"desktop-update-handoff.log"' in source
-
+class TestFullLogPrintLabels:
     def test_local_print_label_list_includes_update_logs(self):
-        """run_debug_share --local prints bundle logs by the same contract."""
-        import inspect
-
+        """run_debug_share prints every bundle log, the update pair included."""
         from hermes_cli import debug
 
-        source = inspect.getsource(debug.run_debug_share)
-        assert '"FULL update.log"' in source
-        assert '"FULL desktop-update-handoff.log"' in source
+        labels = {label for _, label in debug._FULL_LOG_SECTIONS}
+        assert {"update.log", "desktop-update-handoff.log"} <= labels
 
 
 class TestLogsRegistry:

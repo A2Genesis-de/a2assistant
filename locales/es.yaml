@@ -161,13 +161,7 @@ gateway:
     codex_compacted: "🗜️ Hilo del app-server de Codex compactado (thread/compact). El espejo de la transcripción no cambia por diseño: ahora el app-server lleva el contexto compactado."
     codex_incomplete: "⚠️ La compactación del app-server de Codex no se completó: el hilo no cambió. Revisa los registros del app-server, reintenta /compress o usa /reset para una sesión limpia."
   debug:
-    upload_failed: "✗ No se pudo subir el informe de depuración: {error}"
-    header: "**Informe de depuración subido:**"
-    auto_delete: "⏱ Los pastes se eliminarán automáticamente en 6 horas."
-    full_logs_hint: "Para subir registros completos, usa `a2assistant debug share` desde la CLI."
-    share_hint: "Comparte estos enlaces con el equipo de A2Assistant para obtener soporte."
-    report_label: "Informe"
-    local_refused: "`/debug local` mantiene el informe en la máquina donde se ejecuta A2Assistant, así que no está disponible desde un chat. Envía `/debug` para subir el informe resumido."
+    chat_refused: "El informe de depuración permanece en el equipo donde se ejecuta A2Assistant. Ejecuta `hermes debug share` allí."
   deny:
     stale: "❌ Comando denegado (la aprobación había caducado)."
     no_pending: "No hay ningún comando pendiente que denegar."
@@ -1705,7 +1699,7 @@ slash:
   version:
     description: "Mostrar la versión de A2Assistant"
   debug:
-    description: "Subir un informe de depuración (info del sistema + registros) y obtener enlaces compartibles"
+    description: "Mostrar un informe de depuración censurado (información del sistema + registros)"
   quit:
     description: "Salir de la CLI (usa --delete para eliminar también el historial de la sesión)"
 cli:

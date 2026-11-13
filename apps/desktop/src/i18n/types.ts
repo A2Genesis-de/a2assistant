@@ -31,7 +31,6 @@ import type { PluginPreviewAccessTranslations } from './types_plugin_preview_acc
 import type { PluginUpdateAllTranslations, PluginUpdateTranslations } from './types_plugin_update'
 import type { SidebarProjectsTranslations } from './types_projects'
 import type { RightSidebarTranslations } from './types_right_sidebar'
-import type { SharedMetricsTranslations } from './types_shared_metrics'
 import type { ThemePickerCopy } from './types_theme_picker'
 import type { UninstallSectionTranslations } from './types_uninstall_section'
 import type { UpdateChannelCopy } from './types_update_channel'
@@ -93,7 +92,6 @@ interface ModeOptionCopy {
 
 export interface Translations extends NoticeTranslations {
   /** Shared-metrics consent: first-run dialog + Settings › Safety toggles. */
-  sharedMetrics: SharedMetricsTranslations
   appTour: AppTourTranslations
   firstRun: FirstRunCopy
   externalOpenFailed: ExternalOpenFailedCopy
@@ -527,26 +525,6 @@ export interface Translations extends NoticeTranslations {
 
   billingBlock: BillingTranslations['billingBlock']
 
-  sendDiagnostics: {
-    title: string
-    privacyNotice: string
-    upload: string
-    uploading: string
-    cancel: string
-    close: string
-    copyLink: string
-    uploadIdFallback: (id: string) => string
-    doneTitle: string
-    doneDescription: string
-    failedTitle: string
-    failedHint: string
-    handoffLead: string
-    links: {
-      discord: string
-      github: string
-      portal: string
-    }
-  }
 
   titlebar: {
     hideSidebar: string
@@ -2243,11 +2221,6 @@ export interface Translations extends NoticeTranslations {
       securityAuditDesc: string
       backup: string
       backupDesc: string
-      debugShare: string
-      debugShareDesc: string
-      debugShareRunning: string
-      debugShareLinks: string
-      debugShareFailed: string
       copyLink: string
       linkCopied: string
       curator: string
@@ -4029,7 +4002,6 @@ export interface Translations extends NoticeTranslations {
       errorOpenLogs: string
       errorOpenLogsFailed: string
       errorOpenDesktopLogs: string
-      errorSendDiagnostics: string
       filesChanged: (count: number) => string
       reviewChanges: string
       readAloudFailed: string
@@ -4311,7 +4283,6 @@ export interface Translations extends NoticeTranslations {
     boundaryTitle: string
     boundaryDesc: string
     boundaryDetails: string
-    sendDiagnostics: string
     reloadWindow: string
     openLogs: string
   }
