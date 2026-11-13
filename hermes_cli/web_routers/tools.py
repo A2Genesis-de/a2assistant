@@ -122,33 +122,29 @@ def _probe_terminal_backend(name: str, terminal_cfg: dict) -> tuple:
 # Toolsets whose backends carry a selectable model catalog, mapped to the
 # config.yaml section their `model` key lives in. Mirrors the CLI's
 # post-selection model pickers in tools_config.py.
-_MODEL_CATALOG_TOOLSETS = {"image_gen": "image_gen", "video_gen": "video_gen"}
+_MODEL_CATALOG_TOOLSETS = {"image_gen": "image_gen"}
 
 
 def _resolve_toolset_model_plugin(ts_key: str, provider_row: dict) -> Optional[str]:
     """Map a provider picker row to its model-catalog plugin name.
 
-    Plugin-backed rows carry ``image_gen_plugin_name`` / ``video_gen_plugin_name``;
+    Plugin-backed rows carry ``image_gen_plugin_name``;
     a managed image row's ``imagegen_backend`` names its catalog plugin.
     """
     if ts_key == "image_gen":
         return provider_row.get("image_gen_plugin_name") or provider_row.get("imagegen_backend")
-    if ts_key == "video_gen":
-        return provider_row.get("video_gen_plugin_name")
     return None
 
 
 def _toolset_model_catalog(ts_key: str, plugin_name: str, config: dict):
     """Return ``(catalog_dict, default_model)`` for a toolset's plugin backend or, for an image row's
     ``imagegen_backend`` (``fal``, the managed ``nous`` union), that backend's catalog."""
-    from hermes_cli.tools_config import IMAGEGEN_BACKENDS, _plugin_image_gen_catalog, _plugin_video_gen_catalog
+    from hermes_cli.tools_config import IMAGEGEN_BACKENDS, _plugin_image_gen_catalog
 
-    if ts_key == "image_gen":
-        backend = IMAGEGEN_BACKENDS.get(plugin_name)
-        if backend:
-            return backend["catalog_fn"](config)
-        return _plugin_image_gen_catalog(plugin_name)
-    return _plugin_video_gen_catalog(plugin_name)
+    backend = IMAGEGEN_BACKENDS.get(plugin_name)
+    if backend:
+        return backend["catalog_fn"](config)
+    return _plugin_image_gen_catalog(plugin_name)
 
 
 def _category_providers(ts_key: str, config: dict) -> list:
@@ -428,8 +424,8 @@ async def get_toolset_models(
 @router.put("/api/tools/toolsets/{name}/model")
 async def select_toolset_model(
     name: str, body: ToolsetModelSelect, profile: Optional[str] = None):
-    """Persist a backend model selection (``image_gen.model`` /
-    ``video_gen.model``), validated against the resolved backend's catalog."""
+    """Persist a backend model selection (``image_gen.model``), validated against the resolved backend's
+    catalog."""
     section = _MODEL_CATALOG_TOOLSETS.get(name)
     if section is None:
         raise _bad_request(f"Toolset has no model catalog: {name}")

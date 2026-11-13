@@ -3398,7 +3398,6 @@ display:
     terminal: "يشغّل"
     execute_code: "يشغّل كودًا"
     image_generate: "ينشئ صورة"
-    video_generate: "ينشئ فيديو"
     text_to_speech: "ينشئ كلامًا"
     vision_analyze: "ينظر إلى الصورة"
     session_search: "يبحث في الجلسات السابقة"

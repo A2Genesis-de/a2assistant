@@ -44,10 +44,6 @@ _SCOPED_PROVIDER_REGISTRARS: tuple[tuple[str, str, str, str, str, str, dict[str,
      "agent.image_gen_provider:ImageGenProvider", "image_gen provider",
      "Register an :class:`agent.image_gen_provider.ImageGenProvider`; "
      "``provider.name`` is matched by ``image_gen.provider``.", {"article": "an"}),
-    ("register_video_gen_provider", "video_gen_provider", "agent.video_gen_registry",
-     "agent.video_gen_provider:VideoGenProvider", "video_gen provider",
-     "Register an :class:`agent.video_gen_provider.VideoGenProvider`; "
-     "``provider.name`` is matched by ``video_gen.provider``.", {}),
     ("register_web_search_provider", "web_search_provider", "agent.web_search_registry",
      "agent.web_search_provider:WebSearchProvider", "web provider",
      "Register an :class:`agent.web_search_provider.WebSearchProvider`; "

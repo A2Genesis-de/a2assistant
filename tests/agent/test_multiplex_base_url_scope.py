@@ -26,7 +26,6 @@ def secondary_scope(monkeypatch):
 
 def test_base_urls_follow_the_scoped_key_not_default_environ(monkeypatch, secondary_scope, tmp_path):
     import agent.auxiliary_client as aux
-    import plugins.video_gen.xai as xai_video
     from gateway.run_turn import GatewayTurnMixin
     from hermes_cli import auth_nous
 
@@ -40,9 +39,6 @@ def test_base_urls_follow_the_scoped_key_not_default_environ(monkeypatch, second
     assert auth_nous._nous_inference_env_override() is None
     monkeypatch.setattr("gateway.run._load_gateway_config", dict)
     assert GatewayTurnMixin._get_proxy_url(GatewayTurnMixin.__new__(GatewayTurnMixin)) is None
-    # xAI video: a scoped miss stays a miss — no environ fallback-after-miss for the key or the URL.
-    api_key, base_url = xai_video._resolve_xai_credentials()
-    assert api_key == "" and "default.example" not in base_url
 
 
 def test_unscoped_single_profile_reads_keep_environ(monkeypatch):

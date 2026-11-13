@@ -120,15 +120,6 @@ def _image_gen_row(config, feats):
     return ("Image Generation", False, "FAL_KEY or OPENAI_API_KEY")
 
 
-def _video_gen_row(config, feats):
-    # Opt-in via `hermes tools` → Video Generation. Only show the row when a plugin reports
-    # available so we don't badger users who don't care about video gen with a "missing" line.
-    if feats.video_gen.managed_by_nous:
-        return ("Video Generation (FAL via Nous subscription)", True, None)
-    backend = _first_available_plugin_provider("video_gen_registry")
-    return (f"Video Generation ({backend})", True, None) if backend else None
-
-
 def _tts_row(config, feats):
     # Configured provider, gated on its key (or local install)
     if feats.tts.managed_by_nous:
@@ -157,7 +148,7 @@ def _always_on_rows(config, feats):
 
 
 _TOOL_ROW_BUILDERS = (
-    _vision_row, _web_row, _browser_row, _image_gen_row, _video_gen_row, _tts_row, _stt_row,
+    _vision_row, _web_row, _browser_row, _image_gen_row, _tts_row, _stt_row,
     _skills_hub_row, _always_on_rows)
 
 

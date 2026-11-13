@@ -51,7 +51,7 @@ interface ToolsetConfigPanelProps {
 
 /** Toolsets whose backends expose a selectable model catalog (mirrors the
  *  backend's _MODEL_CATALOG_TOOLSETS map). */
-const MODEL_CATALOG_TOOLSETS = new Set(['image_gen', 'video_gen'])
+const MODEL_CATALOG_TOOLSETS = new Set(['image_gen'])
 
 /**
  * `useNavigate` throws when there is no react-router context. Inside Settings
@@ -409,10 +409,9 @@ interface ModelCatalogPickerProps {
 
 /**
  * Backend model catalog — the GUI counterpart of the model picker `hermes
- * tools` runs after you choose an image/video generation backend (e.g. FAL's
- * multi-model catalog). Renders speed / strengths / price per model as a
- * radio-card list and persists the choice to `image_gen.model` /
- * `video_gen.model`.
+ * tools` runs after you choose an image generation backend. Renders speed /
+ * strengths / price per model as a radio-card list and persists the choice to
+ * `image_gen.model`.
  */
 function ModelCatalogPicker({ toolset, providerName, isActiveBackend, profile }: ModelCatalogPickerProps) {
   const { t } = useI18n()

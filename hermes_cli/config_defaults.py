@@ -2648,7 +2648,7 @@ OPTIONAL_ENV_VARS = OptionalEnvVars({
         "Explicit Nous Subscriber access token for tool-gateway requests (optional; otherwise "
         "read from the A2Assistant auth store)", "Tool-gateway user token", None, advanced=True),
     "FAL_KEY": _tool("FAL API key for image and video generation", "FAL API key", "https://fal.ai/",
-        tools=["image_generate", "video_generate"]),
+        tools=["image_generate"]),
     "KREA_API_KEY": _tool("Krea API key for Krea 3 and Krea 2 image generation",
         "Krea API key", "https://www.krea.ai/settings/api-tokens", tools=["image_generate"]),
     "VOICE_TOOLS_OPENAI_KEY": _tool(

@@ -3398,7 +3398,6 @@ display:
     terminal: "ag rith"
     execute_code: "ag rith cóid"
     image_generate: "ag giniúint íomhá"
-    video_generate: "ag giniúint físeáin"
     text_to_speech: "ag giniúint urlabhra"
     vision_analyze: "ag féachaint ar an íomhá"
     session_search: "ag cuardach seisiún roimhe seo"

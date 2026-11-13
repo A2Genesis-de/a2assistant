@@ -259,14 +259,12 @@ def valid_post_setup_keys() -> set[str]:
     plugin-registered providers). This is the allowlist ``post-setup`` and the dashboard endpoint
     validate against, so a caller cannot drive ``_run_post_setup`` with an arbitrary key."""
     from hermes_cli.tools_config import (
-        TOOL_CATEGORIES, _plugin_browser_providers, _plugin_image_gen_providers,
-        _plugin_video_gen_providers, _plugin_web_search_providers)
+        TOOL_CATEGORIES, _plugin_browser_providers, _plugin_image_gen_providers, _plugin_web_search_providers)
 
     keys: set[str] = set()
     for cat in TOOL_CATEGORIES.values():
         keys.update(ps for prov in cat.get("providers", []) if (ps := prov.get("post_setup")))
-    for builder in (_plugin_web_search_providers, _plugin_image_gen_providers,
-                    _plugin_video_gen_providers, _plugin_browser_providers):
+    for builder in (_plugin_web_search_providers, _plugin_image_gen_providers, _plugin_browser_providers):
         try:
             keys.update(ps for prov in builder() if (ps := prov.get("post_setup")))
         except Exception:  # pragma: no cover — defensive; plugins optional

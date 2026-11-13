@@ -3398,7 +3398,6 @@ display:
     terminal: "実行中"
     execute_code: "コードを実行中"
     image_generate: "画像を生成中"
-    video_generate: "動画を生成中"
     text_to_speech: "音声を生成中"
     vision_analyze: "画像を確認中"
     session_search: "過去のセッションを検索中"

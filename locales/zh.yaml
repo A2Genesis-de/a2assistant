@@ -3398,7 +3398,6 @@ display:
     terminal: "运行命令"
     execute_code: "运行代码"
     image_generate: "生成图片"
-    video_generate: "生成视频"
     text_to_speech: "生成语音"
     vision_analyze: "查看图片"
     session_search: "搜索历史会话"

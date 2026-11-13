@@ -3398,7 +3398,6 @@ display:
     terminal: "Çalıştırıyor"
     execute_code: "Kod çalıştırıyor"
     image_generate: "Görsel oluşturuyor"
-    video_generate: "Video oluşturuyor"
     text_to_speech: "Konuşma oluşturuyor"
     vision_analyze: "Görsele bakıyor"
     session_search: "Geçmiş oturumlarda arıyor"

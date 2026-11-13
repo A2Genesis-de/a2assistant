@@ -3715,7 +3715,6 @@ display:
     terminal: "Exécution"
     execute_code: "Exécution de code"
     image_generate: "Génération d'image"
-    video_generate: "Génération de vidéo"
     text_to_speech: "Synthèse vocale"
     vision_analyze: "Analyse de l'image"
     session_search: "Recherche dans les sessions passées"

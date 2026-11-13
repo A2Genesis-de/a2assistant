@@ -176,7 +176,7 @@ class TestDispatchersTriggerPluginDiscovery:
     exported.
 
     Mirrors :func:`tools.browser_config._ensure_browser_plugins_loaded` —
-    every other plugin-backed dispatcher (image_gen, video_gen, browser,
+    every other plugin-backed dispatcher (image_gen, browser,
     skills) already does this.
     """
 

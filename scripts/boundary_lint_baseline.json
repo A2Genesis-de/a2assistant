@@ -573,24 +573,6 @@
     "plugins/teams_pipeline/pipeline.py tools.transcription_tools.transcribe_audio": 1,
     "plugins/teams_pipeline/subscriptions.py tools.microsoft_graph_auth.MicrosoftGraphTokenProvider": 1,
     "plugins/teams_pipeline/subscriptions.py tools.microsoft_graph_client.MicrosoftGraphClient": 1,
-    "plugins/video_gen/deepinfra/__init__.py hermes_cli.models._fetch_deepinfra_models_by_tag": 1,
-    "plugins/video_gen/fal/__init__.py tools.fal_common._ManagedFalSyncClient": 1,
-    "plugins/video_gen/fal/__init__.py tools.fal_common._extract_http_status": 1,
-    "plugins/video_gen/fal/__init__.py tools.fal_common._managed_fal_billing_error": 1,
-    "plugins/video_gen/fal/__init__.py tools.fal_common.import_fal_client": 1,
-    "plugins/video_gen/fal/__init__.py tools.fal_common.submit_managed_fal_with_rate_limit_retry": 1,
-    "plugins/video_gen/fal/__init__.py tools.fal_common.wait_fal_queue_result": 2,
-    "plugins/video_gen/fal/__init__.py tools.managed_tool_gateway.resolve_managed_tool_gateway": 1,
-    "plugins/video_gen/fal/__init__.py tools.tool_backend_helpers.NOUS_MANAGED_PROVIDER": 1,
-    "plugins/video_gen/fal/__init__.py tools.tool_backend_helpers.fal_key_is_configured": 2,
-    "plugins/video_gen/fal/__init__.py tools.tool_backend_helpers.read_selection": 1,
-    "plugins/video_gen/fal/__init__.py tools.tool_backend_helpers.selection_error": 1,
-    "plugins/video_gen/openrouter/__init__.py hermes_cli.runtime_provider.resolve_runtime_provider": 1,
-    "plugins/video_gen/xai/__init__.py agent.file_safety.raise_if_read_blocked": 1,
-    "plugins/video_gen/xai/__init__.py tools.xai_http": 1,
-    "plugins/video_gen/xai/__init__.py tools.xai_http.build_xai_storage_options": 1,
-    "plugins/video_gen/xai/__init__.py tools.xai_http.maybe_mark_xai_storage_notice_seen": 1,
-    "plugins/video_gen/xai/__init__.py tools.xai_http.read_xai_imagine_storage_config": 1,
     "plugins/web/ddgs/provider.py plugins": 1,
     "plugins/web/ddgs/provider.py plugins.web._common.BaseWebSearchProvider": 1,
     "plugins/web/ddgs/provider.py plugins.web._common.search_fail": 1,
@@ -610,7 +592,6 @@
     "hermes_cli/web_server.py plugins.dashboard_auth.nous": 1,
     "tools/image_generation_managed.py plugins.image_gen.krea": 1,
     "tools/image_generation_tool.py plugins.image_gen.krea": 3,
-    "tools/send_message_senders.py plugins.platforms.matrix.adapter": 1,
-    "tools/xai_video_tools.py plugins.video_gen.xai": 1
+    "tools/send_message_senders.py plugins.platforms.matrix.adapter": 1
   }
 }

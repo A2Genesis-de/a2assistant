@@ -120,7 +120,7 @@ def _guard_credential_read(host_target: Path, src: str) -> None:
     try:
         # Shared credential-read guard (agent.file_safety, #57698): refuse secret-bearing files (.env,
         # auth.json, ...) with an intentional, specific error instead of relying on the magic-byte sniff to
-        # reject them incidentally. Same chokepoint the image-gen/video-gen provider plugins enforce on
+        # reject them incidentally. Same chokepoint the image-gen provider plugins enforce on
         # model-supplied local paths. Import is best-effort (guard unavailability must not break image
         # loading); a real block always propagates.
         from agent.file_safety import raise_if_read_blocked

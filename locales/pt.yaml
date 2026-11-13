@@ -3398,7 +3398,6 @@ display:
     terminal: "Executando"
     execute_code: "Executando código"
     image_generate: "Gerando imagem"
-    video_generate: "Gerando vídeo"
     text_to_speech: "Gerando fala"
     vision_analyze: "Analisando a imagem"
     session_search: "Pesquisando sessões anteriores"

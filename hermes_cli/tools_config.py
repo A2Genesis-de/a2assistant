@@ -23,12 +23,12 @@ from hermes_cli.tools_config_post_setup import (
     _ensure_browser_use_cli, _run_post_setup, valid_post_setup_keys, run_post_setup_command, _POST_SETUP_INSTALLED,
     _post_setup_already_installed, _module_installed, _POST_SETUP_READY)
 from hermes_cli.tools_config_providers import (
-    _plugin_image_gen_providers, _plugin_video_gen_providers, _plugin_web_search_providers, _plugin_browser_providers,
+    _plugin_image_gen_providers, _plugin_web_search_providers, _plugin_browser_providers,
     _plugin_tts_providers, web_provider_capabilities, _visible_providers, provider_readiness_status,
     _toolset_needs_configuration_prompt, _configure_tool_category, _is_provider_active,
-    _detect_active_provider_index, IMAGEGEN_BACKENDS, _plugin_image_gen_catalog, _plugin_video_gen_catalog,
-    _configure_imagegen_model, _configure_imagegen_model_for_plugin, _configure_videogen_model_for_plugin,
-    _select_plugin_image_gen_provider, _select_plugin_video_gen_provider, STT_MODEL_CATALOG, _configure_stt_model,
+    _detect_active_provider_index, IMAGEGEN_BACKENDS, _plugin_image_gen_catalog,
+    _configure_imagegen_model, _configure_imagegen_model_for_plugin,
+    _select_plugin_image_gen_provider, STT_MODEL_CATALOG, _configure_stt_model,
     _write_provider_config, apply_provider_selection, _configure_provider, _reconfigure_provider,
     _configure_vision_backend, _configure_vision_provider_model, _configure_simple_requirements)
 from hermes_cli.tools_config_mcp import (
@@ -75,7 +75,6 @@ CONFIGURABLE_TOOLSETS = [
     ("vision",          "👁️  Vision / Image Analysis",  "vision_analyze"),
     ("video",           "🎬 Video Analysis",            "video_analyze (requires video-capable model)"),
     ("image_gen",       "🎨 Image Generation",          "image_generate"),
-    ("video_gen",       "🎬 Video Generation",          "video_generate (text/image/reference)"),
     ("tts",             "🔊 Text-to-Speech",            "text_to_speech"),
     ("stt",             "🎙️ Speech-to-Text",           "voice transcription (gateway voice messages + voice mode)"),
     ("skills",          "📚 Skills",                    "list, view, manage"),
@@ -106,7 +105,7 @@ def gui_toolset_label(label: str) -> str:
 
 # OFF by default for new installs (still in _HERMES_CORE_TOOLS; the checklist won't pre-select them).
 # ``spotify`` and ``a2a`` are plugin toolsets (catalog / bundled plugin) that stay opt-in once installed.
-_DEFAULT_OFF_TOOLSETS = {"spotify", "discord", "discord_admin", "video", "video_gen", "a2a", "kanban"}
+_DEFAULT_OFF_TOOLSETS = {"spotify", "discord", "discord_admin", "video", "a2a", "kanban"}
 
 # Config-only capabilities: provider setup in `hermes tools` (TOOL_CATEGORIES) but not model toolsets — zero
 # schemas, own switch (``stt.enabled``), never in ``platform_toolsets`` or the per-platform checklist.
@@ -274,16 +273,6 @@ TOOL_CATEGORIES = {
             _row("Nous Subscription", "subscription",
                  "Managed image generation (FAL, Krea 3 and Krea 2, Nous Portal models) billed to your subscription", **_NOUS,
                  managed_nous_feature="image_gen", override_env_vars=["FAL_KEY"], imagegen_backend="nous"),
-        ],
-    },
-    "video_gen": {
-        "name": "Video Generation", "icon": "🎬",
-        # Mirrors image_gen: managed FAL video billed via the Nous Portal. Plugin-backed rows (FAL BYOK, xAI, …)
-        # are injected at runtime by ``_plugin_video_gen_providers()`` in ``_visible_providers``. Picking this row
-        # sets video_gen.provider = "fal" + use_gateway so the FAL plugin routes through the managed queue gateway.
-        "providers": [
-            _row("Nous Subscription", "subscription", "Managed FAL video generation billed to your subscription", **_NOUS,
-                 managed_nous_feature="video_gen", override_env_vars=["FAL_KEY"], video_gen_plugin_name="fal"),
         ],
     },
     "browser": {
@@ -795,7 +784,7 @@ def _toolset_has_keys(
             return resolve_vision_provider_client()[1] is not None
         except Exception:
             return False
-    if ts_key in {"web", "image_gen", "video_gen", "tts", "stt", "browser"}:
+    if ts_key in {"web", "image_gen", "tts", "stt", "browser"}:
         if features is None:
             features = get_nous_subscription_features(config, force_fresh=force_fresh)
         feature = features.features.get(ts_key)

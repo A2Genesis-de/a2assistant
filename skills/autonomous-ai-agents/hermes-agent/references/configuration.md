@@ -40,7 +40,7 @@ Full enumeration: `TOOLSETS` dict in `toolsets.py` (`_HERMES_CORE_TOOLS` is the 
 | `computer_use` | Desktop GUI control (cua-driver) |
 | `vision` | Image analysis |
 | `image_gen` | Image generation and image-to-image editing |
-| `video` / `video_gen` | Video analysis / video generation |
+| `video` | Video analysis |
 | `tts` | Text-to-speech |
 | `skills` | Skill browsing and management |
 | `memory` | Persistent cross-session memory |

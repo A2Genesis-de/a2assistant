@@ -947,7 +947,6 @@ _EXTRA_KNOWN_ROOT_KEYS = {
     "fallback_model",    # optional single dict or chain list; omitted when disabled
     "mcp_servers",       # MCP server definitions written by setup/tools flows
     "image_gen",         # agent/image_gen_registry.py
-    "video_gen",         # agent/video_gen_registry.py
     "plugins",           # plugin enable/disable lists (hermes_cli/plugins_cmd.py)
     "smart_model_routing",   # written by the setup wizard
     "platform_toolsets",     # written by the setup wizard

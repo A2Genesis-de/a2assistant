@@ -74,13 +74,6 @@ TOOLSETS = {
     "vision": _ts("Image analysis and vision tools", ["vision_analyze"]),
     "video": _ts("Video analysis and understanding tools (opt-in, not in default toolset)", ["video_analyze"]),
     "image_gen": _ts("Creative generation tools (images)", ["image_generate"]),
-    "video_gen": _ts(
-        "Video generation tools. Single ``video_generate`` tool covers text-to-video "
-        "(prompt only) and image-to-video (prompt + image_url), plus "
-        "reference-to-video. Provider-specific edit/extend workflows may appear as "
-        "separate tools. Configure via ``hermes tools`` → Video Generation.",
-        ["video_generate", "xai_video_edit", "xai_video_extend"],
-    ),
     "computer_use": _ts(
         "Background desktop control via cua-driver (macOS/Windows/Linux) — "
         "screenshots, mouse, keyboard, scroll, drag. Does NOT steal the user's cursor "

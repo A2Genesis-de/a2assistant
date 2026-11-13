@@ -3398,7 +3398,6 @@ display:
     terminal: "執行中"
     execute_code: "執行程式碼中"
     image_generate: "產生圖片中"
-    video_generate: "產生影片中"
     text_to_speech: "產生語音中"
     vision_analyze: "檢視圖片中"
     session_search: "搜尋過往工作階段中"

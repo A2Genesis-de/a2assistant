@@ -201,7 +201,7 @@ _DEFAULT_NAME_KEYS = ("provider", "backend", "cloud_provider")
 # not the cloud provider — excluded.
 _SELECTION_NAME_KEYS = {
     "browser": ("cloud_provider",), "web": ("backend",),
-    **dict.fromkeys(("image_gen", "video_gen", "tts", "stt"), _DEFAULT_NAME_KEYS),
+    **dict.fromkeys(("image_gen", "tts", "stt"), _DEFAULT_NAME_KEYS),
 }
 
 

@@ -3415,7 +3415,6 @@ display:
     terminal: "Futtatás"
     execute_code: "Kód futtatása"
     image_generate: "Kép generálása"
-    video_generate: "Videó generálása"
     text_to_speech: "Beszéd generálása"
     vision_analyze: "Kép megtekintése"
     session_search: "Korábbi munkamenetek keresése"

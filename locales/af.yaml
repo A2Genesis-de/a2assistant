@@ -3398,7 +3398,6 @@ display:
     terminal: "Hardloop"
     execute_code: "Hardloop kode"
     image_generate: "Genereer beeld"
-    video_generate: "Genereer video"
     text_to_speech: "Genereer spraak"
     vision_analyze: "Bekyk die beeld"
     session_search: "Deursoek vorige sessies"
