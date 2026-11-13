@@ -300,7 +300,6 @@ _CLI_FAMILIES: dict[str, tuple[_CliSurface, str]] = {
         _sub("webhook", "build_webhook_parser", "cmd_webhook"),
         "list, *subscribe, *remove, test"),
     "hooks": (_sub("hooks", "build_hooks_parser", "cmd_hooks"), "list, *test, *doctor, *revoke"),
-    "slack": (_sub("slack", "build_slack_parser", "cmd_slack"), "manifest"),
     "profile": (
         _sub("profile", "build_profile_parser", "cmd_profile"),
         "list, show, info, *create, *use, *describe, *rename, *delete, *export, *import, "
@@ -351,7 +350,7 @@ def _register_command_family(
 
 _BLOCKED_TOP = frozenset(
     "acp chat claw completion dashboard desktop fallback gateway gui login logout model moa "
-    "oneshot proxy serve setup uninstall update whatsapp whatsapp-cloud".split())
+    "oneshot proxy serve setup uninstall update".split())
 
 _BLOCKED_PAIRS = {
     ("config", "edit"): "`config edit` opens an editor and is not available in A2Assistant Console.",
@@ -614,7 +613,7 @@ def _sessions_stats(_engine: HermesConsoleEngine, args: list[str]) -> str:
             f"Total sessions: {total}",
             f"Listable sessions: {listable}",
             f"Total messages: {db.message_count()}"]
-        for source in ["cli", "tui", "telegram", "discord", "slack", "cron"]:
+        for source in ["cli", "tui", "telegram", "cron"]:
             count = db.session_count(source=source)
             if count:
                 lines.append(f"  {source}: {count}")

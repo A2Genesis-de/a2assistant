@@ -89,8 +89,6 @@ CONFIGURABLE_TOOLSETS = [
     ("clarify",         "❓ Clarifying Questions",      "clarify"),
     ("delegation",      "👥 Task Delegation",           "delegate_task"),
     ("cronjob",         "⏰ Cron Jobs",                 "create/list/update/pause/resume/run, with optional attached skills"),
-    ("discord",         "💬 Discord (read/participate)", "fetch messages, search members, create thread"),
-    ("discord_admin",   "🛡️  Discord Server Admin",    "list channels/roles, pin, assign roles"),
     ("computer_use",     "🖱️  Computer Use (macOS/Windows/Linux)", "background desktop control via cua-driver"),
 ]
 
@@ -106,9 +104,9 @@ def gui_toolset_label(label: str) -> str:
 
 
 # OFF by default for new installs (still in _HERMES_CORE_TOOLS; the checklist won't pre-select them). x_search
-# auto-enables when xAI creds exist; its check_fn still gates the schema. ``spotify`` and ``a2a`` are plugin
-# toolsets (catalog / bundled plugin) that stay opt-in once installed.
-_DEFAULT_OFF_TOOLSETS = {"spotify", "discord", "discord_admin", "video", "video_gen", "x_search", "a2a", "kanban"}
+# auto-enables when xAI creds exist; its check_fn still gates the schema. ``spotify`` is a plugin
+# toolset (catalog) that stays opt-in once installed.
+_DEFAULT_OFF_TOOLSETS = {"spotify", "video", "video_gen", "x_search", "kanban"}
 
 # Config-only capabilities: provider setup in `hermes tools` (TOOL_CATEGORIES) but not model toolsets — zero
 # schemas, own switch (``stt.enabled``), never in ``platform_toolsets`` or the per-platform checklist.
@@ -372,9 +370,7 @@ TOOL_CATEGORIES = {
 TOOLSET_ENV_REQUIREMENTS = {"vision": [("OPENROUTER_API_KEY", "https://openrouter.ai/keys")]}
 
 # --- Platform / Toolset Helpers ---
-_PLATFORM_ENABLE_ENV_VARS = (
-    ("telegram", "TELEGRAM_BOT_TOKEN"), ("discord", "DISCORD_BOT_TOKEN"), ("slack", "SLACK_BOT_TOKEN"),
-    ("whatsapp", "WHATSAPP_ENABLED"), ("qqbot", "QQ_APP_ID"))
+_PLATFORM_ENABLE_ENV_VARS = (("telegram", "TELEGRAM_BOT_TOKEN"),)
 
 
 def _get_enabled_platforms() -> list[str]:
@@ -708,7 +704,7 @@ def toolsets_partially_stripped(config: dict, enabled_toolsets: set[str]) -> dic
 
 
 def _recover_platform_native_toolsets(enabled_toolsets: set[str], platform: str, *, skip: set[str]) -> None:
-    """Add non-configurable platform toolsets (discord, feishu_*) in place: in the default composite but not in
+    """Add non-configurable platform toolsets in place: in the default composite but not in
     CONFIGURABLE_TOOLSETS, so never in a checklist or saved list. Runs for BOTH ``_get_platform_tools`` branches."""
     from toolsets import resolve_toolset, TOOLSETS
 
@@ -785,7 +781,7 @@ def _save_platform_tools(config: dict, platform: str, enabled_toolset_keys: set[
     """Save the selected toolset keys for a platform to config."""
     config.setdefault("platform_toolsets", {})
     # Drop platform-scoped toolsets that don't apply here, so the "Configure all platforms" checklist (or a
-    # hand-edited config.yaml) can't turn on `discord` for Telegram.
+    # hand-edited config.yaml) can't turn on a platform-restricted toolset elsewhere.
     enabled_toolset_keys = {ts for ts in enabled_toolset_keys if _toolset_allowed_for_platform(ts, platform)}
     plugin_keys = _get_plugin_toolset_keys()
     # Preserve only existing entries that are neither configurable nor platform defaults (i.e. MCP server

@@ -615,30 +615,9 @@ class PluginContext(PluginCapabilityCtxMixin):
         _facade().logger.debug("Plugin %s registered platform: %s", self.manifest.name, name)
         return handle
 
-    def register_slack_action_handler(
-        self, action_id: Any, callback: Callable,
-    ) -> PluginRegistration:
-        """Register a Slack Block Kit action handler, wired into ``slack_bolt.AsyncApp`` at connect.
-        ``action_id`` is anything ``slack_bolt.App.action()`` accepts; ``callback`` is
-        ``async def handler(ack, body, action)`` (``await ack()`` within 3s). Raises ``ValueError`` for
-        a non-callable callback or empty ``action_id``."""
-        if not callable(callback):
-            raise self._refuse("a Slack action handler with a non-callable callback")
-        if action_id is None or (isinstance(action_id, str) and not action_id.strip()):
-            raise self._refuse("a Slack action handler with an empty action_id")
-        entry = (action_id, callback, self.manifest.name)
-        handlers = self._manager._slack_action_handlers
-        handlers.append(entry)
-        handle = self._track("slack_action_handler", repr(action_id),
-                             lambda: self._manager._remove_identity(handlers, entry))
-        _facade().logger.debug("Plugin %s registered Slack action handler: %s", self.manifest.name, action_id)
-        return handle
-
     def register_platform_handler(self, platform: str, factory: Callable) -> None:
         """Register ``factory(native, adapter)``, invoked at ``connect()`` before/as the core handlers
-        register (``adapter`` read-only). ``native``: telegram PTB ``Application``, discord
-        ``commands.Bot``, slack ``AsyncApp``, matrix client, teams ``App``, dingtalk
-        ``DingTalkStreamClient``, line aiohttp ``web.Application``, others ``None``. Keep SDK imports
+        register (``adapter`` read-only). ``native``: telegram PTB ``Application``, others ``None``. Keep SDK imports
         inside the factory; exceptions are logged and the platform still connects. Scope handlers in
         first-match dispatch tables so core flows keep working. Raises ``ValueError`` when not callable
         or platform is empty."""

@@ -434,6 +434,7 @@ export const af: Translations = {
       tts: "Teks-na-Spraak",
       stt: "Spraak-na-Teks",
       logging: "Aantekening",
+      messaging: "Messaging",
       auxiliary: "Hulpmiddels",
     },
   },

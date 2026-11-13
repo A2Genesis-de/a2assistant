@@ -55,7 +55,6 @@ def plugin_activation_summary(manager: Any, plugin_key: str) -> dict[str, Any]:
         now["hooks"] = sorted(hooks - _GATEWAY_TRANSFORM_HOOKS)
     callbacks = sorted(platform for platform, factories in manager._platform_handler_factories.items()
                        if any(plugin == name for _f, plugin in factories))
-    callbacks += [f"slack:{a}" for a in kinds.get("slack_action_handler", ())]
     if callbacks:
         now["callbacks"] = callbacks
     if kinds.get("locale"):  # language-pack layers: the i18n caches reset on registration, so live at once

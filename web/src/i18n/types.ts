@@ -557,6 +557,7 @@ export interface Translations {
       tts: string;
       stt: string;
       logging: string;
+      messaging: string;
       auxiliary: string;
     };
   };

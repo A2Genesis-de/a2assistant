@@ -434,6 +434,7 @@ export const de: Translations = {
       tts: "Text-zu-Sprache",
       stt: "Sprache-zu-Text",
       logging: "Protokollierung",
+      messaging: "Messaging",
       auxiliary: "Hilfs",
     },
   },

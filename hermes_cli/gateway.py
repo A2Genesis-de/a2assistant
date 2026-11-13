@@ -4659,7 +4659,6 @@ from hermes_cli.gateway_setup_wizard import (
     _UNAUTHORIZED_ACCESS_CHOICES,
     _prompt_unauthorized_access,
     _telegram_auto_setup,
-    _clean_discord_ids,
     _prompt_allowlist_var,
     _setup_standard_platform,
     _builtin_setup_fn,
@@ -4753,7 +4752,6 @@ def _print_info_lines(*lines: str) -> None:
 
 
 
-# WhatsApp/DingTalk/WeCom/Feishu setup flows live in their plugins' adapter.py::interactive_setup.
 
 
 def _running_under_s6() -> bool:

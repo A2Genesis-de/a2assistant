@@ -433,6 +433,7 @@ export const ja: Translations = {
       tts: "音声合成",
       stt: "音声認識",
       logging: "ロギング",
+      messaging: "Messaging",
       auxiliary: "補助",
     },
   },

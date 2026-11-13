@@ -442,6 +442,7 @@ export const ga: Translations = {
       tts: "Téacs go Caint",
       stt: "Caint go Téacs",
       logging: "Logáil",
+      messaging: "Messaging",
       auxiliary: "Cúntach",
     },
   },

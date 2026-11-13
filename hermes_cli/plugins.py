@@ -304,7 +304,6 @@ class PluginManager(PluginLoaderMixin, PluginDispatchMixin, PluginLedgerMixin):
         self._portable_mcp_server_plugins: dict[str, str] = {}
         self._aux_tasks: dict[str, dict[str, Any]] = {}
         self._approval_transports: dict[str, Any] = {}
-        self._slack_action_handlers: list[tuple] = []
         self._platform_handler_factories: dict[str, list[tuple]] = {}
         # Process-owned discovery listeners (``on_plugin_loaded``); never cleared by unload().
         self._plugin_loaded_listeners: list[Callable] = []
@@ -630,10 +629,6 @@ class PluginManager(PluginLoaderMixin, PluginDispatchMixin, PluginLedgerMixin):
     def _scan_entry_points(self) -> list[PluginManifest]:
         """Read installed plugin entry points (see :func:`discover_entrypoint_manifests`)."""
         return discover_entrypoint_manifests()
-
-    def get_slack_action_handlers(self) -> list[tuple]:
-        """``(action_id, callback, plugin_name)`` tuples for the Slack adapter to wire at connect."""
-        return list(self._slack_action_handlers)
 
     def get_platform_handler_factories(self, platform: str) -> list[tuple]:
         """``(factory, plugin_name)`` tuples for one platform; adapters call ``factory(native,

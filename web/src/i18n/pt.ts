@@ -435,6 +435,7 @@ export const pt: Translations = {
       tts: "Texto para fala",
       stt: "Fala para texto",
       logging: "Registo",
+      messaging: "Messaging",
       auxiliary: "Auxiliar",
     },
   },

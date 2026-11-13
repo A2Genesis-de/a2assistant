@@ -55,7 +55,7 @@ _REVEAL_WINDOW_SECONDS = 30
 _CATEGORY_ORDER = [
     "general", "agent", "terminal", "display", "delegation",
     "memory", "compression", "security", "browser", "voice",
-    "tts", "stt", "logging", "discord", "auxiliary",
+    "tts", "stt", "logging", "messaging", "auxiliary",
 ]
 
 

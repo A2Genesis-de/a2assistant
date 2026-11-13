@@ -434,6 +434,7 @@ export const ru: Translations = {
       tts: "Синтез речи",
       stt: "Распознавание речи",
       logging: "Журналирование",
+      messaging: "Messaging",
       auxiliary: "Вспомогательные",
     },
   },

@@ -375,6 +375,7 @@ export const ar = defineLocale({
       tts: "تحويل النص إلى كلام",
       stt: "تحويل الكلام إلى نص",
       logging: "التسجيل",
+      messaging: "Messaging",
       auxiliary: "إضافي",
     },
   },

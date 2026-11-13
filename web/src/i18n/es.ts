@@ -435,6 +435,7 @@ export const es: Translations = {
       tts: "Texto a voz",
       stt: "Voz a texto",
       logging: "Registro",
+      messaging: "Messaging",
       auxiliary: "Auxiliar",
     },
   },

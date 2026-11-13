@@ -434,6 +434,7 @@ export const it: Translations = {
       tts: "Sintesi vocale",
       stt: "Riconoscimento vocale",
       logging: "Log",
+      messaging: "Messaging",
       auxiliary: "Ausiliario",
     },
   },

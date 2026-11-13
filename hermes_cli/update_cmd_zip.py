@@ -45,7 +45,6 @@ _ZIP_PRESERVED_TOP_LEVEL = {"venv", ".venv", "node_modules", ".git", ".env"}
 _ZIP_PRESERVED_NESTED = {
     "apps": ("desktop/release", "desktop/dist", "desktop/dist-webapp", "desktop/build"),
     "hermes_cli": ("web_dist",),
-    "scripts": ("whatsapp-bridge/node_modules",),
     "ui-tui": ("dist", "packages/hermes-ink/dist"),
 }
 

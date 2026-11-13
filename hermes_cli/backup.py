@@ -1106,7 +1106,6 @@ def _revive_gateway_after_import(hermes_root: Path) -> None:
 _QUICK_STATE_FILES = (
     "state.db", "config.yaml", ".env", "auth.json", "cron/jobs.json", "cron/executions.db",
     "gateway_state.json", "channel_directory.json", "channel_aliases.json", "processes.json",
-    "gateway/discord_message_recovery.db",  # Discord reconnect replay ledger
     # Per-profile user stores, destroyed if the update flow replaces the file and the post-update
     # schema-init re-creates an empty one (#52889). Skipped when outside HERMES_HOME.
     "projects.db",                      # per-profile project store
@@ -1118,7 +1117,6 @@ _QUICK_STATE_FILES = (
     # Pairing stores (generic + per-platform JSONs outside state.db)
     "pairing",                          # legacy location (gateway/pairing.py)
     "platforms/pairing",                # new location (gateway/pairing.py)
-    "feishu_comment_pairing.json",      # Feishu comment subscription pairings
 )
 
 _QUICK_DEFAULT_KEEP = 20

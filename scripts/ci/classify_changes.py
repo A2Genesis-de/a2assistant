@@ -98,10 +98,7 @@ _FRONTEND = ("ui-tui/", "web/", "apps/")  # TS typecheck-matrix packages
 # Shipped page outside those packages, exercised by the desktop Electron suite. The desktop cache
 # key owner is checked by tests-js/desktop-build-cache-inputs.test.mjs against the Node graph.
 _FRONTEND_FILES = {"scripts/desktop-update/ui.html", "scripts/ci/desktop_build_cache.py"}
-# The WhatsApp bridge's ``node --test`` suites run in the JS & TS job, so a
-# change to the bridge or to the Python adapter that speaks its protocol
-# selects ``frontend``.
-_WHATSAPP_BRIDGE = ("scripts/whatsapp-bridge/", "plugins/platforms/whatsapp/")
+
 # Shift every package's tree (pnpm-workspace.yaml carries the overrides).
 _ROOT_NPM = {"package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml"}
 _DOCKER_META = ("docker/", ".hadolint.yaml", "Dockerfile", ".dockerignore") # docker setup
@@ -656,7 +653,7 @@ def classify(files: list[str], run_e2e: bool = False) -> dict[str, bool]:
     python_prod = any(not _py_irrelevant(f) and not _py_test_only(f) for f in code)
     frontend = any(
         f.startswith(_FRONTEND) or f in _ROOT_NPM or f in _FRONTEND_FILES
-        or f.startswith(("tests-js/",) + _WHATSAPP_BRIDGE)
+        or f.startswith("tests-js/")
         or (f.startswith("scripts/build/") and f.endswith((".mjs", ".js", ".ts")))
         for f in files
     )
