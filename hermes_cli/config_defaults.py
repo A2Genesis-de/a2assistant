@@ -1017,13 +1017,6 @@ DEFAULT_CONFIG = {
         # leaves disconnected sessions ``ended_at IS NULL`` forever — phantom "active" rows in /resume and
         # dashboards. See #65194.
         "startup_orphan_sweep": True,
-        # OAuth gate (engaged when --host is set and --insecure is not), read by the Nous Portal
-        # plugin. Env HERMES_DASHBOARD_OAUTH_CLIENT_ID / HERMES_DASHBOARD_PORTAL_URL win when
-        # non-empty. Empty client_id = no provider; empty portal_url = production.
-        "oauth": {
-            "client_id": "",  # agent:{instance_id} — Portal provisions this
-            "portal_url": "",
-        },
         # Username/password gate (dashboard_auth/basic plugin, no OAuth IDP). Active when username
         # plus password_hash (preferred) or password (hashed in-memory) are set; empty username =
         # no-op. Env HERMES_DASHBOARD_BASIC_AUTH_USERNAME / _PASSWORD_HASH / _PASSWORD / _SECRET /

@@ -782,7 +782,6 @@ from hermes_cli.web_routers import (
     dashboard_ui as _dashboard_ui_routes,
     webapp as _webapp_routes,
     delegation as _delegation_routes,
-    webapp_access as _webapp_access_routes,
     ui_preferences as _ui_preferences_routes,
     gateway_connections as _gateway_connections_routes,
     gateway_connections_reach as _gateway_connections_reach_routes,
@@ -831,7 +830,6 @@ app.include_router(_webapp_routes.router)
 # The saved-connections proxy checks its surface per request (WebSocket routes take no Request).
 app.include_router(_webapp_relay_proxy_routes.router)
 app.include_router(_delegation_routes.router)
-app.include_router(_webapp_access_routes.router, dependencies=[_Depends(_route_on("web_access"))])
 app.include_router(_ui_preferences_routes.router, dependencies=[_Depends(_route_on("ui_preferences"))])
 app.include_router(_gateway_connections_routes.router, dependencies=[_Depends(_route_on("gateway_connections"))])
 app.include_router(_gateway_connections_reach_routes.router, dependencies=[_Depends(_route_on("gateway_connections"))])
@@ -856,13 +854,6 @@ def _no_auth_provider_message(host: str) -> str:
     unconfigured provider is not reported as merely "no providers".
     """
     skip_reasons: list[str] = []
-    try:
-        from plugins.dashboard_auth import nous as _nous_plugin
-
-        if _nous_plugin.LAST_SKIP_REASON:
-            skip_reasons.append(f"  • nous: {_nous_plugin.LAST_SKIP_REASON}")
-    except Exception:
-        pass
 
     # A listener that declares its own public URL (the gateway's Webapp: webapp.public_url) is
     # gated by that setting, never by dashboard.public_url.
@@ -900,8 +891,7 @@ def _no_auth_provider_message(host: str) -> str:
         "    (hash with: python -c \"from "
         "plugins.dashboard_auth.basic import hash_password; "
         "print(hash_password('your-password'))\")\n"
-        "  • OAuth: run `hermes dashboard register` (Nous Portal) or "
-        "install a DashboardAuthProvider plugin.\n"
+        "  • OAuth: install a DashboardAuthProvider plugin.\n"
         "  • Deployment token: provision HERMES_DASHBOARD_SESSION_TOKEN "
         "(a literal token, or 'file:<path>' naming a secret-manager-decrypted "
         "token file) — the bundled session-token provider then authorizes "

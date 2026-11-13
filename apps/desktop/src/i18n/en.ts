@@ -2566,36 +2566,6 @@ export const en: Translations = {
     restartFailedManualDetail: 'Try Restart again; if it still fails, open the logs and send diagnostics.',
     restartAgain: 'Restart again',
     openLogs: 'Open logs',
-    telegramQr: {
-      title: 'Choose how to connect your Telegram bot',
-      subtitle: 'Both options connect a bot you control and save its credentials only to this A2Assistant installation.',
-      quickSetup: 'Quick setup',
-      recommended: 'Recommended',
-      quickHelp:
-        'Scan a QR code and confirm in Telegram. A2Assistant creates the bot and detects your Telegram user ID automatically.',
-      createWithQr: 'Create with QR',
-      starting: 'Starting…',
-      replaceWarning:
-        'Telegram credentials are already configured. A new QR setup or bot token will replace the current bot when you save.',
-      scanHint: 'Scan with the Telegram app on your phone, or open the link on this computer.',
-      waiting: 'Waiting for Telegram…',
-      expiresIn: remaining => `Expires in ${remaining}`,
-      expired: 'Expired',
-      openTelegram: 'Open Telegram',
-      ready: 'Bot created',
-      allowedUsers: 'Allowed users',
-      ownerDetected: 'Owner detected',
-      addAtLeastOne: 'Add at least one Telegram user ID.',
-      userIdPlaceholder: 'Telegram user ID',
-      add: 'Add',
-      numericOnly: 'Allowed Telegram user IDs must be numeric.',
-      saveAndRestart: 'Save and restart',
-      applying: 'Saving…',
-      pairingExpired: 'Telegram pairing expired. Start a new QR setup to try again.',
-      stillWaiting: detail => `Still waiting for Telegram. Retrying after: ${detail}`,
-      savedRestarting: 'Telegram saved; gateway restarting…',
-      savedRestartFailed: detail => `Telegram saved; gateway restart failed${detail}`
-    },
     fieldCopy: {
       TELEGRAM_BOT_TOKEN: {
         label: 'Bot token',

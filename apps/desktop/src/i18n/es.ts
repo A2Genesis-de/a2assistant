@@ -2954,38 +2954,6 @@ export const esOverrides = {
       'Vuelve a pulsar Reiniciar; si sigue fallando, abre los registros y envía un diagnóstico.',
     restartAgain: 'Reiniciar de nuevo',
     openLogs: 'Abrir registros',
-    telegramQr: {
-      title: 'Elige cómo conectar tu bot de Telegram',
-      subtitle:
-        'Ambas opciones conectan un bot que controlas y guardan sus credenciales solo en esta instalación de A2Assistant.',
-      quickSetup: 'Configuración rápida',
-      recommended: 'Recomendado',
-      quickHelp:
-        'Escanea un código QR y confirma en Telegram. A2Assistant crea el bot y detecta tu ID de usuario de Telegram automáticamente.',
-      createWithQr: 'Crear con QR',
-      starting: 'Iniciando…',
-      replaceWarning:
-        'Ya hay credenciales de Telegram configuradas. Una nueva configuración por QR o un nuevo token de bot sustituirá al bot actual cuando guardes.',
-      scanHint: 'Escanéalo con la app de Telegram en tu teléfono o abre el enlace en este equipo.',
-      waiting: 'Esperando a Telegram…',
-      expiresIn: (remaining: string) => `Caduca en ${remaining}`,
-      expired: 'Caducado',
-      openTelegram: 'Abrir Telegram',
-      ready: 'Bot creado',
-      allowedUsers: 'Usuarios permitidos',
-      ownerDetected: 'Propietario detectado',
-      addAtLeastOne: 'Añade al menos un ID de usuario de Telegram.',
-      userIdPlaceholder: 'ID de usuario de Telegram',
-      add: 'Añadir',
-      numericOnly: 'Los ID de usuario de Telegram permitidos deben ser numéricos.',
-      saveAndRestart: 'Guardar y reiniciar',
-      applying: 'Guardando…',
-      pairingExpired:
-        'La vinculación con Telegram caducó. Inicia una nueva configuración por QR para volver a intentarlo.',
-      stillWaiting: (detail: string) => `Seguimos esperando a Telegram. Reintentando tras: ${detail}`,
-      savedRestarting: 'Telegram guardado; reiniciando el gateway…',
-      savedRestartFailed: (detail: string) => `Telegram guardado; falló el reinicio del gateway${detail}`
-    },
     fieldCopy: {
       TELEGRAM_BOT_TOKEN: {
         label: 'Token del bot',

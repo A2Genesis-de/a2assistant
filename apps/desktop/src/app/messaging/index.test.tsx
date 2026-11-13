@@ -22,10 +22,6 @@ const approvePairing = vi.fn()
 const revokePairing = vi.fn()
 const openExternalLink = vi.fn()
 const runGatewayRestart = vi.fn()
-const watchGatewayRestartOutcome = vi.fn()
-const startTelegramOnboarding = vi.fn()
-const getTelegramOnboardingStatus = vi.fn()
-const applyTelegramOnboarding = vi.fn()
 const notify = vi.fn()
 
 vi.mock('@/hermes', () => ({
@@ -37,17 +33,9 @@ vi.mock('@/hermes', () => ({
   revokePairing: (platformId: string, userId: string, profile?: null | string) =>
     revokePairing(platformId, userId, profile),
   setApiRequestProfile: vi.fn(),
-  applyTelegramOnboarding: (pairingId: string, ids: string[], profile?: null | string) =>
-    applyTelegramOnboarding(pairingId, ids, profile),
-  cancelTelegramOnboarding: vi.fn(async () => ({ ok: true })),
-  getTelegramOnboardingStatus: (pairingId: string, profile?: null | string) =>
-    getTelegramOnboardingStatus(pairingId, profile),
-  startTelegramOnboarding: (botName?: string, profile?: null | string) => startTelegramOnboarding(botName, profile),
   updateMessagingPlatform: (id: string, body: unknown, profile?: null | string) =>
     updateMessagingPlatform(id, body, profile)
 }))
-
-vi.mock('qrcode', () => ({ toDataURL: vi.fn(async () => 'data:image/png;base64,QR') }))
 
 // Keep store/profile's side-effecting imports inert (pulled in via the shared
 // settings scope store) — same seam as store/profile.test.ts.
@@ -75,8 +63,7 @@ vi.mock('@/store/system-actions', async () => {
 
   return {
     $gatewayRestarting: atom(false),
-    runGatewayRestart: () => runGatewayRestart(),
-    watchGatewayRestartOutcome: () => watchGatewayRestartOutcome()
+    runGatewayRestart: () => runGatewayRestart()
   }
 })
 
@@ -99,7 +86,6 @@ beforeEach(() => {
   updateMessagingPlatform.mockResolvedValue({ ok: true, platform: 'teams' })
   getPairing.mockResolvedValue({ approved: [], pending: [] })
   runGatewayRestart.mockResolvedValue(true)
-  watchGatewayRestartOutcome.mockResolvedValue(true)
 })
 
 afterEach(() => {
@@ -520,69 +506,5 @@ describe('MessagingView allowlist editor', () => {
       { clear_env: ['TEAMS_ALLOWED_USERS'], env: {} },
       'default'
     )
-  })
-})
-
-describe('MessagingView Telegram quick setup', () => {
-  it('runs the QR pairing to apply on the page scope and watches the backend restart', async () => {
-    // Every call of one pairing must hit the SAME backend (the pairing lives in
-    // that process's memory), so start/status/apply all carry the page's scope
-    // and apply names the profile the credentials land in.
-    const { $settingsScopeOverride } = await import('@/store/settings-scope')
-    $settingsScopeOverride.set('worker')
-    getMessagingPlatforms.mockResolvedValue({
-      platforms: [platform({ id: 'telegram', name: 'Telegram', state: 'not_configured' })]
-    })
-    startTelegramOnboarding.mockResolvedValue({
-      deep_link: 'https://t.me/BotFather?start=abc',
-      expires_at: new Date(Date.now() + 600_000).toISOString(),
-      pairing_id: 'pair-1',
-      qr_payload: 'tg://pair',
-      suggested_username: 'hermes_bot'
-    })
-    getTelegramOnboardingStatus.mockResolvedValue({
-      bot_username: 'hermes_bot',
-      expires_at: new Date(Date.now() + 600_000).toISOString(),
-      owner_user_id: '8792111505',
-      status: 'ready'
-    })
-    applyTelegramOnboarding.mockResolvedValue({
-      bot_username: 'hermes_bot',
-      needs_restart: false,
-      ok: true,
-      platform: 'telegram',
-      restart_started: true
-    })
-
-    try {
-      await renderMessaging()
-
-      await act(async () => {
-        fireEvent.click(await screen.findByRole('button', { name: /Create with QR/ }))
-      })
-      await waitFor(() => expect(startTelegramOnboarding).toHaveBeenCalledWith(undefined, 'worker'))
-
-      const save = await screen.findByRole('button', { name: /Save and restart/ }, { timeout: 4000 })
-      expect(getTelegramOnboardingStatus).toHaveBeenCalledWith('pair-1', 'worker')
-      expect(screen.getByText('8792111505')).toBeTruthy()
-
-      await act(async () => {
-        fireEvent.click(save)
-      })
-
-      await waitFor(() => expect(applyTelegramOnboarding).toHaveBeenCalledWith('pair-1', ['8792111505'], 'worker'))
-      await waitFor(() => expect(watchGatewayRestartOutcome).toHaveBeenCalled())
-      expect(notify).toHaveBeenCalledWith({
-        kind: 'success',
-        message: 'Connected: @hermes_bot · Telegram saved; gateway restarting…',
-        title: 'Telegram setup saved'
-      })
-      // The pairing UI is gone, but the card still names the bot that was just connected.
-      expect(screen.queryByRole('button', { name: /Save and restart/ })).toBeNull()
-      expect(screen.getByText('Connected')).toBeTruthy()
-      expect(screen.getByText('@hermes_bot')).toBeTruthy()
-    } finally {
-      $settingsScopeOverride.set(null)
-    }
   })
 })

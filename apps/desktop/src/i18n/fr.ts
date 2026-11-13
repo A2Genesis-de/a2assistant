@@ -2973,37 +2973,6 @@ export const frOverrides = {
       'Réessayez le redémarrage ; si le problème persiste, ouvrez les journaux et envoyez les diagnostics.',
     restartAgain: 'Redémarrer à nouveau',
     openLogs: 'Ouvrir les journaux',
-    telegramQr: {
-      title: 'Choisissez comment connecter votre bot Telegram',
-      subtitle:
-        "Les deux méthodes connectent un bot que vous contrôlez et enregistrent ses identifiants uniquement dans cette installation d'A2Assistant.",
-      quickSetup: 'Configuration rapide',
-      recommended: 'Recommandé',
-      quickHelp:
-        "Scannez un code QR et confirmez dans Telegram. A2Assistant crée le bot et détecte automatiquement votre identifiant d'utilisateur Telegram.",
-      createWithQr: 'Créer avec un code QR',
-      starting: 'Démarrage…',
-      replaceWarning:
-        "Des identifiants Telegram sont déjà configurés. Une nouvelle configuration par QR ou un nouveau jeton remplacera le bot actuel lors de l'enregistrement.",
-      scanHint: "Scannez avec l'application Telegram de votre téléphone ou ouvrez le lien sur cet ordinateur.",
-      waiting: 'En attente de Telegram…',
-      expiresIn: remaining => `Expire dans ${remaining}`,
-      expired: 'Expiré',
-      openTelegram: 'Ouvrir Telegram',
-      ready: 'Bot créé',
-      allowedUsers: 'Utilisateurs autorisés',
-      ownerDetected: 'Propriétaire détecté',
-      addAtLeastOne: "Ajoutez au moins un identifiant d'utilisateur Telegram.",
-      userIdPlaceholder: "Identifiant d'utilisateur Telegram",
-      add: 'Ajouter',
-      numericOnly: "Les identifiants d'utilisateurs Telegram autorisés doivent être numériques.",
-      saveAndRestart: 'Enregistrer et redémarrer',
-      applying: 'Enregistrement…',
-      pairingExpired: 'La liaison Telegram a expiré. Relancez une configuration par QR pour réessayer.',
-      stillWaiting: detail => `Toujours en attente de Telegram. Nouvelle tentative après : ${detail}`,
-      savedRestarting: 'Telegram enregistré ; redémarrage du gateway…',
-      savedRestartFailed: detail => `Telegram enregistré ; le redémarrage du gateway a échoué${detail}`
-    },
     fieldCopy: {
       TELEGRAM_BOT_TOKEN: {
         label: 'Jeton du bot',

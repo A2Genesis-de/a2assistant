@@ -2268,26 +2268,12 @@ updates:
 # =============================================================================
 # Web Dashboard
 # =============================================================================
-# OAuth gate configuration for `hermes dashboard --host <non-loopback>`.
-# The bundled Nous Portal plugin reads these on startup; settings here are
-# the canonical surface. Each can be overridden by an environment variable:
+# Settings for `hermes dashboard --host <non-loopback>` deployments. Each can
+# be overridden by an environment variable (env wins when non-empty):
 #
-#   dashboard.oauth.client_id   <-  HERMES_DASHBOARD_OAUTH_CLIENT_ID
-#   dashboard.oauth.portal_url  <-  HERMES_DASHBOARD_PORTAL_URL
 #   dashboard.public_url        <-  HERMES_DASHBOARD_PUBLIC_URL
 #
-# Env wins when set to a non-empty value. This is what Fly.io's platform-
-# secret injection uses to push per-deploy client_ids without needing to
-# bake a config.yaml into the image. Empty env values are treated as unset
-# so a provisioned-but-not-populated secret can't shadow a valid entry here.
-#
-# Local dev / on-prem deploys should typically set these via config.yaml
-# (the ~/.hermes/.env file is reserved for API keys and secrets).
-#
 # dashboard:
-#   oauth:
-#     client_id: ""    # agent:{instance_id}; Portal provisions this at deploy
-#     portal_url: ""   # blank → default https://portal.nousresearch.com
 #
 #   # Force the absolute base URL the OAuth callback (and any other public
 #   # URL the dashboard hands to external systems) is built from. Set this
@@ -2319,8 +2305,8 @@ updates:
 #
 # -----------------------------------------------------------------------------
 # Self-hosted OIDC dashboard auth (generic OpenID Connect — Authentik,
-# Keycloak, Zitadel, Authelia, Auth0, Okta, Google, …). Use this INSTEAD of the
-# nous block above when gating the dashboard with your own identity provider.
+# Keycloak, Zitadel, Authelia, Auth0, Okta, Google, …) to gate the dashboard
+# with your own identity provider.
 # Each setting can be overridden by an environment variable:
 #
 #   dashboard.oauth.self_hosted.issuer         <-  HERMES_DASHBOARD_OIDC_ISSUER

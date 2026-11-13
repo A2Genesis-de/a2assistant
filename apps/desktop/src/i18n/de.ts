@@ -2968,37 +2968,6 @@ const deBaseOverrides = {
       'Versuchen Sie den Neustart erneut; wenn er weiterhin fehlschlägt, öffnen Sie die Logs und senden Sie Diagnosedaten.',
     restartAgain: 'Erneut neu starten',
     openLogs: 'Logs öffnen',
-    telegramQr: {
-      title: 'Wählen Sie, wie Sie Ihren Telegram-Bot verbinden',
-      subtitle:
-        'Beide Optionen verbinden einen Bot, den Sie kontrollieren, und speichern seine Zugangsdaten nur in dieser A2Assistant-Installation.',
-      quickSetup: 'Schnelleinrichtung',
-      recommended: 'Empfohlen',
-      quickHelp:
-        'Scannen Sie einen QR-Code und bestätigen Sie in Telegram. A2Assistant legt den Bot an und erkennt Ihre Telegram-Benutzer-ID automatisch.',
-      createWithQr: 'Mit QR-Code anlegen',
-      starting: 'Wird gestartet…',
-      replaceWarning:
-        'Es sind bereits Telegram-Zugangsdaten konfiguriert. Eine neue QR-Einrichtung oder ein Bot-Token ersetzt beim Speichern den aktuellen Bot.',
-      scanHint: 'Scannen Sie mit der Telegram-App auf Ihrem Handy oder öffnen Sie den Link auf diesem Computer.',
-      waiting: 'Warten auf Telegram…',
-      expiresIn: remaining => `Läuft ab in ${remaining}`,
-      expired: 'Abgelaufen',
-      openTelegram: 'Telegram öffnen',
-      ready: 'Bot angelegt',
-      allowedUsers: 'Erlaubte Benutzer',
-      ownerDetected: 'Eigentümer erkannt',
-      addAtLeastOne: 'Fügen Sie mindestens eine Telegram-Benutzer-ID hinzu.',
-      userIdPlaceholder: 'Telegram-Benutzer-ID',
-      add: 'Hinzufügen',
-      numericOnly: 'Erlaubte Telegram-Benutzer-IDs müssen numerisch sein.',
-      saveAndRestart: 'Speichern und neu starten',
-      applying: 'Wird gespeichert…',
-      pairingExpired: 'Telegram-Kopplung abgelaufen. Starten Sie eine neue QR-Einrichtung, um es erneut zu versuchen.',
-      stillWaiting: detail => `Noch keine Antwort von Telegram. Neuer Versuch nach: ${detail}`,
-      savedRestarting: 'Telegram gespeichert; Gateway wird neu gestartet…',
-      savedRestartFailed: detail => `Telegram gespeichert; Gateway-Neustart fehlgeschlagen${detail}`
-    },
     fieldCopy: {
       TELEGRAM_BOT_TOKEN: {
         label: 'Bot-Token',

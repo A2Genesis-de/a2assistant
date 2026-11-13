@@ -65,13 +65,6 @@ class MessagingPlatformUpdate(BaseModel):
     # Explicit body profile beats the switcher's query param (same as other scoped writes).
     profile: Optional[str] = None
 
-class TelegramOnboardingStart(BaseModel):
-    bot_name: Optional[str] = None
-
-class TelegramOnboardingApply(BaseModel):
-    allowed_user_ids: list[str]
-    profile: Optional[str] = None
-
 class WhatsAppOnboardingStart(BaseModel):
     mode: Optional[str] = "bot"
     allowed_users: Optional[str] = ""

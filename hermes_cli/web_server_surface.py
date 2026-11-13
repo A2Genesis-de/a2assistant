@@ -34,9 +34,6 @@ class SurfacePolicy:
     #: Behind the sign-in gate, a write that carries the session cookie (``/auth/logout`` included)
     #: must come from this listener's own origin. Elsewhere the gate keeps main's rule.
     own_origin_cookie_writes: bool
-    #: ``/api/webapp-access/*`` serves: native Desktop's Web Access pane calls the gateway's own
-    #: listener (the private one, or the Webapp's when it is on).
-    web_access: bool
     #: The browser's file routes serve: ``/api/chat/file-upload`` stages a picked file,
     #: ``/api/files/ticket`` mints the path-bound tickets for downloads and media links, and chat
     #: upload bodies are capped before they are parsed (``web_upload_limit``).
@@ -59,19 +56,19 @@ class SurfacePolicy:
 POLICIES: dict[str, SurfacePolicy] = {
     "serve": SurfacePolicy(
         serves_spa=False, html_token=True, host_terminal=False, launch_link=False, gateway_ticket=False,
-        own_origin_cookie_writes=False, web_access=False, browser_files=False,
+        own_origin_cookie_writes=False, browser_files=False,
         desktop_plugins=False, ui_preferences=False, client_direct_voice=True),
     "dashboard": SurfacePolicy(
         serves_spa=True, html_token=True, host_terminal=False, launch_link=False, gateway_ticket=False,
-        own_origin_cookie_writes=False, web_access=False, browser_files=False,
+        own_origin_cookie_writes=False, browser_files=False,
         desktop_plugins=False, ui_preferences=False, client_direct_voice=True),
     "gateway": SurfacePolicy(
         serves_spa=True, html_token=True, host_terminal=False, launch_link=False, gateway_ticket=False,
-        own_origin_cookie_writes=False, web_access=True, browser_files=False,
+        own_origin_cookie_writes=False, browser_files=False,
         desktop_plugins=False, ui_preferences=False, client_direct_voice=True),
     "webapp": SurfacePolicy(
         serves_spa=True, html_token=False, host_terminal=True, launch_link=True, gateway_ticket=True,
-        own_origin_cookie_writes=True, web_access=True, browser_files=True,
+        own_origin_cookie_writes=True, browser_files=True,
         desktop_plugins=True, ui_preferences=True, client_direct_voice=False,
         gateway_connections=True),
 }

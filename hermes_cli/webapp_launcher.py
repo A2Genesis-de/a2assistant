@@ -204,19 +204,10 @@ def _plain_http_note(url: str) -> str | None:
         return PLAIN_HTTP_NOTE
 
 
-def _browser_address(target: Path, settings, served_url: str) -> str:
+def _browser_address(settings, served_url: str) -> str:
     """Where a browser opens the Webapp the gateway serves at *served_url* (its loopback dial origin), as
-    ``webapp-launch`` works it out: ``webapp.public_url`` when set, else behind sign-in the LAN address
-    Web Access registered Nous sign-in for, else *served_url* (a private Webapp's launch link). Read from
-    *target*'s config now, not from when the gateway started."""
-    from hermes_cli.web_server_boundary import public_hosts_engage_gate, public_url_hosts, should_require_auth
-    from hermes_cli.webapp_access import registered_lan_origin
-    # The sign-in gate gateway.run_api.start_gateway_api engages on the Webapp's listener; without it
-    # webapp-launch hands out the loopback launch link and never reads the registration, which outlives
-    # a move back to a loopback bind.
-    gated = should_require_auth(settings.host) or public_hosts_engage_gate(public_url_hosts(settings.public_url))
-    lan = registered_lan_origin(target, urlsplit(served_url).port) if gated else None
-    return settings.public_url or lan or served_url
+    ``webapp-launch`` works it out: ``webapp.public_url`` when set, else *served_url*."""
+    return settings.public_url or served_url
 
 
 def _status(target: Path) -> int:
@@ -237,7 +228,7 @@ def _status(target: Path) -> int:
         print(f"Serving at {status['url']}")
         from gateway.webapp_listener import webapp_settings
         settings = webapp_settings(target)
-        if note := _plain_http_note(_browser_address(target, settings, status["url"])):
+        if note := _plain_http_note(_browser_address(settings, status["url"])):
             print(note)
         if not settings.enabled:
             print(f"{target / 'config.yaml'} no longer turns the Webapp on: it stops at the next gateway restart "
