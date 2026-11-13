@@ -69,39 +69,6 @@ def test_save_auth_store_writes_0o600_with_0o700_parent(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_save_qwen_cli_tokens_writes_0o600_with_0o700_parent(tmp_path, monkeypatch):
-    """``_save_qwen_cli_tokens`` must land the token file at 0o600 and parent at 0o700."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-    # The Qwen CLI auth path lives under $HOME/.qwen by default — isolate it.
-    monkeypatch.setenv("HOME", str(tmp_path))
-    old_umask = os.umask(0o022)
-    try:
-        from hermes_cli import auth as auth_mod
-
-        tokens = {
-            "access_token": "qwen-secret",
-            "refresh_token": "qwen-refresh",
-            "token_type": "Bearer",
-            "expiry_date": 123,
-        }
-        auth_path = auth_mod._save_qwen_cli_tokens(tokens)
-    finally:
-        os.umask(old_umask)
-
-    mode = stat.S_IMODE(auth_path.stat().st_mode)
-    parent_mode = stat.S_IMODE(auth_path.parent.stat().st_mode)
-
-    assert mode == 0o600, (
-        f"Qwen token file mode 0o{mode:o} != 0o600 — TOCTOU race regressed"
-    )
-    assert parent_mode == 0o700, (
-        f"Qwen token parent dir mode 0o{parent_mode:o} != 0o700"
-    )
-
-    data = json.loads(auth_path.read_text())
-    assert data["access_token"] == "qwen-secret"
-
-
 # ---------------------------------------------------------------------------
 # Nous shared-credential store write (inside _write_shared_nous_state)
 # ---------------------------------------------------------------------------

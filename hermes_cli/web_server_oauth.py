@@ -125,13 +125,6 @@ _OAUTH_PROVIDER_CATALOG: tuple[dict[str, Any], ...] = (
     {"id": "openai-codex", "name": "ChatGPT or Codex Subscription", "flow": "device_code",
      "cli_command": "hermes auth add openai-codex", "docs_url": "https://platform.openai.com/docs",
      "status_fn": None},
-    {"id": "qwen-oauth", "name": "Qwen (via Qwen CLI)", "flow": "external",
-     "cli_command": "hermes auth add qwen-oauth", "docs_url": "https://github.com/QwenLM/qwen-code",
-     "status_fn": None},
-    # Structurally device-code (verification URI + user code + token polling) with a PKCE
-    # code-binding extension that doesn't change the operator UX.
-    {"id": "minimax-oauth", "name": "MiniMax (OAuth)", "flow": "device_code",
-     "cli_command": "hermes auth add minimax-oauth", "docs_url": "https://www.minimax.io", "status_fn": None},
     # Device code works in remote shells/containers without a reachable 127.0.0.1 callback.
     {"id": "xai-oauth", "name": "xAI Grok OAuth (SuperGrok / Premium+)", "flow": "device_code",
      "cli_command": "hermes auth add xai-oauth",
@@ -246,54 +239,6 @@ def _nous_sign_in_poller(session_id: str, sess: dict[str, Any]) -> None:
     finally:
         with contextlib.suppress(Exception):
             gen.close()     # unwinds the suspended HTTP client if we leave early
-
-
-@_oauth_poller("minimax")
-def _minimax_poller(session_id: str, sess: dict[str, Any]) -> None:
-    """MiniMax poller: PKCE-style ``code_verifier`` + ``user_code`` instead of Nous's
-    ``device_code``. Builds the same auth_state as the CLI's ``_minimax_oauth_login`` and persists
-    via ``_minimax_save_auth_state`` so the system ends up as after ``hermes auth add minimax-oauth``.
-    Region is fixed to "global" here; cn-region operators use the CLI's ``--region cn``."""
-    from hermes_cli.web_server_profiles import _profile_scope
-    from hermes_cli.auth import (
-        _minimax_poll_token, _minimax_resolve_token_expiry_unix, _minimax_save_auth_state,
-        MINIMAX_OAUTH_GLOBAL_INFERENCE, MINIMAX_OAUTH_SCOPE,
-    )
-    import httpx
-    portal_base_url, client_id = sess["portal_base_url"], sess["client_id"]
-    with httpx.Client(
-        timeout=httpx.Timeout(15.0), headers={"Accept": "application/json"}, follow_redirects=True
-    ) as client:
-        token_data = _minimax_poll_token(
-            client=client, portal_base_url=portal_base_url, client_id=client_id,
-            user_code=sess["user_code"], code_verifier=sess["code_verifier"],
-            expired_in=sess["expired_in_raw"], interval_ms=sess.get("interval_ms"),
-        )
-    now = datetime.now(UTC)
-    expires_at_ts = _minimax_resolve_token_expiry_unix(int(token_data["expired_in"]), now=now)
-    auth_state = {
-        "provider": "minimax-oauth",
-        "region": sess.get("region", "global"),
-        "portal_base_url": portal_base_url,
-        "inference_base_url": MINIMAX_OAUTH_GLOBAL_INFERENCE,
-        "client_id": client_id,
-        "scope": MINIMAX_OAUTH_SCOPE,
-        "token_type": token_data.get("token_type", "Bearer"),
-        "access_token": token_data["access_token"],
-        "refresh_token": token_data["refresh_token"],
-        "resource_url": token_data.get("resource_url"),
-        "obtained_at": now.isoformat(),
-        "expires_at": datetime.fromtimestamp(expires_at_ts, tz=UTC).isoformat(),
-        "expires_in": max(0, int(expires_at_ts - now.timestamp())),
-    }
-    with _profile_scope(sess.get("profile")):
-        # The cancellation check and the save share the session lock, so a cancel cannot land
-        # between them (the same contract as the Nous and Codex savers).
-        with _oauth_sessions_lock:
-            if sess.get("cancelled"):
-                sess["status"] = "cancelled"
-                return
-            _minimax_save_auth_state(auth_state)
 
 
 @_oauth_poller("xai")

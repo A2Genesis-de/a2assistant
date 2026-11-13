@@ -41,16 +41,6 @@ _WIRE_BY_MODEL = [
 
 
 @pytest.mark.parametrize("model, expected", _WIRE_BY_MODEL)
-@pytest.mark.parametrize("stale_api_mode", [None, "chat_completions"])
-def test_builtin_opencode_go_client_follows_the_model_not_the_persisted_mode(model, expected, stale_api_mode):
-    client, resolved = aux.resolve_provider_client("opencode-go", model=model, api_mode=stale_api_mode)
-    assert resolved == model
-    assert type(client) is expected
-    async_client, _ = aux.resolve_provider_client("opencode-go", model=model, api_mode=stale_api_mode, async_mode=True)
-    assert (type(async_client) is aux.AsyncCodexAuxiliaryClient) == (expected is aux.CodexAuxiliaryClient)
-
-
-@pytest.mark.parametrize("model, expected", _WIRE_BY_MODEL)
 def test_named_custom_opencode_family_entry_follows_the_model(model, expected):
     """An ``opencode-go-*`` custom entry without an api_mode of its own gets each model's wire, like main."""
     client, resolved = aux.resolve_provider_client("custom:opencode-go-bridge", model=model)

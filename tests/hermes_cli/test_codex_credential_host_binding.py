@@ -229,7 +229,6 @@ def test_full_picker_discovers_codex_models_with_pinned_canonical_url(monkeypatc
     # Unrelated metadata sources stay offline; config, auth, discovery, cache and picker are real.
     monkeypatch.setattr("agent.models_dev.fetch_models_dev", dict)
     monkeypatch.setattr("hermes_cli.models.get_curated_nous_model_ids", list)
-    monkeypatch.setattr("hermes_cli.models.fetch_ollama_cloud_models", lambda **kw: [])
     monkeypatch.setattr("hermes_cli.models_pricing.get_pricing_for_provider", lambda *a, **kw: {})
     # The picker's background usage refresh outlives this test: left running, it sends the JWT
     # through whatever ``httpx.Client`` a LATER case has patched in, polluting that case's recorder.

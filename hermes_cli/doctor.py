@@ -21,7 +21,7 @@ load_hermes_dotenv(hermes_home=_env_path.parent, project_env=PROJECT_ROOT / ".en
 
 from hermes_cli.colors import Colors, color
 from hermes_cli.doctor_report import Finding, _section, check_bool, check_info, doctor_check, warn_on_error
-from hermes_cli.doctor_connectivity import _has_healthy_oauth_fallback_for_apikey_provider, build_probes, run_probes
+from hermes_cli.doctor_connectivity import build_probes, run_probes
 from hermes_cli.doctor_tools import _safe_which
 
 from hermes_cli.doctor_config import (
@@ -62,26 +62,20 @@ from hermes_cli.doctor_state import (
 )
 
 _PROVIDER_ENV_HINTS = (
-    "DEEPINFRA_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "ANTHROPIC_TOKEN",
-    "OPENAI_BASE_URL", "NOUS_API_KEY", "GLM_API_KEY", "ZAI_API_KEY", "Z_AI_API_KEY", "KIMI_API_KEY",
-    "KIMI_CN_API_KEY", "GMI_API_KEY", "FIREWORKS_API_KEY", "ACTUAL_API_KEY", "ACTUAL_BASE_URL", "MINIMAX_API_KEY",
-    "MINIMAX_CN_API_KEY", "KILOCODE_API_KEY", "DEEPSEEK_API_KEY", "DASHSCOPE_API_KEY", "HF_TOKEN",
-    "AI_GATEWAY_API_KEY", "OPENCODE_ZEN_API_KEY", "OPENCODE_GO_API_KEY", "COMMANDCODE_API_KEY", "XIAOMI_API_KEY",
-    "TOKENHUB_API_KEY", "TOKENPLAN_API_KEY",
+    "OPENROUTER_API_KEY", "OPENAI_API_KEY", "ANTHROPIC_API_KEY", "ANTHROPIC_TOKEN", "OPENAI_BASE_URL",
+    "NOUS_API_KEY", "LM_API_KEY", "LM_BASE_URL",
 )
 
 @doctor_check()
 def _check_auth_providers(should_fix: bool, f: Finding) -> None:
     """Refresh-free OAuth status snapshot (doctor must never trigger a token refresh)."""
     with warn_on_error("Auth provider status", "(could not check: {e})"):
-        from hermes_cli.auth import get_nous_auth_status_local, get_codex_auth_status, get_minimax_oauth_auth_status
+        from hermes_cli.auth import get_nous_auth_status_local, get_codex_auth_status
         _login_row("Nous Portal auth", get_nous_auth_status_local())
         # Native OAuth is Hermes' own device-code flow; the Codex CLI only imports existing ~/.codex/auth.json
         # tokens, so the hint sits under the Codex row (not as another provider's remedy).
         if not _login_row("OpenAI Codex auth", get_codex_auth_status(), show_error=True) and not _safe_which("codex"):
             check_info("codex CLI not installed (optional — only required to import tokens from an existing Codex CLI login)")
-        minimax_status = get_minimax_oauth_auth_status()
-        _login_row("MiniMax OAuth", minimax_status, f"(logged in, region={minimax_status.get('region', 'global')})")
     with warn_on_error(""):  # xAI OAuth separately, so an import failure cannot disrupt the rows already printed
         from hermes_cli.auth import get_xai_oauth_auth_status
         _login_row("xAI OAuth", get_xai_oauth_auth_status() or {}, show_error=True)
@@ -106,8 +100,7 @@ def _check_api_connectivity(should_fix: bool, f: Finding) -> None:
     for r in results:
         for glyph, label, detail in r.lines:
             print(f"  {glyph} {label}" + (f" {detail}" if detail else ""))
-        if r.issues and not _has_healthy_oauth_fallback_for_apikey_provider(r.label):
-            f.issues.extend(r.issues)
+        f.issues.extend(r.issues)
 
 
 # Ordered (section title, check). None title = check prints its own header (or none); order is user-visible.

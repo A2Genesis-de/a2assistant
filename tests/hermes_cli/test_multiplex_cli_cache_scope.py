@@ -61,26 +61,6 @@ def homes(tmp_path, monkeypatch):
     return a, b
 
 
-def test_deepinfra_catalog_is_fetched_with_each_profiles_key(homes, monkeypatch):
-    a, b = homes
-    (a / ".env").write_text("DEEPINFRA_API_KEY=key-A\n", encoding="utf-8")
-    (b / ".env").write_text("DEEPINFRA_API_KEY=key-B\n", encoding="utf-8")
-    from hermes_cli import models
-
-    monkeypatch.setattr(models, "_deepinfra_catalog_cache", {})
-    monkeypatch.setattr(models, "_deepinfra_catalog_neg_cache", {})
-
-    def transport(req, *, timeout, **kw):
-        who = req.headers.get("Authorization", "").rsplit("-", 1)[-1] or "anon"
-        return _json_resp({"data": [{"id": f"di/model-{who}", "metadata": {"tags": ["chat"]}}]})
-
-    monkeypatch.setattr(models, "_urlopen_model_catalog_request", transport)
-    with _Scoped(a):
-        assert models._fetch_deepinfra_models() == ["di/model-A"]
-    with _Scoped(b):
-        assert models._fetch_deepinfra_models() == ["di/model-B"]
-
-
 def test_nous_reasoning_caps_follow_each_profiles_portal(homes, monkeypatch):
     a, b = homes
     (a / ".env").write_text("NOUS_INFERENCE_BASE_URL=https://portal-a.example/v1\n", encoding="utf-8")

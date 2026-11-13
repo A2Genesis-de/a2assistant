@@ -21,11 +21,7 @@ def _is_profile_api_key_provider(provider_id: str) -> bool:
         return False
 
 
-_GENERIC_API_KEY_PROVIDERS = frozenset({
-    "openai-api", "gemini", "deepseek", "xai", "zai", "kimi-coding-cn",
-    "minimax", "minimax-cn", "kilocode", "opencode-zen", "opencode-go",
-    "alibaba", "huggingface", "xiaomi", "arcee", "gmi",
-    "nvidia", "ollama-cloud", "tencent-tokenhub", "tencent-tokenplan", "lmstudio"})
+_GENERIC_API_KEY_PROVIDERS = frozenset({"openai-api", "lmstudio"})
 
 
 def _short_url(url: str) -> str:
@@ -417,9 +413,6 @@ def _prompt_provider_choice(choices, *, default=0, title="Select provider:"):
     return None if idx is _CANCELLED else idx
 
 
-_DEFAULT_QWEN_PORTAL_MODELS = [
-    "qwen3-coder-plus", "qwen3-coder"]
-
 # (mode value, label, description, accepted answers); "" = auto-detect
 _CUSTOM_API_MODES = (
     ("", "Auto-detect", "Use A2Assistant URL heuristics; best for standard OpenAI-compatible endpoints.",
@@ -758,16 +751,6 @@ def _prompt_api_key(pconfig, existing_key: str, provider_id: str = "", existing_
     # Keep (default, or any other input)
     print()
     return existing_key, False
-
-
-def _infer_stepfun_region(base_url: str) -> str:
-    """Infer the current StepFun region from the configured endpoint."""
-    return "china" if "api.stepfun.com" in (base_url or "").strip().lower() else "international"
-
-
-def _stepfun_base_url_for_region(region: str) -> str:
-    from hermes_cli.auth import STEPFUN_STEP_PLAN_CN_BASE_URL, STEPFUN_STEP_PLAN_INTL_BASE_URL
-    return STEPFUN_STEP_PLAN_CN_BASE_URL if region == "china" else STEPFUN_STEP_PLAN_INTL_BASE_URL
 
 
 def _run_anthropic_oauth_flow(save_env_value):

@@ -85,12 +85,6 @@ class TestFallbackApiMode:
 
     @pytest.mark.usefixtures("catalog_defaults")
     @pytest.mark.parametrize("provider, base_url", [
-        ("minimax", "https://api.minimax.io"),             # bare host, no /anthropic hint (#53054 kept)
-        ("minimax", "https://api.minimax.io/anthropic"),   # URL-detected native path
-        ("minimax-cn", "https://api.minimaxi.com/anthropic/v1"),
-        ("minimax", "https://api.minimax.io/anthropic/v1/messages"),  # under the default path
-        ("tencent-tokenplan", "https://api.lkeap.cloud.tencent.com/plan/anthropic/v2"),  # non-/anthropic default
-        ("minimax", ""),  # nothing to compare: keep the declared transport
         ("anthropic", "http://127.0.0.1:4000/v1"),  # bare-host default: relays serve /v1/messages
     ])
     def test_anthropic_transport_holds_on_the_provider_endpoint(self, provider, base_url):

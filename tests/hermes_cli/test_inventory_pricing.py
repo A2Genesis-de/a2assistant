@@ -552,20 +552,6 @@ def test_custom_provider_pricing_rejects_lookalike_upstream_hosts(monkeypatch, b
     ) == {}
 
 
-def test_custom_provider_alias_uses_proven_canonical_upstream(monkeypatch):
-    """A Vercel-named row on the real AI Gateway uses its canonical pricing cache."""
-    expected = {"vendor/model": {"prompt": "0.000001", "completion": "0.000002"}}
-    monkeypatch.setattr(models_pricing, "_cached_only_pricing", lambda provider: expected if provider == "ai-gateway" else {})
-
-    assert models_pricing.get_pricing_for_provider(
-        "custom:vercel", base_url="https://ai-gateway.vercel.sh/v1", cached_only=True
-    ) == expected
-    assert (
-        models_pricing.pricing_cache_scope("custom:vercel", base_url="https://ai-gateway.vercel.sh/v1")
-        == models_pricing.pricing_cache_scope("ai-gateway")
-    )
-
-
 def test_apply_pricing_uses_custom_row_endpoint_identity(monkeypatch):
     """The picker prices an actual OpenRouter row but leaves a canonical-named proxy unpriced."""
     expected = {"vendor/model": {"prompt": "0.000003", "completion": "0.000015"}}

@@ -53,10 +53,7 @@ def bind_route_entry(agent: Any, entry: dict[str, Any], provider: str, model: st
         except Exception as norm_err:  # health: allow BLE001 -- moved verbatim from try_activate_fallback; a bad catalog entry keeps the raw id
             logger.warning("Could not normalize fallback model %r for provider %r: %s", model, provider, norm_err)
         base_url = str(client.base_url)
-        from hermes_cli.providers import is_actual_route
-        if is_actual_route(provider, base_url):
-            api_mode = "chat_completions"
-        elif not api_mode_explicit and api_mode == "chat_completions":
+        if not api_mode_explicit and api_mode == "chat_completions":
             api_mode = _fallback_api_mode_resolved(agent, provider, model, base_url)
 
     from agent.route_verdicts import reset_route_verdicts, save_primary_route_verdicts

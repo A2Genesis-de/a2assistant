@@ -182,20 +182,20 @@ def test_provider_change_drops_the_old_providers_context_window(tmp_path):
 
 def test_provider_pick_over_auto_template_sends_its_key_to_its_own_endpoint(tmp_path, monkeypatch):
     """#139018: the install template (`provider: auto` + OpenRouter base_url) plus a Desktop
-    Google AI Studio pick resolved provider=gemini against openrouter.ai, so the Google key went
-    to OpenRouter (401). The frozen route must resolve to Google's own endpoint."""
+    provider pick resolved that provider against openrouter.ai, so its key went to OpenRouter
+    (401). The frozen route must resolve to the provider's own endpoint."""
     from gateway.session_policy import build_policy
     from hermes_cli.runtime_provider import frozen_runtime_config, resolve_runtime_provider
-    monkeypatch.setenv('GOOGLE_API_KEY', 'sk-google')
+    monkeypatch.setenv('ANTHROPIC_API_KEY', 'sk-ant-api-test')
     monkeypatch.setenv('OPENROUTER_API_KEY', 'sk-openrouter')
     cfg = {'model': {'default': 'anthropic/claude-opus-4.6', 'provider': 'auto',
                      'base_url': 'https://openrouter.ai/api/v1'}}
-    policy = build_policy(dict(cwd=str(tmp_path), source='gui', model='gemini-flash-latest', provider='gemini'), cfg)
+    policy = build_policy(dict(cwd=str(tmp_path), source='gui', model='claude-sonnet-5', provider='anthropic'), cfg)
     with frozen_runtime_config(policy.config()):
-        runtime = resolve_runtime_provider(requested='gemini', target_model='gemini-flash-latest')
-    assert (runtime['provider'], runtime['api_key']) == ('gemini', 'sk-google')
+        runtime = resolve_runtime_provider(requested='anthropic', target_model='claude-sonnet-5')
+    assert (runtime['provider'], runtime['api_key']) == ('anthropic', 'sk-ant-api-test')
     assert 'openrouter.ai' not in runtime['base_url']
-    assert runtime['base_url'].startswith('https://generativelanguage.googleapis.com/')
+    assert runtime['base_url'].startswith('https://api.anthropic.com')
 
 
 def test_provider_alias_pick_keeps_the_profiles_endpoint(tmp_path, monkeypatch):
@@ -235,14 +235,14 @@ def test_custom_pick_over_unrecorded_or_auto_profile_keeps_its_endpoint(tmp_path
 
 
 def test_provider_alias_spelling_and_auto_pick_keep_the_profiles_route(tmp_path, monkeypatch):
-    """`deepinfra` and `deep-infra` are one provider, and an explicit `auto` pick (the thin-client
+    """`lmstudio` and `lm-studio` are one provider, and an explicit `auto` pick (the thin-client
     sentinel) means "the profile's route": neither drops the configured proxy and wire mode."""
     from gateway.session_policy import build_policy
     from hermes_cli.runtime_provider import frozen_runtime_config, resolve_runtime_provider
     for var in ('CUSTOM_BASE_URL', 'OPENAI_BASE_URL'):
         monkeypatch.delenv(var, raising=False)
-    monkeypatch.setenv('DEEPINFRA_API_KEY', 'sk-deepinfra')
-    for held, picked in (('deepinfra', 'deep-infra'), ('deep-infra', 'deepinfra')):
+    monkeypatch.setenv('LM_API_KEY', 'sk-lmstudio')
+    for held, picked in (('lmstudio', 'lm-studio'), ('lm-studio', 'lmstudio')):
         cfg = {'model': {'default': 'm', 'provider': held, 'base_url': 'http://localhost:4321/v1',
                          'api_mode': 'chat_completions'}}
         model = build_policy(dict(cwd=str(tmp_path), model='m', provider=picked), cfg).config()['model']
@@ -250,7 +250,7 @@ def test_provider_alias_spelling_and_auto_pick_keep_the_profiles_route(tmp_path,
     monkeypatch.setenv('LOCAL_KEY', 'sk-local')
     cfg = {'model': {'default': 'qwen', 'provider': 'custom', 'base_url': 'http://localhost:1234/v1',
                      'key_env': 'LOCAL_KEY'}}
-    monkeypatch.delenv('DEEPINFRA_API_KEY')
+    monkeypatch.delenv('LM_API_KEY')
     policy = build_policy(dict(cwd=str(tmp_path), model='qwen', provider='auto'), cfg)
     assert policy.config()['model']['provider'] == 'custom'
     with frozen_runtime_config(policy.config()):

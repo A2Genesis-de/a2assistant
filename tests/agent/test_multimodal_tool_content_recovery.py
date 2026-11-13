@@ -132,25 +132,6 @@ class TestToolResultContentShortCircuit:
                      "png_bytes": 1024},
         }
 
-    def test_returns_text_summary_for_xiaomi_proactively(self, monkeypatch):
-        """Xiaomi MiMo rejects list-type tool content, so even with an
-        empty cache, _tool_result_content_for_active_model should
-        proactively downgrade to a text summary."""
-        agent = _make_agent(provider="xiaomi", model="mimo-v2.5")
-        agent._no_list_tool_content_models = set()  # explicit empty
-        monkeypatch.setattr(agent, "_model_supports_vision", lambda: True)
-        out = agent._tool_result_content_for_active_model(
-            "computer_use", self._multimodal_result()
-        )
-        # Proactive downgrade: text summary instead of list with images.
-        assert isinstance(out, str)
-        assert "data:image" not in out
-        assert "image_url" not in out
-
-
-
-
-
 # ─── Classifier ──────────────────────────────────────────────────────────────
 
 
@@ -222,26 +203,3 @@ class TestRecoveryEndToEndClassification:
         )
         result = classify_api_error(err, provider="nvidia", model="moonshotai/kimi-k3")
         assert result.reason != FailoverReason.multimodal_tool_content_unsupported
-
-class TestOpenCodeGoProactiveToolResultDowngrade:
-    def _multimodal_result(self, png_b64: str = "iVBORw0KGgoAAAA"):
-        return {
-            "_multimodal": True,
-            "content": [
-                {"type": "text", "text": "detected 2 objects"},
-                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{png_b64}"}},
-            ],
-            "text_summary": "detected 2 objects",
-            "meta": {"png_bytes": 1024},
-        }
-
-    def test_returns_text_summary_for_opencode_go_proactively(self, monkeypatch):
-        """OpenCode Go rejects list-type tool content, so _tool_result_content_for_active_model
-        should proactively downgrade to a text summary (#104731)."""
-        agent = _make_agent(provider="opencode-go", model="deepseek-v4-flash-vision-exp")
-        agent._no_list_tool_content_models = set()
-        monkeypatch.setattr(agent, "_model_supports_vision", lambda: True)
-        out = agent._tool_result_content_for_active_model("vision_analyze", self._multimodal_result())
-        assert isinstance(out, str)
-        assert "data:image" not in out
-        assert "image_url" not in out

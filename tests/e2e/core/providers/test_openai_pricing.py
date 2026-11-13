@@ -60,9 +60,9 @@ CATALOG = [
 ]
 TWIN_MODELS = [mid for mid, _p, _c in CATALOG]
 RELAY_MODEL = TWIN_MODELS[-1]
-# (config key, picker slug) of each decoy relay. ``deepseek`` collides with a built-in
-# non-aggregator provider, so its row is ``custom:deepseek`` -- the twin's slug shape.
-DECOYS = [("myrelay", "myrelay"), ("deepseek", "custom:deepseek")]
+# (config key, picker slug) of each decoy relay. ``lmstudio`` collides with a built-in
+# non-aggregator provider, so its row is ``custom:lmstudio`` -- the twin's slug shape.
+DECOYS = [("myrelay", "myrelay"), ("lmstudio", "custom:lmstudio")]
 
 _SHIM = '''\
 """E2E vendor-boundary shim: route a hard-coded vendor origin to a loopback fake."""
@@ -179,8 +179,8 @@ def _home(tmp_path: Path, catalog: FakeCatalog, dead: socket.socket) -> _ShimHom
         },
     }, dotenv={"OPENROUTER_API_KEY": "sk-or-fake-builtin",
                # The picker lists a providers: entry keyed by a built-in name only while that
-               # built-in is credentialed; this makes the custom:deepseek decoy row appear.
-               "DEEPSEEK_API_KEY": "sk-ds-fake-builtin"})
+               # built-in is credentialed; this makes the custom:lmstudio decoy row appear.
+               "LM_API_KEY": "sk-lm-fake-builtin"})
     return h
 
 
@@ -244,7 +244,7 @@ def test_builtin_aggregator_row_prices_from_catalog(picker) -> None:
 def test_relay_without_catalog_gets_no_borrowed_prices(picker, slug: str) -> None:
     """Control (green on main): a config-defined relay that is NOT a priced aggregator serves
     a catalog model id but must not borrow the aggregator's prices -- including the
-    ``custom:deepseek`` row, whose slug has the same ``custom:<key>`` shape as the twin."""
+    ``custom:lmstudio`` row, whose slug has the same ``custom:<key>`` shape as the twin."""
     payload, _requests = picker
     relay = _row(payload, slug)
     assert relay is not None and RELAY_MODEL in (relay.get("models") or []), payload.get("providers")

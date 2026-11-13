@@ -14,7 +14,6 @@ from hermes_cli.timeouts import get_provider_request_timeout
 from utils import base_url_host_matches, env_float
 
 logger = logging.getLogger("run_agent")  # origin module's logger name: log records / caplog filters unchanged
-_QWEN_CODE_VERSION = "0.14.1"  # Qwen Portal mimics the QwenCode CLI
 # Per-request cache slot attribute names (OpenAI-style and Anthropic clients).
 _OPENAI_SLOT = "_request_client_cache"
 _ANTHROPIC_SLOT = "_request_anthropic_client_cache"
@@ -27,15 +26,6 @@ def _routermint_headers() -> dict:
     return {"User-Agent": f"HermesAgent/{get_version_info().base_version}"}
 
 
-def _qwen_portal_headers() -> dict:
-    import platform as _plat
-    _ua = f"QwenCode/{_QWEN_CODE_VERSION} ({_plat.system().lower()}; {_plat.machine()})"
-    return {
-        "User-Agent": _ua, "X-DashScope-CacheControl": "enable", "X-DashScope-UserAgent": _ua,
-        "X-DashScope-AuthType": "qwen-oauth",
-    }
-
-
 # Route-specific default headers; first host match wins (order preserved from the original chain).
 # Builders resolve their module lazily so run_agent keeps its import-time cost and avoids cycles.
 _ROUTE_DEFAULT_HEADERS = (
@@ -44,7 +34,6 @@ _ROUTE_DEFAULT_HEADERS = (
     ("integrate.api.nvidia.com", lambda self, url: _lazy_attr("agent.auxiliary_client", "build_nvidia_nim_headers")(url)),
     ("api.routermint.com", lambda self, url: _routermint_headers()),
     ("api.kimi.com", lambda self, url: _lazy_attr("agent.auxiliary_client", "_ai_gateway_headers")()),
-    ("portal.qwen.ai", lambda self, url: _qwen_portal_headers()),
     ("chatgpt.com", lambda self, url: _lazy_attr("agent.codex_headers", "codex_cloudflare_headers")(
         self._client_kwargs.get("api_key", ""), base_url=url)),
     # Covers provider=xai and provider=xai-oauth (api.x.ai).
@@ -714,15 +703,6 @@ class ClientLifecycleMixin:
             env_url = get_env_prefer_dotenv(url_var).strip().rstrip("/") if url_var else ""
             default_base = (pconfig.inference_base_url or "").strip().rstrip("/")
             base_url = env_url or default_base
-            if self.provider == "actual":
-                from hermes_cli.auth import normalize_actual_base_url
-                from hermes_cli.runtime_provider import _config_base_url_for_provider, _get_model_config
-                configured_base = _config_base_url_for_provider(_get_model_config(), "actual")
-                base_url = normalize_actual_base_url(configured_base or base_url)
-            elif self.provider in ("kimi-coding", "zai"):
-                from hermes_cli import auth as _auth
-                resolver = _auth._resolve_kimi_base_url if self.provider == "kimi-coding" else _auth._resolve_zai_base_url
-                base_url = resolver(api_key, pconfig.inference_base_url, env_url).rstrip("/")
         elif self.provider == "custom":
             # Named custom provider: identity in config, credential in key_env; no key_env → nothing to watch.
             try:
@@ -802,23 +782,6 @@ class ClientLifecycleMixin:
         self._env_creds_seen = (base_url, api_key)
         logger.info("Applied updated .env credentials for %s: endpoint %s", self.provider, self.base_url)
         return True
-
-    def _try_refresh_vertex_client_credentials(self) -> bool:
-        """Re-mint the Vertex OAuth2 token (~1h TTL; long sessions 401 on the expired bearer) and rebuild the client."""
-        if self.api_mode != "chat_completions" or self.provider != "vertex":
-            return False
-        try:
-            from agent.vertex_adapter import get_vertex_config
-            token, base_url = get_vertex_config()
-        except Exception as exc:
-            logger.debug("Vertex credential refresh failed: %s", exc)
-            return False
-        ok = _valid_credential_pair(token, base_url) and self._adopt_openai_credentials(
-            token, base_url, reason="vertex_credential_refresh",
-        )
-        if ok:
-            logger.info("Vertex AI OAuth token refreshed")
-        return ok
 
     def _try_refresh_provider_runtime_credentials(self, *, reason: str) -> bool:
         """Re-mint the live credential through the provider profile's ``refresh_runtime_credentials``
@@ -944,21 +907,12 @@ class ClientLifecycleMixin:
         rotation; the caller treats a refused swap as "no entry")."""
         runtime_key = getattr(entry, "runtime_api_key", None) or getattr(entry, "access_token", "")
         runtime_base = getattr(entry, "runtime_base_url", None) or getattr(entry, "base_url", None) or self.base_url
-        from hermes_cli.providers import is_actual_route
-        actual_route = is_actual_route(getattr(self, "provider", ""), runtime_base)
-        if actual_route:
-            from hermes_cli.auth import normalize_actual_base_url
-            runtime_base = normalize_actual_base_url(runtime_base)
         stripped_base = runtime_base.rstrip("/") if isinstance(runtime_base, str) else runtime_base
         # Refuse BEFORE any state changes below: a refused swap must leave the agent exactly as it was.
         from hermes_cli.anon_auth import route_can_serve_model
         if not route_can_serve_model(getattr(self, "provider", None), stripped_base, getattr(self, "model", None)):
             logger.info("Credential %s skipped: its route cannot serve model %s", getattr(entry, "id", "?"), self.model)
             return False
-        if actual_route:
-            self.api_mode = "chat_completions"
-            if hasattr(self, "_transport_cache"):
-                self._transport_cache.clear()
         self._credential_pool_entry_id = getattr(entry, "id", None)
         from hermes_cli.route_identity import normalize_route_base_url
         route_changed = normalize_route_base_url(self.base_url) != normalize_route_base_url(runtime_base)

@@ -20,16 +20,15 @@ def _entry(provider, model, base_url=""):
 def test_fallback_chain_dedups_canonical_id_and_alias():
     config = {
         "fallback_providers": [
-            _entry("opencode", "deepseek-v4-flash-free"),
-            # ``opencode-zen`` is the legacy pre-rename name of ``opencode``
-            # (same backend). It must not add a second slot in the chain.
-            _entry("opencode-zen", "deepseek-v4-flash-free"),
+            _entry("anthropic", "claude-sonnet-4"),
+            # ``claude`` is an alias of ``anthropic`` (same backend). It must not add a second slot.
+            _entry("claude", "claude-sonnet-4"),
             _entry("anthropic", "claude-sonnet-4"),
         ]
     }
 
     chain = get_fallback_chain(config)
 
-    # The two opencode ids describe the same backend; expect a single slot.
+    # The canonical id and its alias describe the same backend; expect a single slot.
     providers = [e["provider"] for e in chain]
-    assert providers == ["opencode", "anthropic"], providers
+    assert providers == ["anthropic"], providers

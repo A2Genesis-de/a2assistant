@@ -35,63 +35,10 @@ HERMES_OVERLAYS: dict[str, HermesOverlay] = {
                                 base_url_env_var="OPENAI_BASE_URL"),
     "xai-oauth": HermesOverlay(transport="codex_responses", auth_type="oauth_external",
                                base_url_override="https://api.x.ai/v1", base_url_env_var="XAI_BASE_URL"),
-    "qwen-oauth": HermesOverlay(auth_type="oauth_external", base_url_override="https://portal.qwen.ai/v1",
-                                base_url_env_var="HERMES_QWEN_BASE_URL"),
     "lmstudio": HermesOverlay(extra_env_vars=("LM_API_KEY",), base_url_override="http://127.0.0.1:1234/v1",
                               base_url_env_var="LM_BASE_URL"),
     "anthropic": HermesOverlay(transport="anthropic_messages", extra_env_vars=("ANTHROPIC_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN")),
-    "zai": HermesOverlay(extra_env_vars=("GLM_API_KEY", "ZAI_API_KEY", "Z_AI_API_KEY"), base_url_env_var="GLM_BASE_URL"),
-    "kimi-for-coding": HermesOverlay(base_url_env_var="KIMI_BASE_URL"),
-    "stepfun": HermesOverlay(extra_env_vars=("STEPFUN_API_KEY",),
-                             base_url_override="https://api.stepfun.ai/step_plan/v1",
-                             base_url_env_var="STEPFUN_BASE_URL"),
-    "minimax": HermesOverlay(transport="anthropic_messages", base_url_env_var="MINIMAX_BASE_URL"),
-    "minimax-oauth": HermesOverlay(transport="anthropic_messages", auth_type="oauth_external",
-                                   base_url_override="https://api.minimax.io/anthropic"),
-    "minimax-cn": HermesOverlay(transport="anthropic_messages", base_url_env_var="MINIMAX_CN_BASE_URL"),
-    "deepseek": HermesOverlay(base_url_env_var="DEEPSEEK_BASE_URL"),
-    "alibaba": HermesOverlay(base_url_env_var="DASHSCOPE_BASE_URL"),
-    "alibaba-coding-plan": HermesOverlay(base_url_env_var="ALIBABA_CODING_PLAN_BASE_URL"),
-    "vercel": HermesOverlay(is_aggregator=True),
-    "opencode": HermesOverlay(is_aggregator=True, base_url_env_var="OPENCODE_ZEN_BASE_URL"),
-    "opencode-go": HermesOverlay(is_aggregator=True, base_url_env_var="OPENCODE_GO_BASE_URL"),
-    "kilo": HermesOverlay(is_aggregator=True, base_url_env_var="KILOCODE_BASE_URL"),
-    "huggingface": HermesOverlay(is_aggregator=True, base_url_env_var="HF_BASE_URL"),
-    "novita": HermesOverlay(is_aggregator=True, base_url_env_var="NOVITA_BASE_URL"),
-    "xai": HermesOverlay(transport="codex_responses", base_url_override="https://api.x.ai/v1", base_url_env_var="XAI_BASE_URL"),
-    "nvidia": HermesOverlay(base_url_override="https://integrate.api.nvidia.com/v1", base_url_env_var="NVIDIA_BASE_URL"),
-    "xiaomi": HermesOverlay(base_url_env_var="XIAOMI_BASE_URL"),
-    "tencent-tokenhub": HermesOverlay(base_url_env_var="TOKENHUB_BASE_URL"),
-    "tencent-tokenplan": HermesOverlay(transport="anthropic_messages",
-                                       base_url_override="https://api.lkeap.cloud.tencent.com/plan/anthropic",
-                                       base_url_env_var="TOKENPLAN_BASE_URL"),
-    "arcee": HermesOverlay(base_url_override="https://api.arcee.ai/api/v1", base_url_env_var="ARCEE_BASE_URL"),
-    # models.dev lists CommandCode under CMD_API_KEY; the plugin profile and docs use COMMANDCODE_API_KEY.
-    "commandcode": HermesOverlay(extra_env_vars=("COMMANDCODE_API_KEY",),
-                                 base_url_override="https://api.commandcode.ai/provider/v1",
-                                 base_url_env_var="COMMANDCODE_BASE_URL"),
-    "gmi": HermesOverlay(extra_env_vars=("GMI_API_KEY",), base_url_override="https://api.gmi-serving.com/v1",
-                         base_url_env_var="GMI_BASE_URL"),
-    "fireworks": HermesOverlay(extra_env_vars=("FIREWORKS_API_KEY",),
-                               base_url_override="https://api.fireworks.ai/inference/v1"),
-    "actual": HermesOverlay(transport="chat_completions", extra_env_vars=("ACTUAL_API_KEY",),
-                            base_url_override="https://api.actual.inc/v1", base_url_env_var="ACTUAL_BASE_URL"),
-    "upstage": HermesOverlay(extra_env_vars=("UPSTAGE_API_KEY",), base_url_override="https://api.upstage.ai/v1",
-                             base_url_env_var="UPSTAGE_BASE_URL"),
-    "nebius-token-factory": HermesOverlay(extra_env_vars=("NEBIUS_API_KEY", "NEBIUS_TOKEN_FACTORY_API_KEY"),
-                                          base_url_override="https://api.tokenfactory.nebius.com/v1",
-                                          base_url_env_var="NEBIUS_BASE_URL"),
-    "ollama-cloud": HermesOverlay(base_url_override="https://ollama.com/v1", base_url_env_var="OLLAMA_BASE_URL"),
-    # Azure Foundry serves OpenAI- and Anthropic-style endpoints; transport comes from model.api_mode.
-    "azure-foundry": HermesOverlay(base_url_env_var="AZURE_FOUNDRY_BASE_URL"),
-    "bedrock": HermesOverlay(transport="bedrock_converse", auth_type="aws_sdk"),
-    # Vertex is OAuth2 (service-account JSON / ADC), resolved by agent/vertex_adapter.py. Without an
-    # overlay get_provider("vertex") is None and auxiliary_client._preserve_provider_with_base_url
-    # would treat a Vertex MoA slot as an unknown custom endpoint, losing the identity
-    # _refresh_provider_credentials() needs to re-mint an expired token on 401.
-    "vertex": HermesOverlay(auth_type="vertex"),
 }
-
 
 # -- Resolved provider -------------------------------------------------------
 
@@ -114,23 +61,9 @@ class ProviderDef:
 # -- Aliases: human-friendly / legacy names grouped by canonical (models.dev where possible) id;
 # ``ALIASES`` is the inverted lookup table. ---------------------------------------------------
 _ALIAS_GROUPS: dict[str, tuple[str, ...]] = {
-    "openrouter": ("openai",), "zai": ("glm", "z-ai", "z.ai", "zhipu"), "xai": ("x-ai", "x.ai", "grok"),
+    "openrouter": ("openai",),
     "xai-oauth": ("grok-oauth", "xai-oauth", "x-ai-oauth", "xai-grok-oauth"),
-    "nvidia": ("nim", "nvidia-nim", "build-nvidia", "nemotron"),
-    "kimi-for-coding": ("kimi", "kimi-coding", "kimi-coding-cn", "moonshot"),
-    "stepfun": ("step", "stepfun-coding-plan"), "minimax-cn": ("minimax-china", "minimax_cn"),
     "anthropic": ("claude", "claude-code"), "openai-codex": ("chatgpt", "chatgpt-codex"),
-    "vercel": ("ai-gateway", "aigateway", "vercel-ai-gateway"),
-    "opencode": ("opencode-zen", "zen"), "opencode-go": ("go", "opencode-go-sub"), "kilo": ("kilocode", "kilo-code", "kilo-gateway"),
-    "deepseek": ("deep-seek",), "alibaba": ("dashscope", "aliyun", "qwen", "alibaba-cloud"),
-    "alibaba-coding-plan": ("alibaba_coding", "alibaba-coding", "alibaba_coding_plan"),
-    "huggingface": ("hf", "hugging-face", "huggingface-hub"), "novita": ("novita-ai", "novitaai"),
-    "xiaomi": ("mimo", "xiaomi-mimo"), "tencent-tokenhub": ("tencent", "tokenhub", "tencent-cloud", "tencentmaas"),
-    "tencent-tokenplan": ("tokenplan", "tencent-lkeap"),
-    "bedrock": ("aws", "aws-bedrock", "amazon-bedrock", "amazon"), "arcee": ("arcee-ai", "arceeai"),
-    "gmi": ("gmi-cloud", "gmicloud"), "fireworks": ("fireworks-ai", "fw"), "upstage": ("solar",),
-    "actual": ("actual-computer", "actualcomputer", "aci"),
-    "nebius-token-factory": ("nebius", "nebius-tokenfactory", "nebius-tf", "token-factory", "tokenfactory"),
     "lmstudio": ("lmstudio", "lm-studio", "lm_studio"),
     # Local OpenAI-compatible servers route through the generic "custom" provider,
     # matching hermes_cli.auth and hermes_cli.models so every layer agrees. Issue #62213.
@@ -143,11 +76,7 @@ ALIASES: dict[str, str] = {alias: canon for canon, aliases in _ALIAS_GROUPS.item
 
 _LABEL_OVERRIDES: dict[str, str] = {
     "moa": "Mixture of Agents", "nous": "Nous Portal", "openai-codex": "ChatGPT or Codex Subscription",
-    "stepfun": "StepFun Step Plan", "xiaomi": "Xiaomi MiMo", "gmi": "GMI Cloud",
-    "upstage": "Upstage Solar", "actual": "Actual Computer", "tencent-tokenhub": "Tencent TokenHub",
-    "nebius-token-factory": "Nebius Token Factory", "tencent-tokenplan": "Tencent TokenPlan", "lmstudio": "LM Studio",
-    "custom": "Custom endpoint", "bedrock": "AWS Bedrock", "vertex": "Google Vertex AI", "ollama-cloud": "Ollama Cloud",
-    "xai-oauth": "xAI Grok OAuth (SuperGrok / Premium+)",
+    "lmstudio": "LM Studio", "custom": "Custom endpoint", "xai-oauth": "xAI Grok OAuth (SuperGrok / Premium+)",
 }
 
 
@@ -230,14 +159,6 @@ def _get_overlay(canonical: str) -> tuple[Optional[HermesOverlay], str]:
     if prof is None or _profile_overlay_key(prof) != canonical:
         return None, canonical
     return HermesOverlay(**prof.provider_overlay), _LABEL_OVERRIDES.get(canonical, prof.display_name or canonical)
-
-
-def is_actual_route(provider: str = "", base_url: str = "") -> bool:
-    """Identify Actual by provider/alias or its hosted endpoint, including custom routes."""
-    return (
-        normalize_provider(provider or "") == "actual"
-        or base_url_hostname(base_url) == "api.actual.inc"
-    )
 
 
 def _models_dev_info(canonical: str, allow_network: bool = True):
@@ -356,23 +277,10 @@ def is_aggregator(provider: str) -> bool:
     return pdef.is_aggregator if pdef else False
 
 
-# Flat-namespace resellers (opencode-go, opencode-zen) are flagged ``is_aggregator=True`` because
-# their live ``/v1/models`` returns bare model IDs ("deepseek-v4-flash") rather than
-# ``vendor/model`` routing slugs — model_switch searches their flat catalog on that flag. But they
-# are NOT routing aggregators: every listed model is first-party under their own subscription, so
-# picker dedup (build_models_payload) must not strip a reseller's "minimax-m3" just because a
-# user's custom proxy serves a same-named model. Normalized ids: "opencode-zen" -> "opencode".
-_FLAT_NAMESPACE_RESELLERS: frozenset[str] = frozenset({"opencode-go", "opencode"})
-
-
 def is_routing_aggregator(provider: str) -> bool:
-    """True only for TRUE routing aggregators (OpenRouter, named ``custom:*`` proxies) — excludes
-    flat-namespace resellers whose catalog is first-party. Use for "would selecting this model
-    silently re-route away from the intended provider?" (picker dedup)."""
-    provider_norm = normalize_provider(provider or "")
-    if provider_norm in _FLAT_NAMESPACE_RESELLERS:
-        return False
-    return is_aggregator(provider_norm)
+    """True for routing aggregators (OpenRouter, named ``custom:*`` proxies). Use for "would selecting
+    this model silently re-route away from the intended provider?" (picker dedup)."""
+    return is_aggregator(normalize_provider(provider or ""))
 
 
 def is_official_openai_host(base_url: str) -> bool:
@@ -389,13 +297,6 @@ def is_official_openai_host(base_url: str) -> bool:
     return base_url_host_matches(base_url, "api.openai.com")
 
 
-# Exact hostnames that are Responses-API-native: api.meta.ai only achieves prompt-cache hits on
-# Responses with prompt_cache_retention (chat/completions stays cache-cold); api.router.com (Ramp
-# Router) keeps reasoning validation/summaries and prompt caching on /v1/responses and serves
-# /v1/chat/completions as a minimal shim.
-_RESPONSES_NATIVE_HOSTS: frozenset[str] = frozenset({"api.meta.ai", "api.router.com"})
-
-
 def host_mandated_api_mode(base_url: str = "") -> Optional[str]:
     """Return the wire protocol a specific endpoint *requires*, or None. Some hosts accept exactly
     one API mode (api.openai.com 400s chat/completions for reasoning models with tools); these are
@@ -407,8 +308,6 @@ def host_mandated_api_mode(base_url: str = "") -> Optional[str]:
         return None
     url_lower = base_url.rstrip("/").lower()
     hostname = base_url_hostname(base_url)
-    if hostname == "api.actual.inc":
-        return "chat_completions"
     # Exact-hostname matching only — never bare substring — so lookalike hosts
     # (api.openai.com.attacker.test) and path-segment spoofs (proxy.test/api.openai.com/v1) are NOT treated
     # as the real endpoint. (#32243)
@@ -418,10 +317,7 @@ def host_mandated_api_mode(base_url: str = "") -> Optional[str]:
         return "anthropic_messages"
     # Official OpenAI host family (canonical + us./eu. data-residency hosts) mandates Responses;
     # the shared predicate keeps this in lockstep with catalog filtering and listing authority.
-    if is_official_openai_host(base_url) or hostname in _RESPONSES_NATIVE_HOSTS:
-        # Ramp Router (api.router.com) is Responses-native: reasoning-effort validation, reasoning
-        # summaries, and prompt caching live on /v1/responses, and /v1/chat/completions is only a minimal
-        # compatibility shim (docs.router.com/api/endpoint). Exact-hostname match per #32243.
+    if is_official_openai_host(base_url):
         return "codex_responses"
     if hostname.startswith("bedrock-runtime.") and base_url_host_matches(base_url, "amazonaws.com"):
         return "bedrock_converse"
@@ -463,8 +359,6 @@ def determine_api_mode(provider: str, base_url: str = "", model: str = "") -> st
     """API mode (wire protocol) for a provider/endpoint: host-mandated mode, then Nous dual-wire
     (model-derived — the overlay alone says openai_chat and would pin Claude on the wrong wire),
     then the known provider's transport, then bedrock, else ``chat_completions``."""
-    if is_actual_route(provider, base_url):
-        return "chat_completions"
     mandated = host_mandated_api_mode(base_url)
     if mandated is not None:
         return mandated

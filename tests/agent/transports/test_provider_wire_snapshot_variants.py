@@ -51,35 +51,6 @@ REASONING_LADDER: dict[str, Any] = {
 # (key, provider, model, base_url, AIAgent kwargs). Each cell reaches a branch the base cell for
 # that provider does not; the comment names it.
 MODEL_VARIANTS: list[tuple[str, str, str, str, dict[str, Any]]] = [
-    # V3 is outside the thinking contract: no extra_body.thinking / reasoning_effort at all.
-    ("variant:deepseek-v3", "deepseek", "deepseek-v3.2", "https://api.deepseek.com/v1", {}),
-    # Version-less canonical id (_THINKING_CAPABLE_IDS), not the ``deepseek-v<N>`` prefix test.
-    ("variant:deepseek-flash", "deepseek", "deepseek-flash", "https://api.deepseek.com/v1", {}),
-    # Below GLM-4.5: no thinking control.
-    ("variant:zai-glm-4-9b", "zai", "glm-4-9b", "https://api.z.ai/api/paas/v4", {}),
-    # GLM-4.5+: thinking toggle without the 5.2 reasoning_effort.
-    ("variant:zai-glm-4.6", "zai", "glm-4.6", "https://api.z.ai/api/paas/v4", {}),
-    # GLM-5.3: graded low/medium/high/max knob (xhigh -> max), "off" forced to reasoning_effort=low.
-    ("variant:zai-glm-5.3", "zai", "glm-5.3", "https://api.z.ai/api/paas/v4", {}),
-    # Zen's Ox Alpha reasoning_effort clamp to low/high/max (xhigh -> max, none dropped); the base
-    # Zen cell has no reasoning extras.
-    ("variant:opencode-zen-ox-alpha", "opencode-zen", "x-preview-f-free", "https://opencode.ai/zen/v1", {}),
-    # Go profile GLM-5.2 branch: high/max knob, below-high efforts fall back to high (base Go cell
-    # is kimi-k2.5).
-    ("variant:opencode-go-glm-5.2", "opencode-go", "glm-5.2", "https://opencode.ai/zen/go/v1", {}),
-    # Go profile DeepSeek thinking branch.
-    ("variant:opencode-go-deepseek", "opencode-go", "deepseek-v4-pro", "https://opencode.ai/zen/go/v1", {}),
-    # Go per-model output cap (_MODEL_MAX_TOKENS) through profile.get_max_tokens.
-    ("variant:opencode-go-mimo", "opencode-go", "mimo-v2.5-pro", "https://opencode.ai/zen/go/v1", {}),
-    # syn-pro is on the non-reasoning deny-list: no default reasoning_effort (solar-mini is too
-    # small a window to construct a main agent).
-    ("variant:upstage-syn-pro", "upstage", "syn-pro", "https://api.upstage.ai/v1", {}),
-    # MiniMax M3 on the OpenAI-compatible global host: reasoning_split + thinking type.
-    ("variant:minimax-m3-openai", "minimax", "MiniMax-M3", "https://api.minimax.io/v1", {}),
-    # Explicit max_tokens on an Azure host -> max_completion_tokens by URL (_is_azure_openai_url);
-    # a non-OpenAI model so the model-name fallback cannot supply it.
-    ("variant:azure-foundry-max-tokens", "azure-foundry", "mistral-large",
-     "https://example.openai.azure.com/openai/v1", {"max_tokens": 4096}),
     # Explicit max_tokens for gpt-5.5 behind OpenRouter: Responses route, max_output_tokens.
     ("variant:openrouter-gpt-5.5-max-tokens", "openrouter", "openai/gpt-5.5", "https://openrouter.ai/api/v1",
      {"max_tokens": 4096}),
@@ -89,9 +60,6 @@ MODEL_VARIANTS: list[tuple[str, str, str, str, dict[str, Any]]] = [
      {"max_tokens": 4096}),
     # Explicit max_tokens on a generic endpoint -> plain max_tokens.
     ("variant:custom-max-tokens", "custom", "my-local-model", "http://127.0.0.1:8080/v1", {"max_tokens": 4096}),
-    # Explicit small max_tokens on Gemini thinking: raised for the thinking budget when enabled.
-    ("variant:gemini-max-tokens", "gemini", "gemini-3-pro", "https://generativelanguage.googleapis.com/v1beta",
-     {"max_tokens": 1024}),
 ]
 
 # (key, provider, model, base_url, agent attributes set after construction).
@@ -101,11 +69,6 @@ STREAM_CELLS: list[tuple[str, str, str, str, dict[str, Any]]] = [
     ("stream:custom", "custom", "my-local-model", "http://127.0.0.1:8080/v1", {}),
     # llama-server: prompt-progress chunks requested (with_prompt_progress) on every stream.
     ("stream:llamacpp", "llamacpp", "qwen3-8b", "http://127.0.0.1:8080/v1", {}),
-    # Native Gemini REST host: no stream_options.
-    ("stream:gemini-native", "gemini", "gemini-3-pro", "https://generativelanguage.googleapis.com/v1beta", {}),
-    # Gemini's OpenAI-compatible surface keeps stream_options.
-    ("stream:gemini-openai", "gemini", "gemini-3-pro",
-     "https://generativelanguage.googleapis.com/v1beta/openai", {}),
     # An endpoint that already rejected stream_options this session.
     ("stream:custom-stream-options-rejected", "custom", "my-local-model", "http://127.0.0.1:8080/v1",
      {"_stream_options_unsupported": True}),
@@ -118,12 +81,7 @@ AUX_CELLS: list[tuple[str, str, str, str | None, dict[str, Any]]] = [
     # OpenRouter forwards max_tokens; an OpenAI-family model name turns it into max_completion_tokens.
     ("aux:openrouter-gpt-5.5", "openrouter", "openai/gpt-5.5", "https://openrouter.ai/api/v1", {}),
     ("aux:nous", "nous", "anthropic/claude-opus-5.5", "https://inference-api.nousresearch.com/v1", {}),
-    ("aux:kimi-coding", "kimi-coding", "kimi-k2-turbo-preview", "https://api.kimi.com/coding/v1", {}),
-    ("aux:zai", "zai", "glm-4.5-flash", "https://api.z.ai/api/paas/v4", {}),
-    ("aux:deepseek", "deepseek", "deepseek-flash", "https://api.deepseek.com/v1", {}),
     ("aux:custom", "custom", "my-local-model", "http://127.0.0.1:8080/v1", {}),
-    # NVIDIA NIM forwards max_tokens (empty choices without it), as plain max_tokens.
-    ("aux:nvidia", "nvidia", "nvidia/nemotron-3-super", "https://integrate.api.nvidia.com/v1", {}),
     # No profile (base_url-only caller): the generic extra_body.reasoning fallback.
     ("aux:no-profile", "", "my-model", "https://llm.example.com/v1", {}),
     # Configured main endpoint is api.openai.com, no OpenRouter key, no Nous auth: a forwarded
@@ -143,7 +101,6 @@ AUX_CELLS: list[tuple[str, str, str, str | None, dict[str, Any]]] = [
     # in _build_call_kwargs is what keeps ``ultra`` off this profile's wire (custom clamps itself).
     ("aux:openrouter-task-ultra", "openrouter", "anthropic/claude-opus-5.5", "https://openrouter.ai/api/v1", {
         "task": "compression", "config": "auxiliary:\n  compression:\n    reasoning_effort: ultra\n"}),
-    ("aux:gemini", "gemini", "gemini-3-flash", "https://generativelanguage.googleapis.com/v1beta", {}),
 ]
 
 CELL_KEYS = frozenset(c[0] for cells in (MODEL_VARIANTS, STREAM_CELLS, AUX_CELLS) for c in cells)

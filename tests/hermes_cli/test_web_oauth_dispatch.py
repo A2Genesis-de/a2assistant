@@ -72,98 +72,6 @@ def _invoke_scope_refusal():
     return httpx.HTTPStatusError("invalid scope", request=request, response=response)
 
 
-def test_minimax_login_does_not_launch_anthropic_flow():
-    """Click 'Login' on MiniMax → MUST NOT return claude.ai auth_url."""
-    fake_user_code_resp = {
-        "user_code": "ABCD-1234",
-        "verification_uri": "https://api.minimax.io/oauth/verify",
-        # `expired_in` < 1e12 so the heuristic treats it as seconds.
-        "expired_in": 600,
-        "interval": 2000,
-        "state": "stub-state",
-    }
-    with patch(
-        "hermes_cli.auth._minimax_request_user_code",
-        return_value=fake_user_code_resp,
-    ), patch(
-        "hermes_cli.auth._minimax_pkce_pair",
-        return_value=("verifier-stub", "challenge-stub", "stub-state"),
-    ), patch(
-        "hermes_cli.web_server_oauth._minimax_poller",
-        return_value=None,
-    ):
-        resp = client.post(
-            "/api/providers/oauth/minimax-oauth/start",
-            headers=HEADERS,
-        )
-
-    assert resp.status_code == 200, resp.text
-    body = resp.json()
-
-    # The bug used to return Anthropic's auth_url — make sure the response
-    # references neither the auth_url field nor anything Claude-related.
-    assert "auth_url" not in body
-    assert "claude.ai" not in str(body).lower()
-
-    # And the response IS the device-code shape pointing at MiniMax.
-    assert body["flow"] == "device_code"
-    assert "minimax" in body["verification_url"].lower()
-    assert body["user_code"] == "ABCD-1234"
-    assert body["expires_in"] == 600
-
-
-
-
-def test_minimax_start_route_honors_poller_mock_on_owning_module(tmp_path, monkeypatch):
-    """A monkeypatch on ``web_server_oauth._minimax_poller`` must intercept the
-    background thread the /start route spawns.
-
-    Regression: the router imported the poller functions at module level, so a
-    test's patch on the owning module was a no-op — the REAL poller ran on the
-    leaked daemon thread, hit the live MiniMax endpoint from CI, and its
-    getaddrinfo call segfaulted a later test's collection (CI flake, run
-    34323790818). The router must resolve pollers late, at spawn time.
-    """
-    import threading
-
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-    fake_user_code_resp = {
-        "user_code": "ABCD-1234",
-        "verification_uri": "https://api.minimax.io/oauth/verify",
-        "expired_in": 600,
-        "interval": 2000,
-        "state": "stub-state",
-    }
-    mock_ran = threading.Event()
-    real_network_hit = threading.Event()
-
-    def fake_poller(session_id):
-        mock_ran.set()
-
-    def fail_poll_token(**kwargs):
-        real_network_hit.set()
-        raise AssertionError("real _minimax_poller body must not run under the mock")
-
-    with patch(
-        "hermes_cli.auth._minimax_request_user_code",
-        return_value=fake_user_code_resp,
-    ), patch(
-        "hermes_cli.auth._minimax_pkce_pair",
-        return_value=("verifier-stub", "challenge-stub", "stub-state"),
-    ), patch(
-        "hermes_cli.auth._minimax_poll_token",
-        fail_poll_token,
-    ), patch(
-        "hermes_cli.web_server_oauth._minimax_poller",
-        fake_poller,
-    ):
-        resp = client.post("/api/providers/oauth/minimax-oauth/start", headers=HEADERS)
-        assert resp.status_code == 200, resp.text
-        assert mock_ran.wait(timeout=5), "patched poller never ran — router bypassed the seam"
-        assert not real_network_hit.is_set()
-    _web_server_oauth._oauth_sessions.pop(resp.json()["session_id"], None)
-
-
 def test_oauth_provider_status_uses_profile_query(tmp_path, monkeypatch):
     from hermes_constants import get_hermes_home
 
@@ -188,39 +96,6 @@ def test_oauth_provider_status_uses_profile_query(tmp_path, monkeypatch):
 
     assert resp.status_code == 200, resp.text
     assert observed_homes == [profile_home]
-
-
-def test_oauth_start_stores_profile_for_background_completion(tmp_path, monkeypatch):
-
-    _make_profile_home(tmp_path, monkeypatch)
-    fake_user_code_resp = {
-        "user_code": "ABCD-1234",
-        "verification_uri": "https://api.minimax.io/oauth/verify",
-        "expired_in": 600,
-        "interval": 2000,
-        "state": "stub-state",
-    }
-    with patch(
-        "hermes_cli.auth._minimax_request_user_code",
-        return_value=fake_user_code_resp,
-    ), patch(
-        "hermes_cli.auth._minimax_pkce_pair",
-        return_value=("verifier-stub", "challenge-stub", "stub-state"),
-    ), patch(
-        "hermes_cli.web_server_oauth._minimax_poller",
-        return_value=None,
-    ):
-        resp = client.post(
-            "/api/providers/oauth/minimax-oauth/start?profile=coder",
-            headers=HEADERS,
-        )
-
-    assert resp.status_code == 200, resp.text
-    session_id = resp.json()["session_id"]
-    try:
-        assert _web_server_oauth._oauth_sessions[session_id]["profile"] == "coder"
-    finally:
-        _web_server_oauth._oauth_sessions.pop(session_id, None)
 
 
 def test_oauth_session_cannot_be_polled_or_cancelled_from_another_profile(
@@ -667,33 +542,7 @@ def test_status_falls_through_to_generic_dispatcher_for_catalog_only_provider():
     assert out["has_refresh_token"] is True
 
 
-def test_qwen_status_card_carries_the_getter_expiry_token_and_auth_file():
-    """The Qwen card reads the keys get_qwen_auth_status actually returns."""
-    from datetime import datetime
-
-    expires_at_ms = 1_790_541_000_123
-    qwen_status = {
-        "logged_in": True, "auth_file": "/home/u/.qwen/oauth_creds.json", "source": "qwen-cli",
-        "api_key": "qwen-access-token-secret-xyz", "expires_at_ms": expires_at_ms,
-    }
-    with patch("hermes_cli.auth.get_qwen_auth_status", return_value=qwen_status):
-        out = _rt_oauth._resolve_provider_status("qwen-oauth", None)
-
-    assert out["logged_in"] is True
-    # Same wire shape as the other cards: an ISO string with an offset, same instant.
-    assert isinstance(out["expires_at"], str)
-    expires_at = datetime.fromisoformat(out["expires_at"])
-    assert expires_at.tzinfo is not None
-    assert round(expires_at.timestamp() * 1000) == expires_at_ms
-    assert out["source_label"] == "/home/u/.qwen/oauth_creds.json"
-    assert out["token_preview"] and "qwen-access-token-secret-xyz" not in out["token_preview"]
-
-
-
-
-
-
-@pytest.mark.parametrize("provider", ["xai-oauth", "minimax-oauth"])
+@pytest.mark.parametrize("provider", ["xai-oauth"])
 @pytest.mark.parametrize("event", ["cancel", "expire"])
 def test_dashboard_poller_saves_only_into_the_profile_the_login_started_in(tmp_path, monkeypatch, provider, event):
     """A login started with ``?profile=coder`` saves into coder or nowhere. The pollers looked the
@@ -717,20 +566,13 @@ def test_dashboard_poller_saves_only_into_the_profile_the_login_started_in(tmp_p
                 "expired_in": 3600, "token_type": "Bearer"}
 
     record = lambda *_a, **_k: saved_into.append(str(get_hermes_home()))
-    if provider == "xai-oauth":
-        sess.update(device_code="dc", expires_at=time.time() + 600, interval=1)
-        monkeypatch.setattr(auth_mod, "_xai_oauth_discovery", lambda *a, **k: {"token_endpoint": "https://x.test/t"})
-        monkeypatch.setattr(auth_mod, "_xai_oauth_poll_device_token", provider_answers)
-        monkeypatch.setattr(auth_mod, "_save_xai_oauth_tokens", record)
-        monkeypatch.setattr(auth_mod, "mark_provider_active_if_unset", lambda *a, **k: None)
-        monkeypatch.setattr(auth_mod, "unsuppress_credential_source", lambda *a, **k: None)
-        poller = _web_server_oauth._xai_device_poller
-    else:
-        sess.update(portal_base_url="https://m.test", client_id="cid", user_code="uc", code_verifier="cv",
-                    expired_in_raw=600, interval_ms=1000)
-        monkeypatch.setattr(auth_mod, "_minimax_poll_token", provider_answers)
-        monkeypatch.setattr(auth_mod, "_minimax_save_auth_state", record)
-        poller = _web_server_oauth._minimax_poller
+    sess.update(device_code="dc", expires_at=time.time() + 600, interval=1)
+    monkeypatch.setattr(auth_mod, "_xai_oauth_discovery", lambda *a, **k: {"token_endpoint": "https://x.test/t"})
+    monkeypatch.setattr(auth_mod, "_xai_oauth_poll_device_token", provider_answers)
+    monkeypatch.setattr(auth_mod, "_save_xai_oauth_tokens", record)
+    monkeypatch.setattr(auth_mod, "mark_provider_active_if_unset", lambda *a, **k: None)
+    monkeypatch.setattr(auth_mod, "unsuppress_credential_source", lambda *a, **k: None)
+    poller = _web_server_oauth._xai_device_poller
     try:
         poller(sid)
     finally:

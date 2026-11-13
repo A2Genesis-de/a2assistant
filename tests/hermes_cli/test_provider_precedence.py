@@ -40,8 +40,8 @@ class TestProviderPrecedence:
         _clear_provider_env(monkeypatch)
         _no_aws(monkeypatch)
         _login(monkeypatch, "anthropic")           # stale OAuth login
-        _config(monkeypatch, {"provider": "zai", "default": "glm-4.6"})
-        assert resolve_provider("auto") == "zai"
+        _config(monkeypatch, {"provider": "lmstudio", "default": "qwen3-8b"})
+        assert resolve_provider("auto") == "lmstudio"
 
     def test_env_key_beats_stale_oauth(self, monkeypatch):
         """An exported provider API key wins over a logged-in OAuth active_provider."""
@@ -115,7 +115,7 @@ class TestFreeTierBeatsImplicitHostCredentials:
 
     @pytest.mark.parametrize("env_key, config_provider, expected", [
         ("OPENAI_API_KEY", None, "openai-api"),  # an exported key wins
-        (None, "zai", "zai"),                     # a config pin wins
+        (None, "lmstudio", "lmstudio"),  # a config pin wins
     ], ids=["env-key", "config-provider"])
     def test_explicit_providers_beat_a_claimed_trial(self, portal, monkeypatch, env_key, config_provider,
                                                      expected):

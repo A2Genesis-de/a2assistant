@@ -1,7 +1,7 @@
 """A ``providers:`` entry keyed like a built-in sends its own ``key_env``, never the built-in's key.
 
 The entry's durable pool slug equals the built-in's pool id, and ``load_pool`` seeds that pool
-from the built-in's env vars (``env:DEEPSEEK_API_KEY``). The named-custom rung consulted the pool
+from the built-in's env vars (``env:OPENAI_API_KEY``). The named-custom rung consulted the pool
 before ``key_env``, so every turn to the custom endpoint carried the built-in provider's secret.
 """
 
@@ -20,7 +20,7 @@ MANUAL_KEY = "manual-pool-key-0123456789"
 # (entry key == built-in pool id, the built-in's api-key env var): one OpenAI-shaped built-in and
 # one that is not.
 SHADOWED_BUILTINS = [
-    ("deepseek", "DEEPSEEK_API_KEY"),
+    ("openai-api", "OPENAI_API_KEY"),
     ("anthropic", "ANTHROPIC_API_KEY"),
 ]
 
@@ -84,32 +84,32 @@ def test_shadowing_entry_auxiliary_client_never_borrows_builtin_key(tmp_path, mo
 
 
 def test_shadowing_entry_unset_key_env_never_borrows_builtin_key(tmp_path, monkeypatch):
-    _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY")
+    _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY")
     monkeypatch.delenv("ENTRY_KEY_VAR")
     from hermes_cli import runtime_provider as rp
 
-    resolved = rp.resolve_runtime_provider(requested="custom:deepseek")
+    resolved = rp.resolve_runtime_provider(requested="custom:openai-api")
     assert resolved["base_url"] == ENDPOINT
     assert resolved["api_key"] == "no-key-required"
 
 
 def test_shadowing_entry_inline_api_key_beats_builtin_env(tmp_path, monkeypatch):
-    _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY", entry_extra={"api_key": ENTRY_KEY})
+    _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY", entry_extra={"api_key": ENTRY_KEY})
     from hermes_cli import runtime_provider as rp
 
-    assert rp.resolve_runtime_provider(requested="custom:deepseek")["api_key"] == ENTRY_KEY
+    assert rp.resolve_runtime_provider(requested="custom:openai-api")["api_key"] == ENTRY_KEY
 
 
 def test_shadowing_entry_manual_pool_row_still_wins(tmp_path, monkeypatch):
-    """``hermes auth add deepseek`` rows are the operator's credential for the slug and keep
+    """``hermes auth add openai-api`` rows are the operator's credential for the slug and keep
     their precedence over key_env, exactly like a non-shadowing keyed entry."""
     manual = {"id": "m1", "label": "manual", "auth_type": "api_key", "priority": 0, "source": "manual",
               "access_token": MANUAL_KEY}
-    _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY", pool={"deepseek": [manual]})
+    _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY", pool={"openai-api": [manual]})
     from hermes_cli import runtime_provider as rp
 
     for _ in range(3):
-        resolved = rp.resolve_runtime_provider(requested="custom:deepseek")
+        resolved = rp.resolve_runtime_provider(requested="custom:openai-api")
         assert resolved["api_key"] == MANUAL_KEY
         pool = resolved["credential_pool"]
         # The rotation pool must not reach the built-in's env-seeded row either.
@@ -117,20 +117,20 @@ def test_shadowing_entry_manual_pool_row_still_wins(tmp_path, monkeypatch):
     # The built-in's own pool keeps its env-seeded row on disk.
     from agent.credential_pool import load_pool
 
-    assert BUILTIN_KEY in {e.access_token for e in load_pool("deepseek").entries()}
+    assert BUILTIN_KEY in {e.access_token for e in load_pool("openai-api").entries()}
 
 
 def test_entry_without_key_env_keeps_existing_resolution(tmp_path, monkeypatch):
     """No key_env / api_key / key_cmd: resolution is unchanged by this fix (pool first, then
     host-gated env, then the keyless placeholder)."""
-    _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY", entry_extra={})
+    _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY", entry_extra={})
     from hermes_cli import runtime_provider as rp
 
-    assert rp.resolve_runtime_provider(requested="custom:deepseek")["api_key"] == BUILTIN_KEY
+    assert rp.resolve_runtime_provider(requested="custom:openai-api")["api_key"] == BUILTIN_KEY
 
 
 def test_non_shadowing_entry_sends_its_key_env(tmp_path, monkeypatch):
-    _home(tmp_path, monkeypatch, "mydeep", "DEEPSEEK_API_KEY")
+    _home(tmp_path, monkeypatch, "mydeep", "OPENAI_API_KEY")
     from hermes_cli import runtime_provider as rp
 
     resolved = rp.resolve_runtime_provider(requested="custom:mydeep")
@@ -139,20 +139,20 @@ def test_non_shadowing_entry_sends_its_key_env(tmp_path, monkeypatch):
 
 # ── every later pool acquisition keeps the entry's ownership ───────────────────────────────────
 
-BUILTIN_HOST = "https://api.deepseek.com/v1"
+BUILTIN_HOST = "https://api.openai.com/v1"
 
 
 def _edit_config(home, *, model=None, entry=None):
     cfg = yaml.safe_load((home / "config.yaml").read_text())
     cfg["model"].update(model or {})
-    cfg["providers"]["deepseek"].update(entry or {})
+    cfg["providers"]["openai-api"].update(entry or {})
     (home / "config.yaml").write_text(yaml.safe_dump(cfg), encoding="utf-8")
 
 
 @pytest.mark.parametrize("explicit", [False, True], ids=["model_base_url", "explicit_base_url"])
 def test_url_matched_bare_custom_sends_the_entry_key(tmp_path, monkeypatch, explicit):
-    """Bare ``provider: custom`` whose URL matches ``providers.deepseek`` gets the entry's key_env."""
-    home = _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY")
+    """Bare ``provider: custom`` whose URL matches ``providers.openai-api`` gets the entry's key_env."""
+    home = _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY")
     _edit_config(home, model={"provider": "custom", "base_url": ENDPOINT})
     from hermes_cli import runtime_provider as rp
 
@@ -162,7 +162,7 @@ def test_url_matched_bare_custom_sends_the_entry_key(tmp_path, monkeypatch, expl
 
 @pytest.mark.parametrize("explicit", [False, True], ids=["model_base_url", "explicit_base_url"])
 def test_url_matched_bare_custom_frozen_route_sends_the_entry_key(tmp_path, monkeypatch, explicit):
-    home = _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY")
+    home = _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY")
     _edit_config(home, model={"provider": "custom", "base_url": ENDPOINT})
     from hermes_cli import runtime_provider as rp
 
@@ -175,17 +175,17 @@ def test_url_matched_bare_custom_frozen_route_sends_the_entry_key(tmp_path, monk
 
 
 def test_url_matched_entry_without_declared_credential_keeps_existing_resolution(tmp_path, monkeypatch):
-    _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY", entry_extra={})
+    _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY", entry_extra={})
     from hermes_cli import runtime_provider as rp
 
     resolved = rp.resolve_runtime_provider(requested="custom", explicit_base_url=ENDPOINT)
     assert resolved["api_key"] == BUILTIN_KEY
 
 
-@pytest.mark.parametrize("requested", ["custom:deepseek", "custom"])
+@pytest.mark.parametrize("requested", ["custom:openai-api", "custom"])
 def test_declared_key_env_unset_never_falls_back_to_the_builtin_host_key(tmp_path, monkeypatch, caplog, requested):
-    """On the built-in's own host the host-derived ``DEEPSEEK_API_KEY`` is another account's key."""
-    home = _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY")
+    """On the built-in's own host the host-derived ``OPENAI_API_KEY`` is another account's key."""
+    home = _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY")
     _edit_config(home, entry={"api": BUILTIN_HOST})
     monkeypatch.delenv("ENTRY_KEY_VAR")
     from hermes_cli import runtime_provider as rp
@@ -202,10 +202,10 @@ def test_entry_owns_pool_rows_seeded_from_its_own_key_env(tmp_path, monkeypatch)
     slug pool) is the entry's own and keeps its rotation state; the built-in's env row is not."""
     row = {"id": "e1", "label": "ENTRY_KEY_VAR", "auth_type": "api_key", "priority": 0,
            "source": "env:ENTRY_KEY_VAR", "access_token": ENTRY_KEY, "base_url": ENDPOINT}
-    _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY", pool={"deepseek": [row]})
+    _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY", pool={"openai-api": [row]})
     from hermes_cli import runtime_provider as rp
 
-    resolved = rp.resolve_runtime_provider(requested="custom:deepseek")
+    resolved = rp.resolve_runtime_provider(requested="custom:openai-api")
     assert resolved["api_key"] == ENTRY_KEY
     pool = resolved.get("credential_pool")
     assert pool is not None and [e.source for e in pool.entries()] == ["env:ENTRY_KEY_VAR"]
@@ -241,12 +241,12 @@ def _restorable_agent(primary: dict):
 
 
 def test_restoring_the_primary_after_fallback_keeps_the_entry_endpoint_and_key(tmp_path, monkeypatch):
-    _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY")
+    _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY")
     from hermes_cli import runtime_provider as rp
 
-    initial = rp.resolve_runtime_provider(requested="custom:deepseek")
+    initial = rp.resolve_runtime_provider(requested="custom:openai-api")
     assert initial["api_key"] == ENTRY_KEY
-    agent = _restorable_agent({"provider": initial["provider"], "requested_provider": "custom:deepseek",
+    agent = _restorable_agent({"provider": initial["provider"], "requested_provider": "custom:openai-api",
                                "base_url": ENDPOINT, "api_key": ENTRY_KEY})
     assert agent._restore_primary_runtime() is True
     assert (agent.api_key, agent.base_url) == (ENTRY_KEY, ENDPOINT)
@@ -254,30 +254,30 @@ def test_restoring_the_primary_after_fallback_keeps_the_entry_endpoint_and_key(t
 
 
 def test_restoring_a_builtin_primary_still_reselects_its_own_pool(tmp_path, monkeypatch):
-    _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY")
-    agent = _restorable_agent({"provider": "deepseek", "requested_provider": "deepseek",
+    _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY")
+    agent = _restorable_agent({"provider": "openai-api", "requested_provider": "openai-api",
                                "base_url": BUILTIN_HOST, "api_key": "stale-snapshot-key-0123"})
     assert agent._restore_primary_runtime() is True
     assert agent.api_key == BUILTIN_KEY
 
 
 def test_delegated_child_never_leases_the_builtin_account(tmp_path, monkeypatch):
-    """Entry on DeepSeek's own endpoint with a separately declared account key."""
+    """Entry on OpenAI's own endpoint with a separately declared account key."""
     from types import SimpleNamespace
     from unittest.mock import MagicMock
 
-    home = _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY")
+    home = _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY")
     _edit_config(home, entry={"api": BUILTIN_HOST})
     from hermes_cli import runtime_provider as rp
     from tools.delegate_tool_child_run import _lease_child_credential
     from tools.delegate_tool_config import _resolve_child_credential_pool
 
-    resolved = rp.resolve_runtime_provider(requested="custom:deepseek")
+    resolved = rp.resolve_runtime_provider(requested="custom:openai-api")
     assert resolved["api_key"] == ENTRY_KEY
-    parent = SimpleNamespace(provider="custom", requested_provider="custom:deepseek", base_url=BUILTIN_HOST,
+    parent = SimpleNamespace(provider="custom", requested_provider="custom:openai-api", base_url=BUILTIN_HOST,
                              _credential_pool=resolved.get("credential_pool"))
     child = SimpleNamespace(base_url=BUILTIN_HOST, _swap_credential=MagicMock(),
-                            _credential_pool=_resolve_child_credential_pool("custom", parent, BUILTIN_HOST, "custom:deepseek"))
+                            _credential_pool=_resolve_child_credential_pool("custom", parent, BUILTIN_HOST, "custom:openai-api"))
     pool, lease_id = _lease_child_credential(child)
     if lease_id is not None:
         pool.release_lease(lease_id)
@@ -297,17 +297,17 @@ def test_explicit_builtin_pick_keeps_its_env_key(tmp_path, monkeypatch, name, bu
 def test_persisting_the_entry_view_keeps_the_builtin_rows_and_writes_no_secret(tmp_path, monkeypatch):
     manual = {"id": "m1", "label": "manual", "auth_type": "api_key", "priority": 0, "source": "manual",
               "access_token": MANUAL_KEY}
-    home = _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY", pool={"deepseek": [manual]})
+    home = _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY", pool={"openai-api": [manual]})
     from agent.credential_pool import load_pool
     from hermes_cli import runtime_provider as rp
 
-    load_pool("deepseek")
-    before = {r["id"] for r in json.loads((home / "auth.json").read_text())["credential_pool"]["deepseek"]}
-    rp.resolve_runtime_provider(requested="custom:deepseek")["credential_pool"]._persist()
+    load_pool("openai-api")
+    before = {r["id"] for r in json.loads((home / "auth.json").read_text())["credential_pool"]["openai-api"]}
+    rp.resolve_runtime_provider(requested="custom:openai-api")["credential_pool"]._persist()
     text = (home / "auth.json").read_text()
-    after = json.loads(text)["credential_pool"]["deepseek"]
+    after = json.loads(text)["credential_pool"]["openai-api"]
     assert {r["id"] for r in after} == before
-    assert any(r["source"] == "env:DEEPSEEK_API_KEY" for r in after)
+    assert any(r["source"] == "env:OPENAI_API_KEY" for r in after)
     assert BUILTIN_KEY not in text and ENTRY_KEY not in text
 
 
@@ -358,12 +358,12 @@ def _pin_title_generation(home, provider):
 
 
 def test_aux_task_pinned_to_the_entry_sends_its_key_env(tmp_path, monkeypatch):
-    """``auxiliary.title_generation.provider: custom:deepseek`` through ``call_llm``: the pool peek
-    read the built-in's whole ``deepseek`` pool and its env row beat the entry's key_env."""
+    """``auxiliary.title_generation.provider: custom:openai-api`` through ``call_llm``: the pool peek
+    read the built-in's whole ``openai-api`` pool and its env row beat the entry's key_env."""
     from unittest.mock import MagicMock, patch
 
-    home = _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY")
-    _pin_title_generation(home, "custom:deepseek")
+    home = _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY")
+    _pin_title_generation(home, "custom:openai-api")
     from agent import auxiliary_client as ac
 
     monkeypatch.setattr(ac, "_client_cache", {})
@@ -378,12 +378,12 @@ def test_aux_task_pinned_to_the_entry_sends_its_key_env(tmp_path, monkeypatch):
 def test_aux_task_pinned_to_the_builtin_keeps_its_env_key(tmp_path, monkeypatch):
     from unittest.mock import patch
 
-    _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY")
+    _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY")
     from agent import auxiliary_client as ac
 
     monkeypatch.setattr(ac, "_client_cache", {})
     with patch("agent.auxiliary_client.OpenAI") as mock_openai:
-        ac._get_cached_client("deepseek", "m")
+        ac._get_cached_client("openai-api", "m")
     assert mock_openai.call_args.kwargs["api_key"] == BUILTIN_KEY
 
 
@@ -392,22 +392,22 @@ def test_aux_auth_failure_on_the_entry_never_rotates_the_builtin_pool(tmp_path, 
     ladder's pool-recovery rung, from the pinned ``custom:<name>`` route to the rotation)."""
     from types import SimpleNamespace
 
-    _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY")
+    _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY")
     from agent import auxiliary_client as ac
     from agent.credential_pool import load_pool
 
-    load_pool("deepseek")
-    pool_provider = ac._recoverable_pool_provider("custom:deepseek", SimpleNamespace(base_url=ENDPOINT, api_key=ENTRY_KEY))
+    load_pool("openai-api")
+    pool_provider = ac._recoverable_pool_provider("custom:openai-api", SimpleNamespace(base_url=ENDPOINT, api_key=ENTRY_KEY))
     assert pool_provider
     err = type("AuthError", (Exception,), {"status_code": 401})("Error code: 401")
     assert ac._recover_provider_pool(pool_provider, err, failed_api_key=ENTRY_KEY) is False
     assert ac._recover_provider_pool(pool_provider, err) is False
-    builtin = [e for e in load_pool("deepseek").entries() if e.source == "env:DEEPSEEK_API_KEY"]
+    builtin = [e for e in load_pool("openai-api").entries() if e.source == "env:OPENAI_API_KEY"]
     assert builtin and all(e.last_status != "exhausted" for e in builtin)
 
 
 def test_bare_route_skips_an_unusable_inline_key_for_the_declared_key_env(tmp_path, monkeypatch):
-    _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY",
+    _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY",
           entry_extra={"key_env": "ENTRY_KEY_VAR", "api_key": "placeholder"})
     from hermes_cli import runtime_provider as rp
     from hermes_cli.runtime_provider_custom import _owning_entry_credential
@@ -416,7 +416,7 @@ def test_bare_route_skips_an_unusable_inline_key_for_the_declared_key_env(tmp_pa
 
 
 def test_aux_named_entry_skips_an_unusable_inline_key_for_the_declared_key_env(tmp_path, monkeypatch):
-    _home(tmp_path, monkeypatch, "mydeep", "DEEPSEEK_API_KEY",
+    _home(tmp_path, monkeypatch, "mydeep", "OPENAI_API_KEY",
           entry_extra={"key_env": "ENTRY_KEY_VAR", "api_key": "placeholder"})
     from agent.auxiliary_client import _named_custom_api_key
     from hermes_cli.runtime_provider import _get_named_custom_provider
@@ -467,7 +467,7 @@ def _move_beta_endpoint(home):
 
 def _drop_declaration(home, key):
     cfg = yaml.safe_load((home / "config.yaml").read_text())
-    del cfg["providers"]["deepseek"][key]
+    del cfg["providers"]["openai-api"][key]
     (home / "config.yaml").write_text(yaml.safe_dump(cfg), encoding="utf-8")
 
 
@@ -490,13 +490,13 @@ def test_restore_keeps_the_frozen_owner_after_its_endpoint_moves(tmp_path, monke
 @pytest.mark.parametrize("declared", [{"key_env": "ENTRY_KEY_VAR"}, {"api_key": ENTRY_KEY}], ids=["key_env", "api_key"])
 def test_restore_keeps_the_frozen_declaration_after_it_is_removed(tmp_path, monkeypatch, builder, declared):
     """The live entry stops declaring a credential: the built-in's env row used to win, moving the
-    session onto DEEPSEEK_API_KEY and api.deepseek.com."""
-    home = _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY", entry_extra=declared)
+    session onto OPENAI_API_KEY and api.openai.com."""
+    home = _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY", entry_extra=declared)
     from hermes_cli import runtime_provider as rp
 
-    initial = rp.resolve_runtime_provider(requested="custom:deepseek")
+    initial = rp.resolve_runtime_provider(requested="custom:openai-api")
     assert initial["api_key"] == ENTRY_KEY
-    agent = _snapshotted_agent(builder, initial, "custom:deepseek")
+    agent = _snapshotted_agent(builder, initial, "custom:openai-api")
     # The snapshot already holds the session's key; ownership adds no other copy of a secret.
     rest = {k: v for k, v in agent._primary_runtime.items() if k not in {"api_key", "client_kwargs", "compressor_api_key"}}
     assert ENTRY_KEY not in json.dumps(rest, default=str)
@@ -512,7 +512,7 @@ def test_a_snapshot_without_recorded_ownership_keeps_its_own_credential(tmp_path
     if edit == "endpoint":
         home, name = _two_entries_on_one_url(tmp_path, monkeypatch), "beta"
     else:
-        home, name = _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY"), "deepseek"
+        home, name = _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY"), "openai-api"
     from hermes_cli import runtime_provider as rp
 
     initial = rp.resolve_runtime_provider(requested=f"custom:{name}")
@@ -532,11 +532,11 @@ def test_restore_still_reselects_the_owners_own_pool_row(tmp_path, monkeypatch, 
     replaces a stale snapshot key on restore, and the built-in's row stays out."""
     manual = {"id": "m1", "label": "manual", "auth_type": "api_key", "priority": 0, "source": "manual",
               "access_token": MANUAL_KEY}
-    _home(tmp_path, monkeypatch, "deepseek", "DEEPSEEK_API_KEY", pool={"deepseek": [manual]})
+    _home(tmp_path, monkeypatch, "openai-api", "OPENAI_API_KEY", pool={"openai-api": [manual]})
     from hermes_cli import runtime_provider as rp
 
-    initial = rp.resolve_runtime_provider(requested="custom:deepseek")
-    agent = _snapshotted_agent(builder, initial, "custom:deepseek", api_key="stale-snapshot-key-0123")
+    initial = rp.resolve_runtime_provider(requested="custom:openai-api")
+    agent = _snapshotted_agent(builder, initial, "custom:openai-api", api_key="stale-snapshot-key-0123")
     agent._swap_credential = lambda entry: setattr(agent, "api_key", entry.runtime_api_key)
     assert agent._restore_primary_runtime() is True
     assert agent.api_key == MANUAL_KEY

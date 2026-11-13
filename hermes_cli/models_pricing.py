@@ -215,11 +215,6 @@ def _pricing_entry(pricing: dict, prompt_key: str = "prompt", completion_key: st
     return entry
 
 
-def _per_token(per_mtok: Any) -> str:
-    """$/MTok → the per-token price string the picker expects."""
-    return str(float(per_mtok) / 1_000_000)
-
-
 def _catalog_items(payload: dict) -> list[dict]:
     return [item for item in payload.get("data", []) if isinstance(item, dict)]
 
@@ -295,29 +290,6 @@ def fetch_models_with_pricing(
             result[mid] = entry
 
     return _cache_catalog(cache_key, result, cache_ttl_seconds)
-
-
-def fetch_ai_gateway_pricing(timeout: float = 8.0, *, force_refresh: bool = False) -> dict[str, dict[str, str]]:
-    """Vercel AI Gateway /v1/models pricing, translating its ``input`` / ``output`` field names to
-    the picker's ``prompt`` / ``completion`` (cache read/write names already match)."""
-    from hermes_constants import AI_GATEWAY_BASE_URL
-
-    cache_key = AI_GATEWAY_BASE_URL.rstrip("/")
-    if not force_refresh:
-        cached = _cached_catalog(cache_key)
-        if cached is not None:
-            return cached
-
-    payload = _get_json(f"{cache_key}/models", {"Accept": "application/json"}, timeout, opener=urllib.request.urlopen)
-    if payload is None:
-        return _cache_catalog(cache_key, {})
-
-    result: dict[str, dict[str, str]] = {}
-    for item in _catalog_items(payload):
-        mid, pricing = item.get("id"), item.get("pricing")
-        if mid and isinstance(pricing, dict):
-            result[mid] = _pricing_entry(pricing, "input", "output")
-    return _cache_catalog(cache_key, result)
 
 
 def _resolve_openrouter_api_key() -> str:
@@ -431,88 +403,6 @@ def _fetch_openrouter_pricing(*, force_refresh: bool = False) -> dict[str, dict[
     )
 
 
-def _fetch_ai_gateway_pricing_for_provider(*, force_refresh: bool = False) -> dict[str, dict[str, Any]]:
-    _remember_provider_cache_key("ai-gateway", _ai_gateway_pricing_scope())
-    return fetch_ai_gateway_pricing(force_refresh=force_refresh)
-
-
-def _fetch_novita_pricing_for_provider(*, force_refresh: bool = False) -> dict[str, dict[str, Any]]:
-    _remember_provider_cache_key("novita", _novita_pricing_scope())
-    return _fetch_novita_pricing(force_refresh=force_refresh)
-
-
-def _kilo_pricing_scope() -> str:
-    """The kilocode provider profile's gateway base (``KILOCODE_BASE_URL`` overrides it) —
-    the endpoint the doctor connectivity probe and chat requests already use, so pricing reads
-    the same server the user is actually wired to."""
-    from providers import get_provider_profile
-
-    base_url = (
-        os.getenv("KILOCODE_BASE_URL", "").strip()
-        or getattr(get_provider_profile("kilocode"), "base_url", "")
-        or ""
-    )
-    return base_url.rstrip("/").removesuffix("/v1")
-
-
-def _fetch_kilocode_pricing(timeout: float = 8.0, *, force_refresh: bool = False) -> dict[str, dict[str, str]]:
-    """Kilo Gateway ``{base}/models`` pricing (public OpenRouter-shaped catalog — per-token
-    ``prompt``/``completion``/``input_cache_read`` strings, no key required, attached best-effort
-    so an authenticated read also carries the key), cached on the catalog URL.
-
-    ``isFree`` is the explicit free flag the picker badge needs — authoritative over the
-    rates, because a free router (``kilo-auto/free``) can carry non-zero underlying pricing.
-    The gateway's ``-1`` rate sentinel means "varies" (auto-router models); no price is shown
-    rather than a fabricated one, so such rows are skipped.
-    """
-    from hermes_cli.version_info import hermes_user_agent
-
-    cache_key = _kilo_pricing_scope()
-    if not cache_key:
-        return {}
-    if not force_refresh:
-        cached = _cached_catalog(cache_key)
-        if cached is not None:
-            return cached
-
-    headers = {"Accept": "application/json", "User-Agent": hermes_user_agent()}
-    api_key = os.getenv("KILOCODE_API_KEY", "").strip()
-    if api_key:
-        headers["Authorization"] = f"Bearer {api_key}"
-    payload = _get_json(cache_key + "/models", headers, timeout)
-    if payload is None:
-        return _cache_catalog(cache_key, {})
-
-    result: dict[str, dict[str, str]] = {}
-    for item in _catalog_items(payload):
-        mid, pricing = item.get("id"), item.get("pricing")
-        if not mid or not isinstance(pricing, dict):
-            continue
-        entry = _pricing_entry(pricing)
-        if item.get("isFree"):
-            entry["prompt"] = entry["completion"] = "0"
-            entry.pop("input_cache_read", None)
-        # The gateway's ``-1`` sentinel means "rate varies" (auto-router models); no price is
-        # shown rather than a fabricated one. _price_float also drops any other unusable value
-        # (blank / non-numeric), so a malformed row cannot poison the rest of the catalog.
-        if _price_float(entry["prompt"], positive=False) is None or _price_float(entry["completion"], positive=False) is None:
-            continue
-        if entry:
-            result[str(mid)] = entry
-
-    return _cache_catalog(cache_key, result)
-
-
-def _fetch_fireworks_pricing_for_provider(*, force_refresh: bool = False) -> dict[str, dict[str, Any]]:
-    _remember_provider_cache_key("fireworks", _FIREWORKS_PRICING_KEY)
-    return _fireworks_pricing_from_models_dev(force_refresh=force_refresh)
-
-
-def _fetch_kilocode_pricing_for_provider(*, force_refresh: bool = False) -> dict[str, dict[str, Any]]:
-    _remember_provider_cache_key("kilocode", _kilo_pricing_scope())
-    return _fetch_kilocode_pricing(force_refresh=force_refresh)
-
-
 def _fetch_nous_pricing_for_provider(*, force_refresh: bool = False) -> dict[str, dict[str, Any]]:
     api_key, base_url = _resolve_nous_pricing_credentials()
     if not base_url:
@@ -529,16 +419,6 @@ def _fetch_nous_pricing_for_provider(*, force_refresh: bool = False) -> dict[str
 
 
 _OPENROUTER_PRICING_BASE = "https://openrouter.ai/api"
-_FIREWORKS_PRICING_KEY = "models.dev/fireworks"
-
-
-def _ai_gateway_pricing_scope() -> str:
-    from hermes_constants import AI_GATEWAY_BASE_URL
-    return AI_GATEWAY_BASE_URL.rstrip("/")
-
-
-def _novita_pricing_scope() -> str:
-    return (os.getenv("NOVITA_BASE_URL", "").strip() or "https://api.novita.ai/openai/v1").rstrip("/")
 
 
 def get_cached_nous_inference_base_url() -> str:
@@ -555,14 +435,8 @@ def get_cached_nous_inference_base_url() -> str:
         return ""
 
 
-# Static endpoint identity per provider; dynamic ones (deepinfra, nous) are resolved in pricing_cache_scope.
-_STATIC_PRICING_SCOPES = {
-    "openrouter": lambda: _OPENROUTER_PRICING_BASE,
-    "ai-gateway": _ai_gateway_pricing_scope,
-    "novita": _novita_pricing_scope,
-    "kilocode": _kilo_pricing_scope,
-    "fireworks": lambda: _FIREWORKS_PRICING_KEY,
-}
+# Static endpoint identity per provider; the dynamic one (nous) is resolved in pricing_cache_scope.
+_STATIC_PRICING_SCOPES = {"openrouter": lambda: _OPENROUTER_PRICING_BASE}
 
 
 def resolve_pricing_provider(provider: str, *, base_url: str = "") -> str:
@@ -605,13 +479,11 @@ def pricing_cache_scope(
     """The current endpoint identity a provider's pricing cache is keyed on. Resolves local configuration
     only, never fetches: picker prewarm single-flight uses it so an endpoint rotation can start a new
     worker while the previous endpoint is still slow or unreachable."""
-    from hermes_cli.models import _deepinfra_catalog_url, _pricing_profile_key, normalize_provider
+    from hermes_cli.models import _pricing_profile_key, normalize_provider
     normalized = resolve_pricing_provider(provider, base_url=base_url)
     static = _STATIC_PRICING_SCOPES.get(normalized)
     if static:
         return static()
-    if normalized == "deepinfra":
-        return _deepinfra_catalog_url()[0]
     if normalized == "nous":
         try:
             from hermes_cli.auth import _nous_inference_env_override
@@ -632,12 +504,9 @@ def pricing_cache_scope(
 
 def _cached_only_pricing(normalized: str) -> dict[str, dict[str, str]]:
     """Process-resident pricing for *normalized* without any provider I/O."""
-    from hermes_cli.models import _deepinfra_catalog_cache, _deepinfra_catalog_url, _pricing_profile_key
-    if normalized == "deepinfra":
-        cache_key, _url = _deepinfra_catalog_url()
-        return _fetch_deepinfra_pricing() if cache_key in _deepinfra_catalog_cache else {}
+    from hermes_cli.models import _pricing_profile_key
     cache_key = _pricing_provider_cache_keys.get((_pricing_profile_key(), normalized))
-    if cache_key is None and normalized in ("openrouter", "ai-gateway", "fireworks"):
+    if cache_key is None and normalized in _STATIC_PRICING_SCOPES:
         cache_key = _STATIC_PRICING_SCOPES[normalized]()
     return (_cached_catalog(cache_key) or {}) if cache_key else {}
 
@@ -645,8 +514,8 @@ def _cached_only_pricing(normalized: str) -> dict[str, dict[str, str]]:
 def get_pricing_for_provider(
     provider: str, *, base_url: str = "", force_refresh: bool = False, cached_only: bool = False
 ) -> dict[str, dict[str, str]]:
-    """Return live pricing for providers that support it (openrouter, nous, ai-gateway, novita,
-    deepinfra, fireworks, kilocode); ``{}`` for everything else. ``cached_only`` never starts
+    """Return live pricing for providers that support it (openrouter, nous); ``{}`` for everything
+    else. ``cached_only`` never starts
     provider I/O: normal picker opens use it so cold endpoints cannot hold the response path,
     while a background prewarm fills the same caches for later opens."""
     normalized = resolve_pricing_provider(provider, base_url=base_url)
@@ -656,97 +525,7 @@ def get_pricing_for_provider(
     return fetcher(force_refresh=force_refresh) if fetcher else {}
 
 
-def _fireworks_pricing_from_models_dev(*, force_refresh: bool = False) -> dict[str, dict[str, str]]:
-    """Fireworks picker pricing from the models.dev registry cache (``fetch_models_dev()`` keeps a
-    shared in-memory + disk cache, 1h TTL) — a pure dict transform, no per-render network call."""
-    cache_key = "models.dev/fireworks"
-    if not force_refresh:
-        cached = _cached_catalog(cache_key)
-        if cached is not None:
-            return cached
-
-    result: dict[str, dict[str, str]] = {}
-    try:
-        from agent.models_dev import _get_provider_models
-
-        for mid, entry in (_get_provider_models("fireworks") or {}).items():
-            cost = entry.get("cost") if isinstance(entry, dict) else None
-            if not isinstance(cost, dict):
-                continue
-            inp, out = cost.get("input"), cost.get("output")
-            if inp is None and out is None:
-                continue
-            row = {"prompt": _per_token(inp or 0), "completion": _per_token(out or 0)}
-            if cost.get("cache_read"):
-                row["input_cache_read"] = _per_token(cost["cache_read"])
-            result[str(mid)] = row
-    except Exception:
-        result = {}
-
-    return _cache_catalog(cache_key, result)
-
-
-def _fetch_novita_pricing(timeout: float = 8.0, *, force_refresh: bool = False) -> dict[str, dict[str, str]]:
-    """NovitaAI /v1/models pricing (per-million prices in units of 0.0001 USD → per-token strings),
-    cached on the resolved base URL so menu renders don't re-hit the network."""
-    from hermes_cli.version_info import hermes_user_agent
-    api_key = os.getenv("NOVITA_API_KEY", "").strip()
-    if not api_key:
-        return {}
-
-    cache_key = (os.getenv("NOVITA_BASE_URL", "").strip() or "https://api.novita.ai/openai/v1").rstrip("/")
-    if not force_refresh:
-        cached = _cached_catalog(cache_key)
-        if cached is not None:
-            return cached
-
-    headers = {"Authorization": f"Bearer {api_key}", "Accept": "application/json", "User-Agent": hermes_user_agent()}
-    payload = _get_json(cache_key + "/models", headers, timeout)
-    if payload is None:
-        return _cache_catalog(cache_key, {})
-
-    result: dict[str, dict[str, str]] = {}
-    for item in _catalog_items(payload):
-        mid = item.get("id")
-        inp, out = item.get("input_token_price_per_m"), item.get("output_token_price_per_m")
-        if not mid or (inp is None and out is None):
-            continue
-        result[str(mid)] = {
-            "prompt": str(float(inp or 0) / 10_000 / 1_000_000),
-            "completion": str(float(out or 0) / 10_000 / 1_000_000),
-        }
-
-    return _cache_catalog(cache_key, result)
-
-
-def _fetch_deepinfra_pricing(timeout: float = 5.0, *, force_refresh: bool = False) -> dict[str, dict[str, str]]:
-    """DeepInfra chat-model pricing: ``input_tokens`` / ``output_tokens`` / ``cache_read_tokens`` in
-    $/MTok → per-token ``prompt`` / ``completion`` / ``input_cache_read`` (cached by the by-tag
-    helper)."""
-    from hermes_cli.models import _fetch_deepinfra_models_by_tag
-    items = _fetch_deepinfra_models_by_tag("chat", timeout=timeout, force_refresh=force_refresh)
-    result: dict[str, dict[str, str]] = {}
-    for item in items or []:
-        metadata = item.get("metadata") or {}
-        pricing = metadata.get("pricing") if isinstance(metadata, dict) else None
-        if not isinstance(pricing, dict):
-            continue
-        entry = {
-            ours: _per_token(pricing[theirs])
-            for theirs, ours in (("input_tokens", "prompt"), ("output_tokens", "completion"), ("cache_read_tokens", "input_cache_read"))
-            if pricing.get(theirs) is not None
-        }
-        if entry:
-            result[item["id"]] = entry
-    return result
-
-
 _PRICING_FETCHERS = {
     "openrouter": _fetch_openrouter_pricing,
-    "ai-gateway": _fetch_ai_gateway_pricing_for_provider,
-    "novita": _fetch_novita_pricing_for_provider,
-    "deepinfra": _fetch_deepinfra_pricing,
-    "fireworks": _fetch_fireworks_pricing_for_provider,
-    "kilocode": _fetch_kilocode_pricing_for_provider,
     "nous": _fetch_nous_pricing_for_provider,
 }

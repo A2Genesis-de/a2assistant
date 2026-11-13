@@ -168,15 +168,6 @@ def _provider_card(d, description: str, url, *, is_password: bool, advanced: boo
     }
 
 
-_AUTH_TYPE_ENV_VARS = {
-    "aws_sdk": (
-        ("AWS_REGION", lambda d, var: f"{d.label} ({var})"),
-        ("AWS_PROFILE", lambda d, var: f"{d.label} ({var})"),
-    ),
-    "vertex": (("VERTEX_CREDENTIALS_PATH", lambda d, var: f"{d.label} — service account JSON path (or use ADC)"),),
-}
-
-
 def _catalog_provider_env_metadata() -> dict:
     """Map provider env vars -> desktop card metadata, derived from the catalog.
 
@@ -247,17 +238,6 @@ def _catalog_provider_env_metadata() -> dict:
                 d.base_url_env_var,
                 _provider_card(d, f"{d.label} base URL override", None, is_password=False, advanced=True),
             )
-
-        # Providers without api_key_env_vars would otherwise be invisible on
-        # the Keys tab: AWS-SDK providers (Bedrock) authenticate via the AWS
-        # credential chain, Vertex via OAuth2 (service-account JSON path or
-        # ADC — a path, not a secret). Tag their env vars to the card.
-        for var, describe in _AUTH_TYPE_ENV_VARS.get(d.auth_type, ()):
-            existing = meta.get(var, {})
-            meta[var] = _provider_card(
-                d, existing.get("description") or describe(d, var), existing.get("url"),
-                is_password=False, advanced=existing.get("advanced", True),
-            )
     return meta
 
 
@@ -301,8 +281,7 @@ def _get_env_vars_sync(profile: Optional[str] = None):
             "provider_profiles": cat_meta.get("provider_profiles", []),
             # The provider's own index-0 credential flag. Desktop picks a card's
             # main "Paste key" field from this FIRST, so a shared alias that a
-            # peer profile contributes (DASHSCOPE_API_KEY for the CN Coding /
-            # Token Plan cards) can never re-point the card's primary field.
+            # peer profile contributes can never re-point the card's primary field.
             "provider_primary": bool(cat_meta.get("provider_primary", False)),
             # True for a .env key in no catalog at all — an arbitrary/custom var
             # the user added directly, listed so the Keys page can manage it.

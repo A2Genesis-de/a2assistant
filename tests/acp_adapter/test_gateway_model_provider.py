@@ -8,7 +8,7 @@ from acp_adapter.gateway_server import GatewayACPAgent
 @pytest.mark.parametrize(
     "model_id, expected",
     [
-        ("deepseek:deepseek-flash", {"provider": "deepseek", "model": "deepseek-flash"}),
+        ("anthropic:claude-example", {"provider": "anthropic", "model": "claude-example"}),
         ("openrouter:deepseek/example", {"provider": "openrouter", "model": "deepseek/example"}),
         ("anthropic/claude-example:beta", {"model": "anthropic/claude-example:beta"}),
         ("plain-model", {"model": "plain-model"}),
@@ -63,9 +63,9 @@ async def test_prefixed_pick_preserves_mutation_failure_contract(reason):
 
     agent._gateway = RPC()
     with pytest.raises(GatewayClientError, match=reason):
-        await agent.set_session_model(model_id="deepseek:example", session_id="session")
+        await agent.set_session_model(model_id="anthropic:example", session_id="session")
     assert "session" not in agent._snapshots
-    await agent.set_session_model(model_id="deepseek:example", session_id="session")
-    assert calls[0]["payload"] == calls[1]["payload"] == {"provider": "deepseek", "model": "example"}
+    await agent.set_session_model(model_id="anthropic:example", session_id="session")
+    assert calls[0]["payload"] == calls[1]["payload"] == {"provider": "anthropic", "model": "example"}
     assert (calls[0]["request_id"] == calls[1]["request_id"]) == (reason == "connection_lost")
     assert agent._mutations.pending == {}

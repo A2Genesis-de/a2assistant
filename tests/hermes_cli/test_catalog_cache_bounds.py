@@ -45,7 +45,7 @@ at_import = len(parses)
 _PROVIDER_MODELS.get("nous")
 after_other_row = len(parses)
 copied = dict(_PROVIDER_MODELS)
-json.dump({"at_import": at_import, "after_other_row": after_other_row, "copy_xai": copied["xai"],
+json.dump({"at_import": at_import, "after_other_row": after_other_row, "copy_xai": copied["xai-oauth"],
            "row_xai_oauth": _PROVIDER_MODELS["xai-oauth"],
            "shared": models_dev.fetch_models_dev(allow_network=False) is models_dev._models_dev_cache,
            "total": len(parses)}, sys.stdout)

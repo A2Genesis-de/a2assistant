@@ -996,9 +996,6 @@ def _to_openai_base_url(base_url: str) -> str:
     without it). Anthropic-only gateways keep their path.
     """
     url = str(base_url or "").strip().rstrip("/")
-    if base_url_hostname(url) == "api.actual.inc":
-        from hermes_cli.auth import normalize_actual_base_url
-        return normalize_actual_base_url(url)
     if url.endswith("/anthropic"):
         if base_url_host_matches(url, "open.bigmodel.cn") or base_url_host_matches(url, "api.z.ai"):
             rewritten = url[: -len("/anthropic")] + "/coding/paas/v4"
@@ -1549,15 +1546,6 @@ class _CodexCompletionsAdapter:
         return resp_kwargs, model, timeout
 
     def create(self, **kwargs) -> Any:
-        from hermes_cli.providers import is_actual_route
-
-        if is_actual_route(
-            getattr(self._client, "_hermes_aux_effective_provider", ""),
-            str(getattr(self._client, "base_url", "") or ""),
-        ):
-            raise ValueError(
-                "Actual requests require Chat Completions; refusing to call /responses."
-            )
         # Low-level ``responses.create(stream=True)`` and assemble the final response ourselves
         # from ``response.output_item.done``: the high-level ``responses.stream()`` rebuilds from
         # ``response.completed.response.output``, which Codex returns as ``null`` (SDK crash).
@@ -1834,65 +1822,6 @@ class AsyncAnthropicAuxiliaryClient(_AsyncAuxiliaryClientBase):
     pass
 
 
-class _BedrockCompletionsAdapter:
-    """Translates ``chat.completions.create(**kwargs)`` into Bedrock Converse."""
-
-    def __init__(self, region: str, model: str):
-        self._region = region
-        self._model = model
-
-    def create(self, **kwargs) -> Any:
-        from agent.bedrock_adapter import call_converse
-        model = kwargs.get("model", self._model)
-        max_tokens = kwargs.get("max_tokens") or kwargs.get("max_completion_tokens")
-        # OpenAI accepts ``stop`` as str or list; Converse requires a list.
-        stop = kwargs.get("stop")
-        if isinstance(stop, str):
-            stop = [stop]
-        if kwargs.get("tool_choice") is not None:
-            # Converse toolChoice isn't wired through call_converse(); surface the drop.
-            logger.debug(
-                "BedrockAuxiliaryClient: tool_choice=%r not supported by the "
-                "Converse shim — ignored.", kwargs.get("tool_choice"),
-            )
-        if kwargs.get("stream"):
-            # Converse streaming isn't wired here; call_llm's streaming consumer
-            # detects a final object and downgrades to non-live output.
-            logger.debug(
-                "BedrockAuxiliaryClient: stream=True requested for %s — returning a complete response "
-                "(Converse shim does not stream); caller downgrades to non-streaming.", model,
-            )
-        response = call_converse(
-            region=self._region, model=model, messages=kwargs.get("messages", []), tools=kwargs.get("tools"),
-            # Converse specifically defaults to the model maximum when omitted.
-            # Truthiness mirrors the Anthropic shim: explicit 0 means omit.
-            max_tokens=int(max_tokens) if max_tokens else None, temperature=kwargs.get("temperature"),
-            top_p=kwargs.get("top_p"), stop_sequences=stop,
-        )
-        # Converse is complete-response here: mark provider progress only after
-        # return so TTFP reflects real Bedrock latency, not dispatch/setup.
-        _notify_aux_provider_response()
-        return response
-
-
-class BedrockAuxiliaryClient:
-    """OpenAI-client-compatible wrapper over AWS Bedrock Converse API."""
-
-    def __init__(self, region: str, model: str):
-        self._region = region
-        self._model = model
-        self.chat = _ChatShim(_BedrockCompletionsAdapter(region, model))
-        self.api_key = "aws-sdk"
-        self.base_url = f"https://bedrock-runtime.{region}.amazonaws.com"
-
-    def close(self):
-        pass
-
-
-class AsyncBedrockAuxiliaryClient(_AsyncAuxiliaryClientBase):
-    pass
-
-
 def _endpoint_speaks_anthropic_messages(base_url: str) -> bool:
     """True if ``base_url`` speaks Anthropic Messages, not OpenAI chat.completions.
 
@@ -1917,12 +1846,12 @@ def _maybe_wrap_anthropic(
     ``client_obj`` unchanged for probe stubs/specialized adapters, OpenAI-wire, explicit non-Anthropic
     ``api_mode``, or missing ``anthropic`` SDK.
     """
-    # Anthropic/Bedrock/Codex wrappers, plus any client declaring HERMES_SKIP_TRANSPORT_WRAP
+    # Anthropic/Codex wrappers, plus any client declaring HERMES_SKIP_TRANSPORT_WRAP
     # (native/ACP shims, in-tree or plugin), must never be re-dispatched through a wire adapter —
     # a class-attribute declaration rather than isinstance so this hot path never imports them.
     if (
         isinstance(client_obj, _AuxProbeClientStub)
-        or _safe_isinstance(client_obj, (AnthropicAuxiliaryClient, BedrockAuxiliaryClient, CodexAuxiliaryClient))
+        or _safe_isinstance(client_obj, (AnthropicAuxiliaryClient, CodexAuxiliaryClient))
         or _client_declares(client_obj, "HERMES_SKIP_TRANSPORT_WRAP")
     ):
         return client_obj
@@ -2984,63 +2913,6 @@ def _build_codex_client(model: str) -> tuple[Optional[Any], Optional[str]]:
     return CodexAuxiliaryClient(real_client, model), model
 
 
-def _try_azure_foundry(
-    *, model: Optional[str] = None, explicit_api_key: Optional[str] = None,
-    explicit_base_url: Optional[str] = None, api_mode: Optional[str] = None,
-) -> tuple[Optional[Any], Optional[str]]:
-    """Azure Foundry aux client via the main agent's ``_resolve_azure_foundry_runtime`` (api_key vs Entra
-    callable bearer, per-model api_mode, base_url overrides). Returns ``(client, model)`` or ``(None, None)``."""
-    try:
-        from hermes_cli.runtime_provider import _resolve_azure_foundry_runtime
-        from hermes_cli.auth import AuthError
-        from hermes_cli.config import load_config_readonly
-    except ImportError:
-        return None, None
-    try:
-        cfg = load_config_readonly()
-        model_cfg = cfg.get("model") if isinstance(cfg, dict) else {}
-        if not isinstance(model_cfg, dict):
-            model_cfg = {}
-    except Exception:
-        model_cfg = {}
-    try:
-        runtime = _resolve_azure_foundry_runtime(
-            requested_provider="azure-foundry", model_cfg=model_cfg,
-            explicit_api_key=explicit_api_key, explicit_base_url=explicit_base_url,
-            target_model=model,
-        )
-    except AuthError as exc:
-        logger.debug("Auxiliary azure-foundry: %s", exc)
-        return None, None
-    except Exception as exc:
-        logger.debug("Auxiliary azure-foundry runtime error: %s", exc)
-        return None, None
-    api_key = runtime.get("api_key")
-    base_url = str(runtime.get("base_url", "") or "")
-    runtime_api_mode = api_mode or runtime.get("api_mode") or "chat_completions"
-    # api_key may be a callable token provider; bail only on None/"".
-    if not (callable(api_key) or api_key) or not base_url:
-        return None, None
-    final_model = _normalize_resolved_model(model or str(model_cfg.get("default") or ""), "azure-foundry")
-    if not final_model:
-        # No fallback aux model for Azure (needs a deployment name): let the auto chain fall through instead of 404ing.
-        logger.debug(
-            "Auxiliary azure-foundry: no model resolved (model=%r, default=%r)",
-            model, model_cfg.get("default"),
-        )
-        return None, None
-    # The SDK drops api-version query params from the base URL; pass via default_query.
-    _clean_base, _dq = _extract_url_query_params(base_url)
-    extra: dict[str, Any] = {"default_query": _dq} if _dq else {}
-    client = _create_openai_client(api_key=api_key, base_url=_clean_base, **extra)
-    if runtime_api_mode == "codex_responses":
-        return CodexAuxiliaryClient(client, final_model), final_model
-    if runtime_api_mode == "anthropic_messages":
-        # api_key forwarded verbatim (string or Entra callable; build_anthropic_client installs the bearer hook).
-        return _maybe_wrap_anthropic(client, final_model, api_key, base_url, runtime_api_mode), final_model
-    return client, final_model
-
-
 def _try_anthropic(explicit_api_key: Optional[str | Callable[[], str]] = None,
                    explicit_base_url: Optional[str] = None,
                    requested_model: Optional[str] = None) -> tuple[Optional[Any], Optional[str]]:
@@ -3701,19 +3573,11 @@ def _refresh_xai_oauth_credentials() -> bool:
     return _creds_have_api_key(resolve_xai_oauth_runtime_credentials(force_refresh=True))
 
 
-def _refresh_vertex_credentials() -> bool:
-    """Mirrors run_agent's Vertex refresh; the cache key ignores the rotating bearer, so
-    without the eviction that follows, a ~1h-expired aux Vertex client 401s forever."""
-    from agent.vertex_adapter import get_vertex_config
-    token, base_url = get_vertex_config()
-    return bool(isinstance(token, str) and token.strip() and isinstance(base_url, str) and base_url.strip())
-
-
 # Each refresher returns True when a usable credential exists; the caller then evicts cached clients.
 _CREDENTIAL_REFRESHERS: dict[str, Callable[..., bool]] = {
     "openai-codex": _refresh_codex_credentials,
     "nous": _refresh_nous_credentials, "anthropic": _refresh_anthropic_credentials,
-    "xai-oauth": _refresh_xai_oauth_credentials, "vertex": _refresh_vertex_credentials,
+    "xai-oauth": _refresh_xai_oauth_credentials,
 }
 
 
@@ -4561,8 +4425,6 @@ def _to_async_client(sync_client, model: str, is_vision: bool = False):
         return AsyncCodexAuxiliaryClient(sync_client), model
     if isinstance(sync_client, AnthropicAuxiliaryClient):
         return AsyncAnthropicAuxiliaryClient(sync_client), model
-    if isinstance(sync_client, BedrockAuxiliaryClient):
-        return AsyncBedrockAuxiliaryClient(sync_client), model
     with contextlib.suppress(ImportError):
         from agent.gemini_native_adapter import GeminiNativeClient, AsyncGeminiNativeClient
         if isinstance(sync_client, GeminiNativeClient):
@@ -4643,79 +4505,6 @@ def _named_custom_api_key(custom_entry: dict[str, Any], provider: str, custom_ba
     return custom_key or "no-key-required"
 
 
-def _build_bedrock_client(provider: str, model: Optional[str], *, raw_codex: bool) -> tuple[Optional[Any], Optional[str]]:
-    """AWS Bedrock: Claude → Anthropic Bedrock SDK (prompt caching, thinking); bare in-Region OpenAI IDs
-    → Mantle Responses; everything else, incl. OpenAI ``us.``/``global.`` profiles, → Converse API."""
-    try:
-        from agent.bedrock_adapter import (
-            has_aws_credentials, is_anthropic_bedrock_model, resolve_bedrock_runtime_region,
-            bedrock_openai_uses_mantle, bedrock_openai_base_url, resolve_bedrock_bearer_token,
-            configure_bedrock_openai_client_kwargs,
-        )
-        from agent.anthropic_adapter import build_anthropic_bedrock_client
-    except ImportError:
-        logger.warning("resolve_provider_client: bedrock requested but boto3, httpx/openai, or anthropic SDK not installed")
-        return None, None
-    if not has_aws_credentials():
-        logger.debug("resolve_provider_client: bedrock requested but no AWS credentials found")
-        return None, None
-    # Region must match the main runtime's resolution (bedrock.region in config first, then
-    # env/profile) so aux calls never leave the primary runtime's configured region.
-    # See #53880, #65076.
-    region = resolve_bedrock_runtime_region()
-    default_model = "anthropic.claude-haiku-4-5-20251001-v1:0"
-    final_model = _normalize_resolved_model(model or default_model, provider) or default_model
-    if bedrock_openai_uses_mantle(final_model):
-        # Module-level lazy ``OpenAI`` proxy on purpose so tests can patch("agent.auxiliary_client.OpenAI").
-        client_kwargs: dict[str, Any] = {
-            "api_key": resolve_bedrock_bearer_token() or "aws-sdk",
-            "base_url": bedrock_openai_base_url(region),
-        }
-        configure_bedrock_openai_client_kwargs(client_kwargs)
-        client = OpenAI(**client_kwargs)
-        logger.debug("resolve_provider_client: bedrock-openai (%s, %s)", final_model, region)
-        return (client if raw_codex else CodexAuxiliaryClient(client, final_model)), final_model
-    base_url = f"https://bedrock-runtime.{region}.amazonaws.com"
-    if is_anthropic_bedrock_model(final_model):
-        try:
-            real_client = build_anthropic_bedrock_client(region)
-        except ImportError as exc:
-            logger.warning("resolve_provider_client: cannot create Bedrock client: %s", exc)
-            return None, None
-        client = AnthropicAuxiliaryClient(real_client, final_model, api_key="aws-sdk", base_url=base_url)
-        logger.debug("resolve_provider_client: bedrock anthropic (%s, %s)", final_model, region)
-    else:
-        client = BedrockAuxiliaryClient(region, final_model)
-        logger.debug("resolve_provider_client: bedrock converse (%s, %s)", final_model, region)
-    return client, final_model
-
-
-def _build_vertex_client(provider: str, model: Optional[str]) -> tuple[Optional[Any], Optional[str]]:
-    """Google Vertex AI: Gemini via the OpenAI-compatible endpoint with an OAuth2 bearer (standard OpenAI client)."""
-    try:
-        from agent.vertex_adapter import get_vertex_config, has_vertex_credentials
-    except ImportError:
-        logger.warning("resolve_provider_client: vertex requested but google-auth not installed")
-        return None, None
-    if not has_vertex_credentials():
-        logger.debug("resolve_provider_client: vertex requested but no GCP credentials found")
-        return None, None
-    token, base_url = get_vertex_config()
-    if not token or not base_url:
-        logger.warning("resolve_provider_client: vertex requested but could not mint token / resolve project")
-        return None, None
-    final_model = _normalize_resolved_model(model or "google/gemini-3-flash-preview", provider)
-    try:
-        # Aliased import: a bare `from openai import OpenAI` would shadow the module-level lazy proxy.
-        from openai import OpenAI as _VertexOpenAI
-        client = _VertexOpenAI(api_key=token, base_url=base_url)
-    except Exception as exc:
-        logger.warning("resolve_provider_client: cannot create Vertex client: %s", exc)
-        return None, None
-    logger.debug("resolve_provider_client: vertex (%s)", final_model)
-    return client, final_model
-
-
 class _ResolveRequest(NamedTuple):
     """Normalized resolve_provider_client() arguments shared by the per-provider branch helpers."""
     provider: str
@@ -4748,38 +4537,12 @@ def _log_once_debug(seen: set, key: Any, msg: str, *args: Any) -> None:
         logger.debug(msg, *args)
 
 
-def _is_actual_auxiliary_route(req: _ResolveRequest, base_url: str) -> bool:
-    from hermes_cli.auth import normalize_actual_base_url
-    from hermes_cli.providers import is_actual_route
-    from hermes_cli.route_identity import normalize_route_base_url
-
-    if is_actual_route(req.provider, base_url):
-        return True
-    runtime = _normalize_main_runtime(req.main_runtime)
-    return bool(
-        base_url
-        and is_actual_route(runtime.get("provider", ""), runtime.get("base_url", ""))
-        and normalize_route_base_url(normalize_actual_base_url(base_url))
-        == normalize_route_base_url(
-            normalize_actual_base_url(runtime.get("base_url", ""))
-        )
-    )
-
-
 def _wrap_transport(req: _ResolveRequest, client_obj: Any, final_model_str: str,
                     base_url_str: str = "", api_key_str: str = ""):
     """Wrap a plain OpenAI client in the right transport adapter; specialized wrappers pass through.
     Codex (Responses API): explicit ``api_mode=codex_responses``, else — with no
     explicit api_mode — api.openai.com + codex model. Anthropic (Messages): ``api_mode=anthropic_messages``,
     any ``/anthropic`` suffix, ``api.kimi.com/coding``, or ``api.anthropic.com``."""
-    if _is_actual_auxiliary_route(req, base_url_str):
-        client = (
-            client_obj._real_client
-            if isinstance(client_obj, CodexAuxiliaryClient)
-            else client_obj
-        )
-        client._hermes_aux_effective_provider = "actual"
-        return client
     # OpenCode relay targets pick the wire per model; a task/provider-level api_mode is stale for
     # every other model (#98799), so it is re-derived here like the main runtime does.
     from agent.opencode_affinity import opencode_transport
@@ -4955,9 +4718,6 @@ def _resolve_custom_branch(req: _ResolveRequest) -> _ResolveResult:
         if _main_base and _main_key:
             custom_base, custom_key = _main_base, _main_key
     if custom_base and custom_key:
-        if _is_actual_auxiliary_route(req, custom_base):
-            from hermes_cli.auth import normalize_actual_base_url
-            custom_base = normalize_actual_base_url(custom_base)
         final_model = _normalize_resolved_model(
             model or (main_runtime.get("model") if main_runtime else None) or "gpt-4o-mini", provider,
         )
@@ -5025,12 +4785,7 @@ def _resolve_named_custom_branch(req: _ResolveRequest) -> Optional[_ResolveResul
         logger.warning("resolve_provider_client: named custom provider %r has no resolvable "
                        "api_key — request will be sent with placeholder no-key-required "
                        "and will 401 on auth-required endpoints", custom_entry.get("name") or provider)
-    # Actual's wire protocol takes precedence over persisted task/provider modes.
     entry_api_mode = (req.api_mode or custom_entry.get("api_mode") or "").strip()
-    if _is_actual_auxiliary_route(req, custom_base):
-        from hermes_cli.auth import normalize_actual_base_url
-        custom_base = normalize_actual_base_url(custom_base)
-        entry_api_mode = "chat_completions"
     if not custom_base:
         logger.warning("resolve_provider_client: named custom provider %r has no base_url", provider)
         return None, None
@@ -5080,16 +4835,6 @@ def _resolve_named_custom_branch(req: _ResolveRequest) -> Optional[_ResolveResul
     return _route_client(req, client, final_model)
 
 
-def _resolve_azure_foundry_branch(req: _ResolveRequest) -> _ResolveResult:
-    """Azure Foundry via the runtime resolver: the generic PROVIDER_REGISTRY path only knows the static
-    AZURE_FOUNDRY_API_KEY env var, missing ``auth_mode: entra_id`` (callable bearer) and config base_url overrides."""
-    client, default_model = _try_azure_foundry(model=req.model, explicit_api_key=req.explicit_api_key,
-                                               explicit_base_url=req.explicit_base_url, api_mode=req.api_mode)
-    return _route_or_warn(req, client, default_model,
-                          "resolve_provider_client: azure-foundry requested but "
-                          "runtime resolution failed (run: hermes doctor for diagnostics)")
-
-
 def _api_key_profile_supplied_client(provider: str, **client_kwargs: Any) -> Any | None:
     """Registered profile's own client for an ``api_key`` aux route, or ``None``.
 
@@ -5130,21 +4875,13 @@ def _resolve_api_key_branch(req: _ResolveRequest, pconfig: Any, resolve_creds: C
     raw_base_url = str(creds.get("base_url", "")).strip().rstrip("/") or pconfig.inference_base_url
     if req.explicit_base_url:
         raw_base_url = req.explicit_base_url.strip().rstrip("/")
-    if provider == "actual":
-        with contextlib.suppress(Exception):
-            from hermes_cli.auth import (
-                ACTUAL_LOCAL_NOAUTH_PLACEHOLDER, is_actual_local_base_url, normalize_actual_base_url
-            )
-            raw_base_url = normalize_actual_base_url(raw_base_url)
-            if not api_key and is_actual_local_base_url(raw_base_url):
-                api_key = ACTUAL_LOCAL_NOAUTH_PLACEHOLDER
     if not api_key:
         logger.debug("resolve_provider_client: provider %s has no API key configured (tried: %s)",
                      provider, ", ".join(pconfig.api_key_env_vars))
         return None, None
     base_url = _to_openai_base_url(raw_base_url)
     # Explicit base_url override: a fallback_model/custom_providers entry pointing a built-in name elsewhere.
-    if req.explicit_base_url and provider != "actual":
+    if req.explicit_base_url:
         base_url = _to_openai_base_url(req.explicit_base_url.strip().rstrip("/"))
     final_model = _normalize_resolved_model(req.model or _get_aux_model_for_provider(provider), provider)
     # Consulted before the built-in gemini/OpenAI ladder so a registered native transport wins (#112384).
@@ -5246,7 +4983,7 @@ def _resolve_registry_branch(req: _ResolveRequest) -> _ResolveResult:
 
 
 # Explicit providers with a dedicated branch; anything else falls through to named custom
-# providers → azure-foundry → PROVIDER_REGISTRY (order preserved from the original if-chain).
+# providers → PROVIDER_REGISTRY (order preserved from the original if-chain).
 _EXPLICIT_PROVIDER_BRANCHES: dict[str, Callable[[_ResolveRequest], _ResolveResult]] = {
     "auto": _resolve_auto_branch,
     "openrouter": _resolve_openrouter_branch,
@@ -5341,8 +5078,6 @@ def resolve_provider_client(
             return result
     if branch is not None:
         return branch(req)
-    if provider == "azure-foundry":
-        return _resolve_azure_foundry_branch(req)
     return _resolve_registry_branch(req)
 
 
@@ -6844,7 +6579,7 @@ def _aux_stream_total_ceiling(effective_timeout: Optional[float]) -> float:
 def _client_streams_internally(client: Any) -> bool:
     """Adapters that stream inside .create() tick the hook themselves (Codex, Anthropic) or
     cannot stream (Bedrock); none accept ``stream=True`` from us."""
-    return isinstance(client, (CodexAuxiliaryClient, AnthropicAuxiliaryClient, BedrockAuxiliaryClient))
+    return isinstance(client, (CodexAuxiliaryClient, AnthropicAuxiliaryClient))
 
 
 def _provider_requires_stream(provider: str, base_url: Optional[str]) -> bool:
@@ -7183,7 +6918,7 @@ async def _acreate_with_stream(client: Any, kwargs: dict[str, Any], task: Option
 
 def _async_client_streams_internally(client: Any) -> bool:
     """Async twin of :func:`_client_streams_internally` (the async adapters are separate classes)."""
-    return isinstance(client, (AsyncCodexAuxiliaryClient, AsyncAnthropicAuxiliaryClient, AsyncBedrockAuxiliaryClient))
+    return isinstance(client, (AsyncCodexAuxiliaryClient, AsyncAnthropicAuxiliaryClient))
 
 
 async def _acreate_with_progress(

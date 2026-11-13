@@ -2319,12 +2319,8 @@ _FALLBACK_COMMENT = """
 #   openrouter   (OPENROUTER_API_KEY)  — routes to any model
 #   openai-codex (OAuth — hermes auth) — OpenAI Codex
 #   nous         (OAuth — hermes auth) — Nous Portal
-#   zai          (ZAI_API_KEY)         — Z.AI / GLM
-#   kimi-coding  (KIMI_API_KEY)        — Kimi / Moonshot
-#   kimi-coding-cn (KIMI_CN_API_KEY)   — Kimi / Moonshot (China)
-#   minimax      (MINIMAX_API_KEY)     — MiniMax
-#   minimax-cn   (MINIMAX_CN_API_KEY)  — MiniMax (China)
-#   bedrock      (AWS IAM / boto3)     — AWS Bedrock (Converse API)
+#   anthropic    (ANTHROPIC_API_KEY)   — Anthropic
+#   lmstudio     (LM_API_KEY, optional) — LM Studio
 #
 # For custom OpenAI-compatible endpoints, add base_url and key_env.
 #

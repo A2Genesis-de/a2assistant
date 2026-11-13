@@ -1352,9 +1352,6 @@ def openrouter_variant_base(model_id: str) -> str | None:
     return None
 
 
-AI_GATEWAY_BASE_URL = "https://ai-gateway.vercel.sh/v1"
-
-
 def venv_bin_dir(venv_dir, *, windows: bool | None = None) -> Path:
     """Frozen updater surface: pre-PM updaters import this name; pm.environments owns it."""
     from pm.environments import venv_bin_dir as resolve

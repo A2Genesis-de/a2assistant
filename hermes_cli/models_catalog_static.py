@@ -73,18 +73,6 @@ _OPENROUTER_ONLY = {
 }
 
 
-# Fallback Vercel AI Gateway snapshot (open-weight first, then closed-source by family). Slugs
-# match Vercel's /v1/models catalog (``alibaba/`` for Qwen, ``zai/`` and ``xai/`` without hyphens).
-VERCEL_AI_GATEWAY_MODELS: list[tuple[str, str]] = [("moonshotai/kimi-k2.6", "recommended")] + [
-    (mid, "") for mid in (
-        "alibaba/qwen3.6-plus", "zai/glm-5.1", "minimax/minimax-m2.7", "anthropic/claude-sonnet-4.6",
-        "anthropic/claude-opus-4.7", "anthropic/claude-opus-4.6", "anthropic/claude-haiku-4.5",
-        "openai/gpt-5.4", "openai/gpt-5.4-mini", "openai/gpt-5.3-codex", "google/gemini-3.1-pro-preview",
-        "google/gemini-3-flash", "google/gemini-3.1-flash-lite-preview", "xai/grok-4.20-reasoning",
-    )
-]
-
-
 def _codex_curated_models() -> list[str]:
     """openai-codex curated list from codex_models.py (DEFAULT_CODEX_MODELS + forward-compat
     synthesis) so the gateway /model picker and the CLI ``hermes model`` flow share one source."""
@@ -129,7 +117,7 @@ def _xai_finalize_catalog(ids: list[str]) -> list[str]:
 
 
 def _xai_curated_models() -> list[str]:
-    """Offline curated floor for xAI / xAI OAuth pickers: $HERMES_HOME/models_dev_cache.json
+    """Offline curated floor for the xAI OAuth picker: $HERMES_HOME/models_dev_cache.json
     (no network), else ``_XAI_STATIC_FALLBACK``. Any failure falls through to the static list.
     Reads through the process-wide models.dev copy, so the parse is the one every later reader shares."""
     try:
@@ -146,7 +134,7 @@ def _xai_curated_models() -> list[str]:
     return _xai_finalize_catalog(list(_XAI_STATIC_FALLBACK))
 
 
-_XAI_ROWS = ("xai", "xai-oauth")
+_XAI_ROWS = ("xai-oauth",)
 
 
 class _CuratedCatalog(dict):
@@ -200,26 +188,7 @@ class _CuratedCatalog(dict):
 _OPENAI_CHAT_MODELS = [
     "gpt-5.4", "gpt-5.4-mini", "gpt-5-mini", "gpt-5.3-codex", "gpt-5.2-codex", "gpt-4.1", "gpt-4o", "gpt-4o-mini",
 ]
-_MINIMAX_MODELS = ["MiniMax-M3", "MiniMax-M2.7", "MiniMax-M2.5", "MiniMax-M2.1", "MiniMax-M2"]
-_TENCENT_MODELS = ["hy4-preview", "hy3", "hy3-preview"]
-# Alibaba DashScope Coding platform (coding-intl): Qwen + third-party (GLM, Kimi, MiniMax, DeepSeek).
-# Classic DashScope keys should override DASHSCOPE_BASE_URL to
-# https://dashscope-intl.aliyuncs.com/compatible-mode/v1 (OpenAI-compat) or /apps/anthropic.
-_ALIBABA_MODELS = [
-    "qwen3.8-max", "qwen3.7-max", "qwen3.7-plus", "qwen3.6-plus", "qwen3.6-flash", "kimi-k2.5",
-    "qwen3.5-plus", "qwen3-coder-plus", "qwen3-coder-next", "glm-5.2", "glm-5", "glm-4.7",
-    "deepseek-v4-pro", "deepseek-v4-flash-0731", "MiniMax-M2.5",
-]
-_ALIBABA_CODING_PLAN_MODELS = [
-    "qwen3.7-plus", "qwen3.6-plus", "qwen3.5-plus", "qwen3-max-2026-01-23", "qwen3-coder-plus",
-    "qwen3-coder-next", "kimi-k2.5", "glm-5", "glm-4.7", "MiniMax-M2.5",
-]
-# Verified against a live Token Plan subscription (key tier ``sk-sp-...``).
-_ALIBABA_TOKEN_PLAN_MODELS = [
-    "qwen3.8-max-0902", "qwen3.7-max", "qwen3.7-plus", "qwen3.6-plus", "qwen3.6-flash", "deepseek-v4-pro",
-    "deepseek-v4-flash", "deepseek-v3.2", "kimi-k2.7-code", "kimi-k2.6", "kimi-k2.5", "glm-5.2", "glm-5.1", "glm-5",
-]
-# Curated per-provider lists. ``-cn`` twins share the international catalog on a domestic endpoint.
+# Curated per-provider lists.
 _PROVIDER_MODELS: dict[str, list[str]] = _CuratedCatalog({
     "moa": ["default"],
     "nous": [mid for mid, _ in OPENROUTER_MODELS if mid not in _OPENROUTER_ONLY and not mid.endswith(":free")],
@@ -233,128 +202,12 @@ _PROVIDER_MODELS: dict[str, list[str]] = _CuratedCatalog({
     ],
     "openai-codex": _codex_curated_models(),
     "xai-oauth": _xai_finalize_catalog(list(_XAI_STATIC_FALLBACK)),
-    "gemini": [
-        # Argon second: [0] is the silent default when no model is configured, and a flagship never is.
-        "gemini-3.8-flash", "gemini-4-argon", "gemini-3.7-flash",
-        "gemini-3.1-pro-preview", "gemini-3-pro-preview", "gemini-3.6-flash", "gemini-3.1-flash-lite-preview",
-    ],
-    "zai": [
-        "glm-5.3", "glm-5.3-flash", "glm-5.2", "glm-5.1", "glm-5", "glm-5v-turbo", "glm-5-turbo",
-        "glm-4.7", "glm-4.5", "glm-4.5-flash",
-    ],
-    "xai": _xai_finalize_catalog(list(_XAI_STATIC_FALLBACK)),
-    # Nemotron flagships, then third-party agentic models hosted on build.nvidia.com.
-    "nvidia": [
-        "nvidia/nemotron-3.5-super-vl-120b-a12b", "nvidia/nemotron-3-ultra-550b-a55b", "nvidia/nemotron-3-super-120b-a12b",
-        "nvidia/nemotron-3.5-lightning-30b-a3b", "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
-        "z-ai/glm-5.3", "z-ai/glm-5.2", "moonshotai/kimi-k2.6", "minimaxai/minimax-m3",
-    ],
-    "kimi-coding": [
-        "kimi-k3", "kimi-k2.7-code", "kimi-k2.6", "kimi-k2.5", "kimi-for-coding", "kimi-for-coding-highspeed",
-        "kimi-k2-thinking", "kimi-k2-thinking-turbo", "kimi-k2-turbo-preview", "kimi-k2-0905-preview",
-    ],
-    "kimi-coding-cn": [
-        "kimi-k3", "kimi-k2.7-code", "kimi-k2.7-code-highspeed", "kimi-k2.6", "kimi-k2.5",
-        "kimi-k2-thinking", "kimi-k2-turbo-preview", "kimi-k2-0905-preview",
-    ],
-    "stepfun": ["step-3.7-flash", "step-3.5-flash", "step-3.5-flash-2603"],
-    "moonshot": [
-        "kimi-k3", "kimi-k2.6", "kimi-k2.5", "kimi-k2-thinking", "kimi-k2-turbo-preview", "kimi-k2-0905-preview",
-    ],
-    "minimax": list(_MINIMAX_MODELS),
-    "minimax-oauth": ["MiniMax-M3", "MiniMax-M2.7", "MiniMax-M2.7-highspeed"],
-    "minimax-cn": list(_MINIMAX_MODELS),
     "anthropic": [
         "claude-fable-5-2", "claude-fable-5.1", "claude-fable-5", "claude-opus-5-5", "claude-opus-5", "claude-sonnet-5",
         "claude-opus-4-8", "claude-opus-4-7", "claude-opus-4-6",
         "claude-sonnet-4-6", "claude-opus-4-5-20251101", "claude-sonnet-4-5-20250929",
         "claude-opus-4-20250514", "claude-sonnet-4-20250514", "claude-haiku-4-5-20251001",
     ],
-    "deepseek": ["deepseek-flash", "deepseek-v4-pro"],
-    "xiaomi": [
-        "mimo-v2.6-pro", "mimo-v2.6-flash", "mimo-v2.6-pro-ultraspeed",
-        "mimo-v2.5-pro", "mimo-v2.5", "mimo-v2-pro", "mimo-v2-omni", "mimo-v2-flash",
-    ],
-    "tencent-tokenhub": list(_TENCENT_MODELS),
-    "tencent-tokenplan": list(_TENCENT_MODELS),
-    "arcee": ["trinity-large-thinking", "trinity-large-preview", "trinity-mini"],
-    "gmi": [
-        "zai-org/GLM-5.1-FP8", "deepseek-ai/DeepSeek-V3.2", "moonshotai/Kimi-K2.5",
-        "google/gemini-3.1-flash-lite-preview", "anthropic/claude-sonnet-5",
-        "anthropic/claude-sonnet-4.6", "openai/gpt-5.4",
-    ],
-    # Synced against opencode.ai/docs/zen + live GET /zen/v1/models. Zen/Go are
-    # _LIVE_FIRST_PICKER_PROVIDERS, so this is a discovery floor: live entries lead in the picker
-    # and stale curated names never pollute the top. "x-preview-f-free" = "Ox Alpha" stealth model.
-    "opencode-zen": [
-        "x-preview-f-free", "kimi-k3", "kimi-k2.5", "kimi-k2.6", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna",
-        "gpt-5.5", "gpt-5.5-pro", "gpt-5.4-pro", "gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano", "gpt-5.3-codex",
-        "gpt-5.3-codex-spark", "gpt-5.2", "gpt-5.2-codex", "gpt-5.1", "gpt-5.1-codex", "gpt-5.1-codex-max",
-        "gpt-5.1-codex-mini", "gpt-5", "gpt-5-codex", "gpt-5-nano", "claude-fable-5", "claude-opus-5",
-        "claude-sonnet-5", "claude-opus-4-8", "claude-opus-4-7", "claude-opus-4-6", "claude-opus-4-5",
-        "claude-sonnet-4-6", "claude-sonnet-4-5", "claude-sonnet-4", "claude-haiku-4-5", "gemini-3.8-flash",
-        "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.1-pro", "gemini-3-flash",
-        "grok-4.6", "grok-4.5", "grok-build-0.1", "muse-spark-1.2", "minimax-m3", "minimax-m2.7", "minimax-m2.5",
-        "glm-5.3", "glm-5.3-flash", "glm-5.2", "glm-5.1", "glm-5", "kimi-k2.7-code", "deepseek-v4-pro",
-        "deepseek-v4-flash", "qwen3.6-plus", "qwen3.5-plus", "big-pickle", "mimo-v2.5-free",
-        "nemotron-3-ultra-free", "nemotron-3.5-lightning-free",
-        "muse-spark-1.2-contributor-free", "muse-spark-1.3-contributor-free",
-    ],
-    # Synced against opencode.ai/docs/go + live GET /zen/go/v1/models. Known-delisted models are
-    # REMOVED (the live-first merge would otherwise keep offering a model that 401s): "ox-alpha-free"
-    # — the Go-subscription twin of Zen's Ox Alpha — was delisted 2026-09-09.
-    "opencode-go": [
-        "kimi-k3", "kimi-k2.7-code", "kimi-k2.6", "kimi-k2.5", "gpt-5.6-luna", "grok-4.5", "glm-5.3",
-        "glm-5.3-flash", "glm-5.2", "glm-5.1", "glm-5", "mimo-v2.5-pro", "mimo-v2.5", "mimo-v2-pro",
-        "mimo-v2-omni", "minimax-m3", "minimax-m2.7", "minimax-m2.5", "deepseek-v4-pro",
-        "deepseek-v4-flash", "qwen3.8-max", "qwen3.7-max", "qwen3.7-plus", "qwen3.6-plus",
-        "qwen3.5-plus", "hy3", "hy3-preview", "muse-spark-1.2-contributor", "muse-spark-1.3-contributor",
-    ],
-    "kilocode": [
-        "anthropic/claude-opus-4.6", "anthropic/claude-sonnet-4.6", "openai/gpt-5.4",
-        "google/gemini-3-pro-preview", "google/gemini-3-flash-preview",
-    ],
-    "alibaba": list(_ALIBABA_MODELS),
-    "alibaba-cn": list(_ALIBABA_MODELS),
-    "alibaba-coding-plan": list(_ALIBABA_CODING_PLAN_MODELS),
-    "alibaba-coding-plan-cn": list(_ALIBABA_CODING_PLAN_MODELS),
-    "alibaba-token-plan": list(_ALIBABA_TOKEN_PLAN_MODELS),
-    "alibaba-token-plan-cn": list(_ALIBABA_TOKEN_PLAN_MODELS),
-    # Only agentic HF models that map to OpenRouter defaults.
-    "huggingface": [
-        "moonshotai/Kimi-K2.5", "Qwen/Qwen3.5-397B-A17B", "Qwen/Qwen3.5-35B-A3B",
-        "deepseek-ai/DeepSeek-V3.2", "MiniMaxAI/MiniMax-M2.5", "zai-org/GLM-5",
-        "XiaomiMiMo/MiMo-V2-Flash", "moonshotai/Kimi-K2-Thinking", "moonshotai/Kimi-K2.6",
-    ],
-    # Static fallback when live discovery (ListFoundationModels + ListInferenceProfiles) is
-    # unavailable. Inference-profile IDs (us.*) because most models require them.
-    "bedrock": [
-        # [0] is the provider default (get_default_model_for_provider) — keep the cheaper Sonnet there.
-        "us.anthropic.claude-sonnet-5", "us.anthropic.claude-opus-5-5", "us.anthropic.claude-sonnet-4-6",
-        "us.anthropic.claude-opus-4-6-v1",
-        "us.anthropic.claude-haiku-4-5-20251001-v1:0", "us.anthropic.claude-sonnet-4-5-20250929-v1:0",
-        "openai.gpt-6-astra", "openai.gpt-6.1-sol", "openai.gpt-6.1-terra", "openai.gpt-6-sol", "openai.gpt-6-luna",
-        "openai.gpt-5.5", "openai.gpt-5.6-sol", "openai.gpt-5.6-terra", "openai.gpt-5.6-luna", "openai.gpt-5.4",
-        "us.amazon.nova-pro-v1:0", "us.amazon.nova-lite-v1:0", "us.amazon.nova-micro-v1:0", "deepseek.v3.2",
-        "us.meta.llama4-maverick-17b-instruct-v1:0", "us.meta.llama4-scout-17b-instruct-v1:0",
-    ],
-    # Azure Foundry models depend on the user's endpoint configuration.
-    "azure-foundry": [],
-    # Vertex's OpenAI-compatible endpoint has no /models route, so without this the /model picker
-    # only shows the configured model. IDs carry the "google/" publisher prefix Vertex expects
-    # (see hermes_cli/model_setup_flows.py); validated live against a GCP project (global region).
-    "vertex": [
-        "google/gemini-3.8-flash", "google/gemini-4-argon", "google/gemini-3.7-flash",  # [0] = silent default
-        "google/gemini-3.1-pro-preview", "google/gemini-3-pro-preview", "google/gemini-3.6-flash",
-        "google/gemini-3.5-flash", "google/gemini-3.5-flash-lite", "google/gemini-3-flash-preview",
-        "google/gemini-3.1-flash-lite-preview", "google/gemini-3.1-flash-lite",
-    ],
-    "novita": [
-        "moonshotai/kimi-k2.5", "minimax/minimax-m2.7", "zai-org/glm-5", "deepseek/deepseek-v3-0324",
-        "deepseek/deepseek-r1-0528", "qwen/qwen3-235b-a22b-fp8",
-    ],
-    # Bare ids derived from the picker snapshot so both stay in sync.
-    "ai-gateway": [mid for mid, _ in VERCEL_AI_GATEWAY_MODELS],
 })
 
 
@@ -373,41 +226,13 @@ class ProviderEntry(NamedTuple):
 
 CANONICAL_PROVIDERS: list[ProviderEntry] = [ProviderEntry(*row) for row in (
     ("nous", "Nous Portal", "Nous Portal (Everything your agent needs, 300+ models with bundled tool use)"),
-    ("fireworks", "Fireworks AI", "Fireworks AI (OpenAI-compatible direct model API)"),
     ("openrouter", "OpenRouter", "OpenRouter (Pay-per-use API aggregator)"),
     ("moa", "Mixture of Agents", "Mixture of Agents (named presets; aggregator acts after reference models)"),
-    ("novita", "NovitaAI", "NovitaAI (Cloud: Model API, Agent Sandbox, GPU Cloud)"),
     ("lmstudio", "LM Studio", "LM Studio (Local desktop app with built-in model server)"),
     ("anthropic", "Anthropic", "Anthropic (Claude models via API key or Claude Code)"),
     ("openai-codex", "ChatGPT or Codex Subscription", "ChatGPT or Codex Subscription (Sign in with your ChatGPT account, uses Codex models)"),
     ("openai-api", "OpenAI API", "OpenAI API (api.openai.com, API key)"),
-    ("alibaba", "Qwen Cloud", "Qwen Cloud / DashScope (Qwen + multi-provider)"),
     ("xai-oauth", "xAI Grok OAuth (SuperGrok / Premium+)", "xAI Grok OAuth (SuperGrok / Premium+ subscription)"),
-    ("xiaomi", "Xiaomi MiMo", "Xiaomi MiMo (MiMo-V2.5 and V2 models: pro, omni, flash)"),
-    ("tencent-tokenhub", "Tencent TokenHub", "Tencent TokenHub (Hy4 preview via tokenhub.tencentmaas.com)"),
-    ("tencent-tokenplan", "Tencent TokenPlan", "Tencent TokenPlan (Hy4 preview via api.lkeap.cloud.tencent.com, Anthropic Messages)"),
-    ("nvidia", "NVIDIA NIM", "NVIDIA NIM (Nemotron models via build.nvidia.com or local NIM)"),
-    ("huggingface", "Hugging Face", "Hugging Face Inference Providers"),
-    ("gemini", "Google AI Studio", "Google AI Studio (Native Gemini API)"),
-    ("vertex", "Google Vertex AI", "Google Vertex AI (Gemini via GCP; OAuth2 service account or ADC, GCP billing/quotas)"),
-    ("deepseek", "DeepSeek", "DeepSeek (V3, R1, coder, direct API)"), ("xai", "xAI", "xAI Grok (Direct API)"),
-    ("zai", "Z.AI / GLM", "Z.AI / GLM (Zhipu direct API)"),
-    ("kimi-coding", "Kimi / Kimi Coding Plan", "Kimi Coding Plan (api.kimi.com & Moonshot API)"),
-    ("kimi-coding-cn", "Kimi / Moonshot (China)", "Kimi / Moonshot China (Domestic direct API)"),
-    ("stepfun", "StepFun Step Plan", "StepFun Step Plan (Agent / coding models via Step Plan API)"),
-    ("minimax", "MiniMax", "MiniMax (Global direct API)"),
-    ("minimax-oauth", "MiniMax (OAuth)", "MiniMax via OAuth browser login (Coding Plan, minimax.io)"),
-    ("minimax-cn", "MiniMax (China)", "MiniMax China (Domestic direct API)"),
-    ("ollama-cloud", "Ollama Cloud", "Ollama Cloud (Cloud-hosted open models, ollama.com)"),
-    ("arcee", "Arcee AI", "Arcee AI (Trinity models, direct API)"),
-    ("gmi", "GMI Cloud", "GMI Cloud (Multi-model direct API)"),
-    ("kilocode", "Kilo Code", "Kilo Code (Kilo Gateway API)"),
-    ("opencode-zen", "OpenCode Zen", "OpenCode Zen (Curated models, pay-as-you-go)"),
-    ("opencode-go", "OpenCode Go", "OpenCode Go (Open models subscription)"),
-    ("bedrock", "AWS Bedrock", "AWS Bedrock (Claude, Nova, Llama, DeepSeek; IAM or API key)"),
-    ("azure-foundry", "Azure Foundry", "Azure Foundry (OpenAI-style or Anthropic-style endpoint, your Azure AI deployment)"),
-    ("ai-gateway", "Vercel AI Gateway", "Vercel AI Gateway (Multi-model aggregator)"),
-    ("qwen-oauth", "Qwen OAuth (Portal)", "Qwen OAuth (Reuses local Qwen CLI login)"),
 )]
 
 
@@ -504,14 +329,7 @@ def listed_canonical_providers() -> list[ProviderEntry]:
 # Member order is the order shown inside the group submenu; member detail lives in ``tui_desc``.
 # ---------------------------------------------------------------------------
 PROVIDER_GROUPS: dict[str, tuple[str, str, list[str]]] = {
-    "kimi":     ("Kimi / Moonshot", "Coding Plan, Moonshot global & China endpoints", ["kimi-coding", "kimi-coding-cn"]),
-    "minimax":  ("MiniMax",         "Global, OAuth Coding Plan & China endpoints",     ["minimax", "minimax-oauth", "minimax-cn"]),
-    "xai":      ("xAI Grok",        "Direct API or SuperGrok / Premium+ OAuth",        ["xai", "xai-oauth"]),
-    "google":   ("Google Gemini",   "Google AI Studio (API key)",                     ["gemini"]),
     "openai":   ("OpenAI",          "ChatGPT/Codex subscription or direct OpenAI API", ["openai-codex", "openai-api"]),
-    "qwen":     ("Qwen",            "Qwen Cloud / DashScope, Coding Plan, Token Plan & Qwen CLI OAuth", ["alibaba", "alibaba-cn", "alibaba-coding-plan", "alibaba-coding-plan-cn", "alibaba-token-plan", "alibaba-token-plan-cn", "qwen-oauth"]),
-    "opencode": ("OpenCode",        "Zen pay-as-you-go or Go subscription", ["opencode-zen", "opencode-go"]),
-    "tencent":  ("Tencent Hy",      "Hy4 / Hy3 via TokenHub & TokenPlan", ["tencent-tokenhub", "tencent-tokenplan"]),
 }
 
 # Reverse index: member slug -> group_id.
@@ -613,33 +431,11 @@ class _CatalogAliases(dict):
 
 
 _PROVIDER_ALIASES = _CatalogAliases((
-    ("glm", "zai"), ("z-ai", "zai"), ("z.ai", "zai"), ("zhipu", "zai"), ("google", "gemini"),
-    ("google-gemini", "gemini"), ("google-ai-studio", "gemini"), ("google-vertex", "vertex"), ("vertex-ai", "vertex"),
-    ("gcp-vertex", "vertex"), ("vertexai", "vertex"), ("kimi", "kimi-coding"), ("moonshot", "kimi-coding"),
-    ("kimi-cn", "kimi-coding-cn"), ("moonshot-cn", "kimi-coding-cn"), ("step", "stepfun"),
-    ("stepfun-coding-plan", "stepfun"), ("arcee-ai", "arcee"), ("arceeai", "arcee"), ("gmi-cloud", "gmi"),
-    ("gmicloud", "gmi"), ("fireworks-ai", "fireworks"), ("fw", "fireworks"), ("actual-computer", "actual"),
-    ("actualcomputer", "actual"), ("aci", "actual"), ("nebius", "nebius-token-factory"),
-    ("nebius-tokenfactory", "nebius-token-factory"), ("nebius-tf", "nebius-token-factory"),
-    ("token-factory", "nebius-token-factory"), ("tokenfactory", "nebius-token-factory"),
-    ("minimax-china", "minimax-cn"), ("minimax_cn", "minimax-cn"), ("minimax-portal", "minimax-oauth"),
-    ("minimax-global", "minimax-oauth"), ("minimax_oauth", "minimax-oauth"), ("claude", "anthropic"),
-    ("claude-code", "anthropic"), ("deep-seek", "deepseek"), ("opencode", "opencode-zen"), ("zen", "opencode-zen"),
-    ("go", "opencode-go"), ("opencode-go-sub", "opencode-go"), ("aigateway", "ai-gateway"), ("vercel", "ai-gateway"),
-    ("vercel-ai-gateway", "ai-gateway"), ("kilo", "kilocode"), ("kilo-code", "kilocode"),
-    ("kilo-gateway", "kilocode"), ("dashscope", "alibaba"), ("aliyun", "alibaba"), ("qwen", "alibaba"),
-    ("alibaba-cloud", "alibaba"), ("qwen-portal", "qwen-oauth"), ("hf", "huggingface"),
-    ("hugging-face", "huggingface"), ("huggingface-hub", "huggingface"), ("novita-ai", "novita"),
-    ("novitaai", "novita"), ("mimo", "xiaomi"), ("xiaomi-mimo", "xiaomi"), ("tencent", "tencent-tokenhub"),
-    ("tokenhub", "tencent-tokenhub"), ("tencent-cloud", "tencent-tokenhub"), ("tencentmaas", "tencent-tokenhub"),
-    ("tokenplan", "tencent-tokenplan"), ("tencent-lkeap", "tencent-tokenplan"), ("aws", "bedrock"),
-    ("aws-bedrock", "bedrock"), ("amazon-bedrock", "bedrock"), ("amazon", "bedrock"), ("grok", "xai"),
-    ("grok-oauth", "xai-oauth"), ("xai-oauth", "xai-oauth"), ("x-ai-oauth", "xai-oauth"),
-    ("xai-grok-oauth", "xai-oauth"), ("x-ai", "xai"), ("x.ai", "xai"), ("nim", "nvidia"), ("nvidia-nim", "nvidia"),
-    ("build-nvidia", "nvidia"), ("nemotron", "nvidia"), ("lmstudio", "lmstudio"), ("lm-studio", "lmstudio"),
-    ("lm_studio", "lmstudio"), ("chatgpt", "openai-codex"), ("chatgpt-codex", "openai-codex"),
-    ("ollama", "custom"),  # bare "ollama" = local; use "ollama-cloud" for cloud
-    ("ollama_cloud", "ollama-cloud"),
+    ("claude", "anthropic"), ("claude-code", "anthropic"),
+    ("grok-oauth", "xai-oauth"), ("xai-oauth", "xai-oauth"), ("x-ai-oauth", "xai-oauth"), ("xai-grok-oauth", "xai-oauth"),
+    ("lmstudio", "lmstudio"), ("lm-studio", "lmstudio"), ("lm_studio", "lmstudio"),
+    ("chatgpt", "openai-codex"), ("chatgpt-codex", "openai-codex"),
+    ("ollama", "custom"),
     # Local OpenAI-compatible servers route through the generic "custom" provider
     # (parity with hermes_cli.auth and hermes_cli.providers). Issue #62213. The llamacpp
     # aliases stay unmapped: they are the managed local runtime's picker id, and the model
@@ -668,15 +464,8 @@ PREFERRED_SILENT_DEFAULT_MODEL = "z-ai/glm-5.3"
 _SILENT_DEFAULT_PROVIDERS: frozenset[str] = frozenset({"nous", "openrouter"})
 
 
-# Retired model IDs kept for /model auto-detect only — not shown in pickers. DeepSeek cut these
-# off; model_normalize remaps them on the wire.
-_PROVIDER_RETIRED_ALIASES: dict[str, tuple[str, ...]] = {
-    "deepseek": ("deepseek-chat", "deepseek-reasoner"),
-}
-
-
 # Plugin profiles with ``aggregator=True`` join at sync time (``sync_plugin_provider_catalog``).
-_AGGREGATOR_PROVIDERS: set[str] = {"nous", "openrouter", "ai-gateway", "kilocode"}
+_AGGREGATOR_PROVIDERS: set[str] = {"nous", "openrouter"}
 sync_plugin_provider_catalog()  # every table it extends is defined above
 
 
@@ -684,13 +473,6 @@ sync_plugin_provider_catalog()  # every table it extends is defined above
 # resort for bare short-alias resolution (after every native-vendor catalog) so they never hijack
 # an alias from the model's native vendor. None currently defined.
 _BORROWED_MODEL_PROVIDERS: frozenset[str] = frozenset()
-
-
-# Providers whose live /v1/models is the authoritative catalog: the picker merges live-first (live
-# entries lead, curated-only append). Every OTHER provider keeps curated-first so a deliberately
-# surfaced newest model stays on top when the live API lags. Zen/Go re-expose dozens of vendors
-# and rotate them often, so their stale curated entries must not pollute the top.
-_LIVE_FIRST_PICKER_PROVIDERS: frozenset[str] = frozenset({"opencode-zen", "opencode-go", "meta-ai"})
 
 
 # Models supporting OpenAI Priority Processing (service_tier="priority"; see
@@ -712,13 +494,6 @@ _OPENAI_ULTRAFAST_MODELS: frozenset[str] = frozenset({"gpt-6-astra", "gpt-6.1-so
 # /models are the subscription-tier source of truth), and providers with dedicated live-endpoint
 # branches or a profile catalog hook (anthropic, ai-gateway, ollama-cloud, custom, stepfun, openai-codex).
 _MODELS_DEV_PREFERRED: frozenset[str] = frozenset({
-    "opencode-go", "opencode-zen", "kilocode", "fireworks", "mistral", "togetherai", "cohere",
-    "perplexity", "groq", "nvidia", "huggingface", "zai", "gemini", "google", "xai", "xai-oauth",
+    "mistral", "togetherai", "cohere", "perplexity", "groq", "google", "xai-oauth",
 })
 
-
-# Azure Foundry model families that require the Responses API: Azure rejects /chat/completions
-# against them with ``400 "The requested operation is unsupported."`` (seen on gpt-5.3-codex while
-# gpt-4o on the same endpoint worked). Broad enough for vendor-renamed deployments (gpt-5.x-codex,
-# o1-preview), tight enough to leave GPT-4 / 3.5 / Llama / Mistral / Grok on chat completions.
-_AZURE_FOUNDRY_RESPONSES_PREFIXES = ("codex", "gpt-5", "o1", "o3", "o4")

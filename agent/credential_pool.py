@@ -42,8 +42,6 @@ from hermes_cli.auth import (
     _load_auth_store,
     _load_provider_state,
     _load_provider_state_with_source,
-    _resolve_kimi_base_url,
-    _resolve_zai_base_url,
     _same_path,
     _save_auth_store,
     _save_provider_state,
@@ -2661,53 +2659,6 @@ def _profile_seeds_pool(provider: str) -> bool:
     return profile is not None and type(profile).seed_pool_credentials is not ProviderProfile.seed_pool_credentials
 
 
-def _seed_qwen_singleton(seed: _Seeder) -> None:
-    # Qwen OAuth tokens live in ~/.qwen/oauth_creds.json (written by the Qwen
-    # CLI). refresh_if_expiring=False avoids network calls during pool loading.
-    try:
-        from hermes_cli.auth import resolve_qwen_runtime_credentials
-        creds = resolve_qwen_runtime_credentials(refresh_if_expiring=False)
-        token = creds.get("api_key", "")
-        if token:
-            source_name = creds.get("source", "qwen-cli")
-            seed.upsert(source_name, {
-                "auth_type": AUTH_TYPE_OAUTH,
-                "access_token": token,
-                "expires_at_ms": creds.get("expires_at_ms"),
-                "base_url": creds.get("base_url", ""),
-                "label": creds.get("auth_file", source_name),
-            })
-    except Exception as exc:
-        logger.debug("Qwen OAuth token seed failed: %s", exc)
-
-
-def _seed_minimax_singleton(seed: _Seeder) -> None:
-    # Read the raw auth.json state rather than resolve_minimax_oauth_runtime_credentials,
-    # which always refreshes on expiry (surprise network calls during discovery).
-    try:
-        from hermes_cli.auth import get_provider_auth_state
-        state = get_provider_auth_state("minimax-oauth")
-        if not (state and state.get("access_token")):
-            return
-        expires_at_ms = None
-        try:
-            raw = state.get("expires_at", "")
-            if raw:
-                expires_at_ms = int(datetime.fromisoformat(raw).timestamp() * 1000)
-        except Exception:
-            expires_at_ms = None
-        seed.upsert("oauth", {
-            "auth_type": AUTH_TYPE_OAUTH,
-            "access_token": state["access_token"],
-            "refresh_token": state.get("refresh_token"),
-            "expires_at_ms": expires_at_ms,
-            "base_url": str(state.get("inference_base_url", "") or "").rstrip("/"),
-            "label": state.get("label", "") or label_from_token(state.get("access_token", ""), "oauth"),
-        })
-    except Exception as exc:
-        logger.debug("MiniMax OAuth token seed failed: %s", exc)
-
-
 def _seed_tokens_singleton(seed: _Seeder, auth_store: dict[str, Any]) -> None:
     """Codex / xAI: surface the auth.json ``providers.<id>.tokens`` singleton as ``device_code``.
 
@@ -2745,10 +2696,6 @@ def _seed_from_singletons(provider: str, entries: list[PooledCredential]) -> tup
         _seed_anthropic_singletons(seed)
     elif provider == "nous":
         _seed_nous_singleton(seed, auth_store)
-    elif provider == "qwen-oauth":
-        _seed_qwen_singleton(seed)
-    elif provider == "minimax-oauth":
-        _seed_minimax_singleton(seed)
     elif provider in _TOKENS_SINGLETON_PROVIDERS:
         # `hermes auth remove openai-codex` suppresses device_code; without
         # this gate the removal is undone on the next load_pool().
@@ -2823,13 +2770,6 @@ def _env_payload(*, env_var: str, token: str, base_url: str) -> dict[str, Any]:
     return payload
 
 
-# Region-specific endpoints inferred from the key itself.
-_ENV_BASE_URL_RESOLVERS = {
-    "kimi-coding": _resolve_kimi_base_url,
-    "zai": _resolve_zai_base_url,
-}
-
-
 def _env_key_var_candidates(env_vars: list[str], entries: list[PooledCredential]) -> list[str]:
     """*env_vars*, their numbered siblings, and the ``env:VAR`` names already persisted.
 
@@ -2887,14 +2827,11 @@ def _seed_from_env(provider: str, entries: list[PooledCredential]) -> tuple[bool
         env_vars = ["ANTHROPIC_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY"]
     env_vars = _env_key_var_candidates(env_vars, entries)
 
-    resolve_base_url = _ENV_BASE_URL_RESOLVERS.get(provider)
     for env_var in env_vars:
         token = get_env_prefer_dotenv(env_var)
         if not token:
             continue
         base_url = env_url or pconfig.inference_base_url
-        if resolve_base_url is not None:
-            base_url = resolve_base_url(token, pconfig.inference_base_url, env_url)
         seed.upsert(f"env:{env_var}", _env_payload(env_var=env_var, token=token, base_url=base_url))
     return seed.result
 

@@ -232,12 +232,7 @@ _API_KEYS = [
     ("OPENROUTER_API_KEY", "openrouter"), ("OPENAI_API_KEY", "openai"),
     ("ANTHROPIC_API_KEY", "anthropic"), ("ANTHROPIC_TOKEN", "anthropic_token"),
     ("NOUS_API_KEY", "nous"), ("GOOGLE_API_KEY", "google/gemini"), ("GEMINI_API_KEY", "gemini"),
-    ("GLM_API_KEY", "glm/zai"), ("ZAI_API_KEY", "zai"), ("KIMI_API_KEY", "kimi"),
-    ("MINIMAX_API_KEY", "minimax"), ("DEEPSEEK_API_KEY", "deepseek"),
-    ("DASHSCOPE_API_KEY", "dashscope"), ("HF_TOKEN", "huggingface"), ("NVIDIA_API_KEY", "nvidia"),
-    ("AI_GATEWAY_API_KEY", "ai_gateway"), ("OPENCODE_ZEN_API_KEY", "opencode_zen"),
-    ("OPENCODE_GO_API_KEY", "opencode_go"), ("COMMANDCODE_API_KEY", "commandcode"),
-    ("KILOCODE_API_KEY", "kilocode"), ("FIRECRAWL_API_KEY", "firecrawl"), ("TAVILY_API_KEY", "tavily"), ("PERPLEXITY_API_KEY", "perplexity"),
+    ("MINIMAX_API_KEY", "minimax"), ("FIRECRAWL_API_KEY", "firecrawl"), ("TAVILY_API_KEY", "tavily"), ("PERPLEXITY_API_KEY", "perplexity"),
     ("KEENABLE_API_KEY", "keenable"), ("FAL_KEY", "fal"),
     ("GITHUB_TOKEN", "github"),
 ]

@@ -38,13 +38,13 @@ def test_picker_fields_place_plugin_rows(catalog, monkeypatch):
     child = ProviderProfile(name="zz-agent", display_name="ZZ Agent", picker_after="zz-api", picker_group=group)
     parent = ProviderProfile(
         name="zz-api", aliases=("zz", "zz-cloud"), display_name="ZZ API", description="ZZ API (direct)",
-        picker_after="nvidia", picker_group=group, catalog_aliases=True, aggregator=True)
+        picker_after="lmstudio", picker_group=group, catalog_aliases=True, aggregator=True)
     _use_profiles(monkeypatch, child, parent)
 
     assert catalog.sync_plugin_provider_catalog() == 2
 
     slugs = [p.slug for p in catalog.CANONICAL_PROVIDERS]
-    at = slugs.index("nvidia")
+    at = slugs.index("lmstudio")
     assert slugs[at + 1:at + 3] == ["zz-api", "zz-agent"]
     assert catalog.CANONICAL_PROVIDERS[at + 1].label == "ZZ API"
     assert catalog.CANONICAL_PROVIDERS[at + 1].tui_desc == "ZZ API (direct)"

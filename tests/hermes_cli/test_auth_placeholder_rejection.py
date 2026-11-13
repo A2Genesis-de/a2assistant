@@ -48,13 +48,13 @@ def test_placeholder_keys_resolve_as_unconfigured(tmp_path, monkeypatch):
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes"))
     (tmp_path / "hermes").mkdir(parents=True, exist_ok=True)
     monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
-    monkeypatch.setenv("XAI_API_KEY", "your_key_here")
+    monkeypatch.setenv("OPENAI_API_KEY", "your_key_here")
 
     from agent.credential_pool import AUTH_TYPE_API_KEY, SOURCE_MANUAL, PooledCredential, load_pool
     from hermes_cli.runtime_provider import resolve_runtime_provider
 
-    with pytest.raises(AuthError, match="No usable credentials found for provider 'xai'"):
-        resolve_runtime_provider(requested="xai")
+    with pytest.raises(AuthError, match="No usable credentials found for provider 'openai-api'"):
+        resolve_runtime_provider(requested="openai-api")
 
     pool = load_pool("openrouter")
     pool.add_entry(PooledCredential(

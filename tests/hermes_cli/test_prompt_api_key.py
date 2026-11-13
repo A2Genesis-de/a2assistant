@@ -23,12 +23,12 @@ def profile_env(tmp_path, monkeypatch):
     return home
 
 
-def _pconfig(name="deepseek"):
+def _pconfig(name="openai-api"):
     from hermes_cli.auth import PROVIDER_REGISTRY
     return PROVIDER_REGISTRY[name]
 
 
-def _run_prompt(existing_key, choice, new_key="", provider_id="", pconfig_name="deepseek"):
+def _run_prompt(existing_key, choice, new_key="", provider_id="", pconfig_name="openai-api"):
     """Invoke _prompt_api_key with mocked input()/getpass() responses."""
     from hermes_cli import main as m
 
@@ -41,7 +41,7 @@ def _run_prompt(existing_key, choice, new_key="", provider_id="", pconfig_name="
 def test_pool_only_key_does_not_offer_or_execute_clear(profile_env, monkeypatch, capsys):
     from hermes_cli import main as m
 
-    pconfig = _pconfig("deepseek")
+    pconfig = _pconfig("openai-api")
     prompts = []
 
     def choose_clear(prompt):
@@ -53,8 +53,8 @@ def test_pool_only_key_does_not_offer_or_execute_clear(profile_env, monkeypatch,
         key, abort = main_provider_setup._prompt_api_key(
             pconfig,
             "pool-secret",
-            provider_id="deepseek",
-            existing_source="credential_pool:deepseek",
+            provider_id="openai-api",
+            existing_source="credential_pool:openai-api",
         )
 
     assert key == "pool-secret"
@@ -79,14 +79,14 @@ def test_pool_only_key_does_not_offer_or_execute_clear(profile_env, monkeypatch,
 
 def test_clear_wipes_env_and_aborts(profile_env):
     from hermes_cli.config import get_env_value, save_env_value
-    save_env_value("DEEPSEEK_API_KEY", "sk-existing")
+    save_env_value("OPENAI_API_KEY", "sk-existing")
     save_env_value("OTHER_VAR", "keep-me")
 
     key, abort = _run_prompt(existing_key="sk-existing", choice="c")
     assert key == ""
     assert abort is True
     # Cleared, but sibling entries untouched.
-    assert not get_env_value("DEEPSEEK_API_KEY")
+    assert not get_env_value("OPENAI_API_KEY")
     assert get_env_value("OTHER_VAR") == "keep-me"
 
 

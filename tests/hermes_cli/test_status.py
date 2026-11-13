@@ -75,8 +75,6 @@ def _base_xai_mocks(monkeypatch, tmp_path):
     monkeypatch.setattr(status_mod, "provider_label", lambda provider: "OpenAI Codex", raising=False)
     monkeypatch.setattr(auth_mod, "get_nous_auth_status_local", dict, raising=False)
     monkeypatch.setattr(auth_mod, "get_codex_auth_status", dict, raising=False)
-    monkeypatch.setattr(auth_mod, "get_qwen_auth_status", dict, raising=False)
-    monkeypatch.setattr(auth_mod, "get_minimax_oauth_auth_status", dict, raising=False)
     monkeypatch.setattr(gateway_mod, "find_gateway_pids", lambda exclude_pids=None: [], raising=False)
     return status_mod
 
@@ -116,7 +114,7 @@ class TestShowStatusXaiOAuth:
 
 
     def test_import_failure_does_not_break_other_oauth_providers(self, monkeypatch, capsys, tmp_path):
-        """Nous/Codex/MiniMax rows must still appear when xAI import fails."""
+        """Nous/Codex rows must still appear when xAI import fails."""
         import hermes_cli.auth as auth_mod
         status_mod = _base_xai_mocks(monkeypatch, tmp_path)
         monkeypatch.setattr(auth_mod, "get_nous_auth_status_local",
@@ -127,7 +125,7 @@ class TestShowStatusXaiOAuth:
         out = capsys.readouterr().out
 
         assert "Nous Portal" in out
-        assert "MiniMax OAuth" in out
+        assert "OpenAI Codex" in out
 
     def test_status_function_exception_does_not_crash(self, monkeypatch, capsys, tmp_path):
         """show_status must not propagate an exception raised by get_xai_oauth_auth_status."""
@@ -174,7 +172,6 @@ def test_show_status_reports_gateway_session_last_activity(monkeypatch, capsys, 
     monkeypatch.setattr(status_mod, "provider_label", lambda provider: "OpenAI Codex", raising=False)
     monkeypatch.setattr(auth_mod, "get_nous_auth_status", dict, raising=False)
     monkeypatch.setattr(auth_mod, "get_codex_auth_status", dict, raising=False)
-    monkeypatch.setattr(auth_mod, "get_qwen_auth_status", dict, raising=False)
     monkeypatch.setattr(auth_mod, "get_xai_oauth_auth_status", dict, raising=False)
     monkeypatch.setattr(gateway_mod, "find_gateway_pids", lambda exclude_pids=None: [], raising=False)
 

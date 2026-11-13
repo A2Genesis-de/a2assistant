@@ -99,9 +99,9 @@ def test_provider_keyboard_keeps_a_provider_whose_config_key_has_uppercase(plain
 
 
 def test_provider_keyboard_folds_a_group_member_written_with_uppercase(plain_keyboards):
-    keyboard, _ = _make_adapter()._build_provider_keyboard(_picker_providers("Kimi-Coding", "kimi-coding-cn"), 0)
+    keyboard, _ = _make_adapter()._build_provider_keyboard(_picker_providers("OpenAI-Codex", "openai-api"), 0)
     buttons = _keyboard_buttons(keyboard)
-    assert [b.callback_data for b in buttons if b.callback_data.startswith("mp")] == ["mpg:kimi"]
+    assert [b.callback_data for b in buttons if b.callback_data.startswith("mp")] == ["mpg:openai"]
     assert "(2)" in buttons[0].text
 
 
@@ -109,25 +109,25 @@ def test_provider_keyboard_folds_a_group_member_written_with_uppercase(plain_key
 async def test_group_callback_lists_a_member_written_with_uppercase(plain_keyboards):
     adapter = _make_adapter()
     adapter._model_picker_state["12345"] = {
-        "providers": _picker_providers("Kimi-Coding", "kimi-coding-cn"),
+        "providers": _picker_providers("OpenAI-Codex", "openai-api"),
         "current_model": "m",
-        "current_provider": "kimi-coding-cn",
+        "current_provider": "openai-api",
         "session_key": "s",
         "on_model_selected": AsyncMock(),
         "msg_id": 42,
     }
     query = AsyncMock()
-    query.data = "mpg:kimi"
+    query.data = "mpg:openai"
     query.message = MagicMock()
     query.message.chat_id = 12345
     query.from_user = MagicMock()
 
-    await adapter._handle_model_picker_callback(query, "mpg:kimi", "12345")
+    await adapter._handle_model_picker_callback(query, "mpg:openai", "12345")
 
     markup = query.edit_message_text.call_args[1]["reply_markup"]
     callbacks = [b.callback_data for b in _keyboard_buttons(markup)]
-    assert "mp:Kimi-Coding" in callbacks
-    assert "mp:kimi-coding-cn" in callbacks
+    assert "mp:OpenAI-Codex" in callbacks
+    assert "mp:openai-api" in callbacks
 
 
 _BEDROCK_IDS = [

@@ -191,58 +191,6 @@ def _stub_kimi_discovery(monkeypatch, *, canonical):
     monkeypatch.setattr(hm, "clear_provider_models_cache", lambda *a, **k: None)
 
 
-def test_single_kimi_credential_yields_one_canonical_row(monkeypatch):
-    """One Kimi key yields a single row under the canonical 'kimi-coding' slug."""
-    import hermes_cli.models as hm
-    from hermes_cli import models_catalog_static
-
-    _stub_kimi_discovery(
-        monkeypatch,
-        canonical=[models_catalog_static.ProviderEntry("kimi-coding", "Kimi / Kimi Coding Plan", "desc")],
-    )
-    monkeypatch.setenv("KIMI_API_KEY", "sk-test-kimi")
-
-    rows = model_switch.list_authenticated_providers(max_models=10)
-    slugs = [r["slug"] for r in rows]
-
-    # Exactly one Kimi / kimi-for-coding-backed row, under the canonical slug —
-    # not both the alias ("kimi") and its canonical ("kimi-coding").
-    kimi_rows = [s for s in slugs if s in {"kimi", "kimi-coding"}]
-    assert kimi_rows == ["kimi-coding"], (
-        f"expected a single canonical Kimi row, got: {slugs}"
-    )
-    assert slugs.count("kimi-coding") == 1
-    assert "kimi" not in slugs
-
-
-def test_distinct_kimi_china_credential_still_listed(monkeypatch):
-    """A separate China (kimi-coding-cn) credential remains its own row.
-
-    Negative-control guard: the de-dup must collapse only the alias/canonical
-    pair that share a credential, not legitimately distinct providers.
-    """
-    import hermes_cli.models as hm
-    from hermes_cli import models_catalog_static
-
-    _stub_kimi_discovery(
-        monkeypatch,
-        canonical=[
-            models_catalog_static.ProviderEntry("kimi-coding", "Kimi / Kimi Coding Plan", "desc"),
-            models_catalog_static.ProviderEntry("kimi-coding-cn", "Kimi / Moonshot (China)", "desc"),
-        ],
-    )
-    monkeypatch.setenv("KIMI_API_KEY", "sk-test-kimi")
-    monkeypatch.setenv("KIMI_CN_API_KEY", "sk-test-kimi-cn")
-
-    rows = model_switch.list_authenticated_providers(max_models=10)
-    slugs = [r["slug"] for r in rows]
-
-    assert "kimi-coding" in slugs       # canonical global row
-    assert slugs.count("kimi-coding") == 1
-    assert "kimi" not in slugs          # alias collapsed into the canonical row
-    assert "kimi-coding-cn" in slugs    # distinct China endpoint preserved
-
-
 def test_non_blocking_listing_opens_no_socket(monkeypatch, tmp_path):
     """#74003: ``non_blocking_catalogs=True`` must not run a single live catalog probe in the calling
     thread — not the per-provider ``/models`` prefetch and not OpenRouter's curated-catalog GET —

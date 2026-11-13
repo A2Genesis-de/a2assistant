@@ -6,7 +6,6 @@ backoff. These tests drive the real boto3 client the adapter builds against a lo
 and count the requests that reach it.
 """
 
-import asyncio
 import json
 import threading
 import time
@@ -113,53 +112,3 @@ def test_throttle_reaches_hermes_retry_loop_on_first_refusal_with_default_timeou
     classified = classify_api_error(excinfo.value, provider="bedrock", model=MODEL)
     assert (classified.reason, classified.retryable) == (FailoverReason.rate_limit, True)
 
-
-@pytest.mark.parametrize("mode", ["unavailable", "throttle"])
-def test_auxiliary_call_recovers_from_one_transient_bedrock_refusal(fake_bedrock, monkeypatch, mode):
-    """With botocore no longer retrying, the aux recovery ladder must read the botocore error
-    (status in ResponseMetadata, ThrottlingException code) or a single 503/throttle fails the task."""
-    from agent import auxiliary_client
-    from agent.auxiliary_client import BedrockAuxiliaryClient, call_llm
-
-    _use_config(monkeypatch, {})
-    monkeypatch.setattr(auxiliary_client, "_TRANSIENT_RETRY_BACKOFF_BASE", 0.0)
-    fake_bedrock.update(mode=mode, fail_first=1)
-    client = BedrockAuxiliaryClient(REGION, MODEL)
-    monkeypatch.setattr(auxiliary_client, "_get_auxiliary_task_config",
-                        lambda task: {"provider": "bedrock", "model": MODEL, "max_output_tokens": 0})
-    monkeypatch.setattr(auxiliary_client, "_get_cached_client", lambda *a, **k: (client, MODEL))
-
-    response = call_llm(task="session_search", messages=[{"role": "user", "content": "ping"}])
-
-    assert response.choices[0].message.content == "pong"
-    assert len(fake_bedrock["hits"]) == 2
-
-
-@pytest.mark.real_retry_backoff
-@pytest.mark.parametrize("caller", ["sync", "async"])
-def test_auxiliary_call_waits_out_a_bedrock_throttle_window(fake_bedrock, monkeypatch, caller):
-    """A throttle lasting ~300ms is backed off, not re-sent at once: botocore no longer waits
-    between attempts, so an immediate re-send lands in the same window and the task fails."""
-    from agent import auxiliary_client
-    from agent.auxiliary_client import (
-        AsyncBedrockAuxiliaryClient, BedrockAuxiliaryClient, async_call_llm, call_llm,
-    )
-
-    _use_config(monkeypatch, {})
-    fake_bedrock.update(mode="throttle", fail_for=0.3)
-    client = BedrockAuxiliaryClient(REGION, MODEL)
-    monkeypatch.setattr(auxiliary_client, "_get_auxiliary_task_config",
-                        lambda task: {"provider": "bedrock", "model": MODEL, "max_output_tokens": 0})
-    monkeypatch.setattr(
-        auxiliary_client, "_get_cached_client",
-        lambda *a, async_mode=False, **k: (AsyncBedrockAuxiliaryClient(client) if async_mode else client, MODEL))
-    messages = [{"role": "user", "content": "ping"}]
-
-    if caller == "sync":
-        response = call_llm(task="session_search", messages=messages)
-    else:
-        response = asyncio.run(async_call_llm(task="session_search", messages=messages))
-
-    assert response.choices[0].message.content == "pong"
-    times = fake_bedrock["times"]
-    assert times[1] - times[0] >= 0.25, "the throttled call was re-sent without a backoff"

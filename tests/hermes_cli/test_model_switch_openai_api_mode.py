@@ -17,7 +17,6 @@ reasoning_effort into a live one that OpenAI 400s on the chat_completions path.
 
 from unittest.mock import patch
 
-import pytest
 
 from hermes_cli.model_switch import switch_model
 from hermes_cli.providers import host_mandated_api_mode
@@ -112,30 +111,6 @@ def test_generic_endpoint_keeps_explicit_api_mode():
     # The real endpoints are mandated.
     assert host_mandated_api_mode("https://api.openai.com/v1") == "codex_responses"
     assert host_mandated_api_mode("https://api.anthropic.com") == "anthropic_messages"
-
-@pytest.mark.parametrize("models_dev_registry", [_MODELS_DEV_WITH_META, {}], ids=["catalog", "offline"])
-def test_stale_chat_overridden_on_meta_direct(models_dev_registry):
-    """Stale chat_completions on api.meta.ai → codex_responses (like openai direct).
-
-    Switching from openrouter/chat_completions to muse-spark on meta's
-    endpoint must flip to Responses API for caching (0% vs 93-99%). ``meta`` is an
-    alias of the bundled ``meta-ai`` plugin, so the switch lands on ``meta-ai``
-    whether or not models.dev (which keys the same API ``meta``) is reachable.
-    """
-    result = _run_openai_switch(
-        models_dev_registry=models_dev_registry,
-        raw_input="muse-spark-1.2",
-        current_provider="openrouter",
-        current_model="anthropic/claude-opus-4.8",
-        explicit_provider="meta",
-        runtime_api_mode="chat_completions",  # stale
-        runtime_base_url="https://api.meta.ai/v1",
-    )
-    assert result.success, f"switch_model failed: {result.error_message}"
-    assert result.target_provider == "meta-ai"
-    assert result.new_model == "muse-spark-1.2"
-    assert result.api_mode == "codex_responses"
-
 
 def test_generic_relay_not_clobbered_on_meta_switch():
     """Generic relay does not pick up Meta mandate."""

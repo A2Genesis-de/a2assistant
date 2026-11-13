@@ -422,11 +422,6 @@ def _refresh_credentials_after_401(
             _label = "xAI OAuth" if agent.provider == "xai-oauth" else "Codex"
             agent._buffer_vprint(f"🔐 {_label} auth refreshed after 401. Retrying request...")
             return True
-    if agent.api_mode == "chat_completions" and agent.provider == "vertex" and not _retry.vertex_auth_retry_attempted:
-        _retry.vertex_auth_retry_attempted = True
-        if agent._try_refresh_vertex_client_credentials():
-            agent._buffer_vprint("🔐 Vertex AI token refreshed after 401. Retrying request...")
-            return True
     if (
         agent.api_mode in ("chat_completions", "anthropic_messages")
         and agent.provider == "nous"

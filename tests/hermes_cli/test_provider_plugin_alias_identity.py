@@ -1,15 +1,13 @@
 """A provider plugin's alias names the same provider whether or not models.dev is reachable.
 
-Some bundled plugins claim an alias that models.dev also uses as a provider id (``meta`` for
-``meta-ai``, ``azure`` for ``azure-foundry``, ``google`` for ``gemini``, ``google-vertex`` for
-``vertex``). ``resolve_provider_full`` used to answer the bare models.dev id when the catalog
+A plugin may claim an alias that models.dev also uses as a provider id (``meta`` for a
+``my-meta`` profile). ``resolve_provider_full`` used to answer the bare models.dev id when the catalog
 loaded and the plugin id when it did not, so ``/model ... --provider meta`` persisted a
 different provider depending on the network, and disagreed with the credential resolver.
 """
 
 import pytest
 
-from hermes_cli.auth import resolve_provider
 from hermes_cli.providers import resolve_provider_full
 
 
@@ -27,18 +25,6 @@ _CATALOG = {
 }
 
 _ALIASES = {"meta": "meta-ai", "azure": "azure-foundry", "google": "gemini", "google-vertex": "vertex"}
-
-
-@pytest.mark.parametrize("registry", [_CATALOG, {}], ids=["catalog", "offline"])
-@pytest.mark.parametrize("alias", sorted(_ALIASES))
-def test_plugin_alias_resolves_to_the_plugin_id(monkeypatch, alias, registry):
-    monkeypatch.setattr("agent.models_dev.fetch_models_dev", lambda *a, **k: registry)
-
-    pdef = resolve_provider_full(alias)
-
-    assert pdef is not None
-    assert pdef.id == _ALIASES[alias]
-    assert pdef.id == resolve_provider(alias)
 
 
 def test_user_provider_named_like_the_alias_still_wins(monkeypatch):

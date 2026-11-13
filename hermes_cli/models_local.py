@@ -17,7 +17,6 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from pathlib import Path
 from typing import Any, NamedTuple, Optional
 from agent.secret_scope import get_secret_str
 from hermes_cli.urllib_security import url_origin
@@ -614,88 +613,10 @@ def ollama_model_supports_thinking(
     return None
 
 
-_OLLAMA_CLOUD_CACHE_TTL = 3600  # 1 hour
-
-
 def _strip_ollama_cloud_suffix(model_id: str) -> str:
-    """Strip the ``:cloud`` / ``-cloud`` suffix models.dev appends to Ollama Cloud IDs (the live
-    API uses bare ids), so the dedup merge does not produce duplicates."""
+    """Strip the ``:cloud`` / ``-cloud`` suffix models.dev appends to Ollama Cloud IDs (the native
+    API uses bare ids)."""
     for suffix in (":cloud", "-cloud"):
         if model_id.endswith(suffix):
             return model_id[: -len(suffix)]
     return model_id
-
-
-def _ollama_cloud_cache_path() -> Path:
-    from hermes_constants import get_hermes_home
-    return get_hermes_home() / "ollama_cloud_models_cache.json"
-
-
-def _load_ollama_cloud_cache(*, ignore_ttl: bool = False) -> Optional[dict]:
-    """Load cached Ollama Cloud models from disk (None when missing, empty, or stale)."""
-    from hermes_cli.models import _read_json_cache
-
-    try:
-        data = _read_json_cache(_ollama_cloud_cache_path())
-        models = data.get("models") if data is not None else None
-        if not (isinstance(models, list) and models):
-            return None
-        if not ignore_ttl and (time.time() - data.get("cached_at", 0)) > _OLLAMA_CLOUD_CACHE_TTL:
-            return None  # stale
-        return data
-    except Exception:
-        return None
-
-
-def _save_ollama_cloud_cache(models: list[str]) -> None:
-    """Persist the merged Ollama Cloud model list to disk. Best-effort."""
-    from hermes_cli.models import _write_json_cache
-
-    try:
-        _write_json_cache(_ollama_cloud_cache_path(), {"models": models, "cached_at": time.time()}, indent=None)
-    except Exception:
-        pass
-
-
-def fetch_ollama_cloud_models(
-    api_key: Optional[str] = None,
-    base_url: Optional[str] = None,
-    *,
-    force_refresh: bool = False,
-    cache_only: bool = False,
-) -> list[str]:
-    """Ollama Cloud models: fresh disk cache (< 1h, unless force_refresh) → live ``/v1/models``
-    (freshest) merged with models.dev additions (deduped, live first) → stale cache → models.dev
-    only → ``[]``. ``cache_only`` (GUI read path) never runs the 8s network probe and never writes
-    the disk cache. Never None."""
-    from hermes_cli.models import fetch_api_models
-    if not force_refresh:
-        cached = _load_ollama_cloud_cache()
-        if cached is not None:
-            return cached["models"]
-
-    api_key = api_key or os.getenv("OLLAMA_API_KEY", "")
-    base_url = base_url or os.getenv("OLLAMA_BASE_URL", "") or "https://ollama.com/v1"
-    # cache_only (GUI read path): skip only the network probe. The models.dev additions are a local
-    # cache read, so the row still populates with what is known; the live catalog lands next open.
-    live_models = [] if cache_only else ((fetch_api_models(api_key, base_url, timeout=8.0) or []) if api_key else [])
-    mdev_models: list[str] = []
-    try:
-        from agent.models_dev import list_agentic_models
-        mdev_models = list_agentic_models("ollama-cloud")
-    except Exception:
-        pass
-
-    merged: list[str] = []
-    for m in [*live_models, *(_strip_ollama_cloud_suffix(m) for m in mdev_models)]:
-        if m and m not in merged:
-            merged.append(m)
-    if live_models:
-        # Persist only a result that included the live catalog: writing the models.dev-only list here
-        # (cache_only, or a failed probe) would stamp it fresh, drop the live-only ids, and make the
-        # next non-cache_only call serve that trimmed list for an hour instead of probing.
-        _save_ollama_cloud_cache(merged)
-        return merged
-
-    stale = _load_ollama_cloud_cache(ignore_ttl=True)
-    return stale["models"] if stale is not None else merged

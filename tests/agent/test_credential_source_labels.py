@@ -53,25 +53,11 @@ def _entra_provider(monkeypatch):
     return adapter.build_token_provider()
 
 
-def _vertex_provider(monkeypatch):
-    import agent.vertex_adapter as va
-
-    monkeypatch.setattr(va, "get_vertex_credentials", lambda *_a, **_k: _never_called())
-    return va.vertex_access_token
-
-
 def _key_cmd_provider(monkeypatch):
     import agent.command_token_source as cts
 
     monkeypatch.setattr(cts, "_mint", lambda *_a, **_k: _never_called())
     return cts.build_command_token_provider("print-token", "corp")
-
-
-def _minimax_provider(monkeypatch):
-    import hermes_cli.auth_minimax as mm
-
-    monkeypatch.setattr(mm, "_minimax_fresh_state", lambda: _never_called())
-    return mm.build_minimax_oauth_token_provider()
 
 
 def _untagged_provider(monkeypatch):
@@ -83,9 +69,7 @@ def _untagged_provider(monkeypatch):
 
 CASES = [
     pytest.param(_entra_provider, "cli.config.microsoft_entra_id", id="entra"),
-    pytest.param(_vertex_provider, "cli.config.google_vertex_oauth", id="vertex"),
     pytest.param(_key_cmd_provider, "cli.config.key_cmd_token", id="key_cmd"),
-    pytest.param(_minimax_provider, "cli.config.minimax_oauth", id="minimax"),
     pytest.param(_untagged_provider, "cli.config.token_provider", id="unknown"),
 ]
 

@@ -641,11 +641,10 @@ class AIAgent(
     @staticmethod
     def _provider_model_requires_responses_api(model: str, *, provider: Optional[str] = None) -> bool:
         """Return True when this provider/model pair should use Responses API."""
-        from hermes_cli.providers import is_actual_route
         normalized_provider = (provider or "").strip().lower()
         # Nous serves GPT-5.x via chat completions (its /v1/responses returns 404); generic custom endpoints
         # may relay GPT-5 without full Responses semantics — only direct OpenAI/xAI URLs auto-upgrade.
-        if normalized_provider in ("nous", "custom") or is_actual_route(provider):
+        if normalized_provider in ("nous", "custom"):
             return False
         # ACP facades expose the OpenAI-compatible chat.completions shape regardless of model
         # family and have no ``responses`` attribute, so neither primary routing nor GPT-5
