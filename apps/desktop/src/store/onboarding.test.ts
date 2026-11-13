@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as notifications from '@/store/notifications'
 import { markOnboardingDecided } from '@/store/onboarding-presence'
 import { makeOAuthProvider } from '@/test/oauth-provider'
-import type { AppHandoffStatus, OAuthProvider } from '@/types/hermes'
+import type { OAuthProvider } from '@/types/hermes'
 
 import {
   $desktopOnboarding,
@@ -38,7 +38,6 @@ function baseState(overrides: Partial<DesktopOnboardingState> = {}): DesktopOnbo
     firstRunSkipped: false,
     manual: false,
     localEndpoint: false,
-    freeTierReady: false,
     ...overrides
   }
 }
@@ -547,42 +546,6 @@ describe('OAuth onboarding', () => {
     $desktopOnboarding.set(baseState())
     resetBootRaceWindowForTests()
     vi.restoreAllMocks()
-  })
-
-  it('a Nous sign-in shows its account and what moved on the confirm screen, not in a dialog after it', async () => {
-    const { startProviderOAuth } = await import('./onboarding')
-    const { $freeTierSignIn } = await import('./free-tier-sign-in')
-    const { setOnboardingSurfaceActive } = await import('./onboarding-presence')
-    const handoff: AppHandoffStatus = { lines: ['Your apps moved to someone@example.com: linear.'], state: 'claimed' }
-
-    installApiMock(async ({ path }) => {
-      if (path.endsWith('/start')) {
-        return { expires_in: 600, flow: 'device_code', session_id: 's', user_code: 'C', verification_url: 'http://x' }
-      }
-
-      if (path.includes('/poll/')) {
-        return { account_email: 'someone@example.com', handoff_status: handoff, session_id: 's', status: 'approved' }
-      }
-
-      if (path.startsWith('/api/model/options')) {
-        return { providers: [{ models: ['nous/m'], name: 'Nous Portal', slug: 'nous' }] }
-      }
-
-      return path.startsWith('/api/model/recommended-default') ? { model: 'nous/m' } : { ok: true }
-    })
-    vi.spyOn(window, 'open').mockReturnValue(null)
-    setOnboardingSurfaceActive('onboarding', true)
-
-    await startProviderOAuth(makeOAuthProvider('nous', 'Nous Portal'), {
-      requestGateway: async method =>
-        // SAFETY: onboarding reads only `provider_configured` from setup.status and `ok` from the rest.
-        (method === 'setup.status' ? { provider_configured: true } : { ok: true }) as never
-    })
-    await vi.waitFor(() => expect($desktopOnboarding.get().flow.status).toBe('confirming_model'), { timeout: 5000 })
-
-    expect($desktopOnboarding.get().flow).toMatchObject({ signedIn: { email: 'someone@example.com', handoff } })
-    setOnboardingSurfaceActive('onboarding', false)
-    expect($freeTierSignIn.get()).toEqual({ status: 'closed' })
   })
 
   it('clears stale readiness errors after OAuth succeeds and model confirmation is shown', async () => {

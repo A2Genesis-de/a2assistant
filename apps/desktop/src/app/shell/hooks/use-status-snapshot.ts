@@ -4,7 +4,6 @@ import { getStatus } from '@/hermes'
 import { type I18nContextValue, useI18n } from '@/i18n'
 import { evaluateRuntimeReadiness, type RuntimeReadinessResult } from '@/lib/runtime-readiness'
 import { isSignedOutStatus } from '@/lib/signed-out-status'
-import { $freeTierStatus, refreshFreeTierStatus, setFreeTierRoute } from '@/store/free-tier'
 import { $setupReadyTick } from '@/store/live-sync'
 import { dismissNotification, notify } from '@/store/notifications'
 import { $desktopOnboarding, isLocalRuntimeUnavailable, settleLocalRuntimeNotice } from '@/store/onboarding'
@@ -21,10 +20,6 @@ const REFRESH_MS = 60_000
 // engine) would pay that every tick, so the gap grows to a 5-minute cap. A model switch or a ready
 // answer resets it; focus returns and `setup.ready` still check at once.
 const LOCAL_DOWN_RECHECK_MS = [60_000, 120_000, 300_000]
-
-// The scope the cached free-tier verdict was read under. Module-level because
-// $freeTierStatus is one app-wide atom, not per hook instance.
-let freeTierScope: string | undefined
 
 type GatewayRequester = <T = unknown>(method: string, params?: Record<string, unknown>) => Promise<T>
 
@@ -81,14 +76,6 @@ export function useStatusSnapshot(
     setStatusSnapshot(null)
     publishInferenceStatus(null)
 
-    // The free-tier verdict belongs to one profile too. Drop it on a real switch
-    // only: a flap on the same scope keeps the last answer (refreshFreeTierStatus).
-    if (freeTierScope !== undefined && freeTierScope !== gatewayScope) {
-      $freeTierStatus.set(null)
-    }
-
-    freeTierScope = gatewayScope
-
     // A closed/connecting gateway cannot have an authoritative live-runtime
     // result. Clear readiness before starting the REST status leg so a hung
     // getStatus() cannot leave a stale "ready" state visible after disconnect.
@@ -114,25 +101,15 @@ export function useStatusSnapshot(
       // user is working in another app.
       document.visibilityState === 'visible' && document.hasFocus()
 
-    // Inference readiness + the free-tier verdict. Not on the periodic tick:
-    // both change only at seams the backend announces (`setup.ready` at boot)
-    // or that this window crosses (open, return from another app), so they
-    // run once per seam instead of every 60s.
+    // Inference readiness. Not on the periodic tick: it changes only at seams the backend announces (`setup.ready` at boot)
+    // or that this window crosses (open, return from another app), so it
+    // runs once per seam instead of every 60s.
     const refreshReadiness = async () => {
       if (gatewayState !== 'open') {
         return
       }
 
-      // The free-tier verdict is a local, zero-network read that writes
-      // straight to its own store and swallows its failures — nothing here
-      // waits on it or reads the result. Unlike the readiness publish below,
-      // its write happens inside the store, so hand it this run's liveness: a
-      // reply that lands after a source/profile switch must not repaint the
-      // shared atom the new run already answered.
-      const [inferenceResult] = await Promise.allSettled([
-        evaluateRuntimeReadiness(requestGateway),
-        refreshFreeTierStatus(requestGateway, () => !cancelled)
-      ])
+      const [inferenceResult] = await Promise.allSettled([evaluateRuntimeReadiness(requestGateway)])
 
       if (cancelled || inferenceResult.status !== 'fulfilled') {
         return
@@ -148,7 +125,6 @@ export function useStatusSnapshot(
         // of flashing "Inference not ready" during a gateway flap.
         publishInferenceStatus(inference)
         settleLocalRuntimeNotice(inference)
-        setFreeTierRoute(inference.freeTier)
       }
     }
 

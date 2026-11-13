@@ -34,10 +34,9 @@ export interface PetChangeMeta {
 
 export const $petChange = atom<{ meta?: PetChangeMeta; tick: number }>({ tick: 0 })
 
-/** `setup.ready` — the boot bootstrap (free-tier identity + provider resolution)
- *  finished, so inference readiness and the free-tier verdict may have just
- *  changed. One-shot: the status snapshot re-reads both legs once instead of
- *  waiting for its next ambient tick. */
+/** `setup.ready` — the boot bootstrap (provider resolution) finished, so
+ *  inference readiness may have just changed. One-shot: the status snapshot
+ *  re-reads it once instead of waiting for its next ambient tick. */
 export const $setupReadyTick = atom(0)
 
 /** Monotonic clock for "how fresh is this backend boot?" — bumped on every

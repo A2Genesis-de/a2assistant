@@ -22,7 +22,6 @@ function coldState(): DesktopOnboardingState {
     firstRunSkipped: false,
     manual: false,
     localEndpoint: false,
-    freeTierReady: false
   }
 }
 

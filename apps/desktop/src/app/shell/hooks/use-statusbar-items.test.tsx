@@ -2,7 +2,7 @@ import { act, renderHook } from '@testing-library/react'
 import type { WritableAtom } from 'nanostores'
 import { isValidElement, type ReactNode } from 'react'
 import { MemoryRouter } from 'react-router'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { group } from '@/components/pane-shell/tree/model'
 import { $layoutTree, noteActiveTreeGroup } from '@/components/pane-shell/tree/store'
@@ -10,9 +10,6 @@ import { en } from '@/i18n/en'
 import { createClientSessionState } from '@/lib/chat-runtime'
 import type * as DesktopFs from '@/lib/desktop-fs'
 import { usageContextLabel } from '@/lib/statusbar'
-import { $freeTierStatus } from '@/store/free-tier'
-import { INTERFACE_MODES, setInterfaceMode } from '@/store/interface-mode'
-import { markOnboardingDecided, setOnboardingSurfaceActive } from '@/store/onboarding-presence'
 import {
   $connection,
   $currentCwd,
@@ -25,9 +22,9 @@ import {
 } from '@/store/session'
 import { $focusedTreePaneId as $focusedTreePaneIdMock } from '@/store/session-focus'
 import { $sessionStates, $sessionTiles } from '@/store/session-states'
-import { $statusbarVisible, setStatusbarItemVisible } from '@/store/statusbar-prefs'
+import { setStatusbarItemVisible } from '@/store/statusbar-prefs'
 import { $desktopVersion, $updateStatus } from '@/store/updates'
-import type { ContextBreakdown, FreeTierStatus, UsageStats } from '@/types/hermes'
+import type { ContextBreakdown, UsageStats } from '@/types/hermes'
 
 import { useStatusbarItems } from './use-statusbar-items'
 
@@ -385,70 +382,6 @@ describe('useStatusbarItems session timer — runtime cache anchor', () => {
 
     expect(since).toBe(branchRuntimeStartedAt)
     expect(since).not.toBe(parentRowStartedAt * 1000)
-  })
-})
-
-// The statusbar chip is a free-tier user's standing way in to a sign-in, and
-// an interface mode decides whether the bar is mounted at all. Whatever a mode
-// rests, a signed-out free-tier user keeps one visible Sign in.
-describe('free-tier Sign in in every interface mode', () => {
-  const freeTier = (available: boolean): FreeTierStatus => ({
-    available,
-    enabled: true,
-    has_guest: available,
-    label: 'Nous · free tier',
-    model: 'nous/welcome',
-    notice_pending: false
-  })
-
-  function signInChipVisible(): boolean {
-    const { leftStatusbarItems, statusbarItems } = renderStatusbarItems()
-    const chip = [...leftStatusbarItems, ...statusbarItems].find(item => item.id === 'free-tier')
-
-    return $statusbarVisible.get() && chip !== undefined && !chip.hidden
-  }
-
-  beforeEach(() => markOnboardingDecided())
-
-  afterEach(() => {
-    $freeTierStatus.set(null)
-    setOnboardingSurfaceActive('onboarding', false)
-    setInterfaceMode('advanced')
-  })
-
-  it.each(INTERFACE_MODES)('shows the Sign in chip to a signed-out free-tier user in %s mode', mode => {
-    setInterfaceMode(mode)
-    $freeTierStatus.set(freeTier(true))
-
-    expect(signInChipVisible()).toBe(true)
-  })
-
-  it('lets Simple rest the bar again once the user has signed in', () => {
-    setInterfaceMode('simple')
-    $freeTierStatus.set(freeTier(true))
-    expect($statusbarVisible.get()).toBe(true)
-
-    $freeTierStatus.set(freeTier(false))
-    expect($statusbarVisible.get()).toBe(false)
-  })
-
-  it('shows the chip to a guest with connected apps but no trial, without the free model', () => {
-    $freeTierStatus.set({ ...freeTier(false), has_guest: true })
-
-    const { leftStatusbarItems, statusbarItems } = renderStatusbarItems()
-    const chip = [...leftStatusbarItems, ...statusbarItems].find(item => item.id === 'free-tier')
-
-    expect(signInChipVisible()).toBe(true)
-    expect(chip?.title).toBe('Nous')
-  })
-
-  it('holds the chip while onboarding is open and brings it back after', () => {
-    $freeTierStatus.set(freeTier(true))
-    setOnboardingSurfaceActive('onboarding', true)
-    expect(signInChipVisible()).toBe(false)
-
-    setOnboardingSurfaceActive('onboarding', false)
-    expect(signInChipVisible()).toBe(true)
   })
 })
 

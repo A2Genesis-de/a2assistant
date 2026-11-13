@@ -51,12 +51,10 @@ export function handleLifecycleEvent(ctx: GatewayEventContext): boolean {
   }
 
   if (event.type === 'setup.ready') {
-    // The boot bootstrap (hermes_cli/free_tier_bootstrap.py) resolved the
-    // free-tier identity and the inference route, and broadcast once. The
+    // The boot bootstrap resolved the inference route and broadcast once. The
     // payload is only a hint — the status snapshot re-reads `setup.status` /
-    // `setup.runtime_check` / `free_tier.status` through its own scoped
-    // requester so the chip, strip and onboarding react now rather than on
-    // the next ambient tick. Only the active source's boot matters here.
+    // `setup.runtime_check` through its own scoped requester so the chip and
+    // onboarding react now rather than on the next ambient tick. Only the active source's boot matters here.
     if (fromActiveSource()) {
       notifySetupReady()
     }

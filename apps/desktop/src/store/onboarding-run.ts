@@ -20,10 +20,8 @@ import { atom, computed } from 'nanostores'
 import { getRuntimeI18nLocale } from '@/i18n/runtime'
 import type { GatewayRequester } from '@/lib/yolo-session'
 
-import { ackFreeTierNotice } from './free-tier'
 import { activeGatewayConnectionId } from './gateway'
 import { $gatewayReadyAt } from './live-sync'
-import { clearFreeTierIntro } from './onboarding'
 import { $decideExit } from './onboarding-intro'
 import { $onboardingPhase } from './onboarding-phase'
 import { markOnboardingDecided, ONBOARDING_DECIDE_OFFER_MS, setOnboardingSurfaceActive } from './onboarding-presence'
@@ -180,10 +178,7 @@ export async function startOnboarding(
     })
     watchRunEnd(request)
 
-    if (intro) {
-      intro.opened(started)
-      ackFreeTierIntro(request)
-    }
+    intro?.opened(started)
 
     return true
   } catch (error) {
@@ -197,16 +192,6 @@ export async function startOnboarding(
 
     return false
   }
-}
-
-// The onboarding intro is the free-tier introduction, as on main: the ready screen must not follow it.
-function ackFreeTierIntro(request: OnboardingRequest): void {
-  clearFreeTierIntro()
-  void ackFreeTierNotice(request).then(acked => {
-    if (acked) {
-      clearFreeTierIntro()
-    }
-  })
 }
 
 // Skip setup's ending, like main's: the run is over and a fresh chat opens in the onboarding profile.

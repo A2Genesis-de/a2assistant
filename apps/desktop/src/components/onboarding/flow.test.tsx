@@ -13,7 +13,12 @@ vi.mock('@/hermes', async importOriginal => ({
   ...(await importOriginal<typeof HermesApi>()),
   getGlobalModelOptions: async () => ({
     providers: [
-      { free_tier: false, models: ['gpt-5.6-terra'], name: 'OpenAI OAuth (ChatGPT)', slug: 'openai' },
+      {
+        models: ['gpt-5.6-terra'],
+        name: 'OpenAI OAuth (ChatGPT)',
+        pricing: { 'gpt-5.6-terra': { input: '$1.00', output: '$4.00' } },
+        slug: 'openai'
+      },
       { models: ['deepseek/deepseek-v4-flash-0731'], name: 'Nous Portal', slug: 'nous' }
     ]
   })
@@ -55,7 +60,6 @@ function confirmingModelState(): DesktopOnboardingState {
     firstRunSkipped: false,
     manual: false,
     localEndpoint: false,
-    freeTierReady: false
   }
 }
 
@@ -99,9 +103,9 @@ describe('ConfirmingModelPanel model pick', () => {
 
     render(<Harness />)
 
-    // The Pro badge only renders once the catalog query has resolved — the
+    // The price line only renders once the catalog query has resolved — the
     // relabel below reads the picked provider's name from that catalog.
-    await screen.findByText('Pro')
+    await screen.findByText('$1.00 in / $4.00 out per Mtok')
 
     // The user signed in with OpenAI OAuth; the picker offers a deepseek
     // model that only Nous Portal serves.
@@ -123,26 +127,5 @@ describe('ConfirmingModelPanel model pick', () => {
       expect(flow.providerSlug).toBe('nous')
       expect(flow.label).toBe('Nous Portal')
     }
-  })
-})
-
-describe('ConfirmingModelPanel sign-in result', () => {
-  it('names the account and what moved before Begin', async () => {
-    $desktopOnboarding.set({
-      ...confirmingModelState(),
-      flow: {
-        currentModel: 'gpt-5.6-terra',
-        label: 'OpenAI OAuth (ChatGPT)',
-        providerSlug: 'openai',
-        saving: false,
-        signedIn: { email: 'someone@example.com', handoff: { lines: ['Your apps moved.'], state: 'claimed' } },
-        status: 'confirming_model'
-      }
-    })
-
-    render(<Harness />)
-
-    expect(screen.getByText('someone@example.com')).toBeTruthy()
-    expect(screen.getByText('Your apps moved.')).toBeTruthy()
   })
 })

@@ -1,5 +1,4 @@
 import type {
-  AppHandoffStatus,
   ConfigSchemaResponse,
   CustomEndpointsResponse,
   CustomEndpointUpdate,
@@ -373,18 +372,6 @@ export function pollOAuthSession(
     ...capabilityScoped(profile),
     path: `/api/providers/oauth/${encodeURIComponent(providerId)}/poll/${encodeURIComponent(sessionId)}${query}`,
     ...(waitSeconds > 0 ? { timeoutMs: OAUTH_LONG_POLL_TIMEOUT_MS } : {})
-  })
-}
-
-/** The free tier's handoff after a Nous sign-in. A long-poll: given `since`
- *  (the `updated_at` on screen) the backend answers once the record changes. */
-export function getNousHandoffStatus(since: null | string, profile?: ProfileScope): Promise<AppHandoffStatus> {
-  const query = new URLSearchParams({ wait: String(OAUTH_LONG_POLL_SECONDS), ...(since ? { since } : {}) })
-
-  return window.hermesDesktop.api<AppHandoffStatus>({
-    ...capabilityScoped(profile),
-    path: `/api/providers/oauth/nous/handoff?${query}`,
-    timeoutMs: OAUTH_LONG_POLL_TIMEOUT_MS
   })
 }
 
