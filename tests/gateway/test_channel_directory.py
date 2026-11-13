@@ -4,8 +4,7 @@ import asyncio
 import json
 import os
 import threading
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 from gateway.config import Platform
 from gateway.channel_directory import (

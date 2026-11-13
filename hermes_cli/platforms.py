@@ -19,6 +19,12 @@ PLATFORMS: OrderedDict[str, PlatformInfo] = OrderedDict([
     ("cron",           PlatformInfo(label="⏰ Cron",            default_toolset="hermes-cron")),
 ])
 
+RETIRED_PLATFORMS = frozenset({
+    "a2a", "bluebubbles", "buzz", "dingtalk", "discord", "email", "feishu", "google_chat", "irc", "line",
+    "matrix", "mattermost", "msgraph_webhook", "ntfy", "photon", "qqbot", "raft", "signal", "simplex",
+    "slack", "sms", "teams", "wecom", "wecom_callback", "weixin", "whatsapp", "whatsapp_cloud",
+})
+
 
 def _plugin_label(entry) -> str:
     return f"{entry.emoji}  {entry.label}" if entry.emoji else entry.label

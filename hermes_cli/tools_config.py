@@ -762,7 +762,9 @@ def _warn_all_invalid_platform_toolsets(platform: str, explicit: list, config: d
     from hermes_cli.toolset_validation import is_known_platform_bundle, saved_toolset_resolver
     from toolsets import validate_toolset
 
-    if platform in _warned_invalid_platform_toolsets:
+    from hermes_cli.platforms import RETIRED_PLATFORMS
+
+    if platform in _warned_invalid_platform_toolsets or platform in RETIRED_PLATFORMS:
         return
     named = [str(t) for t in explicit if isinstance(t, str) and t]
     if not named or any(validate_toolset(t) or is_known_platform_bundle(platform, t) for t in named):

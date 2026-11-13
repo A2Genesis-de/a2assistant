@@ -39,16 +39,16 @@ def test_38798_corruption_warns_and_suggests_correct_name():
 
 
 def test_mixed_valid_and_invalid_flags_only_the_invalid():
-    cfg = {"cli": ["hermes-cli"], "discord": ["bogus"]}
+    cfg = {"cli": ["hermes-cli"], "webhook": ["bogus"]}
     warnings = validate_platform_toolsets(cfg, _is_valid)
     # One valid entry exists, so no zero-valid warning.
     assert not any("zero valid toolsets" in w for w in warnings)
     assert any(
-        "platform 'discord'" in w and "unknown toolset 'bogus'" in w
+        "platform 'webhook'" in w and "unknown toolset 'bogus'" in w
         for w in warnings
     )
     assert any(
-        "platform 'discord'" in w and "no valid toolsets" in w
+        "platform 'webhook'" in w and "no valid toolsets" in w
         for w in warnings
     )
 
@@ -81,18 +81,18 @@ def test_empty_list_on_a_platform_warns_even_when_others_are_valid():
 
 
 def test_empty_list_warns_for_each_affected_platform():
-    cfg = {"cli": [], "discord": [], "telegram": ["hermes-telegram"]}
+    cfg = {"cli": [], "webhook": [], "telegram": ["hermes-telegram"]}
     warnings = validate_platform_toolsets(cfg, _is_valid)
 
     empty = [w for w in warnings if "empty toolset list" in w]
     assert len(empty) == 2
-    assert {"cli", "discord"} == {
-        p for p in ("cli", "discord") if any(f"platform '{p}'" in w for w in empty)
+    assert {"cli", "webhook"} == {
+        p for p in ("cli", "webhook") if any(f"platform '{p}'" in w for w in empty)
     }
 
 
 def test_empty_list_does_not_mask_unknown_names_on_other_platforms():
-    cfg = {"cli": [], "discord": ["bogus"]}
+    cfg = {"cli": [], "webhook": ["bogus"]}
     warnings = validate_platform_toolsets(cfg, _is_valid)
 
     assert any("empty toolset list" in w and "platform 'cli'" in w for w in warnings)
@@ -182,4 +182,13 @@ def test_all_invalid_platform_warns_even_when_others_are_valid():
 def test_populated_platforms_produce_no_empty_list_warning():
     cfg = {"cli": ["hermes-cli"], "telegram": ["hermes-telegram"]}
     warnings = validate_platform_toolsets(cfg, _is_valid)
+    assert warnings == []
+
+
+def test_retired_platform_rows_are_inert():
+    warnings = validate_platform_toolsets(
+        {"cli": ["hermes-cli"], "discord": ["hermes-discord"], "slack": ["hermes-slack"],
+         "whatsapp": ["hermes-whatsapp"], "qqbot": ["unknown-thing"]},
+        lambda name: name == "hermes-cli",
+    )
     assert warnings == []

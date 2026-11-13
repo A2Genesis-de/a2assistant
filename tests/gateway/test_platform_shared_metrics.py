@@ -16,7 +16,6 @@ from hermes_cli.observability import shared_metrics_contract as contract
 from hermes_cli.observability import shared_metrics_gateway as smg
 from hermes_constants import get_hermes_home
 
-from gateway.config import Platform
 
 
 _CHAT_A = Platform._add_pseudo_member("chat_a")
