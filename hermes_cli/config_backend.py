@@ -10,9 +10,8 @@ already keys on the config path, so a backend keeps per-home state.
 the version is the ``file_signature`` stat tuple, reads are ``open`` + ``fast_safe_load`` and raise
 exactly what those raise (``FileNotFoundError`` for an absent file, ``OSError``, YAML errors), and
 writes are the ruamel round-trip writers in ``utils``. Callers keep their own error handling, so a
-backend whose layer always exists simply never takes the "no file" branches. Every other kind
-(``HERMES_CONFIG_BACKEND=<kind>``, e.g. ``remote``) is the package ``plugins/config_backends/<kind>/``,
-whose ``get_backend()`` returns the instance; this module names no backend beyond that.
+backend whose layer always exists simply never takes the "no file" branches. It is the only backend
+this build provides: any other ``HERMES_CONFIG_BACKEND`` value fails closed.
 
 The managed scope (``/etc/hermes``) is NOT a backend concern: it stays an overlay applied on top of
 whatever user layer the backend returns.
@@ -21,10 +20,7 @@ from __future__ import annotations
 
 import contextlib
 import contextvars
-import importlib
 import os
-import re
-import sys
 import threading
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -336,32 +332,12 @@ def get_config_backend() -> ConfigBackend:
     return _backend_for(os.environ.get(BACKEND_ENV, "").strip().lower() or "file")
 
 
-# A kind is one package name under plugins/config_backends/: never a dotted or relative path.
-_KIND_RE = re.compile(r"[a-z][a-z0-9_]{0,63}")
-_BACKENDS_PACKAGE = "plugins.config_backends"
-
-
 def _backend_for(kind: str) -> ConfigBackend:
-    """``file``, or the instance ``plugins.config_backends.<kind>.get_backend()`` returns. The
-    package is imported directly, never through the general plugin loader (which reads config, D11)."""
+    """``file`` is the only backend this build provides; any other kind fails closed."""
     if kind == "file":
         return _FILE_BACKEND
-    unknown = f"{BACKEND_ENV}={kind!r} is not a config backend this build provides (expected 'file' or 'remote')."
-    if not _KIND_RE.fullmatch(kind):
-        raise ConfigBackendUnavailable(unknown)
-    name = f"{_BACKENDS_PACKAGE}.{kind}"
-    module = sys.modules.get(name)
-    if module is None:
-        try:
-            module = importlib.import_module(name)
-        except ImportError as exc:
-            if exc.name != name and not name.startswith(f"{exc.name}."):
-                raise  # the backend exists but is broken: show that, not "unknown"
-            raise ConfigBackendUnavailable(unknown) from exc
-    get_backend = getattr(module, "get_backend", None)
-    if not callable(get_backend):
-        raise ConfigBackendUnavailable(unknown)
-    return get_backend()
+    raise ConfigBackendUnavailable(
+        f"{BACKEND_ENV}={kind!r} is not a config backend this build provides (expected 'file').")
 
 
 class _ExplicitFile(FileBackend):

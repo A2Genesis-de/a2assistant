@@ -516,15 +516,6 @@ def _bootstrap_env(home: Path | None = None, project_env: Path | None = None) ->
     return env
 
 
-def selected_config_backend_name(home: Path | None = None) -> str:
-    """The config backend ``load_hermes_dotenv`` selects for *home*, decided without loading or
-    booting anything. For a caller that must decide before Hermes starts (Docker stage2 skips the
-    config-file migration in remote mode, D12)."""
-    from hermes_cli.config_backend import BACKEND_ENV
-
-    return (_bootstrap_env(home).get(BACKEND_ENV) or "").strip().lower() or "file"
-
-
 def apply_config_bootstrap_env(backend_names, home: Path | None = None, project_env: Path | None = None) -> None:
     """Publish ``backend_names(kind)`` (the selected backend's deployment and credential, D26/D32) from the
     launch home's ``.env`` and the managed ``.env``, with the values ``load_hermes_dotenv`` gives
