@@ -298,9 +298,7 @@ def _command_output_format(config: dict[str, Any], formats: frozenset[str], defa
 # ---- TTS ``tts.providers.<name>`` layer -----------------------------------
 
 # Any ``tts.provider`` value NOT in this set refers to ``tts.providers.<name>``.
-BUILTIN_TTS_PROVIDERS = frozenset({
-    "edge", "elevenlabs", "openai", "minimax", "xai", "mistral", "gemini",
-    "neutts", "kittentts", "piper", "deepinfra"})
+BUILTIN_TTS_PROVIDERS = frozenset({"openai", "kittentts", "piper"})
 
 DEFAULT_COMMAND_TTS_TIMEOUT_SECONDS = 120
 DEFAULT_COMMAND_TTS_OUTPUT_FORMAT = "mp3"

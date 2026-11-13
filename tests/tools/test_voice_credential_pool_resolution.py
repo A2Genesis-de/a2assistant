@@ -174,16 +174,6 @@ class TestMultiplexScope:
 class TestToolWiring:
     """The tools' module-level helpers delegate to the shared resolver."""
 
-    def test_transcription_tools_delegates(self):
-        from tools import transcription_tools as tt
-
-        def fake_load_pool(pid):
-            return _fake_pool("stt-pool-key" if pid == "groq" else "")
-
-        with patch("agent.credential_pool.load_pool", side_effect=fake_load_pool):
-            assert tt._resolve_provider_key("GROQ_API_KEY", "groq") == "stt-pool-key"
-
-
     def test_openai_audio_key_falls_back_to_pool(self):
         from tools.tool_backend_helpers import resolve_openai_audio_api_key
 

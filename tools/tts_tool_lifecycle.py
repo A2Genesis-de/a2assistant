@@ -5,7 +5,7 @@ resident. Every surface that flips speech output on holds a *lease* here (warmin
 engine); when the last lease is released the local model caches are dropped after a keep-warm
 window (``tts.keep_warm_seconds``), so one surface's "off" can't unload a model another surface
 still needs and a wake-word loop that re-acquires within the window reuses the loaded model.
-Cloud providers have nothing resident; warming only ensures the SDK imports. Origin seams (``_load_tts_config``, ``_get_provider``) are
+Cloud providers have nothing resident. Origin seams (``_load_tts_config``, ``_get_provider``) are
 resolved through :func:`_origin` per call.
 """
 
@@ -44,10 +44,6 @@ def _local_tts_warmers() -> dict[str, Callable[[dict[str, Any]], Any]]:
     return {
         "piper": lambda cfg: _load_piper_voice_for_config(cfg)[0],
         "kittentts": lambda cfg: _load_kittentts_model_for_config(cfg)[0]}
-
-
-# pm extra for providers whose SDK installs on first use.
-_LAZY_SDK_FEATURES = {"edge": "edge-tts", "elevenlabs": "tts-premium", "mistral": "mistral"}
 
 
 def _signal_user_tts_provider(name: str, tts_config: dict[str, Any], hook: str) -> Optional[str]:
@@ -90,8 +86,8 @@ def _signal_user_tts_provider(name: str, tts_config: dict[str, Any], hook: str) 
 
 def warm_tts_provider(tts_config: Optional[dict[str, Any]] = None, provider: Optional[str] = None) -> dict[str, Any]:
     """Pre-load the configured TTS provider so the next synthesis starts hot (blocking; never raises).
-    Local engines fill the same LRU slot synthesis reads (including first-use download); lazily
-    installed cloud SDKs are made importable; user-declared providers get their warm hook;
+    Local engines fill the same LRU slot synthesis reads (including first-use download);
+    user-declared providers get their warm hook;
     everything else is ``action: "noop"``. The result carries ``warmed`` / ``action`` / ``error``."""
     if tts_config is None:
         tts_config = _origin()._load_tts_config()
@@ -117,18 +113,6 @@ def warm_tts_provider(tts_config: Optional[dict[str, Any]] = None, provider: Opt
         ok = signalled != "error"
         result.update(warmed=ok, action="warmed" if ok else "error")
         return result
-    feature = _LAZY_SDK_FEATURES.get(name)
-    if feature is not None:
-        try:
-            import pm
-            if pm.available(feature):
-                result.update(warmed=True, action="cached")
-            else:
-                pm.ensure_import(feature)
-                result.update(warmed=True, action="installed")
-        except Exception as exc:
-            logger.debug("[TTS] SDK warm-up for %s skipped: %s", name, exc)
-            result.update(action="error", error=str(exc))
     return result
 
 

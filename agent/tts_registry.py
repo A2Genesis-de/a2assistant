@@ -22,10 +22,7 @@ logger = logging.getLogger(__name__)
 # ``BUILTIN_TTS_PROVIDERS`` in :mod:`tools.tts_tool`** (``TestBuiltinSync`` in
 # ``tests/agent/test_tts_registry.py`` fails on drift); importing it directly
 # would be a circular import.
-_BUILTIN_NAMES = frozenset({
-    "edge", "elevenlabs", "openai", "minimax", "xai", "mistral", "gemini", "neutts", "kittentts",
-    "piper", "deepinfra",
-})
+_BUILTIN_NAMES = frozenset({"openai", "kittentts", "piper"})
 
 
 def _warn_builtin_collision(key: str) -> None:

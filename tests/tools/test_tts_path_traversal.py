@@ -97,7 +97,7 @@ def test_media_directive_in_path_is_rejected_before_any_echo(tmp_path):
         assert "media directive" in payload["error"], bad
         assert _collect_auto_append_media_tags(_tts_messages(result), history_offset=0)[0] == []
 
-    base, err = _resolve_output_base(str(tmp_path / "media:notes.mp3"), "edge", None, False)
+    base, err = _resolve_output_base(str(tmp_path / "media:notes.mp3"), "piper", None, False)
     assert err is None and base == tmp_path / "media:notes.mp3"
 
 

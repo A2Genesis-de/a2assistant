@@ -4,7 +4,7 @@
 Covers:
 
 1. Fixture plugin returning a prompt → the backend call receives
-   ``initial_prompt`` (faster-whisper) / ``prompt`` (OpenAI, Groq, Mistral).
+   ``initial_prompt`` (faster-whisper) / ``prompt`` (OpenAI).
    The API boundary is stubbed — no live model is loaded or called.
 2. Two hooks → last-writer-wins per field, in registration order.
 3. Hook returning the read-only ``file_path`` field → dropped with a log.
@@ -13,9 +13,7 @@ Covers:
    on the wire).
 5. ``stt.prompt`` config alone → threaded without any hook.
 6. Config + hook → hook wins (config is the base, hooks mutate on top).
-7. Unsupported backend (xAI, ElevenLabs) → DEBUG note and the call
-   proceeds without the prompt.
-8. Plugin-registered providers receive the prompt via the ABC's ``**extra``
+7. Plugin-registered providers receive the prompt via the ABC's ``**extra``
    kwargs — no signature change.
 
 Mirrors the ``transform_tool_result`` hook test conventions from
@@ -25,8 +23,6 @@ Mirrors the ``transform_tool_result`` hook test conventions from
 from __future__ import annotations
 
 import logging
-import sys
-from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -137,49 +133,6 @@ class TestPromptThreading:
         _, kwargs = mock_client.audio.transcriptions.create.call_args
         assert kwargs["prompt"] == PROMPT
         assert kwargs["language"] == "en"
-
-    def test_hook_prompt_reaches_groq(self, monkeypatch, tmp_path):
-        audio = _make_audio(tmp_path)
-        monkeypatch.setenv("GROQ_API_KEY", "gsk-test")
-        _fake_hooks(monkeypatch, [{"prompt": PROMPT}])
-
-        mock_client = MagicMock()
-        mock_client.audio.transcriptions.create.return_value = "hello"
-
-        cfg_patch, prov_patch = _dispatch_ctx({"provider": "groq"}, "groq")
-        with cfg_patch, prov_patch, \
-             patch("tools.transcription_tools._HAS_OPENAI", True), \
-             patch("openai.OpenAI", return_value=mock_client):
-            result = transcription_tools.transcribe_audio(audio)
-
-        assert result["success"] is True
-        _, kwargs = mock_client.audio.transcriptions.create.call_args
-        assert kwargs["prompt"] == PROMPT
-
-    def test_prompt_reaches_mistral(self, monkeypatch, tmp_path):
-        """Unit-level: _transcribe_mistral forwards prompt to the SDK call."""
-        audio = _make_audio(tmp_path)
-        monkeypatch.setenv("MISTRAL_API_KEY", "mk-test")
-        # Never attempt a lazy install in tests.
-        monkeypatch.setattr("pm.ensure_import", lambda *a, **kw: None)
-
-        mistral_cls = MagicMock()
-        mock_client = mistral_cls.return_value.__enter__.return_value
-        mock_client.audio.transcriptions.complete.return_value = SimpleNamespace(
-            text="hello",
-        )
-        fake_mistralai = SimpleNamespace(client=SimpleNamespace(Mistral=mistral_cls))
-        monkeypatch.setitem(sys.modules, "mistralai", fake_mistralai)
-        monkeypatch.setitem(sys.modules, "mistralai.client", fake_mistralai.client)
-
-        result = transcription_tools._transcribe_mistral(
-            audio, "voxtral-mini-latest", prompt=PROMPT,
-        )
-
-        assert result["success"] is True
-        _, kwargs = mock_client.audio.transcriptions.complete.call_args
-        assert kwargs["prompt"] == PROMPT
-
 
 # ---------------------------------------------------------------------------
 # Hook merge mechanics
@@ -354,25 +307,13 @@ class TestSttPromptConfig:
         # Tail survives — whisper conditions on the final context window.
         assert kwargs["prompt"] == long_prompt[-max_chars:]
 
-    def test_non_whisper_provider_prompt_not_truncated(
-        self, monkeypatch, tmp_path,
-    ):
-        """Providers without a known whisper prompt window (mistral) get the
+    def test_non_whisper_provider_prompt_not_truncated(self):
+        """Providers without a known whisper prompt window (command/plugin backends) get the
         prompt unchanged — the backend owns its own validation."""
-        audio = _make_audio(tmp_path)
+        from tools.transcription_command import _enforce_prompt_length_limit
+
         long_prompt = "domain-vocabulary " * 300
-        _fake_hooks(monkeypatch, [{"prompt": long_prompt}])
-
-        backend = MagicMock(return_value={"success": True, "transcript": "hi"})
-        cfg_patch, prov_patch = _dispatch_ctx(
-            {"provider": "mistral", "prompt": "config base"}, "mistral",
-        )
-        with cfg_patch, prov_patch, \
-             patch("tools.transcription_tools._transcribe_mistral", backend):
-            transcription_tools.transcribe_audio(audio)
-
-        _, kwargs = backend.call_args
-        assert kwargs["prompt"] == long_prompt
+        assert _enforce_prompt_length_limit(long_prompt, "my-plugin-asr") == long_prompt
 
 
     def test_blank_config_prompt_ignored(self, monkeypatch, tmp_path):
@@ -389,61 +330,6 @@ class TestSttPromptConfig:
 
         _, kwargs = backend.call_args
         assert kwargs["prompt"] is None
-
-
-# ---------------------------------------------------------------------------
-# Backends without prompt support
-# ---------------------------------------------------------------------------
-
-
-class TestUnsupportedBackends:
-    def test_xai_logs_debug_and_proceeds_without_prompt(
-        self, monkeypatch, tmp_path, caplog,
-    ):
-        audio = _make_audio(tmp_path)
-        monkeypatch.setattr(
-            "tools.xai_http.resolve_xai_http_credentials",
-            lambda: {"api_key": "xk-test", "base_url": None},
-        )
-        monkeypatch.setattr(
-            "tools.xai_http.hermes_xai_user_agent", lambda: "test-ua",
-        )
-
-        response = MagicMock(status_code=200)
-        response.json.return_value = {"text": "hello", "language": "en", "duration": 1.0}
-        fake_requests = SimpleNamespace(post=MagicMock(return_value=response))
-        monkeypatch.setitem(sys.modules, "requests", fake_requests)
-
-        with caplog.at_level(logging.DEBUG, logger="tools.transcription_tools"), \
-             patch("tools.transcription_tools._load_stt_config", return_value={}):
-            result = transcription_tools._transcribe_xai(
-                audio, "grok-stt", prompt=PROMPT,
-            )
-
-        assert result["success"] is True
-        _, kwargs = fake_requests.post.call_args
-        assert "prompt" not in kwargs["data"]
-
-    def test_elevenlabs_logs_debug_and_proceeds_without_prompt(
-        self, monkeypatch, tmp_path, caplog,
-    ):
-        audio = _make_audio(tmp_path)
-        monkeypatch.setenv("ELEVENLABS_API_KEY", "el-test")
-
-        response = MagicMock(status_code=200)
-        response.json.return_value = {"text": "hello"}
-        fake_requests = SimpleNamespace(post=MagicMock(return_value=response))
-        monkeypatch.setitem(sys.modules, "requests", fake_requests)
-
-        with caplog.at_level(logging.DEBUG, logger="tools.transcription_tools"), \
-             patch("tools.transcription_tools._load_stt_config", return_value={}):
-            result = transcription_tools._transcribe_elevenlabs(
-                audio, "scribe_v2", prompt=PROMPT,
-            )
-
-        assert result["success"] is True
-        _, kwargs = fake_requests.post.call_args
-        assert "prompt" not in kwargs["data"]
 
 
 # ---------------------------------------------------------------------------

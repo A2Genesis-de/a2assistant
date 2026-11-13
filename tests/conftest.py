@@ -419,8 +419,8 @@ def _hermetic_environment(tmp_path, tmp_path_factory, monkeypatch):
     # On-demand extras (pm.sync_venv) install mid-test-run by design —
     # _allow_lazy_installs() fails open for users. Unit tests must never reach
     # pip/the network: with the SDK absent, any agent init whose tool checks
-    # touch a lazy feature (e.g. check_tts_requirements →
-    # ensure("tts.elevenlabs")) spawns a real pip install — which hangs to the
+    # touch a lazy feature (e.g. a voice engine's first-use install)
+    # spawns a real pip install — which hangs to the
     # suite timeout under tests that set fake proxy env vars. The kill-switch
     # makes ensure() raise FeatureUnavailable immediately instead.
     # extras tests override this var in both directions.

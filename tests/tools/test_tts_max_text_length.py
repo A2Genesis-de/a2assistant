@@ -30,9 +30,6 @@ class TestResolveMaxTextLength:
     # --- Overrides ---
 
 
-    # --- ElevenLabs model-aware ---
-
-
     # --- Sanity: the table covers every provider listed in the schema ---
 
 
@@ -42,7 +39,7 @@ class TestTextToSpeechToolChunking:
     per-request chunks rather than the old 4000-char global truncation."""
 
     def test_openai_chunks_at_4096_without_dropping_text(self, tmp_path, monkeypatch):
-        # 5000 chars -- over OpenAI's 4096 limit but under xAI's 15k
+        # 5000 chars -- over OpenAI's 4096 limit
         text = "A" * 5000
         captured_text = []
 
@@ -73,28 +70,29 @@ class TestTextToSpeechToolChunking:
         assert "".join(captured_text) == text
         assert result["chunk_count"] == 2
 
-    def test_xai_accepts_much_longer_input(self, tmp_path, monkeypatch):
-        # 12000 chars -- over old global 4000, under xAI's 15000
-        text = "B" * 12000
+    def test_piper_accepts_longer_input(self, tmp_path, monkeypatch):
+        # 4500 chars -- over the global 4000 fallback, under Piper's 5000
+        text = "B" * 4500
         captured_text = {}
 
-        def fake_xai(t, out, cfg):
+        def fake_piper(t, out, cfg):
             captured_text["text"] = t
             with open(out, "wb") as f:
                 f.write(b"\x00")
             return out
 
-        monkeypatch.setattr("tools.tts_tool._generate_xai_tts", fake_xai)
+        monkeypatch.setattr("tools.tts_tool._generate_piper_tts", fake_piper)
+        monkeypatch.setattr("tools.tts_tool._import_piper", lambda: object())
         monkeypatch.setattr("tools.tts_tool._load_tts_config",
-                            lambda: {"provider": "xai"})
+                            lambda: {"provider": "piper"})
 
         from tools.tts_tool import text_to_speech_tool
         out = str(tmp_path / "out.mp3")
         result = json.loads(text_to_speech_tool(text=text, output_path=out))
 
         assert result["success"] is True
-        # xAI should accept the full 12000 chars in a single chunk
-        assert len(captured_text["text"]) == 12000
+        # Piper should accept the full 4500 chars in a single chunk
+        assert len(captured_text["text"]) == 4500
 
     def test_user_override_is_respected(self, tmp_path, monkeypatch):
         # User says "cap openai at 100 chars" -- we must honor it

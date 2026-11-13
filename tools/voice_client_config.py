@@ -13,21 +13,15 @@ Config gate: ``voice.client_direct`` (default ``true``).
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 # Wire shapes the desktop knows how to speak. Anything else → relay.
 #   openai-multipart : POST {base_url}/audio/transcriptions (multipart, Bearer)
-#   xai-stt          : POST {base_url}/stt (multipart, Bearer, model, format=true)
-#   elevenlabs-stt   : POST {base_url}/speech-to-text (multipart, xi-api-key)
 #   openai-speech    : POST {base_url}/audio/speech (JSON, Bearer) → audio bytes
-#   elevenlabs-tts   : POST {base_url}/text-to-speech/{voice_id} (JSON, xi-api-key)
 STT_WIRE_OPENAI = "openai-multipart"
-STT_WIRE_XAI = "xai-stt"
-STT_WIRE_ELEVENLABS = "elevenlabs-stt"
 TTS_WIRE_OPENAI = "openai-speech"
-TTS_WIRE_ELEVENLABS = "elevenlabs-tts"
 
 
 def _client_direct_enabled() -> bool:
@@ -77,21 +71,7 @@ def stt_hallucination_filter() -> dict[str, Any]:
     }
 
 
-def _deepinfra_model(section: dict[str, Any], kind: str) -> Optional[str]:
-    """Configured model, else the first catalog model of ``kind`` (stt/tts)."""
-    from hermes_cli.models import deepinfra_model_ids
-    return section.get("model") or next(iter(deepinfra_model_ids(kind)), None)
-
-
 # ── STT ──
-# provider -> (env var, default-model attr on transcription_common, base_url).
-# ``base_url`` is a transcription_common attr name or a literal URL.
-_STT_KEYED: dict[str, tuple[str, str, str]] = {
-    "groq": ("GROQ_API_KEY", "DEFAULT_GROQ_STT_MODEL", "GROQ_BASE_URL"),
-    "mistral": ("MISTRAL_API_KEY", "DEFAULT_MISTRAL_STT_MODEL", "https://api.mistral.ai/v1"),
-}
-
-
 def _resolve_stt_client_config() -> dict[str, Any]:
     from tools import transcription_common as tc
     from tools import transcription_tools as tt
@@ -107,29 +87,12 @@ def _resolve_stt_client_config() -> dict[str, Any]:
     if provider not in tc.BUILTIN_STT_PROVIDERS:
         return _relay("command/plugin provider")
 
-    language = tt._resolve_stt_language(
-        provider, stt_config, extra_keys=("language_code",) if provider == "elevenlabs" else ())
+    language = tt._resolve_stt_language(provider, stt_config)
     section = _section(stt_config, provider)
-    # Same deadline the gateway's own transcription client applies
-    # (``stt.openai.timeout``; riders such as groq/deepinfra inherit it), so a
-    # slow endpoint fails the Desktop's direct request instead of hanging it.
+    # Same deadline the gateway's own transcription client applies (``stt.openai.timeout``),
+    # so a slow endpoint fails the Desktop's direct request instead of hanging it.
     timeout_s = tc._config_number(_section(stt_config, "openai"), "timeout", 60.0)
 
-    def direct(wire: str, base_url: Any, api_key: str, model: Any) -> dict[str, Any]:
-        return _direct(wire, provider, base_url, api_key, model, language=language, timeout_s=timeout_s,
-                       hallucination_filter=stt_hallucination_filter())
-
-    def env_base_url(env_var: str, default: str) -> str:
-        from hermes_cli.config import get_env_value
-        return str(section.get("base_url") or get_env_value(env_var) or default).strip().rstrip("/")
-
-    if provider in _STT_KEYED:
-        env_var, default_model, base = _STT_KEYED[provider]
-        api_key = tt._resolve_provider_key(env_var, provider)
-        if not api_key:
-            return _relay("no credentials")
-        return direct(STT_WIRE_OPENAI, getattr(tc, base, base), api_key,
-                      section.get("model") or getattr(tc, default_model))
     if provider == "openai":
         # Covers the Nous-managed selection too: the resolver returns the user's
         # own gateway token + managed base URL — exactly what the client should use.
@@ -137,38 +100,15 @@ def _resolve_stt_client_config() -> dict[str, Any]:
             api_key, base_url = tt._resolve_openai_audio_client_config()
         except ValueError as exc:
             return _relay(f"openai resolution failed: {exc}")
-        return direct(STT_WIRE_OPENAI, base_url, api_key, section.get("model") or tc.DEFAULT_STT_MODEL)
-    if provider == "xai":
-        # API key only: an xAI OAuth bearer refreshes server-side mid-session and
-        # would strand the client on the first 401.
-        from hermes_cli.config import get_env_value
-        api_key = str(get_env_value("XAI_API_KEY") or "").strip()
-        if not api_key:
-            return _relay("xai oauth (server-managed) or no credentials")
-        return direct(STT_WIRE_XAI, env_base_url("XAI_STT_BASE_URL", tc.XAI_STT_BASE_URL), api_key,
-                      tc.normalize_xai_stt_model(section.get("model")))
-    if provider == "elevenlabs":
-        api_key = tt._resolve_provider_key("ELEVENLABS_API_KEY", "elevenlabs")
-        if not api_key:
-            return _relay("no credentials")
-        return direct(STT_WIRE_ELEVENLABS, env_base_url("ELEVENLABS_STT_BASE_URL", tc.ELEVENLABS_STT_BASE_URL),
-                      api_key, section.get("model") or tc.DEFAULT_ELEVENLABS_STT_MODEL)
-    if provider == "deepinfra":
-        api_key = tt._resolve_provider_key("DEEPINFRA_API_KEY", "deepinfra")
-        if not api_key:
-            return _relay("no credentials")
-        from hermes_cli.models import deepinfra_base_url
-        model = _deepinfra_model(section, "stt")
-        if not model:
-            return _relay("no deepinfra stt model")
-        return direct(STT_WIRE_OPENAI, deepinfra_base_url(section), api_key, model)
+        return _direct(STT_WIRE_OPENAI, provider, base_url, api_key, section.get("model") or tc.DEFAULT_STT_MODEL,
+                       language=language, timeout_s=timeout_s, hallucination_filter=stt_hallucination_filter())
     return _relay(f"provider {provider!r} has no client wire")
 
 
 # ── TTS ──
 def _resolve_tts_client_config() -> dict[str, Any]:
     from tools import tts_tool as tts
-    from tools import tts_tool_openai, tts_tool_providers
+    from tools import tts_tool_openai
 
     tts_config = tts._load_tts_config()
     provider = tts._get_provider(tts_config)
@@ -202,29 +142,7 @@ def _resolve_tts_client_config() -> dict[str, Any]:
                        voice=oai.get("voice") or tts_tool_openai.DEFAULT_OPENAI_VOICE, speed=speed,
                        extra_body=tts_tool_openai._openai_extra_body(oai),
                        min_len=min_len)
-    if provider == "elevenlabs":
-        api_key = tts._resolve_provider_key("ELEVENLABS_API_KEY", "elevenlabs")
-        if not api_key:
-            return _relay("no credentials")
-        el = _section(tts_config, "elevenlabs")
-        return _direct(TTS_WIRE_ELEVENLABS, "elevenlabs",
-                       str(el.get("base_url") or "https://api.elevenlabs.io/v1").rstrip("/"),
-                       api_key, el.get("model_id") or tts_tool_providers.DEFAULT_ELEVENLABS_MODEL_ID,
-                       voice=el.get("voice_id") or tts_tool_providers.DEFAULT_ELEVENLABS_VOICE_ID, speed=None,
-                       min_len=min_len)
-    if provider == "deepinfra":
-        api_key = tts._resolve_provider_key("DEEPINFRA_API_KEY", "deepinfra")
-        if not api_key:
-            return _relay("no credentials")
-        from hermes_cli.models import deepinfra_base_url
-        di = _section(tts_config, "deepinfra")
-        model = _deepinfra_model(di, "tts")
-        if not model:
-            return _relay("no deepinfra tts model")
-        return _direct(TTS_WIRE_OPENAI, "deepinfra", deepinfra_base_url(di), api_key, model,
-                       voice=di.get("voice") or "af_bella", speed=None, min_len=min_len)
-    # edge / minimax / xai / mistral / gemini / neutts / kittentts / piper: server-host-only
-    # engines or wire shapes the desktop doesn't speak yet; the relay path serves them.
+    # kittentts / piper: server-host-only engines; the relay path serves them.
     return _relay(f"provider {provider!r} has no client wire")
 
 

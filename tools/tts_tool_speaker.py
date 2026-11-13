@@ -344,7 +344,7 @@ def stream_tts_to_speaker(
     try:
         tts_config = origin._load_tts_config()
         # Prefer a chunked streamer for low time-to-first-audio; otherwise per-sentence sync
-        # synthesis (universal — edge + every non-streamer).
+        # synthesis (universal — every non-streamer).
         from tools.tts_streaming import SentenceChunker, resolve_streaming_provider
         streamer = resolve_streaming_provider(tts_config, preferred=provider)
         stream_max_len = 0

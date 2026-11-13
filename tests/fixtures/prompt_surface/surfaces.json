@@ -5,7 +5,7 @@
       "stable": 1883,
       "volatile": 1269
     },
-    "tool_tokens": 11241,
+    "tool_tokens": 11225,
     "tools": [
       "browser_cdp",
       "browser_dialog",
@@ -38,7 +38,7 @@
       "stable": 1278,
       "volatile": 1270
     },
-    "tool_tokens": 11241,
+    "tool_tokens": 11225,
     "tools": [
       "browser_cdp",
       "browser_dialog",
@@ -71,7 +71,7 @@
       "stable": 1700,
       "volatile": 1268
     },
-    "tool_tokens": 11241,
+    "tool_tokens": 11225,
     "tools": [
       "browser_cdp",
       "browser_dialog",
@@ -104,7 +104,7 @@
       "stable": 2473,
       "volatile": 1266
     },
-    "tool_tokens": 11396,
+    "tool_tokens": 11381,
     "tools": [
       "browser_cdp",
       "browser_dialog",
@@ -137,7 +137,7 @@
       "stable": 1278,
       "volatile": 1269
     },
-    "tool_tokens": 11241,
+    "tool_tokens": 11225,
     "tools": [
       "browser_cdp",
       "browser_dialog",
@@ -170,7 +170,7 @@
       "stable": 1265,
       "volatile": 1270
     },
-    "tool_tokens": 11241,
+    "tool_tokens": 11225,
     "tools": [
       "browser_cdp",
       "browser_dialog",
@@ -203,7 +203,7 @@
       "stable": 1528,
       "volatile": 1271
     },
-    "tool_tokens": 11894,
+    "tool_tokens": 11878,
     "tools": [
       "browser_cdp",
       "browser_dialog",
@@ -237,7 +237,7 @@
       "stable": 1297,
       "volatile": 1271
     },
-    "tool_tokens": 11241,
+    "tool_tokens": 11225,
     "tools": [
       "browser_cdp",
       "browser_dialog",
@@ -270,7 +270,7 @@
       "stable": 1384,
       "volatile": 1271
     },
-    "tool_tokens": 11241,
+    "tool_tokens": 11225,
     "tools": [
       "browser_cdp",
       "browser_dialog",

@@ -1,39 +1,27 @@
 #!/usr/bin/env python3
 """Text-to-speech tool: config resolution, built-in provider dispatch, output policy, registration.
 
-Built-ins: Edge (free default), ElevenLabs, OpenAI, DeepInfra, MiniMax, Mistral, Gemini, xAI,
-local NeuTTS / KittenTTS / Piper; plus ``type: command`` providers under ``tts.providers.<name>``
-and plugin-registered ones. Output is Opus (.ogg) on voice-bubble platforms, MP3 elsewhere.
+Built-ins: OpenAI-compatible (default) and local KittenTTS / Piper; plus ``type: command``
+providers under ``tts.providers.<name>`` and plugin-registered ones. Output is Opus (.ogg) on voice-bubble platforms, MP3 elsewhere.
 Sibling ``tts_tool_*`` modules hold backends/delivery/lifecycle; they read the seams defined
 here (config, provider resolution, lazy SDK importers) through ``_origin()`` at call time.
 """
 
-from pm import install_hint
-import asyncio
-import contextlib
 import datetime
 import importlib.util
 import json
 import logging
 import os
 import re
-import tempfile
 import uuid
 from pathlib import Path
-from typing import Callable, Dict, Any, List, Optional
+from typing import Callable, Any, Optional
 
 import copy
 
 from hermes_constants import display_hermes_home
 
 logger = logging.getLogger(__name__)
-
-
-def _resolve_provider_key(env_var: str, provider_id: str) -> str:
-    """Resolve a TTS provider API key via the shared voice-key resolver (config > env/.env > pool)."""
-    from tools.tool_backend_helpers import resolve_provider_secret
-    return resolve_provider_secret(env_var, provider_id)
-
 
 from tools.tts_command_provider import (
     BUILTIN_TTS_PROVIDERS, _configured_command_tts_output_path, _generate_command_tts,
@@ -42,40 +30,25 @@ from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER
 from tools.tts_tool_delivery import (
     _resolve_max_text_length, _build_audio_delivery_files, _convert_to_opus, _remove_quietly,
     _repair_ogg_container, _resolve_audio_delivery_profile, _split_text_for_tts)
-from tools.tts_tool_providers import (
-    _generate_edge_tts, _generate_elevenlabs, _generate_gemini_tts, _generate_minimax_tts,
-    _generate_mistral_tts, _generate_xai_tts, _resolve_minimax_tts_runtime)
-from tools.tts_tool_local import _generate_kittentts, _generate_neutts, _generate_piper_tts
+from tools.tts_tool_local import _generate_kittentts, _generate_piper_tts
 from tools.tts_tool_plugins import (
     _dispatch_to_plugin_provider, _plugin_provider_is_available,
     _plugin_provider_is_voice_compatible)
-from tools.tts_tool_openai import _generate_deepinfra_tts, _generate_openai_tts, _has_openai_audio_backend
+from tools.tts_tool_openai import _generate_openai_tts, _has_openai_audio_backend
 
-
-_PM_FEATURE_ALIASES = {"tts.edge": "edge-tts", "tts.elevenlabs": "tts-premium", "tts.mistral": "mistral"}
 
 # --- Lazy SDK importers -- providers import only when used (headless boxes lack PortAudio etc.) ---
-def _sdk_importer(module: str, attr: Optional[str] = None, feature: Optional[str] = None) -> Callable[[], Any]:
+def _sdk_importer(module: str, attr: Optional[str] = None) -> Callable[[], Any]:
     """Lazy SDK importer: returns ``module`` (or ``module.attr``), raising ImportError when absent.
-
-    ``feature`` names a ``pm.ensure_import`` extra to best-effort install first (users who enabled
-    a provider in config.yaml never ran the post-setup hook); any failure there falls through so
-    the raw import still raises cleanly. sounddevice also raises OSError without PortAudio."""
+    sounddevice also raises OSError without PortAudio."""
     def _import():
-        if feature:
-            with contextlib.suppress(Exception):
-                from pm import ensure_import as _pm_ensure
-                _pm_ensure(_PM_FEATURE_ALIASES.get(feature, feature))
         mod = importlib.import_module(module)
         return getattr(mod, attr) if attr else mod
     _import.__name__ = f"_import_{module.split('.')[0]}"
     return _import
 
 
-_import_edge_tts = _sdk_importer("edge_tts", feature="tts.edge")
-_import_elevenlabs = _sdk_importer("elevenlabs.client", "ElevenLabs", feature="tts.elevenlabs")
 _import_openai_client = _sdk_importer("openai", "OpenAI")
-_import_mistral_client = _sdk_importer("mistralai.client", "Mistral", feature="tts.mistral")
 _import_sounddevice = _sdk_importer("sounddevice")
 _import_kittentts = _sdk_importer("kittentts", "KittenTTS")
 _import_piper = _sdk_importer("piper", "PiperVoice")  # piper-tts wheels embed espeak-ng
@@ -96,13 +69,12 @@ def _package_installed(name: str) -> bool:
         return False
 
 
-def _check_neutts_available() -> bool: return _package_installed("neutts")
 def _check_kittentts_available() -> bool: return _package_installed("kittentts")
 def _check_piper_available() -> bool: return _package_installed("piper")
 
 
 # --- Defaults / config ---
-DEFAULT_PROVIDER = "edge"
+DEFAULT_PROVIDER = "openai"
 
 
 def _get_default_output_dir() -> str:
@@ -143,8 +115,7 @@ def _load_tts_config() -> dict[str, Any]:
 
 
 def _get_provider(tts_config: dict[str, Any]) -> str:
-    """Configured provider or the free default (inference credentials never imply consent to paid
-    speech); ``nous`` is serviced by the OpenAI path through the managed openai-audio gateway."""
+    """Configured provider or the OpenAI-compatible default; ``nous`` is serviced by the OpenAI path through the managed openai-audio gateway."""
     provider = (tts_config.get("provider") or DEFAULT_PROVIDER).lower().strip()
     return "openai" if provider == NOUS_MANAGED_PROVIDER else provider
 
@@ -161,30 +132,16 @@ OPUS_VOICE_PLATFORMS = frozenset({"telegram", "matrix", "feishu", "whatsapp", "s
 _MEDIA_DIRECTIVE_RE = re.compile(r"media:\s*[`'\"*_]*(?:[`'\"]|[a-z]:[/\\]|~?/)", re.IGNORECASE)
 
 # Built-ins that emit Opus natively when asked for .ogg; the rest need ffmpeg for voice bubbles.
-_NATIVE_OPUS_PROVIDERS = frozenset({"openai", "elevenlabs", "mistral", "gemini"})
-_FFMPEG_OPUS_PROVIDERS = frozenset({"edge", "neutts", "minimax", "xai", "kittentts", "piper"})
+_NATIVE_OPUS_PROVIDERS = frozenset({"openai"})
+_FFMPEG_OPUS_PROVIDERS = frozenset({"kittentts", "piper"})
 
 
 # --- Built-in provider dispatch ---
 # provider -> (availability predicate or None, log label, generator name, "package missing" error).
 # Predicates/generator names resolve module globals at call time so test monkeypatches apply.
 _BUILTIN_DISPATCH: dict[str, tuple] = {
-    "elevenlabs": (lambda: _importable(_import_elevenlabs), "ElevenLabs", "_generate_elevenlabs",
-                   "ElevenLabs provider selected but 'elevenlabs' package not installed. Run: "
-                   f"{install_hint('tts-premium')}"),
     "openai": (lambda: _importable(_import_openai_client), "OpenAI TTS", "_generate_openai_tts",
                "OpenAI provider selected but 'openai' package not installed."),
-    "deepinfra": (lambda: _importable(_import_openai_client), "DeepInfra TTS", "_generate_deepinfra_tts",
-                  "DeepInfra TTS uses the 'openai' SDK but it isn't installed."),
-    "minimax": (None, "MiniMax TTS", "_generate_minimax_tts", None),
-    "xai": (None, "xAI TTS", "_generate_xai_tts", None),
-    "mistral": (lambda: _importable(_import_mistral_client), "Mistral Voxtral TTS", "_generate_mistral_tts",
-                "Mistral provider selected but 'mistralai' package not installed. "
-                "Run `hermes setup` to install Mistral support."),
-    "gemini": (None, "Google Gemini TTS", "_generate_gemini_tts", None),
-    "neutts": (lambda: _check_neutts_available(), "NeuTTS (local)", "_generate_neutts",
-               "NeuTTS provider selected but neutts is not installed. "
-               "Run hermes setup tts and choose NeuTTS; espeak-ng is also required."),
     "kittentts": (lambda: _importable(_import_kittentts), "KittenTTS (local, ~25MB)", "_generate_kittentts",
                   "KittenTTS provider selected but 'kittentts' package not installed. "
                   "Run 'hermes setup tts' and choose KittenTTS."),
@@ -197,45 +154,32 @@ def _error_json(message: str) -> str:
     return json.dumps({"success": False, "error": message}, ensure_ascii=False)
 
 
-def _run_edge_tts(text: str, file_str: str, tts_config: dict[str, Any]) -> None:
-    """Run the async Edge generator from sync code (worker thread; direct run if that fails)."""
-    run = lambda: asyncio.run(_generate_edge_tts(text, file_str, tts_config))
-    try:
-        from concurrent.futures import ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            pool.submit(run).result(timeout=60)
-    except RuntimeError:
-        run()
+def _warn_unknown_tts_provider(provider: str) -> None:
+    key = ("unknown_tts_provider", provider)
+    if key in _once_warnings:
+        return
+    _once_warnings.add(key)
+    logger.warning("Unknown TTS provider %r; falling back to %r", provider, DEFAULT_PROVIDER)
 
 
 def _select_builtin_engine(provider: str) -> tuple:
-    """SDK check -> ``(engine, None)`` or ``(provider, error_json)``. Unknown names take the Edge
-    default; without edge-tts NeuTTS is the fallback (engine != provider)."""
-    entry = _BUILTIN_DISPATCH.get(provider)
-    if entry is not None:
-        available, _label, _generator, missing_error = entry
-        return provider, (_error_json(missing_error) if available is not None and not available() else None)
-    if _importable(_import_edge_tts):
-        return provider, None  # Edge default; the reported provider stays as configured
-    if _check_neutts_available():
-        logger.info("Edge TTS not available, falling back to NeuTTS (local)...")
-        return "neutts", None
-    return provider, _error_json(
-        "No TTS provider available. Enable Edge TTS with: "
-        f"{install_hint('edge-tts')} "
-        "or run 'hermes setup tts' and choose NeuTTS for local synthesis.")
+    """SDK check -> ``(engine, None)`` or ``(engine, error_json)``. Unknown or retired names
+    fall back to the ``DEFAULT_PROVIDER`` engine with a one-time warning."""
+    if provider not in _BUILTIN_DISPATCH:
+        _warn_unknown_tts_provider(provider)
+        provider = DEFAULT_PROVIDER
+    available, _label, _generator, missing_error = _BUILTIN_DISPATCH[provider]
+    return provider, (_error_json(missing_error) if not available() else None)
 
 
 def _synthesize_builtin(engine: str, text: str, file_str: str, tts_config: dict[str, Any], instructions: Optional[str]) -> None:
     """Run the already-selected built-in *engine*."""
-    entry = _BUILTIN_DISPATCH.get(engine)
-    logger.info("Generating speech with %s...", entry[1] if entry else "Edge TTS")
-    if entry is None:
-        _run_edge_tts(text, file_str, tts_config)
-    elif engine == "openai":
+    _available, label, generator, _missing = _BUILTIN_DISPATCH[engine]
+    logger.info("Generating speech with %s...", label)
+    if engine == "openai":
         _generate_openai_tts(text, file_str, tts_config, instructions=instructions)
     else:
-        globals()[entry[2]](text, file_str, tts_config)
+        globals()[generator](text, file_str, tts_config)
 
 
 def _finalize_voice_delivery(
@@ -303,51 +247,6 @@ def _apply_call_overrides(tts_config: dict[str, Any], speed: Optional[float], pr
         if requested and requested != configured_provider:
             _warn_ignored_tts_provider_override(requested, configured_provider)
     return tts_config, configured_provider
-
-
-# ElevenLabs voice ids are short alphanumeric tokens; anything else never reaches the URL path.
-_ELEVENLABS_VOICE_ID_RE = re.compile(r"^[A-Za-z0-9]{8,64}$")
-
-
-def elevenlabs_voice_selection_active(tts_config: Optional[dict[str, Any]] = None) -> bool:
-    """Whether the model may pick voices: built-in ElevenLabs is the configured provider (gates
-    the ``voice_id`` and ``find_voices`` schema fields, so other providers see neither)."""
-    tts_config = _load_tts_config() if tts_config is None else tts_config
-    return (_get_provider(tts_config) == "elevenlabs"
-            and _resolve_command_provider_config("elevenlabs", tts_config) is None)
-
-
-def _apply_voice_override(tts_config: dict[str, Any], provider: str, voice_id: Optional[str]):
-    """Per-call ElevenLabs ``voice_id`` on a copy of the config -> ``(tts_config, error_json)``.
-    Ignored (logged) on any other provider: a schema cached before a provider switch may still
-    send it, and it must not fail the speech."""
-    voice_id = (voice_id or "").strip()
-    if not voice_id:
-        return tts_config, None
-    if provider != "elevenlabs" or not elevenlabs_voice_selection_active(tts_config):
-        logger.warning("Ignoring per-call TTS voice_id; tts.provider is %r", provider)
-        return tts_config, None
-    if not _ELEVENLABS_VOICE_ID_RE.match(voice_id):
-        return tts_config, tool_error(
-            f"Invalid ElevenLabs voice_id {voice_id!r}: use a voice_id returned by find_voices.",
-            success=False)
-    section = dict(tts_config.get("elevenlabs") or {})
-    section["voice_id"] = voice_id
-    return {**tts_config, "elevenlabs": section}, None
-
-
-def _find_voices(find: Any) -> str:
-    """``text_to_speech(find_voices=...)``: one page of ElevenLabs voices to pick a voice_id from."""
-    if not isinstance(find, dict):
-        return tool_error("find_voices must be an object, e.g. {\"query\": \"orc\"}", success=False)
-    tts_config = _load_tts_config()
-    if not elevenlabs_voice_selection_active(tts_config):
-        return tool_error("find_voices needs tts.provider: elevenlabs", success=False)
-    api_key = _resolve_provider_key("ELEVENLABS_API_KEY", "elevenlabs")
-    if not api_key:
-        return tool_error("ELEVENLABS_API_KEY not set. Get one at https://elevenlabs.io/", success=False)
-    from tools.tts_elevenlabs_voices import search_voices
-    return search_voices(find, tts_config, api_key)
 
 
 def _session_platform() -> tuple:
@@ -420,7 +319,7 @@ def _text_to_speech_single(
 
     Command providers resolve BEFORE built-in dispatch, but built-in names short-circuit so
     ``tts.providers.openai.command`` can't shadow OpenAI. Plugins fire only for names that are
-    neither; a None return falls through to built-in dispatch (unknown -> Edge default)."""
+    neither; a None return falls through to built-in dispatch (unknown -> default provider)."""
     try:
         if command_provider_config is not None:
             logger.info("Generating speech with command TTS provider '%s'...", provider)
@@ -429,8 +328,8 @@ def _text_to_speech_single(
         # Plugin-registered TTS backend (issue #30398). Fires when the configured provider is neither a
         # built-in nor a command-type entry, AND a plugin is registered under that name. The walrus binds
         # `_plugin_path` only when the dispatcher returns a path (i.e. a plugin was actually found); a None
-        # return falls through to the built-in elif chain so unknown names hit the Edge TTS default at the
-        # bottom. The dispatcher itself enforces built-ins-always-win + command-wins-over-plugin
+        # return falls through to the built-in elif chain so unknown names hit the default provider at
+        # the bottom. The dispatcher itself enforces built-ins-always-win + command-wins-over-plugin
         # defensively.
         elif provider not in BUILTIN_TTS_PROVIDERS and (
             _plugin_path := _dispatch_to_plugin_provider(text, file_str, provider, tts_config)
@@ -501,16 +400,12 @@ def _synthesize_chunks(chunks: list[str], base_path: Path, generated_artifacts: 
 
 def text_to_speech_tool(
     text: str, output_path: Optional[str] = None, speed: Optional[float] = None,
-    instructions: Optional[str] = None, provider: Optional[str] = None,
-    voice_id: Optional[str] = None, find_voices: Optional[dict[str, Any]] = None) -> str:
+    instructions: Optional[str] = None, provider: Optional[str] = None) -> str:
     """Convert text to speech with long-form chunking; returns the JSON result envelope.
 
     Text is normalized, split into provider-safe chunks (never silently truncated), synthesized
     sequentially, then packed against the platform's upload limit: a failed combine keeps the
-    separate valid files and no over-limit artifact is ever returned. ``find_voices`` (ElevenLabs
-    only) searches voices instead of speaking."""
-    if find_voices is not None:  # {} = browse with the defaults
-        return _find_voices(find_voices)
+    separate valid files and no over-limit artifact is ever returned."""
     if not text or not text.strip():
         return tool_error("Text is required", success=False)
     try:  # shared cleaner: markdown, emoji, think blocks, verifier footer, units, newlines
@@ -521,9 +416,6 @@ def text_to_speech_tool(
     if not text:
         return tool_error("Text is empty after TTS cleanup", success=False)
     tts_config, provider = _apply_call_overrides(_load_tts_config(), speed, provider)
-    tts_config, error = _apply_voice_override(tts_config, provider, voice_id)
-    if error:
-        return error
     command_provider_config = _resolve_command_provider_config(provider, tts_config)
     max_len = _resolve_max_text_length(provider, tts_config)
     chunks = _split_text_for_tts(text, max_len)
@@ -575,103 +467,24 @@ def text_to_speech_tool(
 
 
 # --- check_fn ---
-def _minimax_requirements() -> bool:
-    try:
-        _resolve_minimax_tts_runtime(_load_tts_config())
-        return True
-    except ValueError:
-        return False
-
-
-def _xai_requirements() -> bool:
-    try:
-        from tools.xai_http import resolve_xai_http_credentials
-        # Same ordering as _generate_xai_tts / XAIStreamer: an explicit key wins over the
-        # subscription OAuth bearer (which 403s on metered /v1/tts) — never touch the OAuth
-        # pool for an availability probe when a key is configured. See #87045, #113727.
-        return bool(resolve_xai_http_credentials(prefer_api_key=True).get("api_key"))
-    except Exception:
-        return False
-
-
-# Must mirror text_to_speech_tool dispatch: unrelated cloud credentials never make the Edge
-# default usable, and an explicit provider is checked on its own.
-#
-# PASSIVE ONLY: every entry answers from availability/credentials and never installs. The SDK
-# importers (`_import_edge_tts`/`_import_elevenlabs`/`_import_mistral_client`) call
-# ``pm.ensure_import`` on import, so reaching them from here turned ``check_tts_requirements``
-# — the ``text_to_speech`` tool's ``check_fn`` — into an installer that ran during every tool
-# listing.
 _BUILTIN_REQUIREMENTS: dict[str, Callable[[], bool]] = {
-    "edge": lambda: _pm_extra_available("edge-tts") or _check_neutts_available(),
-    "elevenlabs": lambda: _pm_extra_available("tts-premium") and bool(_resolve_provider_key("ELEVENLABS_API_KEY", "elevenlabs")),
     "openai": lambda: _package_installed("openai") and _has_openai_audio_backend(),
-    "deepinfra": lambda: _package_installed("openai") and bool(_resolve_provider_key("DEEPINFRA_API_KEY", "deepinfra")),
-    "minimax": _minimax_requirements,
-    "xai": _xai_requirements,
-    "gemini": lambda: bool(_resolve_provider_key("GEMINI_API_KEY", "gemini") or _resolve_provider_key("GOOGLE_API_KEY", "gemini")),
-    "mistral": lambda: _pm_extra_available("mistral") and bool(_resolve_provider_key("MISTRAL_API_KEY", "mistral")),
-    "neutts": lambda: _check_neutts_available(),
     "kittentts": lambda: _check_kittentts_available(),
     "piper": lambda: _check_piper_available()}
 
 
-def _pm_extra_available(extra: str) -> bool:
-    """Whether the extra's anchor is importable, by pm's own answer for it.
-
-    Not ``find_spec`` on a hand-written module name: ``pm.extras`` owns the extra→anchor table and
-    counts a module already in ``sys.modules`` as installed, which is how every other feature in
-    the tree reports availability.
-    """
-    try:
-        from pm.extras import available
-    except Exception:
-        return False
-    return bool(available(extra))
-
-# Providers whose SDK pm installs on first use: provider -> the credential it needs REGARDLESS of
-# the install (an install cannot conjure a key; None = none). Extra names come from
-# ``_PM_FEATURE_ALIASES`` (upstream's ``tts.<provider>`` ids), so that table stays their one
-# source. The install belongs to synthesis (``_select_builtin_engine`` and the command/streaming
-# paths), never to a requirement check — so a missing-but-installable SDK counts as READY here.
-_SDK_ON_DEMAND: dict[str, Optional[str]] = {
-    "edge": None,
-    "elevenlabs": "ELEVENLABS_API_KEY",
-    "mistral": "MISTRAL_API_KEY"}
-
-
-def _ready_after_first_use_install(provider: str) -> bool:
-    """True when the SDK is absent but pm may install it at first synthesis AND this machine
-    could actually get it (platform gate open) AND the provider's own credential is present.
-    Installs nothing itself."""
-    if provider not in _SDK_ON_DEMAND:
-        return False
-    feature = _PM_FEATURE_ALIASES.get(f"tts.{provider}")
-    if feature is None:
-        return False
-    key_env = _SDK_ON_DEMAND[provider]
-    if key_env and not _resolve_provider_key(key_env, provider):
-        return False
-    try:
-        from pm.install import lazy_installs_allowed
-        from pm.extras import extra_supported
-    except Exception:
-        return False
-    return extra_supported(feature) and bool(lazy_installs_allowed())
-
-
 def check_tts_requirements() -> bool:
-    """Return whether the explicitly resolved TTS provider can run — now, or after the
-    first-use SDK install that synthesis performs. This is the ``text_to_speech`` tool's
-    ``check_fn``, so it runs on every tool listing and must never install."""
+    """Return whether the resolved TTS provider can run (passive: never installs, since this is the
+    ``text_to_speech`` check_fn). Unknown names count as available when a plugin serves them, else
+    they are judged by the ``DEFAULT_PROVIDER`` they fall back to."""
     tts_config = _load_tts_config()
     provider = _get_provider(tts_config)
     if _resolve_command_provider_config(provider, tts_config) is not None:
         return True
     check = _BUILTIN_REQUIREMENTS.get(provider)
     if check is not None:
-        return bool(check()) or _ready_after_first_use_install(provider)
-    return _plugin_provider_is_available(provider)
+        return bool(check())
+    return _plugin_provider_is_available(provider) or bool(_BUILTIN_REQUIREMENTS[DEFAULT_PROVIDER]())
 
 
 # --- Registry ---
@@ -687,21 +500,10 @@ def _tts_schema_overrides() -> dict:
     would name the launch profile's home for everyone else (#95685)."""
     params = copy.deepcopy(TTS_SCHEMA["parameters"])
     params["properties"]["output_path"]["description"] = _output_path_description(display_hermes_home())
-    if not elevenlabs_voice_selection_active():
-        return {"parameters": params}
-    from tools.tts_elevenlabs_voices import FIND_VOICES_SCHEMA
-    params["properties"]["voice_id"] = {
-        "type": "string",
-        "description": ("ElevenLabs voice for this audio (a voice_id from find_voices). "
-                        "Omit to use the user's configured voice.")}
-    params["properties"]["find_voices"] = copy.deepcopy(FIND_VOICES_SCHEMA)
-    params["required"] = []  # a find_voices call carries no text
-    return {"parameters": params, "description": TTS_SCHEMA["description"].replace(
-        _CONFIGURED_VOICE_SENTENCE, _ELEVENLABS_VOICE_SENTENCE)}
+    return {"parameters": params}
 
 
-_CONFIGURED_VOICE_SENTENCE = "Voice and provider are user-configured (built-in providers like edge/openai or custom command providers under tts.providers.<name>), not model-selected."
-_ELEVENLABS_VOICE_SENTENCE = "The provider is user-configured (ElevenLabs); pick a voice per call with voice_id, found with find_voices (one character per voice, e.g. for game NPCs)."
+_CONFIGURED_VOICE_SENTENCE = "Voice and provider are user-configured (built-in providers like openai/piper or custom command providers under tts.providers.<name>), not model-selected."
 
 TTS_SCHEMA = {
     "name": "text_to_speech",
@@ -711,7 +513,7 @@ TTS_SCHEMA = {
         "properties": {
             "text": {
                 "type": "string",
-                "description": "The text to convert to speech. Provider-specific per-request character caps apply automatically (OpenAI 4096, xAI 15000, MiniMax 10000, ElevenLabs 5k-40k depending on model); longer input is split into ordered chunks without silent truncation."
+                "description": "The text to convert to speech. Provider-specific per-request character caps apply automatically (OpenAI 4096); longer input is split into ordered chunks without silent truncation."
             },
             "output_path": {
                 "type": "string",
@@ -741,7 +543,7 @@ registry.register(
     schema=TTS_SCHEMA,
     handler=lambda args, **kw: text_to_speech_tool(
         text=args.get("text", ""),
-        **{k: args.get(k) for k in ("output_path", "speed", "instructions", "voice_id", "find_voices")}),
+        **{k: args.get(k) for k in ("output_path", "speed", "instructions")}),
     check_fn=check_tts_requirements,
     emoji="🔊",
     dynamic_schema_overrides=_tts_schema_overrides)

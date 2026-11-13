@@ -15,7 +15,7 @@ from hermes_cli.config import cfg_get, get_env_value, load_config, save_config, 
 from hermes_cli.nous_account import format_nous_portal_entitlement_message
 from hermes_cli.nous_subscription import MANAGED_FEATURE_COVERAGE_CATEGORY, NousSubscriptionFeatures
 from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER, fal_key_is_configured
-from tools.transcription_common import STT_MODEL_CATALOG, STT_MODEL_CONFIG_KEY
+from tools.transcription_common import STT_MODEL_CATALOG
 from utils import base_url_hostname, is_truthy_value
 
 logger = logging.getLogger("hermes_cli.tools_config")
@@ -663,21 +663,17 @@ _select_plugin_image_gen_provider = partial(_select_plugin_gen_provider, "image_
 _select_plugin_video_gen_provider = partial(_select_plugin_gen_provider, "video_gen")
 
 def _configure_stt_model(stt_provider: str, config: dict) -> None:
-    """Prompt for the STT model after a provider pick (static catalog, or DeepInfra's live one)."""
+    """Prompt for the STT model after a provider pick (static catalog)."""
     from hermes_cli.tools_config import _cfg_section, _prompt_choice
 
     catalog = STT_MODEL_CATALOG.get(stt_provider)
-    if catalog is None and stt_provider == "deepinfra":
-        from hermes_cli.models import deepinfra_model_ids
-        catalog = deepinfra_model_ids("stt")
     if not catalog:
         return
     prov_cfg = _cfg_section(_cfg_section(config, "stt"), stt_provider)
-    model_key = STT_MODEL_CONFIG_KEY.get(stt_provider, "model")
-    current = str(prov_cfg.get(model_key) or "").strip()
+    current = str(prov_cfg.get("model") or "").strip()
     ordered = list(catalog)
     chosen = ordered[_prompt_choice("  Select STT model:", ordered, ordered.index(current) if current in ordered else 0)]
-    prov_cfg[model_key] = chosen
+    prov_cfg["model"] = chosen
     _print_success(f"  STT model set to: {chosen}")
 
 

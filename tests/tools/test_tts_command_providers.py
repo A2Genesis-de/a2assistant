@@ -75,7 +75,7 @@ class TestResolveCommandProviderConfig:
         cfg = {
             "providers": {
                 "openai": {"type": "command", "command": "echo hi"},
-                "edge": {"type": "command", "command": "echo hi"},
+                "piper": {"type": "command", "command": "echo hi"},
             },
         }
         for name in BUILTIN_TTS_PROVIDERS:

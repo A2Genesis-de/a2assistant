@@ -249,7 +249,7 @@ class TestWriteProviderConfig:
     def test_managed_row_writes_nous_and_clears_legacy_flag(self):
         from hermes_cli.tools_config import _write_provider_config
 
-        config = {"tts": {"provider": "edge", "use_gateway": False}}
+        config = {"tts": {"provider": "piper", "use_gateway": False}}
         provider = {"name": "Nous Subscription", "tts_provider": "openai"}
         _write_provider_config(provider, config, managed_feature="tts")
         assert config["tts"]["provider"] == "nous"

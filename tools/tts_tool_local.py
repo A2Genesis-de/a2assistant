@@ -1,6 +1,6 @@
-"""Local on-device TTS engines for ``tools.tts_tool``: NeuTTS, Piper, KittenTTS.
+"""Local on-device TTS engines for ``tools.tts_tool``: Piper, KittenTTS.
 
-All three synthesize WAV natively; :func:`_finalize_wav_output` converts/renames to the requested
+Both synthesize WAV natively; :func:`_finalize_wav_output` converts/renames to the requested
 container. Piper and KittenTTS keep loaded models in small LRU caches registered in
 ``_LOCAL_TTS_MODEL_CACHES`` so warm/release can pre-load or drop them. ``_import_piper`` /
 ``_import_kittentts`` are resolved through the origin module at call time (test monkeypatches).
@@ -21,7 +21,6 @@ logger = logging.getLogger("tools.tts_tool")
 DEFAULT_KITTENTTS_MODEL = "KittenML/kitten-tts-nano-0.8-int8"  # 25MB
 DEFAULT_KITTENTTS_VOICE = "Jasper"
 DEFAULT_PIPER_VOICE = "en_US-lessac-medium"  # balanced size/quality
-_NEUTTS_SAMPLES = Path(__file__).parent / "neutts_samples"
 
 # --- Bounded model caches ---
 # Each entry is a whole loaded model (tens of MB); unbounded, one would be pinned per distinct
@@ -55,25 +54,6 @@ def _run_helper(cmd: list, timeout: int) -> subprocess.CompletedProcess:
         cmd, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=timeout, stdin=subprocess.DEVNULL,
         check=False,
     )
-
-
-# --- NeuTTS (subprocess via tools/neutts_synth.py so the ~500MB model exits after use) ---
-def _generate_neutts(text: str, output_path: str, tts_config: dict[str, Any]) -> str:
-    neutts_config = tts_config.get("neutts") or {}
-    wav_path = _wav_sidecar_path(output_path)
-    cmd = [
-        sys.executable, str(Path(__file__).parent / "neutts_synth.py"),
-        "--text", text,
-        "--out", wav_path,
-        "--ref-audio", neutts_config.get("ref_audio", "") or str(_NEUTTS_SAMPLES / "jo.wav"),
-        "--ref-text", neutts_config.get("ref_text", "") or str(_NEUTTS_SAMPLES / "jo.txt"),
-        "--model", neutts_config.get("model", "neuphonic/neutts-air-q4-gguf"),
-        "--device", neutts_config.get("device", "cpu")]
-    result = _run_helper(cmd, 120)
-    if result.returncode != 0:  # the synth script reports success lines as "OK:" on stderr too
-        error_lines = [l for l in result.stderr.strip().splitlines() if not l.startswith("OK:")]
-        raise RuntimeError(f"NeuTTS synthesis failed: {chr(10).join(error_lines) or 'unknown error'}")
-    return _finalize_wav_output(wav_path, output_path)
 
 
 # --- Piper (local neural VITS, 44 languages) ---

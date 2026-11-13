@@ -275,41 +275,25 @@ def test_requirements_openwakeword_available(monkeypatch):
     assert r["phrase"] == "hey hermes"
 
 
-def test_tts_ready_is_a_probe_never_an_installer(monkeypatch):
-    """_tts_ready must NOT trigger lazy pip installs from a status poll.
-
-    Regression: check_tts_requirements → _import_edge_tts → pm.ensure_import
-    ran pip inside wake.status; a slow/failed install froze the poll and
-    unmounted the desktop ear. Uninstalled-but-lazy-installable counts as
-    ready WITHOUT calling ensure/check.
-    """
+def test_tts_ready_follows_the_passive_requirements_probe(monkeypatch):
+    """_tts_ready answers from ``check_tts_requirements`` (a passive probe that never installs)."""
     import types as _types
 
     monkeypatch.setattr(
         ww, "_tts_ready", ww.__dict__["_tts_ready"]
     )  # use the real implementation
-    fake_tts = _types.SimpleNamespace(
-        _get_provider=lambda cfg: "edge",
-        _load_tts_config=dict,
-        check_tts_requirements=lambda: (_ for _ in ()).throw(
-            AssertionError("check_tts_requirements must not run when deps are missing")
-        ),
-    )
+    fake_tts = _types.SimpleNamespace(check_tts_requirements=lambda: False)
     monkeypatch.setitem(sys.modules, "tools.tts_tool", fake_tts)
-
-    # Deps missing + lazy installs allowed → ready (installs at first speak).
-    monkeypatch.setattr(pm, "available", lambda f: False)
-    monkeypatch.setattr(pm_ensure, "lazy_installs_allowed", lambda: True)
-    assert ww._tts_ready() is True
-
-    # Deps missing + lazy installs disabled → not ready.
-    monkeypatch.setattr(pm_ensure, "lazy_installs_allowed", lambda: False)
     assert ww._tts_ready() is False
 
-    # Deps present → falls through to the real requirements check.
     fake_tts.check_tts_requirements = lambda: True
-    monkeypatch.setattr(pm, "available", lambda f: True)
     assert ww._tts_ready() is True
+
+    def _raise():
+        raise RuntimeError("probe failed")
+
+    fake_tts.check_tts_requirements = _raise
+    assert ww._tts_ready() is False
 
 
 def test_requirements_fresh_install_lazy_allowed(monkeypatch):
