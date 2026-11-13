@@ -5,15 +5,12 @@ import {
   ExternalLink,
   Info,
   PlugZap,
-  QrCode,
   Radio,
   RotateCw,
-  Save,
   Settings2,
   WifiOff,
   X,
 } from "lucide-react";
-import * as QRCode from "qrcode";
 import { Badge } from "@nous-research/ui/ui/components/badge";
 import { Button } from "@nous-research/ui/ui/components/button";
 import { Card, CardContent } from "@nous-research/ui/ui/components/card";
@@ -78,17 +75,6 @@ function validateMessagingEnvField(field: MessagingPlatformEnvVar, value: string
   }
 
   return null;
-}
-
-function formatExpiry(expiresAt: string): string {
-  const ms = Date.parse(expiresAt) - Date.now();
-  if (!Number.isFinite(ms) || ms <= 0) return "expired";
-  const seconds = Math.ceil(ms / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const rest = seconds % 60;
-  return `${minutes}:${rest.toString().padStart(2, "0")}`;
-}
-
 }
 
 export default function ChannelsPage() {
@@ -614,19 +600,6 @@ export default function ChannelsPage() {
                     </Button>
                   </div>
                 </div>
-                {platform.relay_fronted && (
-                  <RelayLinkPanel platform={platform} showToast={showToast} />
-                )}
-                {platform.id === "telegram" && !viaRelay && (
-                  <TelegramOnboardingPanel
-                    onManualSetup={() => openConfig(platform)}
-                    onChanged={load}
-                    onRestartNeeded={() => setRestartNeeded(true)}
-                    platform={platform}
-                    setRestartNeeded={setRestartNeeded}
-                    showToast={showToast}
-                  />
-                )}
               </CardContent>
             </Card>
           );
@@ -636,6 +609,3 @@ export default function ChannelsPage() {
   );
 }
 
-    </div>
-  );
-}

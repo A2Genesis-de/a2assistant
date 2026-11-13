@@ -964,8 +964,6 @@ export const api = {
       `/api/messaging/platforms/${encodeURIComponent(id)}/test`,
       { method: "POST" },
     ),
-      { method: "DELETE" },
-    ),
 
   // Gateway / update actions
   restartGateway: () =>
