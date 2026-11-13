@@ -47,13 +47,6 @@ export const BROWSER_BRIDGE_STUBS = {
   // uses the URL slug when no title is available; Electron keeps its resolver.
   fetchLinkTitle: async () => '',
   claimAmbientCue: async () => true,
-  cloud: {
-    agentSignIn: async (dashboardUrl: string) => ({ baseUrl: dashboardUrl, connected: false }),
-    discover: async () => ({ agents: [] }),
-    login: async () => ({ ok: false, portalBaseUrl: '', signedIn: false }),
-    logout: async () => ({ ok: true, portalBaseUrl: '', signedIn: false }),
-    status: async () => ({ portalBaseUrl: '', signedIn: false })
-  },
   continueBootstrapLocal: async () => ({ ok: true }),
   getBootProgress: async () => readyBootProgress(),
   getBootstrapState: async () => readyBootstrapState(),

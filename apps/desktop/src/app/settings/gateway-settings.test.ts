@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { normalizeGatewaySettingsState, savedCloudConnectionUrl } from './gateway-settings'
+import { normalizeGatewaySettingsState } from './gateway-settings'
 
 describe('normalizeGatewaySettingsState', () => {
   it('fills missing and undefined persisted fields with canonical defaults', () => {
@@ -18,27 +18,15 @@ describe('normalizeGatewaySettingsState', () => {
     expect(normalized.secureTokenStorage).toBe(true)
   })
 
+  it('opens a legacy cloud connection as a remote gateway', () => {
+    expect(normalizeGatewaySettingsState({ mode: 'cloud', remoteUrl: 'https://gateway.example' }).mode).toBe('remote')
+  })
+
   it('returns an independent default state for invalid persisted data', () => {
     const first = normalizeGatewaySettingsState(null)
     const second = normalizeGatewaySettingsState(undefined)
 
     expect(first).toEqual(second)
     expect(first).not.toBe(second)
-  })
-})
-
-describe('savedCloudConnectionUrl', () => {
-  it('normalizes the URL of a persisted cloud connection', () => {
-    expect(savedCloudConnectionUrl({ mode: 'cloud', remoteUrl: ' HTTPS://AGENT.EXAMPLE/ ' })).toBe(
-      'https://agent.example'
-    )
-  })
-
-  it('does not treat a stale cloud URL on a local config as connected', () => {
-    expect(savedCloudConnectionUrl({ mode: 'local', remoteUrl: 'https://agent.example' })).toBe('')
-  })
-
-  it('does not treat a remote gateway URL as a connected cloud agent', () => {
-    expect(savedCloudConnectionUrl({ mode: 'remote', remoteUrl: 'https://agent.example' })).toBe('')
   })
 })

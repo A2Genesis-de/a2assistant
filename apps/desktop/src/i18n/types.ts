@@ -1131,37 +1131,6 @@ export interface Translations extends NoticeTranslations {
       remoteTitle: string
       remoteDesc: string
       remoteAuthHint: string
-      cloudTitle: string
-      cloudDesc: string
-      cloudSignInTitle: string
-      cloudSignIn: string
-      cloudSignedIn: string
-      cloudNeedsSignIn: string
-      cloudSignedInDesc: string
-      cloudAgentsTitle: string
-      cloudOrgPickerTitle: string
-      cloudOrgSelect: string
-      cloudOrgChange: string
-      cloudOrgRole: (role: string) => string
-      cloudLoadingAgents: string
-      cloudNoAgents: { before: string; linkText: string; after: string }
-      cloudRefresh: string
-      cloudConnect: string
-      cloudSavedTitle: string
-      cloudSavedDesc: string
-      cloudUseSaved: string
-      cloudActive: string
-      cloudConnecting: string
-      cloudDiscoverFailed: string
-      cloudConnectFailed: string
-      cloudSignInFailed: string
-      cloudSignedOutTitle: string
-      cloudSignedOutMessage: string
-      cloudConnectedTitle: string
-      cloudConnectedPill: string
-      cloudConnectedTo: (name: string) => string
-      cloudAgentProvisioning: string
-      cloudStatusLabel: (status: string) => string
       remoteUrlTitle: string
       remoteUrlDesc: string
       probing: string
