@@ -18,15 +18,10 @@ export const deOnboarding: TranslationOverrides['onboarding'] = {
   recommended: 'Empfohlen',
   connected: 'Verbunden',
   featuredPitch: 'Ein Abo, 300+ Frontier-Modelle – die empfohlene Art, A2Assistant zu nutzen',
-  fireworksPitch: 'Direkte Model-API – Fireworks-gehostete Frontier-Modelle',
   localModelsTitle: 'Modelle lokal ausführen',
   localModelsPitch: 'Kein Konto nötig – laden Sie ein Modell herunter und führen Sie es auf diesem Rechner aus',
   openRouterPitch: 'Ein Key, hunderte Modelle – ein solider Standard',
   apiKeyOptions: {
-    fireworks: {
-      short: 'direkte Model-API',
-      description: 'Direkter Zugriff auf Modelle, die von Fireworks AI gehostet werden.'
-    },
     openrouter: {
       short: 'ein Key, viele Modelle',
       description: 'Hostet hunderte Modelle hinter einem einzigen Key. Guter Standard für neue Installationen.'
@@ -34,14 +29,6 @@ export const deOnboarding: TranslationOverrides['onboarding'] = {
     openai: {
       short: 'GPT-Klasse-Modelle',
       description: 'Direkter Zugriff auf OpenAI-Modelle.'
-    },
-    gemini: {
-      short: 'Gemini-Modelle',
-      description: 'Direkter Zugriff auf Google-Gemini-Modelle.'
-    },
-    xai: {
-      short: 'Grok-Modelle',
-      description: 'Direkter Zugriff auf xAI-Grok-Modelle.'
     },
     local: {
       short: 'selbst gehostet',

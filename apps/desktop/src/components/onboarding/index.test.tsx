@@ -54,14 +54,14 @@ describe('onboarding Picker', () => {
 
     expect(screen.getByText('Nous Portal')).toBeTruthy()
     expect(screen.getByText('Recommended')).toBeTruthy()
-    // Fireworks stays behind the disclosure with the other alternatives; only
+    // OpenRouter stays behind the disclosure with the other alternatives; only
     // Nous Portal is visible before the user expands the list.
-    expect(screen.queryByText('Fireworks AI')).toBeNull()
+    expect(screen.queryByText('OpenRouter')).toBeNull()
     expect(screen.queryByText('Anthropic Account')).toBeNull()
 
     fireEvent.click(screen.getByRole('button', { name: 'Other providers' }))
 
-    expect(screen.getByText('Fireworks AI')).toBeTruthy()
+    expect(screen.getByText('OpenRouter')).toBeTruthy()
     expect(screen.getByText('Anthropic Account')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Collapse' })).toBeTruthy()
   })
@@ -73,7 +73,7 @@ describe('onboarding Picker', () => {
     ])
     render(<Picker ctx={ctx} />)
 
-    expect(screen.getByText('Fireworks AI')).toBeTruthy()
+    expect(screen.getByText('OpenRouter')).toBeTruthy()
     expect(screen.getByText('Anthropic Account')).toBeTruthy()
     expect(screen.getByText('ChatGPT or Codex Subscription')).toBeTruthy()
     expect(screen.queryByText('Other sign-in options')).toBeNull()
@@ -100,7 +100,7 @@ describe('onboarding Picker', () => {
 
     expect(screen.getByText('Nous Portal')).toBeTruthy()
     expect(screen.getByText('Recommended')).toBeTruthy()
-    expect(screen.getByText('Fireworks AI')).toBeTruthy()
+    expect(screen.getByText('OpenRouter')).toBeTruthy()
     cleanup()
 
     // The custom-endpoint form is a deliberate destination: no Nous row there.

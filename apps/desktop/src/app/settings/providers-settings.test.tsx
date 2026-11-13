@@ -53,7 +53,7 @@ function provider(id: string, loggedIn: boolean, patch: Partial<OAuthProvider> =
     docs_url: '',
     flow: 'device_code',
     id,
-    name: id === 'nous' ? 'Nous Portal' : 'MiniMax',
+    name: id === 'nous' ? 'Nous Portal' : 'xAI Grok',
     status: {
       logged_in: loggedIn
     },
@@ -87,7 +87,7 @@ beforeEach(() => {
   revealEnvVar.mockResolvedValue({ value: 'old-secret' })
   setEnvVar.mockResolvedValue({ ok: true })
   listOAuthProviders.mockResolvedValue({
-    providers: [provider('nous', true), provider('minimax-oauth', false)]
+    providers: [provider('nous', true), provider('xai-oauth', false)]
   })
 })
 
@@ -207,20 +207,20 @@ describe('ProvidersSettings', () => {
   it('does not offer removal for externally managed providers', async () => {
     listOAuthProviders.mockResolvedValue({
       providers: [
-        provider('qwen-oauth', true, {
-          cli_command: 'hermes auth add qwen-oauth',
-          disconnect_hint: "Use `hermes auth add qwen-oauth` or that provider's CLI to remove it.",
+        provider('claude-code', true, {
+          cli_command: 'claude setup-token',
+          disconnect_hint: "Use that provider's CLI to remove it.",
           disconnectable: false,
           flow: 'external',
-          name: 'Qwen (via Qwen CLI)'
+          name: 'Claude Code'
         })
       ]
     })
 
     await renderProvidersSettings()
 
-    expect(await screen.findByText('Qwen Code')).toBeTruthy()
-    expect(screen.queryByRole('button', { name: 'Remove Qwen Code' })).toBeNull()
+    expect(await screen.findByText('Anthropic OAuth: Required Extra Usage Credits to Use Subscription')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Remove Anthropic OAuth: Required Extra Usage Credits to Use Subscription' })).toBeNull()
   })
 
   it('renders a Keys card for a backend-tagged provider with no PROVIDER_GROUPS prefix', async () => {

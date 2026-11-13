@@ -16,16 +16,12 @@ export const zhOnboarding: TranslationOverrides['onboarding'] = {
   recommended: '推荐',
   connected: '已连接',
   featuredPitch: '一个订阅，300+ 前沿模型 — 运行 A2Assistant 的推荐方式',
-  fireworksPitch: '直接模型 API — Fireworks 托管的前沿模型',
   localModelsTitle: '本地运行模型',
   localModelsPitch: '无需账号——下载模型，在本机运行',
   openRouterPitch: '一个密钥，数百个模型 — 稳妥的默认选择',
   apiKeyOptions: {
-    fireworks: { short: '直接模型 API', description: '直接访问 Fireworks AI 托管的模型。' },
     openrouter: { short: '一个密钥，多个模型', description: '用一个密钥访问数百个模型。适合新安装的默认选择。' },
     openai: { short: 'GPT 级模型', description: '直接访问 OpenAI 模型。' },
-    gemini: { short: 'Gemini 模型', description: '直接访问 Google Gemini 模型。' },
-    xai: { short: 'Grok 模型', description: '直接访问 xAI Grok 模型。' },
     local: {
       short: '自托管',
       description: '将 A2Assistant 指向本地或自托管的 OpenAI 兼容端点 (vLLM、llama.cpp、Ollama 等)。'

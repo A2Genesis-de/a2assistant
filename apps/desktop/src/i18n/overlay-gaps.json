@@ -947,8 +947,6 @@
   "notifications.voice.liveEndedConnectionLost": ["ar","ja","ru","zh-hant"],
   "notifications.voice.liveError": ["ar","ja","ru","zh-hant"],
   "notifications.voice.liveUnavailable": ["ar","ja","ru","zh-hant"],
-  "onboarding.apiKeyOptions.fireworks.description": ["ar"],
-  "onboarding.apiKeyOptions.fireworks.short": ["ar"],
   "onboarding.errorDetails": ["ar","ja","ru","zh","zh-hant"],
   "onboarding.localApiKeyPlaceholder": ["ja","zh-hant"],
   "onboarding.localModelNamePlaceholder": ["ar","ja","ru","zh-hant"],

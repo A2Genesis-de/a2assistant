@@ -17,15 +17,10 @@ export const frOnboarding: TranslationOverrides['onboarding'] = {
   recommended: 'Recommandé',
   connected: 'Connecté',
   featuredPitch: 'Un abonnement, 300+ modèles de pointe — la méthode recommandée pour exécuter A2Assistant',
-  fireworksPitch: 'API de modèles directe — modèles de pointe hébergés par Fireworks',
   localModelsTitle: 'Exécuter des modèles en local',
   localModelsPitch: 'Aucun compte requis — téléchargez un modèle et exécutez-le sur cette machine',
   openRouterPitch: 'Une clé, des centaines de modèles — une valeur par défaut solide',
   apiKeyOptions: {
-    fireworks: {
-      short: 'API de modèles directe',
-      description: 'Accès direct aux modèles hébergés par Fireworks AI.'
-    },
     openrouter: {
       short: 'une clé, de nombreux modèles',
       description:
@@ -34,14 +29,6 @@ export const frOnboarding: TranslationOverrides['onboarding'] = {
     openai: {
       short: 'Modèles de classe GPT',
       description: 'Accès direct aux modèles OpenAI.'
-    },
-    gemini: {
-      short: 'Modèles Gemini',
-      description: 'Accès direct aux modèles Google Gemini.'
-    },
-    xai: {
-      short: 'Modèles Grok',
-      description: 'Accès direct aux modèles xAI Grok.'
     },
     local: {
       short: 'auto-hébergé',
