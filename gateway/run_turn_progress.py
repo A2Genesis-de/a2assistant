@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import logging
 import queue
 import re
@@ -375,6 +376,27 @@ class GatewayTurnProgressMixin:
             sc.on_tool_progress(msg)
         else:
             ctx.progress_queue.put(msg)
+
+    # ── editable progress bubbles (progress-queue drain) ────────────────────────────────────
+
+    @dataclasses.dataclass
+    class _ProgressEditState:
+        """Mutable editable-bubble state shared by ``send_progress_messages`` and its helpers."""
+        adapter: Any
+        progress_lines: list
+        progress_msg_id: Any
+        can_edit: bool
+        _progress_len_fn: Any
+        _PROGRESS_TEXT_LIMIT: int
+        _edit_accepts_metadata: bool
+        # monotonic() until which a flood-refused edit's retry_after runs: no progress call fires
+        # into that window, the buffer just keeps absorbing lines (#76494).
+        flood_until: float = 0.0
+        # A progress update held back by that window: delivered once it closes, even when no
+        # further tool event arrives (a long-running last tool must not leave the bubble stale).
+        flood_pending: bool = False
+        # (message_id, text) of bubbles a content reset closed while their update was flood-held.
+        owed_bubbles: list = dataclasses.field(default_factory=list)
 
     def _progress_edit_state(self, adapter) -> TurnRunner._ProgressEditState:
         ctx = self._ctx

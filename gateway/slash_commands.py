@@ -712,7 +712,7 @@ class GatewaySlashCommandsMixin(
         toggle_line = t("gateway.voice.enabled_short" if turning_on else "gateway.voice.disabled_short")
         # Bare /voice still toggles, but append an explainer so users discover the on/off/tts/status
         # subcommands. Toggle result shows first.
-        return t("gateway.voice.help", toggle=toggle_line, channels="")
+        return t("gateway.voice.help", toggle=toggle_line)
 
     async def _handle_rollback_command(self, event: MessageEvent) -> str:
         """Handle /rollback command — list or restore filesystem checkpoints."""

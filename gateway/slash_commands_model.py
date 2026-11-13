@@ -729,7 +729,7 @@ class GatewayModelCommandsMixin:
                 async def _on_choice(_chat_id: str, value: str) -> str:
                     if generation is not None and self._usage_limit_offer_is_stale(session_key, generation):
                         # A newer turn ran since the refusal: /retry would re-run that one, not the refused one.
-                        return t("platform.discord.picker.choice_expired")
+                        return t("platform.shared.choice_expired")
                     return await self._accept_usage_limit_switch(
                         event, value, offer=None if generation is None else (session_key, generation))
 
