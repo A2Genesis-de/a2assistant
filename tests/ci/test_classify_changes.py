@@ -792,23 +792,6 @@ def test_pull_request_labels_prefers_the_live_labels_over_the_replayed_event(tmp
     assert pull_request_labels() == ["run-e2e"]
 
 
-def test_catalog_lane_runs_every_test_that_reads_the_shipped_catalog():
-    """A catalog-only PR runs only the lane's discovered files, so a test that
-    reads the real ``plugin-catalog/`` must be among them."""
-    spec = importlib.util.spec_from_file_location("catalog_test_files", _REPO / "scripts/ci/catalog_test_files.py")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    files = set(mod.catalog_test_files())
-    for must in (
-        "tests/hermes_cli/test_plugin_catalog.py",
-        "tests/scripts/test_validate_plugin_catalog.py",
-        "tests/scripts/test_contributor_map.py",
-        "tests/website/test_extract_plugins.py",
-    ):
-        assert must in files
-    assert not any(f.startswith("tests/e2e/") for f in files)
-    text = (_REPO / ".github/workflows/catalog-tests.yml").read_text(encoding="utf-8-sig")
-    assert "scripts/ci/catalog_test_files.py" in text and "scripts/run_tests.sh" in text
 
 
 def test_a_rename_counts_under_its_old_path_too(monkeypatch, capsys):

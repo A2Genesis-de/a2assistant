@@ -39,7 +39,7 @@ logger = logging.getLogger(__name__)
 #: Every plugin event name starts with this — core owns all other names.
 PLUGIN_EVENT_PREFIX = "plugin."
 
-# Plugin ids are the catalog names (``plugin_catalog._NAME_RE``): lowercase, digits, ``_``/``-``.
+# Plugin ids are lowercase, digits, ``_``/``-``.
 # No dot: ``plugin.<id>.`` must be an unambiguous prefix, so an id can never spell a neighbour's
 # namespace (``other.x`` would read as plugin ``other``).
 _PLUGIN_ID_RE = re.compile(r"^[a-z0-9_-]{1,64}$")

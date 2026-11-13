@@ -129,7 +129,7 @@ def test_zip_command_migrates_profiles_recovers_snapshot_and_verifies_fleet(
     zip_update, monkeypatch, route, gateway_mode,
 ):
     state = zip_update
-    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (route == "direct", ["git"], False))
+    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (route == "direct", ["git"]))
     monkeypatch.setattr(main, "_warn_orphaned_update_autostashes", lambda *args: None)
 
     def fail_fetch(*args, **kwargs):
@@ -200,7 +200,7 @@ def test_zip_failure_recovers_pause_without_completion_mutations(zip_update, mon
     old_project = (state.root / "pyproject.toml").read_bytes()
     original_tree = {p.relative_to(state.root): p.read_bytes()
                      for p in state.root.rglob("*") if p.is_file()}
-    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (route == "direct", ["git"], False))
+    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (route == "direct", ["git"]))
     monkeypatch.setattr(main, "_warn_orphaned_update_autostashes", lambda *args: None)
     monkeypatch.setattr(update_cmd, "_should_zip_fallback_on_update_error", lambda exc: True)
 
@@ -261,7 +261,7 @@ def test_zip_build_failure_after_swap_is_a_followup(zip_update, monkeypatch, rou
     import pm
 
     state = zip_update
-    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (route == "direct", ["git"], False))
+    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (route == "direct", ["git"]))
     monkeypatch.setattr(main, "_warn_orphaned_update_autostashes", lambda *args: None)
     monkeypatch.setattr(update_cmd, "_should_zip_fallback_on_update_error", lambda exc: True)
 
@@ -293,7 +293,7 @@ def test_zip_dependency_sync_failure_after_swap_is_a_followup(zip_update, monkey
     from hermes_cli.venv_sync import completion_pending_path
 
     state = zip_update
-    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (route == "direct", ["git"], False))
+    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (route == "direct", ["git"]))
     monkeypatch.setattr(main, "_warn_orphaned_update_autostashes", lambda *args: None)
     monkeypatch.setattr(update_cmd, "_should_zip_fallback_on_update_error", lambda exc: True)
 
@@ -332,7 +332,7 @@ def test_ctrl_c_after_the_swap_reports_the_new_code_not_a_failure(zip_update, mo
     # The tree is new, so the run is ``interrupted`` (never "failed" / "still on the previous
     # version") and the message says what is owed; a non-zero exit for an interrupt is fine.
     state = zip_update
-    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (True, ["git"], False))
+    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (True, ["git"]))
     monkeypatch.setattr(main, "_warn_orphaned_update_autostashes", lambda *args: None)
 
     def interrupted(request):
@@ -435,7 +435,7 @@ def test_installed_app_without_a_checkout_build_is_still_rebuilt(zip_update, mon
     built = []
     monkeypatch.setattr("hermes_cli.source_build.build_update_products",
                         lambda selected, *, desktop, after_dependencies=None: built.append(desktop))
-    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (True, ["git"], False))
+    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (True, ["git"]))
     monkeypatch.setattr(main, "_warn_orphaned_update_autostashes", lambda *args: None)
 
     update_cmd._cmd_update_impl(SimpleNamespace(branch="main", yes=True), False)

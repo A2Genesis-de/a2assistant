@@ -11,7 +11,7 @@ from hermes_cli.update_channel import install_id
 from hermes_cli.version_info import get_version_info
 
 
-@pytest.mark.parametrize("channel", ["stable", "canary", "preview-from-r2"])
+@pytest.mark.parametrize("channel", ["stable"])
 def test_release_channel_never_compares_main_or_reuses_main_cache(tmp_path, monkeypatch, channel):
     from hermes_constants import get_hermes_home
 
@@ -31,7 +31,7 @@ def test_release_channel_never_compares_main_or_reuses_main_cache(tmp_path, monk
         "rev": None, "ver": get_version_info().derived_version,
         "head": head, "behind": 99, "ts": 10**12,
     }))
-    resolve = Mock(return_value=SourceTarget(channel, channel, "example/fork", commit=target, version="1.2.3"))
+    resolve = Mock(return_value=SourceTarget(channel, "example/fork", commit=target, version="1.2.3"))
     monkeypatch.setattr(source_check, "resolve_source_target", resolve)
     main = Mock(side_effect=AssertionError("release must not check a branch"))
     monkeypatch.setattr(source_check, "_branch_tip", main)
@@ -41,8 +41,6 @@ def test_release_channel_never_compares_main_or_reuses_main_cache(tmp_path, monk
     main.assert_not_called()
     assert status["channel"] == channel
     assert status["targetSha"] == target
-    # The selected release may be an ancestor (a requested canary → stable switch).
-    # That is still a different release, not "already current" or "behind main".
     label = banner.format_banner_version_label()
     assert channel in label
     assert "upstream" not in label

@@ -60,14 +60,13 @@ def reset_bundled_skill(name: str, restore: bool = False) -> dict:
     return {"ok": True, "action": action, "message": message, "synced": synced}
 
 
-_OWN_REPO_PREFIXES = ("nousresearch/hermes-agent/skills/", "skills-sh/nousresearch/hermes-agent/")
+_OWN_REPO_PREFIXES = ("a2genesis-de/a2assistant/skills/",)
 
 
 def bundled_skill_for_install(identifier: str) -> Optional[str]:
     """Bundled skill name an install identifier means, else None: a bare bundled name, or this
-    repo's own copy of one (``NousResearch/hermes-agent/skills/<cat>/<name>``, which the Skills Hub
-    site hands out for built-ins, or its ``skills-sh/nousresearch/hermes-agent/<name>`` mirror).
-    Fetched from GitHub, that copy is scanned as a community skill and refused — every time."""
+    repo's own copy of one (``A2Genesis-de/a2assistant/skills/<cat>/<name>``). Fetched from
+    GitHub, that copy is scanned as a community skill and refused — every time."""
     ident = identifier.strip().strip("/")
     lowered = ident.lower()
     if "/" in ident and not lowered.startswith(_OWN_REPO_PREFIXES):

@@ -1,6 +1,6 @@
 """The first-task catalog of onboarding's build beat: what the model may put on the build card.
 
-Pure. Gates read only hard facts (this OS, plugins installed this run, apps connected this run);
+Pure. Gates read only hard facts (this OS, apps connected this run);
 whether a row fits the person is the model's call. ``agent/onboarding_flow.py`` checks the model's
 picks against ``eligible_tasks``; ``agent/onboarding_text.py`` renders each row's reminder.
 """
@@ -43,11 +43,6 @@ def _always(facts: Facts, picks: Mapping[str, Any]) -> bool:
     return True
 
 
-def _plugin(name: str) -> Callable[[Facts, Mapping[str, Any]], bool]:
-    # The plugins card answers with every onboarding plugin installed, including ones from before this run.
-    return lambda facts, picks: name in (picks.get("installed") or ())
-
-
 def _connected(facts: Facts, picks: Mapping[str, Any]) -> bool:
     return bool(picks.get("connected"))
 
@@ -61,8 +56,8 @@ FIRST_TASKS: tuple[FirstTask, ...] = (
         "hermes", "Explain how A2Assistant works", lambda facts, picks: False, ("hermes-agent", "claude-design", "p5js"),
         goal="build a living page that shows how A2Assistant works, from the real docs and this install",
         steps=(
-            "Read https://hermes-agent.nousresearch.com/docs/llms.txt once with web_extract. Open a page only to "
-            "check a fact you show.",
+            "Read https://github.com/A2Genesis-de/a2assistant#readme once with web_extract to check the facts "
+            "you show.",
             "Read this install: the model, how many skills are installed, the connected apps, and what this chat did "
             "(tools called, skills loaded, their name and picks).",
             "Within a minute, open it in the preview pane with the title, those facts and three screen headings. "
@@ -77,64 +72,6 @@ FIRST_TASKS: tuple[FirstTask, ...] = (
                "graphic; open in the preview pane.",
         quality="Every name and number comes from the docs or this install. A few short lines per screen.",
         done="All three screens move and show real facts, and you said where the file is."),
-    FirstTask(
-        "games", "Tune my games for this PC", _plugin("nvidia-app"), ("nvidia-app:nvidia-app",),
-        goal="optimise the games on this PC with NVIDIA App and show what changed",
-        steps=(
-            "Its tools are mcp__nvidia_app__nvapp_*. If none are listed, check without changing anything whether "
-            "NVIDIA App is installed and running. Not installed: open https://www.nvidia.com/en-us/software/nvidia-app/ "
-            "in the preview pane and say how to install it. Not running: say how to start it. Check again each time "
-            "they say done.",
-            "List the installed games and show them at once. If the driver status shows a newer Game Ready "
-            "driver, say so in one line.",
-            "Ask in one clarify which preset to apply (Performance, Visual or Recommended), naming the games.",
-            "Apply it, then read each game back.",
-        ),
-        output="A before and after table in chat: one row per game, what changed.",
-        quality="Only settings NVIDIA App reports and really changed. Never guess a value.",
-        done="The changes are read back and in the table. Next-step idea: launch one of the games."),
-    FirstTask(
-        "broadcast", "Make my mic and camera pro", _plugin("nvidia-broadcast"), ("nvidia-broadcast:nvidia-broadcast",),
-        goal="set up NVIDIA Broadcast so their mic and camera are ready for a call",
-        steps=(
-            "Its tools are mcp__nvidia_broadcast__*. If none are listed, check without changing anything whether "
-            "NVIDIA Broadcast is installed and running. Not installed or too old: open "
-            "https://www.nvidia.com/en-us/geforce/broadcasting/broadcast-app/ in the preview pane and offer the "
-            "install as the skill says. Not running: say how to start it. Check again each time they say done.",
-            "Read the devices and the effects this machine offers, then ask in one clarify what it is for: a "
-            "meeting, a stream or a noisy room.",
-            "Turn the effects on one at a time. After each, say what to look at or listen for in the Broadcast "
-            "window.",
-        ),
-        output="A short list in chat: each effect, its device, before and after.",
-        quality="Only effects Broadcast reports on this machine.",
-        done="The effects are on and read back, and they know how to turn each one off."),
-    FirstTask(
-        "blender", "Build a 3D scene in Blender", _plugin("blender"), ("blender:blender",),
-        goal="build a small 3D scene live in their open Blender, one visible step at a time",
-        steps=(
-            "Drive the open Blender with its mcp__blender__* tools. Never run Blender from the terminal.",
-            "If Blender is not connected (no tools, or get_objects_summary fails), this is a first run: open "
-            "https://www.blender.org/lab/mcp-server/ in the preview pane and walk them through it in a short list: "
-            "Blender 5.1 or newer open; drag the page's Drag and Drop into Blender button into Blender twice (the "
-            "first adds the Blender Lab repository, the second installs the add-on); allow Online access; start the "
-            "MCP bridge on port 9876. Check again each time they say done.",
-            "Offer three scene ideas in one clarify: two that fit them, one that shows off this machine.",
-            "First capture their Blender window with get_screenshot_of_window_as_image, copy the image it saved "
-            "over preview.png and open that in the preview pane, so they watch A2Assistant work. Then build it in a new "
-            "scene named A2Assistant, in camera view, in four calls they can watch: ground and camera, main objects, "
-            "materials and light, framing. After each, capture the window over preview.png again; the pane "
-            "reloads it.",
-            "Render one 1280x720 EEVEE still with render_viewport_to_path, copy the filepath it returns to "
-            "render.png and open it in the pane. Look at it before you call it done: lit, not black, framed. Fix "
-            "and re-render once at most.",
-            "Save only the new scene with bpy.data.libraries.write as scene.blend, and the code as scene.py.",
-        ),
-        output="scene.blend, scene.py, preview.png and render.png in ~/hermes-first-task/; the render open in the "
-               "preview pane.",
-        quality="Made in their open Blender, never headless, never a placeholder.",
-        done="The final still is shown and you named the files. Next-step idea: a turntable video or a GPU Cycles "
-             "render."),
     FirstTask(
         "brief", "Brief me on today", _connected, ("claude-design",),
         goal="write today's brief from their connected apps",

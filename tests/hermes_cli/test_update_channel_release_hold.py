@@ -69,7 +69,7 @@ def source(tmp_path, monkeypatch):
     monkeypatch.setattr(update_cmd, "_begin_update_receipt_and_plan", lambda *_: None)
     monkeypatch.setattr(main, "_run_pre_update_backup", lambda *_: None)
     monkeypatch.setattr(main, "_pause_windows_gateways_for_update", lambda: None)
-    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (False, ["git"], False))
+    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (False, ["git"]))
     completed = []
     monkeypatch.setattr(update_cmd, "_complete_source_update",
                         lambda request: completed.append(deepcopy(request)))
@@ -85,24 +85,11 @@ def _ledgered(home):
                                payload={"text": "x"})
 
 
-def _channel_publishes(monkeypatch, source, name):
-    record = {"schema": 1, "name": name, "repository": "NousResearch/hermes-agent", "policy": "preview",
-              "state": "active", "identity": {}, "nextSequence": 2,
-              "head": {"buildId": "build-fixture", "sequence": 1}}
-    result = SimpleNamespace(requested=deepcopy(record), terminal=record, manifest={
-        "schema": 1, "request": {"buildId": "build-fixture", "channel": name, "sequence": 1,
-        "repository": "NousResearch/hermes-agent", "commit": source.release, "sourceVersion": "1.2.3",
-        "version": "0.0.1", "identity": {}, "bundleEnv": {},
-        "publicBase": "https://hermes-assets.nousresearch.com"}, "packages": []})
-    monkeypatch.setattr(source_releases, "_resolve_channel", lambda n, repository: deepcopy(result),
-                        raising=False)
-
-
 def test_a_channel_release_older_than_the_runtime_holds_the_install_and_exits_cleanly(
         source, monkeypatch, capsys):
-    name = "preview-before-runtime"
+    name = "stable"
     set_install_channel(name, source.root)
-    _channel_publishes(monkeypatch, source, name)
+    _stable_publishes(monkeypatch, source.release)
     _ledgered(source.home)
 
     update_cmd._cmd_update_impl(source.parser.parse_args(["update", "--yes"]), False)  # no SystemExit
@@ -118,9 +105,9 @@ def test_a_channel_release_older_than_the_runtime_holds_the_install_and_exits_cl
 
 
 def test_the_same_release_still_applies_while_no_store_holds_runtime_history(source, monkeypatch, capsys):
-    name = "preview-before-runtime"
+    name = "stable"
     set_install_channel(name, source.root)
-    _channel_publishes(monkeypatch, source, name)
+    _stable_publishes(monkeypatch, source.release)
 
     update_cmd._cmd_update_impl(source.parser.parse_args(["update", "--yes"]), False)
 
@@ -142,8 +129,7 @@ def test_an_explicit_branch_to_a_pre_runtime_commit_is_still_refused(source, mon
 
 
 def _stable_publishes(monkeypatch, commit):
-    monkeypatch.setattr(source_releases, "_resolve_stable", lambda repository, *_: source_releases.SourceTarget(
-        "stable", "stable", repository, commit=commit, version="0.22.2"))
+    monkeypatch.setattr(source_releases, "_resolve_stable", lambda repository, *_: source_releases.SourceTarget("stable", repository, commit=commit, version="0.22.2"))
 
 
 def _assert_held_at_head(source, out, channel="stable"):

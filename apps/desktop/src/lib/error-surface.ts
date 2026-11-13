@@ -1,3 +1,5 @@
+import { README_URL } from '@hermes/shared/repository'
+
 // Structured turn-error descriptor forwarded by the gateway (see
 // agent/error_surface.py). Names WHICH layer of the stack failed and the
 // classifier's failure code so the error card can say what happened in plain
@@ -367,8 +369,8 @@ export interface ErrorCardActions {
 }
 
 export const ERROR_SETUP_GUIDE_URLS = {
-  tls: 'https://hermes-agent.nousresearch.com/docs/user-guide/security#tls-certificate-trust',
-  local: 'https://hermes-agent.nousresearch.com/docs/user-guide/local-models#using-your-own-llama-server'
+  tls: README_URL,
+  local: README_URL
 } as const
 
 /** Provider pages where the user fixes an account-level routing/privacy block. */

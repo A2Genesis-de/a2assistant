@@ -1,9 +1,6 @@
 import { skillCatalogInstallIdentifier } from '@hermes/shared'
 import { queryOptions, useQuery } from '@tanstack/react-query'
 
-import { CATALOG_ORIGIN } from '@/lib/plugin-catalog'
-import { queryClient } from '@/lib/query-client'
-
 import { curatedFeaturedRank, curationOwnsArtwork, officialCatalogArtwork } from './catalog-curation'
 
 export type CatalogKind = 'skills' | 'plugins'
@@ -47,11 +44,6 @@ export interface CatalogEntry {
   search: string
 }
 
-// The public domain redirects here without CORS headers on the redirect.
-// Use the docs' actual static host, not GitHub's API or repository endpoints.
-const CATALOG_BASE = 'https://nousresearch.github.io/hermes-agent/docs/api'
-/** A download with no new bytes for this long is aborted (inactivity, not total time). */
-const CATALOG_STALL_MS = 60_000
 const text = (value: unknown): string => (typeof value === 'string' ? value : '')
 const strings = (value: unknown): string[] => (Array.isArray(value) ? value.filter(v => typeof v === 'string') : [])
 
@@ -97,8 +89,7 @@ function catalogLinks(kind: CatalogKind, row: any, rawName: string, source: stri
           })
         : null,
     sourceUrl: webUrl(row.repo || row.sourceUrl),
-    docsUrl:
-      webUrl(row.docsUrl) || (text(row.docsPath) ? `${CATALOG_ORIGIN}/docs/user-guide/skills/${text(row.docsPath)}` : null),
+    docsUrl: webUrl(row.docsUrl),
     imageUrl: curationOwnsArtwork(kind, row) ? officialCatalogArtwork(kind, row) : catalogImageUrl(row.image),
     screenshots:
       kind === 'plugins'
@@ -204,79 +195,10 @@ export function parseCatalog(kind: CatalogKind, data: unknown): CatalogEntry[] {
   return [...entries.values()]
 }
 
-export async function fetchCatalog(kind: CatalogKind): Promise<CatalogEntry[]> {
-  // Bound inactivity, not total transfer time: a large skills snapshot can
-  // take minutes on a healthy slow connection. Headers and each body chunk
-  // get the same deadline; an actually stalled download still terminates.
-  const controller = new AbortController()
-  let timer: ReturnType<typeof setTimeout> | undefined
-
-  const armDeadline = () => {
-    clearTimeout(timer)
-    timer = setTimeout(() => controller.abort(), CATALOG_STALL_MS)
-  }
-
-  armDeadline()
-
-  try {
-    // Same published snapshots as the docs galleries; no per-entry fan-out.
-    const response = await fetch(`${CATALOG_BASE}/${kind}.json`, {
-      credentials: 'omit',
-      signal: controller.signal
-    })
-
-    if (!response.ok) {
-      throw new Error(`Catalog HTTP ${response.status}`)
-    }
-
-    if (!response.body) {
-      return parseCatalog(kind, await response.json())
-    }
-
-    const reader = response.body.getReader()
-    const decoder = new TextDecoder()
-    const chunks: string[] = []
-    armDeadline()
-
-    try {
-      while (true) {
-        const { done, value } = await reader.read()
-
-        if (done) {
-          break
-        }
-
-        if (value.byteLength > 0) {
-          armDeadline()
-        }
-
-        chunks.push(decoder.decode(value, { stream: true }))
-      }
-    } finally {
-      reader.releaseLock()
-    }
-
-    clearTimeout(timer)
-    chunks.push(decoder.decode())
-
-    return parseCatalog(kind, JSON.parse(chunks.join('')))
-  } catch (error) {
-    // Chromium can turn our abort into "The user aborted a request." The
-    // controller, not that browser-dependent exception name, owns the cause.
-    if (controller.signal.aborted) {
-      throw new Error(`Catalog download timed out after ${CATALOG_STALL_MS / 1000} seconds without progress. Please try again.`)
-    }
-
-    throw error
-  } finally {
-    clearTimeout(timer)
-  }
-}
-
 const catalogQuery = (kind: CatalogKind) =>
   queryOptions({
     queryKey: ['public-catalog', kind],
-    queryFn: () => fetchCatalog(kind),
+    queryFn: (): Promise<CatalogEntry[]> => Promise.resolve([]),
     staleTime: 30 * 60_000,
     // The skills snapshot parses to ~100k rows; release it once the page has
     // been left long enough that a revisit is a fresh browse anyway.
@@ -295,11 +217,4 @@ export function useCatalog(kind: CatalogKind) {
     // user explicitly chooses Try again.
     enabled: query => query.state.status !== 'error'
   })
-}
-
-/** Warm a catalog while the browser is idle so switching tabs doesn't pay the fetch + parse. */
-export function prefetchCatalogWhenIdle(kind: CatalogKind) {
-  const id = requestIdleCallback(() => void queryClient.prefetchQuery(catalogQuery(kind)), { timeout: 5_000 })
-
-  return () => cancelIdleCallback(id)
 }

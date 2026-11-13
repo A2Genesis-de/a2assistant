@@ -74,7 +74,6 @@ QUESTIONS = {
     "theme": "Pick a colour.",
     "layout": "Which layout?",
     "connectors": "Which apps should I work with?",
-    "plugins": "Want any of these?",
     "tour": "Want a look around first?",
     "build": "Know what you'd like me to make?",
 }
@@ -161,7 +160,6 @@ _TYPED_ANSWER = {
     "theme": _SET_THEME.replace('"accent":"violet"', '"accent":"<colour>"'),
     "layout": 'tool_call {"calls":[{"name":"set_theme","arguments":{"layout":"sidebar-left" or "terminal-deck"}}]}',
     "connectors": 'setup_beat(beat="connectors", value="continue") for "done" or "continue", skip=true for "skip"',
-    "plugins": 'setup_beat(beat="plugins", value="continue") for "done" or "continue", skip=true for "skip"',
     "tour": 'setup_beat(beat="tour", value="quick", "full" or "skip"), bucketing their words into one of the three',
     "build": ('setup_beat(beat="build", value=<id>) for an option on the card; a task of their own is '
               'setup_beat(beat="build", value="own"), then build it'),
@@ -299,12 +297,6 @@ def _after_connectors(record, facts) -> str:
             f"{again} {_next(record)}")
 
 
-def _after_plugins(record, facts) -> str:
-    installed = record["picks"]["installed"]
-    again = " They are already installed; do not install them again." if installed else ""
-    return f"Installed plugins: {_names(installed)}.{again} {_next(record)}"
-
-
 def _tour(preset: str):
     return lambda record, facts: (
         f'Say "Here\'s where things live." Then, in this same turn, call {_TOUR_CALL % preset} and then show the '
@@ -322,7 +314,6 @@ _REMINDERS = {
     "after_layout": _after_layout,
     "offer_first": lambda r, f: f"The connectors card is not shown yet. {_LOOK_AROUND}",
     "after_connectors": _after_connectors,
-    "after_plugins": _after_plugins,
     "after_tour": lambda r, f: f"The tour is already running; do not start it again. {_next(r)}",
     "after_build": lambda r, f: _next(r),
     "tour_quick": _tour("quick"),

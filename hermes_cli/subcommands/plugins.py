@@ -11,25 +11,21 @@ def build_plugins_parser(subparsers, *, cmd_plugins: Callable) -> None:
     """Attach the ``plugins`` subcommand to ``subparsers``."""
     plugins_parser = subparsers.add_parser(
         "plugins", help="Manage and validate plugins",
-        description="Install, update, remove, list, or validate native A2Assistant plugins "
+        description="Install, remove, list, or validate native A2Assistant plugins "
             "and portable Agent Plugins v1 packages. Portable packages install disabled.")
     plugins_subparsers = plugins_parser.add_subparsers(dest="plugins_action")
 
     plugins_install = plugins_subparsers.add_parser(
-        "install", help="Install a plugin from the curated catalog, a Git URL, or owner/repo")
+        "install", help="Install a plugin from a Git URL or owner/repo")
     plugins_install.add_argument(
         "identifier",
-        help="Bare plugin catalog entry name (see `hermes plugins search`), Git URL, or owner/repo "
-            "shorthand (e.g. anpicasso/hermes-plugin-chrome-profiles)")
+        help="Git URL, file:// path or owner/repo shorthand (e.g. anpicasso/hermes-plugin-chrome-profiles)")
     plugins_install.add_argument(
         "--force", "-f", action="store_true",
         help="Reinstall over an existing plugin (from the same source, your untracked files are kept)")
     plugins_install.add_argument(
         "--ref", metavar="COMMIT_SHA",
         help="Install exactly one immutable 40-character Git commit SHA")
-    plugins_install.add_argument(
-        "--allow-removed", action="store_true",
-        help="DANGEROUS: bypass the catalog removed-plugin blocklist check")
     _install_deps_group = plugins_install.add_mutually_exclusive_group()
     _install_deps_group.add_argument(
         "--no-deps", action="store_true",
@@ -47,86 +43,14 @@ def build_plugins_parser(subparsers, *, cmd_plugins: Callable) -> None:
         help="Install disabled (skip confirmation prompt); enable later with `hermes plugins enable <name>`",
     )
 
-    plugins_search = plugins_subparsers.add_parser(
-        "search", help="Search the curated A2Assistant plugin catalog")
-    plugins_search.add_argument(
-        "term", nargs="?", default="",
-        help="Query matched against entry names, descriptions and declared tools (omit to list the whole catalog)")
-    add_json_flag(plugins_search, "Print machine-readable JSON")
-
-    plugins_subparsers.add_parser("browse", help="List every curated plugin catalog entry")
-
     plugins_validate = plugins_subparsers.add_parser(
-        "validate", help="Validate a plugin directory for catalog admission (CI gate)")
+        "validate", help="Validate a plugin directory")
     plugins_validate.add_argument("path", help="Path to the plugin directory")
     plugins_validate.add_argument(
         "--install-deps", action="store_true",
         help="Install the plugin's declared Python dependencies (pyproject/python_dependencies) into this "
-             "venv before the capability probe, exactly as `plugins install` would — the catalog CI gate")
+             "venv before the capability probe, exactly as `plugins install` would")
     add_json_flag(plugins_validate, "Print machine-readable JSON (for CI)")
-
-    plugins_update = plugins_subparsers.add_parser(
-        "update", help="Update an installed plugin, or with no name every plugin that has an update")
-    plugins_update.add_argument(
-        "name", nargs="?", help="Plugin name to update (default: list every plugin with an update and offer them all)")
-    plugins_update.add_argument(
-        "--yes", "-y", action="store_true",
-        help="With no name: update everything listed without the confirmation question (required without a terminal)")
-    plugins_update.add_argument(
-        "--force", "-f", action="store_true",
-        help="Apply the update even when the security scan returns a caution verdict (a dangerous verdict "
-             "still blocks). Without it, a terminal asks first")
-
-    plugins_auto = plugins_subparsers.add_parser(
-        "auto-update", aliases=["autoupdate"],
-        help="Show or set unattended plugin updates (plugins.auto_apply)",
-        description=(
-            "With auto-update on, the gateway's update check (every plugins.auto_update_check_hours) "
-            "applies the catalog and tracked Git updates `hermes plugins update` would apply, through the "
-            "same security scan. Updated code loads in new sessions; a widened catalog pin or new "
-            "capabilities are never accepted unattended. Off by default."))
-    plugins_auto.add_argument("state", nargs="?", choices=["on", "off"], help="Omit to show the current setting")
-
-    plugins_adopt = plugins_subparsers.add_parser(
-        "adopt",
-        help="Adopt a self-cloned plugin dir into provenance tracking",
-        description=(
-            "For plugin dirs you cloned yourself (no install record): read "
-            "the git origin URL, write the provenance row, and become a "
-            "tracked git install (check-updates + update)."
-        ),
-    )
-    plugins_adopt.add_argument("name", help="Self-cloned plugin directory name")
-
-    plugins_trust = plugins_subparsers.add_parser(
-        "trust-update-url",
-        help="Confirm a changed plugin update_url into the saved tag",
-        description=(
-            "The ONLY path that moves a saved update_url tag. When a "
-            "plugin's manifest changed its update_url (needs-fixing "
-            "mismatch), running this trusts the new url after review. "
-            "Never triggered automatically."
-        ),
-    )
-    plugins_trust.add_argument("name", help="Plugin name")
-
-    plugins_check = plugins_subparsers.add_parser(
-        "check-updates",
-        aliases=["check"],
-        help="Check whether installed plugins have updates (read-only)",
-        description=(
-            "Standard, read-only update check for every installed plugin: "
-            "saved-tag update_url feeds (with mismatch protection), git "
-            "ls-remote for git installs, and a stateless PyPI probe for "
-            "pip entry-point plugins. NEVER mutates anything — apply with "
-            "`hermes plugins update <name>`."
-        ),
-    )
-    plugins_check.add_argument(
-        "--json",
-        action="store_true",
-        help="Print machine-readable JSON (the receipt-section shape)",
-    )
 
     plugins_remove = plugins_subparsers.add_parser(
         "remove", aliases=["rm", "uninstall"], help="Remove an installed plugin")

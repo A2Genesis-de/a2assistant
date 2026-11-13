@@ -45,7 +45,7 @@ class PackPluginEntry:
 
     @property
     def install_identifier(self) -> Optional[str]:
-        """Identifier for the install path; None for bare names (resolved via the plugin catalog)."""
+        """Identifier for the install path; None for a bare name without a repo."""
         if self.repo:
             return f"{self.repo}/{self.subdir}" if self.subdir else self.repo
         return None
@@ -234,37 +234,16 @@ class ResolvedPackPlugin:
 
     entry: PackPluginEntry
     identifier: Optional[str]        # None when index resolution failed
-    index_capabilities: list[str] = field(default_factory=list)
     resolve_error: Optional[str] = None
 
 
 def resolve_pack_plugins(pack: PluginPack) -> list[ResolvedPackPlugin]:
-    """Resolve every entry; bare names go through the curated plugin catalog. Failures do not raise —
-    they are carried per-entry so the review screen shows them and install reports partial failure."""
-    resolved: list[ResolvedPackPlugin] = []
-    catalog_entries = None
-    for entry in pack.plugins:
-        if entry.install_identifier is not None:
-            resolved.append(ResolvedPackPlugin(entry=entry, identifier=entry.install_identifier))
-            continue
-        try:
-            if catalog_entries is None:
-                from hermes_cli.plugin_catalog import load_catalog_live
-                catalog_entries = load_catalog_live()
-        except Exception as exc:  # catalog load must not crash pack handling
-            resolved.append(ResolvedPackPlugin(
-                entry=entry, identifier=None, resolve_error=f"plugin catalog unavailable: {exc}"))
-            continue
-        match = next((e for e in catalog_entries if e.name == (entry.name or "")), None)
-        if match is None:
-            resolved.append(ResolvedPackPlugin(
-                entry=entry, identifier=None, resolve_error="not found in the plugin catalog"))
-            continue
-        caps = match.capabilities
-        resolved.append(ResolvedPackPlugin(
-            entry=entry, identifier=match.install_identifier,
-            index_capabilities=[*caps.provides_tools, *caps.provides_hooks, *caps.provides_middleware]))
-    return resolved
+    """Resolve every entry to its install identifier; a bare name without a repo cannot be resolved.
+    Failures do not raise — they are carried per-entry so the review screen shows them and install
+    reports partial failure."""
+    return [ResolvedPackPlugin(entry=entry, identifier=entry.install_identifier,
+                               resolve_error=None if entry.install_identifier else "no repo given for this plugin")
+            for entry in pack.plugins]
 
 
 def render_pack_review(console, pack: PluginPack, resolved: list[ResolvedPackPlugin]) -> None:
@@ -283,9 +262,8 @@ def render_pack_review(console, pack: PluginPack, resolved: list[ResolvedPackPlu
     table.add_column("Pinned ref")
     table.add_column("Capabilities (declared)")
     for rp in resolved:
-        caps = ", ".join(rp.index_capabilities) if rp.index_capabilities else "(shown at install)"
         source = rp.identifier or f"[red]unresolved: {rp.resolve_error}[/red]"
-        table.add_row(rp.entry.display, source, rp.entry.ref[:12], caps)
+        table.add_row(rp.entry.display, source, rp.entry.ref[:12], "(shown at install)")
     console.print(table)
 
     if pack.config:
@@ -360,7 +338,6 @@ def install_pack_plugins(
         _set_plugin_enabled,
     )
     from hermes_cli.plugins_admission import AdmissionRefused
-    from hermes_cli.plugins_cmd_catalog import raise_if_removed
     from hermes_cli.plugins_cmd_install import recorded_install
     results: list[PackInstallResult] = []
 
@@ -375,12 +352,9 @@ def install_pack_plugins(
             continue
         console.print(f"[dim]Installing {display} @ {rp.entry.ref[:12]}...[/dim]")
         try:
-            if not rp.entry.repo:  # a name-only recall names the catalog entry; the core sees only its repo
-                raise_if_removed(rp.entry.name or "")
-            # A bare pack name resolved through the plugin catalog; repo entries are custom sources.
             _target, manifest, installed_name = recorded_install(
                 lambda: _install_plugin_core(rp.identifier, force=force, ref=rp.entry.ref),
-                catalog_name=None if rp.entry.repo else rp.entry.name, identifier=rp.identifier)
+                identifier=rp.identifier)
         except PluginOperationError as exc:
             _fail(display, str(exc))
             continue

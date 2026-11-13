@@ -10,9 +10,6 @@ from __future__ import annotations
 
 import json
 import logging
-import threading
-import time
-import urllib.request
 from dataclasses import dataclass, field
 from pathlib import PurePosixPath
 
@@ -296,22 +293,11 @@ def recommended_entry(budget: HardwareBudget,
     return None
 
 
-# ── catalog data: packaged JSON, refreshed from GitHub in memory ─
+# ── catalog data: packaged JSON ─
 #
-# catalog.json ships as package data and is loaded at import (no network on the import path). A
-# TTL-gated background refresh fetches the same file from the repo's main branch and swaps it in
-# MEMORY only: nothing on disk changes, so a git checkout never sees a dirty tracked file and the
-# packaged copy remains the offline truth. A reverted commit on main heals every install on its
-# next fetch, and day-0 entries reach users without an app release.
+# catalog.json ships as package data and is loaded at import; it changes with the checkout.
 
-_CATALOG_URL = ("https://raw.githubusercontent.com/NousResearch/hermes-agent"
-                "/main/hermes_cli/local_runtime/catalog.json")
 _SCHEMA_VERSION = 3  # bump when an older app would read a newer catalog but launch its entries wrongly
-_REFRESH_TTL_S = 6 * 3600
-_refresh_lock = threading.Lock()
-# None = never attempted: monotonic() counts from boot, so a 0.0 sentinel read as "refreshed at
-# boot" and suppressed the first fetch for the first six awake hours after every reboot.
-_last_refresh_attempt: float | None = None
 
 
 def _asset_from(d: dict | None) -> AssetFile | None:
@@ -365,39 +351,6 @@ def _packaged_catalog() -> tuple[CatalogEntry, ...]:
 
 
 CATALOG: tuple[CatalogEntry, ...] = _packaged_catalog()
-
-
-def refresh_catalog(force: bool = False) -> bool:
-    """Fetch the current catalog from the repo and swap it in memory. Best-effort: any failure
-    (offline, GitHub down, unreadable schema) leaves the running catalog untouched and retries
-    after the TTL. Returns True when a fetched document replaced the catalog."""
-    global CATALOG, _last_refresh_attempt
-
-    now = time.monotonic()
-    with _refresh_lock:
-        if not force and _last_refresh_attempt is not None and now - _last_refresh_attempt < _REFRESH_TTL_S:
-            return False
-        _last_refresh_attempt = now
-    try:
-        req = urllib.request.Request(_CATALOG_URL, headers={"User-Agent": "hermes-local-runtime"})
-        with urllib.request.urlopen(req, timeout=10) as r:
-            fetched = _load_catalog(json.load(r))
-    except Exception as exc:
-        logger.debug("catalog refresh skipped: %s", exc)
-        return False
-    if fetched != CATALOG:
-        logger.info("catalog refreshed from repo (%d models)", len(fetched))
-    CATALOG = fetched
-    return True
-
-
-def refresh_catalog_soon() -> None:
-    """TTL-gated background refresh; returns immediately. The current request serves the catalog
-    it already has — the refresh lands for the next one."""
-    last = _last_refresh_attempt
-    if last is not None and time.monotonic() - last < _REFRESH_TTL_S:
-        return
-    threading.Thread(target=refresh_catalog, daemon=True, name="catalog-refresh").start()
 
 
 def catalog_by_id() -> dict[str, CatalogEntry]:

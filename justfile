@@ -75,11 +75,6 @@ check-uv-lock:
 lint-docker:
     scripts/ci/lint_docker.sh
 
-# Validate every plugin-catalog entry's structure (no clone, no install)
-[group('check')]
-check-plugin-catalog:
-    scripts/hermes-python scripts/validate_plugin_catalog.py plugin-catalog/
-
 # Run the flake's checks (needs nix with flakes)
 [group('check')]
 check-nix:
@@ -101,11 +96,6 @@ test-all:
 test-js:
     pnpm --dir ui-tui run build:ink
     pnpm -r test
-
-# Run the plugin-catalog tests, the files scripts/ci/catalog_test_files.py selects
-[group('test')]
-test-catalog:
-    scripts/hermes-python scripts/ci/catalog_test_files.py | scripts/run_tests.sh --files-from -
 
 # Run the WhatsApp bridge's node tests (after `just js-install-whatsapp-bridge`)
 [group('test')]

@@ -29,15 +29,10 @@ load_config = late("load_config", "hermes_cli.config")
 # Labels per hub source id (matches `hermes skills search` provenance); keep in
 # sync with create_source_router()'s source list.
 _SKILL_HUB_SOURCE_LABELS = {
-    "official": "Official (Nous)",
-    "hermes-index": "A2Assistant Index",
-    "skills-sh": "skills.sh",
+    "official": "Official",
     "well-known": "Well-Known",
     "url": "Direct URL",
     "github": "GitHub",
-    "clawhub": "ClawHub",
-    "lobehub": "LobeHub",
-    "browse-sh": "browse.sh",
 }
 
 
@@ -59,11 +54,6 @@ def _resolve_hub_skill(ident: str, profile: Optional[str]):
         meta, bundle, _src = _resolve_source_meta_and_bundle(ident, sources)
     return meta, bundle
 
-
-# Sources subsumed by an available hermes-index (progressive per-source fan-out
-# skips them: ~70 GitHub calls per keystroke saved). Keep in sync with
-# parallel_search_sources' _api_source_ids.
-_API_SOURCE_IDS = frozenset({"github", "skills-sh", "clawhub", "lobehub", "well-known"})
 
 
 def _flag(obj, attr: str) -> bool:
@@ -150,33 +140,14 @@ async def list_skills_hub_sources(profile: Optional[str] = None):
     ``profile``), so the Browse-hub tab has something before a search runs."""
 
     def _run():
-        sources = _hub_sources(profile)
         out = []
-        index_available = False
-        featured = []
-        for src in sources:
+        for src in _hub_sources(profile):
             sid = src.source_id()
             entry = {"id": sid, "label": _SKILL_HUB_SOURCE_LABELS.get(sid, sid)}
-            # GitHub exposes a rate-limit flag; the index an availability flag.
             if sid == "github":
                 entry["rate_limited"] = _flag(src, "is_rate_limited")
-            if sid == "hermes-index":
-                index_available = _flag(src, "is_available")
-                entry["available"] = index_available
-                # Empty-query search on the index returns featured/popular skills.
-                if index_available:
-                    try:
-                        featured = [
-                            _skill_meta_to_payload(m) for m in src.search("", limit=12)]
-                    except Exception:
-                        featured = []
             out.append(entry)
-        # Which sources are worth searching individually (see _API_SOURCE_IDS).
-        for entry in out:
-            entry["searchable"] = not (index_available and entry["id"] in _API_SOURCE_IDS)
-        return {
-            "sources": out, "index_available": index_available, "featured": featured,
-            "installed": _installed_hub_identifiers(profile)}
+        return {"sources": out, "installed": _installed_hub_identifiers(profile)}
 
     with http_failure("skills hub sources listing failed", 502, "Hub sources failed"):
         return await asyncio.to_thread(_run)

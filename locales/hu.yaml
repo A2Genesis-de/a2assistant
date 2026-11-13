@@ -3654,7 +3654,7 @@ tips:
   t064: "Az a2assistant sessions browse interaktív, kereshető munkamenet-választót nyit meg."
   t065: "Az a2assistant sessions stats platformonkénti munkamenetszámot és az adatbázis méretét mutatja."
   t066: "Az a2assistant sessions prune --older-than 30 kitakarítja a régi munkameneteket."
-  t067: "Az a2assistant skills search react --source skills-sh a skills.sh nyilvános katalógusában keres."
+  t067: "Az a2assistant skills search pdf --source official a hivatalos opcionális skillek között keres."
   t068: "Az a2assistant skills check a telepített hub-skillek frissítéseit ellenőrzi."
   t069: "Az a2assistant skills tap add myorg/skills-repo egyedi GitHub skill-forrást ad hozzá."
   t070: "Az a2assistant skills snapshot export setup.json exportálja a skill-konfigurációdat biztonsági mentéshez vagy megosztáshoz."

@@ -21,8 +21,8 @@ same path, and the channel opt-in must survive that.
 * Written by ``hermes update --set-channel <x>`` from inside an install
   (it knows its own id — the user never types a sha).
 * Shown by ``hermes update --install-id`` and the desktop About page.
-* Source installs select an R2 channel name, or use an explicit branch override.
-  Unconfigured official checkouts track ``stable``; forks and mirrors keep ``main``.
+* Source installs select ``main`` or ``stable``, or use an explicit branch override.
+  Unconfigured checkouts track ``main``.
   Bundles derive their channel from their baked identity, never these records.
   ``external`` installs have no configurable channel; the steward owns updates.
 
@@ -47,6 +47,7 @@ logger = logging.getLogger(__name__)
 CHANNEL_MAIN = "main"
 CHANNEL_STABLE = "stable"
 CHANNEL_CANARY = "canary"
+SOURCE_CHANNELS = (CHANNEL_MAIN, CHANNEL_STABLE)
 
 
 # A canary source identity: the exact stable version plus a full UTC build
@@ -140,9 +141,7 @@ def _package_channel(stamp: dict) -> bool:
 def default_channel(project_root: Optional[Path] = None) -> str:
     """The channel an unconfigured install tracks.
 
-    A source checkout of the official repository follows the latest published
-    stable release. Forks, mirrors and checkout-less trees keep following main.
-    ``electron-updater`` and ``app-installer`` bundles report their artifact
+    A source checkout follows main. ``electron-updater`` and ``app-installer`` bundles report their artifact
     channel: a canary artifact tracks canary, every other bundle
     tracks stable. The stamp's ``tag`` is the authority, the same fact
     apps/desktop/product-identity.cjs keys the published feed name on — so
@@ -155,7 +154,7 @@ def default_channel(project_root: Optional[Path] = None) -> str:
     root = Path(project_root) if project_root is not None else install_root()
     stamp = _read_stamp(root)
     if not _package_channel(stamp):
-        return CHANNEL_STABLE if _tracks_official_origin(root) else CHANNEL_MAIN
+        return CHANNEL_MAIN
     if stamp.get("source") == "channel-build":
         request = stamp.get("channelBuild")
         if not isinstance(request, dict):
@@ -163,30 +162,6 @@ def default_channel(project_root: Optional[Path] = None) -> str:
         return validate_name(request.get("channel"))
     return CHANNEL_CANARY if is_canary_tag(stamp.get("tag")) else CHANNEL_STABLE
 
-
-def _tracks_official_origin(root: Path) -> bool:
-    """True when ``root`` is a git checkout whose ``remote.origin.url`` is the official repo.
-
-    Read from the git config file (no git process: the banner and boot paths call this).
-    Forks, mirrors and local-path origins publish no official releases.
-    """
-    from hermes_cli.source_releases import _GITHUB_ORIGIN, OFFICIAL_REPOSITORY
-    from hermes_cli.update_lock import _git_common_dir
-
-    common = _git_common_dir(root)
-    try:
-        lines = (common / "config").read_text(encoding="utf-8-sig").splitlines() if common else []
-    except OSError:
-        return False
-    in_origin = False
-    for line in lines:
-        text = line.strip()
-        if text.startswith("["):
-            in_origin = text == '[remote "origin"]'
-        elif in_origin and text.partition("=")[0].strip() == "url":
-            match = _GITHUB_ORIGIN.fullmatch(text.partition("=")[2].strip())
-            return bool(match) and match[1].lower() == OFFICIAL_REPOSITORY.lower()
-    return False
 
 
 def rides_default_channel(record: dict, channel: str, project_root: Optional[Path] = None) -> bool:
@@ -232,6 +207,8 @@ def set_install_channel(
     channel = validate_name(channel)
 
     stamp = _read_stamp(root)
+    if channel not in SOURCE_CHANNELS and not _package_channel(stamp):
+        raise ValueError(f"Unknown update channel {channel!r}; source installs follow main or stable")
     if _package_channel(stamp) or stamp.get("updateMechanism") == "external":
         distribution = stamp.get("distribution") or "an external steward"
         raise ValueError(
@@ -257,9 +234,7 @@ def handle_metadata_args(args, project_root: Path) -> bool:
         print(str(exc))
         raise SystemExit(2) from exc
     print(f"Update channel for {key}: {channel}")
-    if channel == CHANNEL_CANARY:
-        print("Canary builds can write forward-incompatible state. Back up your data before switching.")
-    elif channel == CHANNEL_STABLE:
+    if channel == CHANNEL_STABLE:
         print("Switching to an older stable release may not read state written by canary. Back up your data first.")
     return True
 
@@ -290,28 +265,16 @@ def _channel_write_lock(config_path: Path):
                 fcntl.flock(lock.fileno(), fcntl.LOCK_UN)
 
 
-def adopt_retired_channel(request: dict) -> bool:
-    """After verified completion, adopt only an unchanged persistent subscription."""
-    retirement = request.get("channel_retirement")
-    if retirement is None:
-        return False
-    return _write_channel_record(
-        install_id(Path(request["source"])), request["source"],
-        validate_name(retirement["destination"]),
-        expected=retirement["original"], config_path=Path(request["home"]) / "config.yaml")
 
-
-def _write_channel_record(sha16: str, path: str, channel: str, *,
-                          expected: dict | None = None, config_path: Path | None = None) -> bool:
+def _write_channel_record(sha16: str, path: str, channel: str) -> None:
     from hermes_cli.config import get_config_path
 
-    config_path = config_path if config_path is not None else get_config_path()
+    config_path = get_config_path()
     with _channel_write_lock(config_path):
-        return _write_channel_record_locked(sha16, path, channel, expected, config_path)
+        _write_channel_record_locked(sha16, path, channel, config_path)
 
 
-def _write_channel_record_locked(sha16: str, path: str, channel: str,
-                                 expected: dict | None, config_path: Path) -> bool:
+def _write_channel_record_locked(sha16: str, path: str, channel: str, config_path: Path) -> None:
     """Write ``update.installs.<sha16>`` into config.yaml, preserving the rest.
 
     Persists through the shared comment-preserving atomic writer
@@ -333,13 +296,10 @@ def _write_channel_record_locked(sha16: str, path: str, channel: str,
     if installs is not None and not isinstance(installs, dict):
         raise ValueError("config key 'update.installs' is not a mapping")
     record = installs.get(sha16) if isinstance(installs, dict) else None
-    if expected is not None and (record or {}) != expected:
-        return False
     new_record = dict(record) if isinstance(record, dict) else {}
     new_record["path"] = path  # DATA, for humans + doctor GC
     new_record["channel"] = channel
     write_config_key(config_path, f"update.installs.{sha16}", new_record)
-    return True
 
 
 def stale_channel_records(config: Optional[dict]) -> list[tuple[str, dict, str]]:

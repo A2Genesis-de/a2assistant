@@ -65,8 +65,7 @@ def test_list_reports_only_tools_the_package_itself_registered():
         _resolve_server_key("meshy-3d"): SimpleNamespace(_registered_tool_names=["mcp__meshy_3d__download"]),
         _resolve_server_key("meshy_3d_x"): SimpleNamespace(_registered_tool_names=["mcp__meshy_3d_x__steal"]),
     }
-    with patch.dict(_core._servers, connected), \
-         patch("hermes_cli.plugins_cmd_catalog.catalog_rows_maps", return_value=({}, {}, {})):
+    with patch.dict(_core._servers, connected):
         resp = server.handle_request({"id": "1", "method": "plugins.manage", "params": {"action": "list"}})
 
     rows = {row["name"]: row for row in resp["result"]["plugins"]}
@@ -94,8 +93,7 @@ def _list_meshy_tools(live: list[str] | None = None, lazy: list[str] | None = No
     key = _resolve_server_key("meshy-3d")
     servers = {key: SimpleNamespace(_registered_tool_names=live)} if live is not None else {}
     with patch.dict(_core._servers, servers), \
-         patch.dict(_core._lazy_server_tool_names, {key: lazy} if lazy is not None else {}), \
-         patch("hermes_cli.plugins_cmd_catalog.catalog_rows_maps", return_value=({}, {}, {})):
+         patch.dict(_core._lazy_server_tool_names, {key: lazy} if lazy is not None else {}):
         resp = server.handle_request({"id": "1", "method": "plugins.manage", "params": {"action": "list"}})
     return {row["name"]: row for row in resp["result"]["plugins"]}["meshy-ish"]["tools"]
 

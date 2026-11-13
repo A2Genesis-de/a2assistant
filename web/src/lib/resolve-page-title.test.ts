@@ -11,7 +11,6 @@ const t = {
       chat: "Chat",
       config: "Config",
       cron: "Cron",
-      documentation: "Documentation",
       keys: "Keys",
       logs: "Logs",
       models: "Models",

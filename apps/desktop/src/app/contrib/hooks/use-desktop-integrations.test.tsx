@@ -9,7 +9,6 @@ import { $confirmRequest, runConfirm, settleConfirm } from '@/store/confirm'
 import { keepRoute, keptRouteOpened } from '@/store/gateway-kept-routes'
 import { $hubInstalledOverride } from '@/store/hub-actions'
 import { requestMcpInstallFromDeepLink } from '@/store/mcp-deeplink-install'
-import { requestPluginCatalogInstallFromDeepLink } from '@/store/plugin-catalog-install'
 import { openPluginInstallRequest } from '@/store/plugin-install-request'
 import {
   _resetLegacyDiscardForTests,
@@ -40,10 +39,6 @@ vi.mock('@/app/chat/close-tab', () => ({ closeActiveTab }))
 
 vi.mock('@/store/mcp-deeplink-install', () => ({
   requestMcpInstallFromDeepLink: vi.fn()
-}))
-
-vi.mock('@/store/plugin-catalog-install', () => ({
-  requestPluginCatalogInstallFromDeepLink: vi.fn()
 }))
 
 vi.mock('@/store/plugin-install-request', () => ({
@@ -79,7 +74,6 @@ describe('useDesktopIntegrations', () => {
     window.localStorage.clear()
     _resetLegacyDiscardForTests()
     vi.mocked(requestMcpInstallFromDeepLink).mockClear()
-    vi.mocked(requestPluginCatalogInstallFromDeepLink).mockClear()
     vi.mocked(openPluginInstallRequest).mockClear()
     navigate = vi.fn()
     // Every test starts as a main window; only the HUD describe flips this.
@@ -867,7 +861,7 @@ describe('useDesktopIntegrations', () => {
       expect(navigate).not.toHaveBeenCalled()
     })
 
-    it('routes hermes://plugin/install?catalog= to the catalog lookup, not the git-path modal', () => {
+    it('ignores hermes://plugin/install?catalog=, never opening the git-path modal', () => {
       let deepLink: ((payload: { kind: string; name: string; params: Record<string, string> }) => void) | undefined
       desktopWindow.hermesDesktop = {
         ...desktopWindow.hermesDesktop,
@@ -881,7 +875,6 @@ describe('useDesktopIntegrations', () => {
 
       render({ profileReady: true, sessions: [] })
       deepLink?.({ kind: 'plugin', name: 'install', params: { catalog: 'weather', repo: 'evil/repo' } })
-      expect(requestPluginCatalogInstallFromDeepLink).toHaveBeenCalledWith('weather')
       expect(openPluginInstallRequest).not.toHaveBeenCalled()
       expect(navigate).not.toHaveBeenCalled()
     })
@@ -912,7 +905,6 @@ describe('useDesktopIntegrations', () => {
         force: false,
         legacyHint: null
       })
-      expect(requestPluginCatalogInstallFromDeepLink).not.toHaveBeenCalled()
       expect(navigate).not.toHaveBeenCalled()
     })
 

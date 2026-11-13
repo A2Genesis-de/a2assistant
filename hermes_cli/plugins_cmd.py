@@ -1,8 +1,8 @@
-"""``hermes plugins`` CLI subcommand — install, update, remove, and list plugins.
+"""``hermes plugins`` CLI subcommand — install, remove, and list plugins.
 
 Facade: shared primitives (errors, console/config helpers, manifest reading, discovery, enable/disable
 selection) and the dispatch table live here; each verb family lives in a ``plugins_cmd_<topic>.py``
-sibling (install, update, remove, git, capabilities, toggle, listing, catalog)."""
+sibling (install, remove, git, capabilities, toggle, listing)."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ from hermes_cli.plugins_cmd_capabilities import (
 )
 from hermes_cli.plugins_cmd_git import (
     _EXACT_COMMIT_RE, _canonical_source, _checkout_exact_revision, _clone_plugin_repo, _git_head_revision,
-    _git_or_raise, _git_pull_plugin_dir, _git_resolve_commit, _normalize_exact_revision, _pin_annotation,
+    _git_or_raise, _git_resolve_commit, _normalize_exact_revision, _pin_annotation,
     _read_install_metadata, _run_plugin_git, _safe_git_error, _scrub_cloned_origin, _update_install_record,
     _write_install_metadata, pinned_revision,
 )
@@ -48,10 +48,6 @@ from hermes_cli.plugins_cmd_remove import (
 from hermes_cli.plugins_cmd_toggle import (
     _discover_context_engines, _persist_plugin_selection, _provider_categories, _run_composite_fallback,
     cmd_toggle,
-)
-from hermes_cli.plugins_cmd_update import (
-    _clear_plugin_bytecode, cmd_adopt, cmd_check_updates, cmd_trust_update_url, cmd_update,
-    dashboard_update_user_plugin,
 )
 
 logger = logging.getLogger(__name__)
@@ -192,16 +188,11 @@ def _scan_on_install_enabled() -> bool:
     return bool(_config_value("plugins", "scan_on_install", default=True))
 
 
-def _scan_plugin_tree(plugin_dir: Path, identifier: str, *, force: bool, scan_decision_cb=None,
-                      reviewed_pin: bool = False):
+def _scan_plugin_tree(plugin_dir: Path, identifier: str, *, force: bool, scan_decision_cb=None):
     """Scan *plugin_dir* and enforce the install policy.
 
     Verdicts: safe → proceed; caution → needs confirmation (``force=True`` or a truthy
     ``scan_decision_cb(result)``); dangerous → always blocked (:class:`PluginScanBlocked`).
-    *reviewed_pin* marks a tree checked out at a curated-catalog sha: that exact tree passed
-    the same scanner at admission with a human reading the caution findings, so caution is
-    accepted without a prompt (the Desktop has none). Dangerous still blocks — a signature
-    added after review is exactly the case the backstop exists for.
     Returns the ScanResult, or None when scanning is disabled.
     """
     if not _scan_on_install_enabled():
@@ -209,8 +200,6 @@ def _scan_plugin_tree(plugin_dir: Path, identifier: str, *, force: bool, scan_de
     from tools.plugin_guard import format_scan_report, scan_plugin, should_allow_plugin_install
     result = scan_plugin(plugin_dir, source=identifier)
     allowed, reason = should_allow_plugin_install(result, force=force)
-    if allowed is None and reviewed_pin:
-        allowed, reason = True, "Caution verdict accepted: reviewed catalog pin"
 
     if allowed is None and scan_decision_cb is not None:
         try:
@@ -447,8 +436,7 @@ def _clone_failure_message(git_url: str, git_error: str) -> str:
     The text reaches ``_fail`` -> Rich ``console.print``: escape the git output so ``[...]`` in it is
     not parsed as markup."""
     from rich.markup import escape
-    return (f"Could not download the plugin from {git_url}. Check the address (browse the catalog "
-            "with `hermes plugins search`), check your internet connection, or, if the repository "
+    return (f"Could not download the plugin from {git_url}. Check the address, check your internet connection, or, if the repository "
             "is private, sign in first with `gh auth login` (or set GITHUB_TOKEN in your .env).\n"
             f"Details: {escape(git_error.strip())}")
 
@@ -598,7 +586,7 @@ def _forget_plugin_config(aliases: set) -> dict[str, Any]:
     from config.yaml: allow/deny-list entries, ``plugins.entries.<id>`` grants and a ``memory.provider``
     selection naming it. A later reinstall under the same name must start from the "Enable now?"
     decision, not inherit a stale enable or grant (#54336); a dangling ``memory.provider`` would make
-    the next agent init re-clone the plugin from the catalog, silently undoing the uninstall.
+    the next agent init fail to load a provider that no longer exists.
     Returns ``{"cleared_memory_provider": True}`` when the selection was reset."""
     from hermes_cli.config import load_config, save_config
     config = load_config()
@@ -638,12 +626,9 @@ def _selection_lock() -> threading.Lock:
 
 
 def _set_plugin_enabled(name: str, *, enable: bool, aliases=(), console=None) -> None:
-    """Submit the command's delta with the version of the selection it read. Enabling a non-bundled plugin
-    on the kill list raises :class:`PluginOperationError`; the `hermes plugins` picker checks it itself."""
+    """Submit the command's delta with the version of the selection it read."""
     from pm.plugins_state import read_home_selection
 
-    if enable:
-        _refuse_recalled_entry(_find_plugin_entry(name))
     with _selection_lock():
         expected_config = _plugin_selection_version()
         config = read_home_selection(get_hermes_home()) or {}
@@ -655,16 +640,6 @@ def _set_plugin_enabled(name: str, *, enable: bool, aliases=(), console=None) ->
                                    action=f"{'Enable' if enable else 'Disable'} '{name}'",
                                    expected_config=expected_config, plugin=name if enable else None,
                                    settled=(name, *aliases))
-
-
-def _refuse_recalled_entry(entry: Optional[tuple]) -> None:
-    """``PluginOperationError`` when the kill list recalls the non-bundled plugin *entry* (a
-    :func:`_find_plugin_entry` tuple). Judged on the load-time gate's inputs, its manifest name and its own
-    directory: re-resolving the bare leaf could read another plugin's install record (a nested
-    ``obs/x`` beside a top-level ``x``)."""
-    if entry is not None and entry[3] != "bundled":
-        from hermes_cli.plugins_cmd_catalog import refuse_if_installed_removed
-        refuse_if_installed_removed(entry[0], entry[4])
 
 
 def _apply_activation(enabled: set, disabled: set, key: str, aliases, *, enable: bool) -> None:
@@ -682,39 +657,19 @@ def _resolve_plugin_key(name: str) -> Optional[str]:
     return resolved[0] if resolved else None
 
 
-def _catalog_installed_dir(name: str) -> Optional[Path]:
-    """Install dir whose installer-owned record names catalog entry *name* (``hermes-memory-wiki`` is
-    installed as ``plugins/memory-wiki``), else None (also when two dirs claim it). Read through
-    :func:`catalog_install_record` (``.install-metadata.json``), never the tree, so a URL-installed
-    repo cannot claim a catalog entry's name."""
-    from hermes_cli.plugins_cmd_catalog import catalog_install_record
-    try:
-        keys = list(_read_install_metadata())
-    except PluginOperationError:
-        return None
-    hits = [target for key in keys if (target := _plugins_dir() / key).is_dir()
-            and (record := catalog_install_record(target)) and record["catalog_name"] == name]
-    return hits[0] if len(hits) == 1 else None
-
-
 def _find_plugin_entry(name: str) -> Optional[tuple]:
     """THE plugin name resolver for every verb (enable/disable/show/capabilities/remove/update, the
     dashboard and the Desktop hub): the discovered ``(name, version, description, source, dir_path, key)``
     entry for a canonical key or manifest name; else a bare leaf (``exa`` ->
-    ``web/exa``) only when unique; else the catalog name the plugin was installed under.
-    Never guesses between two candidates."""
+    ``web/exa``) only when unique. Never guesses between two candidates."""
     entries = _discover_all_plugins()
     from hermes_cli.left_core_migration import legacy_plugin_alias
-    target = legacy_plugin_alias(name) or name  # ``observability/langfuse`` -> its catalog plugin
+    target = legacy_plugin_alias(name) or name
     exact = next((entry for entry in entries if target in (entry[0], entry[5])), None)
     if exact is not None:
         return exact
     leaf_matches = [entry for entry in entries if name == entry[5].split("/")[-1]]
-    if leaf_matches:
-        return leaf_matches[0] if len(leaf_matches) == 1 else None
-    target = _catalog_installed_dir(name)
-    return next((entry for entry in entries if target is not None and entry[4] and Path(str(entry[4])) == target),
-                None)
+    return leaf_matches[0] if len(leaf_matches) == 1 else None
 
 
 def _resolve_plugin_key_and_source(name: str) -> Optional[tuple]:
@@ -746,12 +701,6 @@ def cmd_enable(name: str, allow_tool_override: Optional[bool] = None) -> None:
         _fail(console, _unknown_plugin_message(name))
     key, source = resolved
     _refuse_legacy_relay(key)
-    if source != "bundled":
-        # Activating recalled code is the same act as installing it (`plugins/AGENTS.md`: kill list).
-        try:
-            _refuse_recalled_entry(_find_plugin_entry(key))
-        except PluginOperationError as exc:
-            _fail(console, f"[red]Error:[/red] {exc}")
 
     changed = _activate_key(key, enable=True, console=console)
     if changed:
@@ -1088,35 +1037,9 @@ def _tri_state_flag(args, yes_attr: str, no_attr: str) -> Optional[bool]:
     return True if getattr(args, yes_attr, False) else (False if getattr(args, no_attr, False) else None)
 
 
-def _catalog():
-    from hermes_cli import plugins_cmd_catalog
-    return plugins_cmd_catalog
-
-
-def _action_update(args):
-    if args.name:
-        if getattr(args, "yes", False):
-            _fail(_console(), "[red]Error:[/red] --yes only applies to `hermes plugins update` with no name.")
-        cmd_update(args.name, force=getattr(args, "force", False))
-        return
-    if getattr(args, "force", False):
-        _fail(_console(), "[red]Error:[/red] --force applies to one named plugin: `hermes plugins update <name> --force`.")
-    from hermes_cli.plugins_cmd_update_all import cmd_update_all
-    cmd_update_all(yes=getattr(args, "yes", False))
-
-
-def _action_auto_update(args):
-    from hermes_cli.plugins_auto_update import auto_update_state, set_auto_update
-    console = _console()
-    state = getattr(args, "state", None)
-    try:
-        current = auto_update_state() if state is None else set_auto_update(state == "on")
-    except PluginOperationError as exc:
-        _fail(console, f"[red]Error:[/red] {exc}")
-    word = "[green]on[/green]" if current["auto_apply"] else "[dim]off[/dim]"
-    cadence = (f"checked every {current['check_hours']:g}h by the gateway" if current["check_hours"] > 0
-               else "the gateway's check is off: plugins.auto_update_check_hours is 0")
-    console.print(f"Plugin auto-update: {word} ({cadence}; updates load in new sessions)")
+def _plugin_validate():
+    from hermes_cli import plugin_validate
+    return plugin_validate
 
 
 def _action_pack(args):
@@ -1131,21 +1054,10 @@ _PLUGIN_ACTIONS = {
         force=getattr(args, "force", False),
         enable=_tri_state_flag(args, "enable", "no_enable"),
         ref=getattr(args, "ref", None),
-        allow_removed=getattr(args, "allow_removed", False),
         no_deps=getattr(args, "no_deps", False),
         yes_deps=getattr(args, "yes_deps", False)),
-    "search": lambda args: _catalog().cmd_search(
-        getattr(args, "term", "") or "", json_output=getattr(args, "json", False)),
-    "browse": lambda args: _catalog().cmd_search(""),
-    "validate": lambda args: _catalog().cmd_validate(
+    "validate": lambda args: _plugin_validate().cmd_validate(
         args.path, as_json=getattr(args, "json", False), install_deps=getattr(args, "install_deps", False)),
-    "update": _action_update,
-    "auto-update": _action_auto_update,
-    "autoupdate": _action_auto_update,
-    "adopt": lambda args: cmd_adopt(args.name),
-    "trust-update-url": lambda args: cmd_trust_update_url(args.name),
-    "check-updates": lambda args: cmd_check_updates(args),
-    "check": lambda args: cmd_check_updates(args),
     "remove": lambda args: cmd_remove(args.name),
     "rm": lambda args: cmd_remove(args.name),
     "uninstall": lambda args: cmd_remove(args.name),
@@ -1159,7 +1071,7 @@ _PLUGIN_ACTIONS = {
     "doctor": lambda args: cmd_plugin_doctor(args.target, ci=getattr(args, "ci", False)),
     "pack": _action_pack,
     "show": lambda args: cmd_show(args.name),
-    "info": lambda args: _catalog().cmd_info(args.name),
+    "info": lambda args: cmd_show(args.name),
     None: lambda args: cmd_toggle(),
 }
 

@@ -1,9 +1,8 @@
-"""``manage_catalog``: a desktop chat's catalog search and install-through-the-card.
+"""``manage_catalog``: a desktop chat's skills hub search and install-through-the-card.
 
-``search`` reads the plugin catalog (the Plugins tab's resolver) and the skills hub and says what is
-already installed in this chat's profile. ``install`` opens the same connection operation
-``manage_connections`` opens, with rows of kind ``plugin`` / ``skill``; the host installs each row
-the user approves (``tools/connectors/catalog.py``). The model sends catalog ids and an action,
+``search`` reads the skills hub and says what is already installed in this chat's profile. ``install``
+opens the same connection operation ``manage_connections`` opens, with rows of kind ``skill``; the host
+installs each row the user approves (``tools/connectors/catalog.py``). The model sends catalog ids and an action,
 nothing else: the pin, scan, target profile and activation are the host's.
 """
 
@@ -15,15 +14,14 @@ from typing import Any, Callable, Dict, List, Optional
 from tools.registry import tool_error
 
 ACTIONS = ("search", "install")
-ITEM_KINDS = ("plugin", "skill")
+ITEM_KINDS = ("skill",)
 _TOP_KEYS = frozenset({"action", "kind", "query", "items", "reason"})
 _ITEM_KEYS = frozenset({"kind", "id"})
 SEARCH_LIMIT = 10
 
 NOT_HERE = (
     "manage_catalog is available only in the A2Assistant desktop app, where the approval card can be drawn. "
-    "Tell the user to install from a terminal instead: `hermes plugins install <id>` for a plugin, "
-    "`hermes skills install <id>` for a skill."
+    "Tell the user to install from a terminal instead: `hermes skills install <id>`."
 )
 
 NOTE = (
@@ -36,12 +34,11 @@ NOTE = (
 MANAGE_CATALOG_SCHEMA = {
     "name": "manage_catalog",
     "description": (
-        "Find and install A2Assistant catalog plugins and hub skills for the user. 'search' lists matches "
+        "Find and install hub skills for the user. 'search' lists matches "
         "(id, kind, display, tier, platforms, installed) and changes nothing. 'install' shows the user "
         "one approval card with a row per item and blocks until every row is installed, skipped or "
         "failed, or the card is closed; the host installs each approved row into this chat's profile at "
-        "the catalog's reviewed version, and turns on a catalog plugin that is installed but not "
-        "enabled. Pass only catalog ids exactly as 'search' returns them; the "
+        "the hub's version. Pass only catalog ids exactly as 'search' returns them; the "
         "host decides the source, version, profile and settings, and the user can change them on the "
         "card. Offer an install only for something the user asked for or agreed to."
     ),
@@ -50,8 +47,8 @@ MANAGE_CATALOG_SCHEMA = {
         "properties": {
             "action": {"type": "string", "enum": list(ACTIONS)},
             "kind": {"type": "string", "enum": list(ITEM_KINDS),
-                     "description": "search only: limit results to plugins or skills."},
-            "query": {"type": "string", "description": "search only: words to match; empty lists plugins."},
+                     "description": "search only: limit results to skills."},
+            "query": {"type": "string", "description": "search only: words to match."},
             "items": {
                 "type": "array",
                 "description": "install only: the catalog items to offer, one card row each.",
@@ -86,7 +83,7 @@ def _check_args(args: dict[str, Any]) -> Optional[str]:
         return None
     items = args.get("items")
     if not isinstance(items, list) or not items:
-        return "install needs 'items': [{\"kind\": \"plugin\", \"id\": \"<catalog id>\"}, ...]."
+        return "install needs 'items': [{\"kind\": \"skill\", \"id\": \"<catalog id>\"}, ...]."
     for item in items:
         if not isinstance(item, dict):
             return "every item is an object {kind, id}."
@@ -95,7 +92,7 @@ def _check_args(args: dict[str, Any]) -> Optional[str]:
             return (f"unknown item field(s) {', '.join(extra)}: an item is {{kind, id}}. The host decides "
                     "source, version, profile and settings.")
         if item.get("kind") not in ITEM_KINDS or not str(item.get("id") or "").strip():
-            return "every item needs kind (plugin or skill) and a non-empty id."
+            return "every item needs kind skill and a non-empty id."
     return None
 
 
@@ -150,36 +147,17 @@ def search(query: str, kind: Optional[str], *, installer: Any = None) -> dict[st
     chat's profile's."""
     from hermes_constants import get_hermes_home, profile_name_for_home
 
-    rows: list[dict[str, Any]] = []
-    if kind in (None, "plugin"):
-        rows += _plugin_rows(query)
-    if kind in (None, "skill") and query.strip():
-        rows += _skill_rows(query)
+    rows = _skill_rows(query) if query.strip() else []
     return {"results": rows, "installed_in": profile_name_for_home(get_hermes_home())}
 
 
-def _plugin_rows(query: str) -> list[dict[str, Any]]:
-    from hermes_cli.plugin_catalog import filter_entries, load_catalog_live
-    from hermes_cli.plugins_cmd import PluginOperationError, _read_install_metadata
-    from tools.connectors.catalog import _display
-
-    try:
-        installed = {str(rec["catalog"]["name"]) for rec in _read_install_metadata().values()
-                     if isinstance(rec, dict) and isinstance(rec.get("catalog"), dict) and rec["catalog"].get("name")}
-    except PluginOperationError:
-        installed = set()
-    return [{"id": e.name, "kind": "plugin", "display": _display(e.name), "tier": e.tier,
-             "platforms": list(e.platforms), "installed": e.name in installed}
-            for e in filter_entries(load_catalog_live(), query)[:SEARCH_LIMIT]]
-
-
 def _skill_rows(query: str) -> list[dict[str, Any]]:
-    from tools.skills_hub import HubLockFile, installed_entry
+    from tools.skills_hub import HubLockFile
     from tools.skills_hub_github import GitHubAuth
     from tools.skills_hub_search import create_source_router, unified_search
 
     installed = HubLockFile().by_identifier()
     return [{"id": r.identifier, "kind": "skill", "display": r.name,
              "tier": "official" if r.source == "official" else "community", "platforms": [],
-             "installed": installed_entry(installed, r.identifier, r.source) is not None}
+             "installed": r.identifier in installed}
             for r in unified_search(query, create_source_router(GitHubAuth()), limit=SEARCH_LIMIT)]

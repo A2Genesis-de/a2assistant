@@ -16,7 +16,7 @@ import type { ProfileScope } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { DESKTOP_PLUGIN_TOOLSETS } from '@/lib/desktop-toolsets'
 import { triggerHaptic } from '@/lib/haptics'
-import { CheckCircle2, FolderOpen, Loader2, Monitor, Package, RefreshCw } from '@/lib/icons'
+import { FolderOpen, Loader2, Monitor, Package, RefreshCw } from '@/lib/icons'
 import { isBrowserHostedDesktop } from '@/lib/platform'
 import { queryClient } from '@/lib/query-client'
 import { cn } from '@/lib/utils'
@@ -36,7 +36,6 @@ import {
 } from '@/store/agent-plugins'
 import { confirm } from '@/store/confirm'
 import { notify, notifyError } from '@/store/notifications'
-import { openCatalogPluginInstall } from '@/store/plugin-catalog-install'
 import { openPluginInstallRequest } from '@/store/plugin-install-request'
 import { $connection, $gatewayState } from '@/store/session'
 
@@ -51,8 +50,6 @@ import { TOOLSETS_QUERY_KEY } from '../toolsets/toolsets-data'
 import { PluginFolderAccess } from './plugin-folder-access'
 import { mergePluginPackages, type PackageKind, type PluginPackage } from './plugin-packages'
 import { PluginPageAccess } from './plugin-page-access'
-import { runPluginUpdate } from './plugin-update'
-import { PluginUpdateAllActions } from './plugin-update-all'
 
 /** Deep-link anchor for a package row (`/capabilities?tab=plugins&plugin=<key>`).
  *  Accepts the agent key, the agent name, or the desktop record id. */
@@ -104,7 +101,7 @@ async function rescanAll(requestGateway: GatewayRequest, scope: null | string) {
 /** Open the dual-target install modal pre-filled to install ONLY the agent
  *  half of a unified package into the scoped profile (the desktop half is
  *  already here). Provenance comes from the package marker Electron stamped
- *  when it copied the half out (catalog sidecar or git remote). */
+ *  when it copied the half out (its git remote). */
 function installAgentHalfHere(record: PluginRecord, profile: null | string) {
   const origin = record.packageOrigin
 
@@ -112,23 +109,7 @@ function installAgentHalfHere(record: PluginRecord, profile: null | string) {
     return
   }
 
-  // The package marker carries no tier, so read it from the cached catalog
-  // (a plugin row's `source` is its tier). Not cached: the dialog keeps the
-  // generic Verified badge.
-  const tier = origin.catalogName
-    ? queryClient
-        .getQueryData<CatalogEntry[]>(['public-catalog', 'plugins'])
-        ?.find(entry => entry.name === origin.catalogName)?.source
-    : undefined
-
-  openPluginInstallRequest({
-    catalogName: origin.catalogName,
-    legacyHint: 'agent',
-    profile,
-    repo: origin.repo,
-    sha: origin.sha,
-    tier
-  })
+  openPluginInstallRequest({ legacyHint: 'agent', profile, repo: origin.repo })
 }
 
 const SERVER_TONE = {
@@ -143,13 +124,6 @@ const SERVER_TONE = {
   unsupported_gpu: 'destructive'
 } as const satisfies Record<AgentPluginServerState, 'destructive' | 'success' | 'warn'>
 
-/** What the Update button moves to: the catalog's version label or short pin, else a git install's target. */
-const updateTargetLabel = (agent: AgentPluginRow) =>
-  agent.catalog_version ?? agent.catalog_sha?.slice(0, 8) ?? shortTarget(agent.update_target)
-
-/** A full commit shortens to 8 characters; a feed version stays as it is. */
-const shortTarget = (target?: string) => (target && /^[0-9a-f]{40}$/i.test(target) ? target.slice(0, 8) : (target ?? ''))
-
 function KindBadge({ kind }: { kind: PackageKind }) {
   const { t } = useI18n()
   const p = t.skills.plugins
@@ -163,27 +137,10 @@ function KindBadge({ kind }: { kind: PackageKind }) {
   )
 }
 
-// Official in the accent, verified green with a check, community stays neutral.
-const TIER_TONE: Record<string, 'muted' | 'primary' | 'success'> = { official: 'primary', verified: 'success' }
-
 /** Provenance pill: where the package came from. */
 function ProvenancePill({ pkg }: { pkg: PluginPackage }) {
   const { t } = useI18n()
   const p = t.skills.plugins
-  const tierLabel = t.assistant.catalogInstall.tier
-
-  if (pkg.agent?.catalog_name) {
-    return (
-      <Tip label={p.catalogProvenance(pkg.agent.installed_sha?.slice(0, 8) ?? '')}>
-        <span>
-          <Pill tone={TIER_TONE[pkg.agent.catalog_tier ?? ''] ?? 'muted'}>
-            {pkg.agent.catalog_tier === 'verified' && <CheckCircle2 />}
-            {tierLabel[pkg.agent.catalog_tier as keyof typeof tierLabel] ?? tierLabel.community}
-          </Pill>
-        </span>
-      </Tip>
-    )
-  }
 
   if (pkg.agent?.pinned_sha) {
     return (
@@ -268,7 +225,6 @@ function PackageRow({
   busy,
   request,
   onAgentToggle,
-  onAgentUpdate,
   onAgentRemove,
   onDesktopRemove
 }: {
@@ -280,7 +236,6 @@ function PackageRow({
   busy: boolean
   request: GatewayRequest
   onAgentToggle: (row: AgentPluginRow, enable: boolean) => void
-  onAgentUpdate: (row: AgentPluginRow) => void
   onAgentRemove: (row: AgentPluginRow, desktop: null | PluginRecord) => void
   onDesktopRemove: (record: PluginRecord) => void
 }) {
@@ -473,17 +428,6 @@ function PackageRow({
         <HalfCell label={p.halfAgentIn(scopeLabel)} labelContent={scopeSelector}>
           {agent ? (
             <>
-              {agent.update_available && (
-                <Button
-                  className="h-5 px-1.5 text-[0.65rem]"
-                  disabled={busy}
-                  onClick={() => onAgentUpdate(agent)}
-                  size="xs"
-                  variant="outline"
-                >
-                  {p.updateToPin(updateTargetLabel(agent))}
-                </Button>
-              )}
               {busy && <Loader2 className="size-3.5 animate-spin text-(--ui-text-tertiary)" />}
               {agentToggleable ? (
                 <Switch
@@ -551,7 +495,6 @@ export function PluginActions({ profile }: { profile: ProfileScope }) {
 
   return (
     <>
-      <PluginUpdateAllActions scope={scope} />
       <Button onClick={() => openPluginInstallRequest({ profile: scope, repo: '' })} size="xs" variant="textStrong">
         {d.installModal.installFromGit}
       </Button>
@@ -659,9 +602,9 @@ export const PluginsTab = memo(function PluginsTab({
           identifier: pkg.key,
           description: pkg.description,
           category: pkg.kind === 'desktop' ? 'desktop' : 'general',
-          tier: pkg.agent?.catalog_tier ?? pkg.agent?.source ?? pkg.desktop?.kind ?? '',
+          tier: pkg.agent?.source ?? pkg.desktop?.kind ?? '',
           repo: pkg.desktop?.packageOrigin?.repo ?? '',
-          sha: pkg.agent?.installed_sha ?? pkg.desktop?.packageOrigin?.sha ?? '',
+          sha: pkg.desktop?.packageOrigin?.sha ?? '',
           version: pkg.agent?.version ?? ''
         }))
       ).map(entry => ({ ...entry, id: `installed:${entry.identifier}` })),
@@ -675,7 +618,7 @@ export const PluginsTab = memo(function PluginsTab({
 
     for (const entry of installedEntries) {
       const pkg = packageById.get(entry.id)
-      const name = pkg?.agent?.catalog_name ?? pkg?.desktop?.packageOrigin?.catalogName
+      const name = pkg?.desktop?.packageOrigin?.catalogName
 
       if (name) {
         byName.set(name, entry)
@@ -799,9 +742,7 @@ export const PluginsTab = memo(function PluginsTab({
       kind="plugins"
       matchInstalled={matchInstalled}
       notice={notice}
-      // A plugin row's `source` IS its catalog tier (catalog-data.ts::catalogEntry);
-      // CatalogEntry has no `tier` field, so don't "fix" this to entry.tier.
-      onInstall={entry => openCatalogPluginInstall(entry, scope, { tier: entry.source })}
+      onInstall={entry => openPluginInstallRequest({ profile: scope, repo: entry.repo })}
       onQueryChange={onQueryChange}
       query={query}
       renderInstalledAction={entry => {
@@ -835,13 +776,6 @@ export const PluginsTab = memo(function PluginsTab({
 
                 if (ok && enable && half) {
                   void enablePackageDesktopHalf(half, { keepUserChoice: true })
-                }
-              })
-            }}
-            onAgentUpdate={row => {
-              void runPluginUpdate(requestGateway, row, scope, p).then(outcome => {
-                if (outcome.kind === 'applied') {
-                  void rescanAll(requestGateway, scope)
                 }
               })
             }}

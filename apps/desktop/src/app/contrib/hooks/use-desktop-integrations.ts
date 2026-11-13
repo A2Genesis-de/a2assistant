@@ -23,7 +23,6 @@ import {
   invokePluginNotifyActivate,
   respondToApprovalAction
 } from '@/store/native-notifications'
-import { requestPluginCatalogInstallFromDeepLink } from '@/store/plugin-catalog-install'
 import { openPluginInstallRequest } from '@/store/plugin-install-request'
 import { openFolderAsProject } from '@/store/projects'
 import {
@@ -463,12 +462,6 @@ export function useDesktopIntegrations({
         const command = `/blueprint ${action.name}${slots ? ' ' + slots : ''}`
         requestComposerInsert(command, { mode: 'block', target: 'main' })
         requestComposerFocus('main')
-
-        return
-      }
-
-      if (action.type === 'plugin-catalog-install') {
-        void requestPluginCatalogInstallFromDeepLink(action.name)
 
         return
       }

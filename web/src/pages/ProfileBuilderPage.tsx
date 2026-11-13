@@ -457,7 +457,7 @@ export default function ProfileBuilderPage() {
                 <Label>Add from the skills hub</Label>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Search the hub (e.g. linear, hyperliquid)…"
+                    placeholder="Search the hub (e.g. linear, excalidraw)…"
                     value={hubQuery}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                       setHubQuery(e.target.value)

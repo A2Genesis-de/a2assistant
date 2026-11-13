@@ -22,21 +22,21 @@ def test_declaration_consent_admission_and_resync(plugin_world, monkeypatch, cap
     before = (world.home / "config.yaml").read_bytes()
     if (surface, suffix) == ("pyproject", "yaml"):
         monkeypatch.setattr(plugins_cmd.sys.stdin, "isatty", lambda: False)
-        world.command("install", identifier=origin.as_uri(), ref=revision, enable=True, allow_removed=True)
+        world.command("install", identifier=origin.as_uri(), ref=revision, enable=True)
         assert world.enabled() == [], "non-interactive Python admission bypassed consent"
         assert (world.home / "config.yaml").read_bytes() == before
         assert "skipped (non-interactive)" in " ".join(capsys.readouterr().out.split())
         monkeypatch.setattr(plugins_cmd.sys.stdin, "isatty", lambda: True)
         monkeypatch.setattr(plugins_cmd.sys.stdout, "isatty", lambda: True)
         monkeypatch.setattr("builtins.input", lambda prompt: "no")
-        world.command("install", identifier=origin.as_uri(), force=True, enable=True, allow_removed=True)
+        world.command("install", identifier=origin.as_uri(), force=True, enable=True)
         assert world.enabled() == []
         assert (world.home / "config.yaml").read_bytes() == before
         assert "declined" in capsys.readouterr().out
     monkeypatch.setattr(plugins_cmd.sys.stdin, "isatty", lambda: True)
     monkeypatch.setattr(plugins_cmd.sys.stdout, "isatty", lambda: True)
     monkeypatch.setattr("builtins.input", lambda prompt: "yes")
-    world.command("install", identifier=origin.as_uri(), force=True, enable=True, allow_removed=True)
+    world.command("install", identifier=origin.as_uri(), force=True, enable=True)
     assert world.enabled() == ["plugin-worker-proof"]
     assert receipt.latest()["outcome"] == "ok"
     world.imports()
@@ -69,7 +69,7 @@ def test_active_force_reinstall_decline_preserves_entire_selection(plugin_world,
     monkeypatch.setattr(plugins_cmd.sys.stdout, "isatty", lambda: True)
     answers = []
     monkeypatch.setattr("builtins.input", lambda prompt: answers.append(prompt) or "yes")
-    world.command("install", identifier=origin.as_uri(), ref=first, enable=True, allow_removed=True)
+    world.command("install", identifier=origin.as_uri(), ref=first, enable=True)
     world.imports()
     target = world.home / "plugins/plugin-worker-proof"
     watched = [world.home / "config.yaml", target / "__init__.py", target / "plugin.yaml",
@@ -79,7 +79,7 @@ def test_active_force_reinstall_decline_preserves_entire_selection(plugin_world,
     second = version(origin, pin="2.0")
     monkeypatch.setattr("builtins.input", lambda prompt: answers.append(prompt) or "no")
     try:
-        world.command("install", identifier=origin.as_uri(), ref=second, force=True, enable=True, allow_removed=True)
+        world.command("install", identifier=origin.as_uri(), ref=second, force=True, enable=True)
     except SystemExit as exc:
         assert exc.code == 1
     assert {path: path.read_bytes() for path in watched} == before
@@ -89,7 +89,7 @@ def test_active_force_reinstall_decline_preserves_entire_selection(plugin_world,
 
     answers.clear()
     monkeypatch.setattr("builtins.input", lambda prompt: answers.append(prompt) or "yes")
-    world.command("install", identifier=origin.as_uri(), ref=second, force=True, enable=True, allow_removed=True)
+    world.command("install", identifier=origin.as_uri(), ref=second, force=True, enable=True)
     assert len(answers) == 1, "active replacement asked for the same consent twice"
     assert git(target, "rev-parse", "HEAD") == second
     assert world.selected() != selected
@@ -107,7 +107,7 @@ def test_active_reinstall_does_not_overwrite_a_later_disable(plugin_world, monke
     monkeypatch.setattr(plugins_cmd.sys.stdin, "isatty", lambda: True)
     monkeypatch.setattr(plugins_cmd.sys.stdout, "isatty", lambda: True)
     monkeypatch.setattr("builtins.input", lambda prompt: "yes")
-    world.command("install", identifier=origin.as_uri(), ref=first, enable=True, allow_removed=True)
+    world.command("install", identifier=origin.as_uri(), ref=first, enable=True)
     second = version(origin, pin="2.0")
     watched = [world.home / "config.yaml", paths.runtime_facts_path()]
     acknowledged = {}
@@ -115,7 +115,7 @@ def test_active_reinstall_does_not_overwrite_a_later_disable(plugin_world, monke
         world.command("disable", name="plugin-worker-proof")
         acknowledged.update({path: path.read_bytes() for path in watched})
     monkeypatch.setattr(plugins_cmd, "_display_after_install", disable_after_publication)
-    world.command("install", identifier=origin.as_uri(), ref=second, force=True, allow_removed=True, **{flag: True})
+    world.command("install", identifier=origin.as_uri(), ref=second, force=True, **{flag: True})
     assert acknowledged
     assert {path: path.read_bytes() for path in watched} == acknowledged
     assert world.enabled() == []
@@ -137,7 +137,7 @@ def test_malformed_portable_member_cannot_join_a_new_generation(plugin_world, mo
     monkeypatch.setattr(plugins_cmd.sys.stdin, "isatty", lambda: True)
     monkeypatch.setattr(plugins_cmd.sys.stdout, "isatty", lambda: True)
     monkeypatch.setattr("builtins.input", lambda prompt: "yes")
-    world.command("install", identifier=origin.as_uri(), enable=True, allow_removed=True)
+    world.command("install", identifier=origin.as_uri(), enable=True)
     world.imports()
     watched = [world.home / "config.yaml", paths.runtime_facts_path()]
     before = {path: path.read_bytes() for path in watched}
@@ -158,7 +158,7 @@ def test_pack_admits_compatible_members_and_reports_conflict(plugin_world, monke
     monkeypatch.setattr(plugins_cmd.sys.stdin, "isatty", lambda: True)
     monkeypatch.setattr(plugins_cmd.sys.stdout, "isatty", lambda: True)
     monkeypatch.setattr("builtins.input", lambda prompt: "yes")
-    world.command("install", identifier=incumbent.as_uri(), ref=first, enable=True, allow_removed=True)
+    world.command("install", identifier=incumbent.as_uri(), ref=first, enable=True)
     world.imports()
     good, good_sha = world.origin(name="pack-good", capabilities=["tools.override"])
     bad, bad_sha = world.origin(name="pack-conflict", pin="2.0")
@@ -214,7 +214,7 @@ def test_concurrent_commands_keep_acknowledged_enables(plugin_world, sibling_pro
         origin, revision = world.origin(name=name, dependency="plugin-proof-dep" if name == "race-left" else "plugin-proof-other")
         token = set_hermes_home_override(home)
         try:
-            world.command("install", identifier=origin.as_uri(), ref=revision, no_enable=True, allow_removed=True)
+            world.command("install", identifier=origin.as_uri(), ref=revision, no_enable=True)
         finally:
             reset_hermes_home_override(token)
     untouched = (world.home / "config.yaml").read_bytes()

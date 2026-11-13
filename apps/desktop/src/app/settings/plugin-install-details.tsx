@@ -78,10 +78,6 @@ function VersionRow({
   agent,
   busy
 }: Pick<PluginInstallDetailsProps, 'busy' | 'copy' | 'pin' | 'request'> & { agent: boolean }) {
-  if (request.catalogName) {
-    return <Row label={copy.versionLabel}>{copy.reviewedPin(request.sha?.slice(0, 8) ?? '')}</Row>
-  }
-
   if (!agent) {
     return <Row label={copy.versionLabel}>{copy.latestCommit}</Row>
   }
@@ -180,14 +176,12 @@ export function PluginInstallDetails(props: PluginInstallDetailsProps) {
           </SelectContent>
         </Select>
       </Row>
-      {(!request.catalogName || props.offerForce) && (
-        <div>
-          <label className={cn(CAPTION, 'flex items-center justify-between gap-3 text-foreground')}>
-            <span>{copy.forceReinstall}</span>
-            <Switch checked={force} disabled={busy} onCheckedChange={onForceChange} />
-          </label>
-        </div>
-      )}
+      <div>
+        <label className={cn(CAPTION, 'flex items-center justify-between gap-3 text-foreground')}>
+          <span>{copy.forceReinstall}</span>
+          <Switch checked={force} disabled={busy} onCheckedChange={onForceChange} />
+        </label>
+      </div>
     </dl>
   )
 }

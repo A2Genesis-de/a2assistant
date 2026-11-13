@@ -21,7 +21,7 @@ from typing import Any, Callable, Dict, FrozenSet, Optional
 from urllib.parse import parse_qs, urlparse
 from hermes_cli.auth_constants import (
     AuthError, DEFAULT_NOUS_PORTAL_URL, DEVICE_AUTH_POLL_INTERVAL_CAP_SECONDS,
-    DEVICE_CODE_GRANT_TYPE, OAUTH_OVER_SSH_DOCS_URL, httpx)
+    DEVICE_CODE_GRANT_TYPE, httpx)
 from hermes_cli.auth_error_copy import DeviceCodeExpired
 from utils import is_truthy_value
 
@@ -209,7 +209,7 @@ def _print_loopback_ssh_hint(redirect_uri: str, *, docs_url: str | None = None) 
         "Then open the authorize URL above in your local browser.")
     if docs_url:
         print(f"Provider docs:      {docs_url}")
-    print(f"SSH/jump-box guide: {OAUTH_OVER_SSH_DOCS_URL}\n{divider}\n")
+    print(f"{divider}\n")
 
 
 def _default_verify() -> bool | ssl.SSLContext:

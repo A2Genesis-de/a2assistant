@@ -14,7 +14,6 @@ the way any other installed plugin does, on the next scan of ``desktop-plugins/`
 
 from __future__ import annotations
 
-import os
 import re
 import tempfile
 from pathlib import Path
@@ -65,31 +64,18 @@ def _checked_name(name: Optional[str]) -> str:
     return candidate
 
 
-def _resolve_source(identifier: str, catalog_name: Optional[str]) -> tuple[str, Optional[str], Optional[str]]:
-    """``(git_url, subdir, catalog_sha)`` through the installer's own resolution and kill list, with the
-    catalog's reviewed pin when *catalog_name* is given (its repository replaces *identifier*).
+def _resolve_source(identifier: str) -> tuple[str, Optional[str]]:
+    """``(git_url, subdir)`` through the installer's own resolution.
 
     Every scheme the CLI installs from is accepted (``git@``/``ssh://`` for private plugins, ``file://``,
     ``http://``): the Webapp opens only for the signed-in owner of this host, whose keys and disk these are."""
-    pc = _pc()
-    revision = None
-    if catalog_name:
-        from hermes_cli import plugins_cmd_catalog as catalog
-        entry = catalog.get_live_catalog_entry(catalog_name)
-        if entry is None:
-            raise pc.PluginOperationError(f"'{catalog_name}' is not in the A2Assistant plugin catalog.")
-        identifier, revision = entry.install_identifier, entry.sha or None
     try:
-        git_url, subdir = pc._resolve_git_url(identifier)
+        return _pc()._resolve_git_url(identifier)
     except ValueError as exc:
-        raise pc.PluginOperationError(str(exc)) from exc
-    from hermes_cli.plugins_cmd_catalog import raise_if_removed
-    raise_if_removed(identifier, git_url, *((catalog_name,) if catalog_name else ()))
-    return git_url, subdir, revision
+        raise _pc().PluginOperationError(str(exc)) from exc
 
 
-def install_desktop_plugin(identifier: str, *, ref: Optional[str], catalog_name: Optional[str] = None,
-                           force: bool = False) -> dict[str, Any]:
+def install_desktop_plugin(identifier: str, *, ref: Optional[str], force: bool = False) -> dict[str, Any]:
     """Clone a repository's desktop half into ``desktop-plugins/<name>`` on this host.
 
     *ref* is the commit the install dialog showed (``inspect``'s ``sha``): the clone is checked out at
@@ -106,18 +92,11 @@ def install_desktop_plugin(identifier: str, *, ref: Optional[str], catalog_name:
     try:
         if not _COMMIT.fullmatch(sha):
             raise pc.PluginOperationError("Installing a desktop plugin needs the commit the install dialog reviewed.")
-        git_url, subdir, catalog_sha = _resolve_source(identifier, catalog_name)
+        git_url, subdir = _resolve_source(identifier)
         root = desktop_plugins_root()
         with tempfile.TemporaryDirectory(prefix="hermes-plugin-install-") as tmp:
             clone = Path(tmp) / "plugin"
-            # A catalog entry is fetched at its own pin, as the agent installer fetches it: an
-            # annotated-tag pin names the tag object, and only its peeled commit is what the dialog read.
-            head = pc._clone_plugin_repo(clone, git_url, catalog_sha or sha, subdir)
-            if head != sha:
-                raise pc.PluginSourceMoved(
-                    "The catalog's reviewed commit changed since the dialog read it; inspect it again.")
-            # Nothing reads a plugin's Git metadata, and Git's read-only object files would make the
-            # published folder one that Windows cannot delete.
+            pc._clone_plugin_repo(clone, git_url, sha, subdir)
             rmtree_readonly(clone / ".git")
             plugin_root = pc._resolve_subdir_within(clone, subdir) if subdir else clone
             fallback = subdir.rstrip("/").rsplit("/", 1)[-1] if subdir else pc._repo_name_from_url(git_url)
@@ -128,27 +107,13 @@ def install_desktop_plugin(identifier: str, *, ref: Optional[str], catalog_name:
             folder = package_name or _checked_name(_desktop_folder_name(git_url, subdir))
             source_dir = _desktop_tree(plugin_root)
             target = root / folder
-            # A package's half keeps the marker Electron writes (the Plugins page pairs it to the agent
-            # row); a standalone plugin carries none.
             marker = {"package": package_name, "repo": git_url, "source": str(target),
                       "sourceMtimeMs": halves.mtime_ms((source_dir / "plugin.js").stat())} if package_name else None
-            # A standalone plugin installed from a catalog entry records that entry, so the card shows it.
-            # ``sha`` = the commit checked out; ``pin`` = the catalog pin it satisfies when that names an
-            # annotated-tag object (the agent's catalog record keeps both the same way).
-            origin = ({"catalogName": catalog_name, "repo": git_url, "sha": head,
-                       **({"pin": catalog_sha.lower()} if catalog_sha and catalog_sha.lower() != head else {})}
-                      if catalog_name and not package_name else None)
-            # The exists check and the publish must not interleave with a reconcile pass.
             with halves.ROOT_WRITER:
-                if origin and not force and _adoptable(target, source_dir):
-                    # Already installed from this very tree (a card that never showed it installed sent
-                    # the user back to Install): record its catalog entry, replace nothing.
-                    halves.write_install_origin(target, origin)
-                elif (halves._is_link(target) or target.exists()) and not force:
+                if (halves._is_link(target) or target.exists()) and not force:
                     return {**_failure(f"Desktop plugin '{folder}' already exists. Enable force reinstall to replace it."),
                             "exists": True}
-                else:
-                    halves.publish_desktop_tree(source_dir, target, marker, origin=origin)
+                halves.publish_desktop_tree(source_dir, target, marker)
     except pc.PluginOperationError as exc:
         return {**_failure(str(exc)), **({"source_moved": True} if isinstance(exc, pc.PluginSourceMoved) else {})}
     except OSError as exc:
@@ -156,14 +121,6 @@ def install_desktop_plugin(identifier: str, *, ref: Optional[str], catalog_name:
 
     return {"ok": True, "plugin_name": folder, "path": str(target), "sha": sha,
             "paired_with_agent": bool(package_name), "warnings": []}
-
-
-def _adoptable(target: Path, source_dir: Path) -> bool:
-    """*target* is a plain standalone folder whose ``plugin.js`` is byte for byte the one *source_dir*
-    would publish: an install of that same tree by a build that recorded no origin, which a catalog
-    install adopts in place instead of asking for Force (that would replace the folder and what it keeps)."""
-    return (not halves._is_link(target) and target.is_dir() and not os.path.lexists(target / halves.PACKAGE_MARKER)
-            and halves._same_file(target / "plugin.js", source_dir / "plugin.js"))
 
 
 def _desktop_tree(plugin_root: Path) -> Path:

@@ -40,7 +40,7 @@ def build_update_parser(subparsers, *, cmd_update: Callable) -> None:
     )
     update_parser.add_argument(
         "--yes", "-y", action="store_true", default=False,
-        help="Run without blocking on prompts: accepts the config-migration and stash-restore prompts, skips the fork-upstream prompt without adding a remote. API-key entry is skipped; run 'hermes config migrate' separately for those.",
+        help="Run without blocking on prompts: accepts the config-migration and stash-restore prompts. API-key entry is skipped; run 'hermes config migrate' separately for those.",
     )
     update_parser.add_argument(
         "--keep-stash", action="store_true", default=False,
@@ -80,10 +80,9 @@ def build_update_parser(subparsers, *, cmd_update: Callable) -> None:
         metavar="CHANNEL",
         help=(
             "Persist the update channel for THIS install (recorded per "
-            "install in config.yaml under update.installs). Names are resolved "
-            "from the release archive, not a built-in list. Official source "
-            "checkouts default to 'stable' (the latest published vX.Y.Z "
-            "release, exact commit); 'main' follows the source branch. "
+            "install in config.yaml under update.installs). Source checkouts "
+            "follow 'main' (the branch tip) by default; 'stable' selects the "
+            "latest published vX.Y.Z release of the A2Assistant repository. "
             "Package channels are baked into their identities."
         ),
     )
@@ -103,8 +102,8 @@ def build_update_parser(subparsers, *, cmd_update: Callable) -> None:
         metavar="CHANNEL",
         help=(
             "Track CHANNEL for this run only (transient override; "
-            "--set-channel persists). 'stable' and 'canary' select published "
-            "releases, 'main' the branch tip. Source installs only."
+            "--set-channel persists). 'stable' selects the latest published "
+            "release, 'main' the branch tip. Source installs only."
         ),
     )
     update_parser.add_argument(

@@ -40,6 +40,7 @@ import path from 'node:path'
 // Relative, not `@hermes/shared/ansi`: the electron bundle is built by esbuild
 // with no tsconfig path resolution (see scripts/bundle-electron-main.mjs).
 import { stripAnsi } from '../../shared/src/ansi'
+import { REPOSITORY } from '../../shared/src/repository'
 
 import { pathEnvKey, storeFirstPath } from './backend-env'
 import { hiddenWindowsChildOptions } from './windows-child-options'
@@ -229,7 +230,7 @@ function downloadInstallScript(ref, destPath) {
   // install, the branch for an existing checkout or a non-git fallback stamp
   // (never the all-zero placeholder, which is not a real GitHub commit).
   const scriptName = installScriptName()
-  const url = `https://raw.githubusercontent.com/NousResearch/hermes-agent/${ref}/scripts/${scriptName}`
+  const url = `https://raw.githubusercontent.com/${REPOSITORY}/${ref}/scripts/${scriptName}`
 
   return new Promise((resolve, reject) => {
     fs.mkdirSync(path.dirname(destPath), { recursive: true })

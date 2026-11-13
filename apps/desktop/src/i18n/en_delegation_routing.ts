@@ -17,8 +17,6 @@ export const enDelegationRouting: DelegationRoutingTranslations = {
   pluginMissing: 'Model routes and Profile routes come from the Advanced Delegation plugin.',
   pluginDisabled: 'Advanced Delegation is installed but turned off for this profile.',
   pluginNotLoaded: 'Advanced Delegation is on, but A2Assistant has not loaded it yet. Restart A2Assistant to finish.',
-  installPlugin: 'Install plugin',
-  installUnavailable: 'Advanced Delegation is not in the plugin catalog yet. Install it from Capabilities › Plugins.',
   enablePlugin: 'Turn on',
   enableFailed: 'Could not turn on Advanced Delegation',
   modeFailed: 'Could not change subagent routing',

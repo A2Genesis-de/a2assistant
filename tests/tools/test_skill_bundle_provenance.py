@@ -14,7 +14,6 @@ import pytest
 from rich.console import Console
 
 from tools.skills_hub_github import GitHubAuth, GitHubSource
-from tools.skills_hub_models import SkillBundle
 from tools.skills_hub_sources import UrlSource
 
 
@@ -493,75 +492,6 @@ def test_bundled_optional_source_still_includes_support_files(tmp_path, monkeypa
     bundle = source.fetch("official/category/official-demo")
     assert bundle is not None
     assert set(bundle.files) == {"SKILL.md", os.path.join("references", "all.md")}
-
-
-UPSTREAM_STUB_MD = """---
-name: upstream-demo
-description: Upstream-maintained catalog entry.
-metadata:
-  hermes:
-    upstream:
-      repo: acme/design-skill
-      path: .hermes/skills/design
----
-# Stub
-"""
-
-
-def test_optional_source_upstream_stub_fetches_from_external_repo(tmp_path, monkeypatch):
-    """A catalog stub with metadata.hermes.upstream installs the upstream repo's
-    content (relabelled official/trusted), not the stub itself."""
-    from tools.skills_hub_official import OptionalSkillSource
-
-    root = tmp_path / "optional-skills"
-    skill = root / "creative" / "upstream-demo"
-    skill.mkdir(parents=True)
-    (skill / "SKILL.md").write_text(UPSTREAM_STUB_MD)
-
-    source = OptionalSkillSource()
-    source._optional_dir = root
-
-    fetched_ids = []
-
-    class _FakeGitHub:
-        def fetch(self, identifier):
-            fetched_ids.append(identifier)
-            return SkillBundle(
-                name="design",
-                files={"SKILL.md": "---\nname: design\ndescription: real\n---\nreal body",
-                       "reference/audit.md": "audit"},
-                source="github",
-                identifier=identifier,
-                trust_level="community",
-                metadata={"source_url": "https://github.com/acme/design-skill"},
-            )
-
-    monkeypatch.setattr(source, "_get_github", lambda: _FakeGitHub())
-
-    bundle = source.fetch("official/creative/upstream-demo")
-
-    assert fetched_ids == ["acme/design-skill/.hermes/skills/design"]
-    assert bundle is not None
-    assert bundle.source == "official"
-    assert bundle.identifier == "official/creative/upstream-demo"
-    assert bundle.trust_level == "trusted"
-    assert bundle.files["SKILL.md"].startswith("---\nname: design")
-    assert bundle.metadata["upstream_repo"] == "acme/design-skill"
-
-
-def test_optional_source_upstream_pointer_rejects_malformed(tmp_path):
-    from tools.skills_hub_official import OptionalSkillSource
-
-    source = OptionalSkillSource()
-    bad = [
-        "---\nname: x\nmetadata:\n  hermes:\n    upstream:\n      repo: acme\n      path: skills/x\n---\n",          # repo not owner/name
-        "---\nname: x\nmetadata:\n  hermes:\n    upstream:\n      repo: a/b/c\n      path: skills/x\n---\n",        # repo too deep
-        "---\nname: x\nmetadata:\n  hermes:\n    upstream:\n      repo: acme/skill\n      path: ../../etc\n---\n",  # traversal
-        "---\nname: x\nmetadata:\n  hermes:\n    upstream:\n      repo: acme/skill\n---\n",                          # missing path
-        "---\nname: x\n---\n",                                                                                       # no pointer
-    ]
-    for content in bad:
-        assert source._upstream_pointer_from_content(content) is None
 
 
 def test_unified_search_trust_rank_survives_limit_cut():

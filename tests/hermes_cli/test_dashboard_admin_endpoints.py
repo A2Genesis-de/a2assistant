@@ -614,7 +614,7 @@ class TestSkillsHubSourcesEndpoint:
         # The endpoint should enumerate the configured hub sources without
         # requiring any live network — monkeypatch the router.
         class _Src:
-            is_available = False
+            is_rate_limited = False
 
             def __init__(self, sid):
                 self._sid = sid
@@ -622,16 +622,8 @@ class TestSkillsHubSourcesEndpoint:
             def source_id(self):
                 return self._sid
 
-            def search(self, q, limit=10):
-                return [_FakeMeta("hermes-index/featured-skill", "trusted")]
-
         def _fake_router():
-            srcs = [_Src("official"), _Src("github")]
-            # hermes-index source advertises availability + featured search.
-            idx = _Src("hermes-index")
-            idx.is_available = True
-            srcs.insert(1, idx)
-            return srcs
+            return [_Src("official"), _Src("github")]
 
         monkeypatch.setattr(
             "tools.skills_hub_search.create_source_router", _fake_router
@@ -640,13 +632,8 @@ class TestSkillsHubSourcesEndpoint:
         assert r.status_code == 200
         body = r.json()
         ids = {s["id"] for s in body["sources"]}
-        assert {"official", "github", "hermes-index"} <= ids
-        # Every source carries a human label.
+        assert ids == {"official", "github"}
         assert all(s.get("label") for s in body["sources"])
-        assert body["index_available"] is True
-        # Featured pulled from the index (zero extra API calls).
-        assert len(body["featured"]) == 1
-        assert body["featured"][0]["trust_level"] == "trusted"
         assert isinstance(body["installed"], dict)
 
 

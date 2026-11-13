@@ -15,7 +15,7 @@ import { useOwnerCatalog } from '../delegation-model-provider-field'
 import { Pill, SectionHeading, SettingsSection } from '../primitives'
 
 import { ModelRoutesEditor } from './model-routes'
-import { enableAdvancedDelegation, installAdvancedDelegation, useAdvancedDelegationPlugin } from './plugin-actions'
+import { enableAdvancedDelegation, useAdvancedDelegationPlugin } from './plugin-actions'
 import { ProfileRoutesEditor } from './profile-routes'
 import {
   chooseDelegationMode,
@@ -263,11 +263,7 @@ function AdvancedDelegationStatus({ blocked, scope }: { blocked: boolean; scope:
   }
 
   const action =
-    state === 'missing' ? (
-      <Button onClick={() => void installAdvancedDelegation(owner, r.installUnavailable)} size="sm" variant="outline">
-        {r.installPlugin}
-      </Button>
-    ) : state === 'disabled' && row?.key ? (
+    state === 'disabled' && row?.key ? (
       <Button
         onClick={() =>
           void enableAdvancedDelegation(requestGateway, row.key!, owner, r.enableFailed).then(ok => {

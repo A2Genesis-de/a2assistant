@@ -20,7 +20,6 @@ import { frNotifications } from './fr_notifications'
 import { frOnboarding } from './fr_onboarding'
 import { frPluginPreviewAccess } from './fr_plugin_preview_access'
 import { frPluginUpdate } from './fr_plugin_update'
-import { frPluginUpdateAll } from './fr_plugin_update_all'
 import { frPreviewWeb } from './fr_preview_web'
 import { frProjects } from './fr_projects'
 import { frSharedMetrics } from './fr_shared_metrics'
@@ -1856,7 +1855,7 @@ export const frOverrides = {
       sshErrHostKey:
         "La clé de l'hôte a changé depuis votre dernière connexion. Vérifiez que ce changement est attendu, puis exécutez ssh-keygen -R <host> et reconnectez-vous.",
       sshErrNotInstalled:
-        "A2Assistant n'est pas installé sur l'hôte distant. Installez-le là-bas (curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh) ou définissez le chemin A2Assistant.",
+        "A2Assistant n'est pas installé sur l'hôte distant. Installez-le là-bas (git clone https://github.com/A2Genesis-de/a2assistant.git) ou définissez le chemin A2Assistant.",
       sshErrPlatform:
         'Plateforme distante non prise en charge. Le mode SSH de A2Assistant Desktop supporte les hôtes distants Linux, macOS et Windows.',
       sshErrTimeout: "Expiration de la connexion SSH. L'hôte peut être inaccessible ou en veille.",
@@ -2538,7 +2537,6 @@ export const frOverrides = {
         `Épinglé au commit ${sha}. Les mises à jour sont refusées tant qu’il n’est pas réinstallé avec un nouvel épinglage.`,
       pinnedBadge: (sha: string) => `épinglé @ ${sha}`,
       ...frPluginUpdate,
-      ...frPluginUpdateAll,
       ...frPluginPreviewAccess,
       uninstall: 'Désinstaller',
       uninstallTip: (name: string, profile: string) => `Désinstaller ${name} de ${profile}`,
@@ -2620,10 +2618,6 @@ export const frOverrides = {
       actionLog: "Journal d'action",
       alreadyInstalled: name => `« ${name} » est déjà installé`,
       pickerTitle: 'Hub de skills',
-      pickerBrowse: 'Parcourir tout le hub',
-      pickerHide: 'Masquer le navigateur du hub',
-      pickerHint:
-        'Cliquez sur « + Ajouter à cet agent » pour installer un skill : il apparaîtra ensuite dans la liste ci-dessus.',
       loadFailed: 'Échec du chargement du hub de skills',
       previewFailed: "Échec de l'aperçu du skill",
       scanFailed: 'Échec du scan de sécurité',

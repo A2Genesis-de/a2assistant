@@ -175,9 +175,8 @@ HERMES_AGENT_HELP_GUIDANCE = (
     # Names Hermes Agent without restating identity: SOUL.md line 1 already says who you are, while a custom
     # persona (no Hermes identity line) still learns from "Hermes Agent itself" + "your own features" what it runs on.
     "For help with A2Assistant itself — configuring, setting up, using, extending, or troubleshooting it — "
-    "or to understand your own features, tools, or capabilities, the documentation at "
-    "https://hermes-agent.nousresearch.com/docs (upstream docs of the underlying engine) is your "
-    "authoritative reference and always holds the latest, most up-to-date information. The `hermes-agent` "
+    "or to understand your own features, tools, or capabilities, the README at "
+    "https://github.com/A2Genesis-de/a2assistant#readme is your authoritative reference. The `hermes-agent` "
     "skill has the actual commands and proven workflows — load it with skill_view(name='hermes-agent') "
     "before configuring, modifying, or troubleshooting A2Assistant so you don't guess or invent workarounds."
 )
@@ -185,9 +184,8 @@ HERMES_AGENT_HELP_GUIDANCE = (
 # Variant for sessions without the skills toolset (e.g. Blank Slate): naming skill_view() there would dangle.
 HERMES_AGENT_HELP_GUIDANCE_NO_SKILLS = (
     "For help with A2Assistant itself — configuring, setting up, using, extending, or troubleshooting it — "
-    "or to understand your own features, tools, or capabilities, the documentation at "
-    "https://hermes-agent.nousresearch.com/docs (upstream docs of the underlying engine) is the "
-    "authoritative reference and always holds the latest, most up-to-date information. Point the user there "
+    "or to understand your own features, tools, or capabilities, the README at "
+    "https://github.com/A2Genesis-de/a2assistant#readme is the authoritative reference. Point the user there "
     "(or read it yourself if you have a way to fetch web content)."
 )
 

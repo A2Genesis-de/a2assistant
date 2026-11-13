@@ -1,12 +1,9 @@
-"""``manage_catalog`` install targets: catalog plugins and hub skills, installed through the card.
+"""``manage_catalog`` install targets: hub skills, installed through the card.
 
-``prepare`` resolves every id against the plugin catalog (the Plugins tab's resolver) or the skills
-hub and fills the row the card draws; an id that does not resolve, or a plugin this OS cannot run,
-is drawn failed with the reason. Nothing installs until the user approves a row. The install runs on
-a worker under the TARGET profile's runtime scope (the calling chat's own home unless the Advanced
-modal named another profile), through the same host install the Plugins tab uses, so the catalog
-pin, the kill list, the security scan and the live activation of the plugin's MCP servers and skills
-are the host's.
+``prepare`` resolves every id against the skills hub and fills the row the card draws; an id that
+does not resolve is drawn failed with the reason. Nothing installs until the user approves a row. The
+install runs on a worker under the TARGET profile's runtime scope (the calling chat's own home unless
+the Advanced modal named another profile).
 """
 
 from __future__ import annotations
@@ -33,7 +30,6 @@ logger = logging.getLogger(__name__)
 # The Advanced modal's own keys (CATALOG-ROW-CONTRACT.md); every other answer key is a credential.
 _OPTION_KEYS = frozenset({"target_profile", "agent_half", "desktop_half", "enable", "force", "ref"})
 _COMMIT_SHA = re.compile(r"^[0-9a-fA-F]{40}$")
-_TIERS = frozenset({"official", "verified", "community"})
 
 
 def _flag(value: Optional[str], default: bool) -> bool:
@@ -75,26 +71,7 @@ def _named_home(name: str) -> Path:
 
 
 class HostInstaller:
-    """The host side of a catalog row. Tests replace it; production reads the real catalog, hub and
-    installer."""
-
-    def plugin_entry(self, name: str) -> Any:
-        from hermes_cli.plugin_catalog import get_live_catalog_entry
-
-        return get_live_catalog_entry(name)
-
-    def refuse(self, entry: Any) -> None:
-        """Raise with the installer's own text when the catalog would refuse this entry here."""
-        from hermes_cli.plugins_cmd_catalog import raise_if_removed, refuse_incompatible_catalog_entry
-
-        raise_if_removed(entry.name, entry.repo)
-        refuse_incompatible_catalog_entry(entry)
-
-    def install_plugin(self, name: str, *, force: bool, enable: bool, ref: Optional[str],
-                       on_step: Callable[[InstallPhase], None]) -> dict[str, Any]:
-        from hermes_cli.plugins_cmd import dashboard_install_plugin
-
-        return dashboard_install_plugin("", force=force, enable=enable, catalog_name=name, ref=ref, on_step=on_step)
+    """The host side of a catalog row. Tests replace it; production reads the real hub and installer."""
 
     def skill_meta(self, identifier: str) -> Optional[dict[str, Any]]:
         """The first hub source that knows the identifier; metadata only, no bundle download."""
@@ -112,19 +89,17 @@ class HostInstaller:
                             "identifier": meta.identifier or identifier}
         return None
 
-    def install_skill(self, identifier: str, *, force: bool, source: Optional[str] = None) -> dict[str, Any]:
+    def install_skill(self, identifier: str, *, force: bool) -> dict[str, Any]:
         """Install headless; ``{name, already_installed}``. ``do_install`` reports only by printing, so
         success is read from the hub lock file and failure from its last line. A skill that is already
-        installed (force off) is left as it is and reported so. ``source`` is the hub source that
-        resolved ``identifier``; the lock records a ClawHub skill as ``@owner/slug``, so a ClawHub
-        hit's bare slug is read back through its ``clawhub/<slug>`` card id."""
+        installed (force off) is left as it is and reported so."""
         from rich.console import Console
 
         from hermes_cli.skills_hub import do_install
-        from tools.skills_hub import HubLockFile, installed_entry
+        from tools.skills_hub import HubLockFile
 
         def entry() -> Optional[dict[str, Any]]:
-            return installed_entry(HubLockFile().by_identifier(), identifier, source)
+            return HubLockFile().by_identifier().get(identifier)
 
         before = entry()
         if before is not None and not force:
@@ -155,7 +130,7 @@ class _Runner:
     def __init__(self, installer: HostInstaller):
         self.installer = installer
         self.op_id: Optional[str] = None
-        self.facts: dict[str, Any] = {}  # row name -> PluginCatalogEntry | skill meta; never on the wire
+        self.facts: dict[str, Any] = {}
         self.work: dict[str, _Work] = {}
         # The Advanced values the user approved per row; Try again (env null) reuses them. Values
         # are credentials in part, so they stay here, off the target.
@@ -178,16 +153,6 @@ class _Runner:
                 _fail(operation, target, self._detail(exc, target))
 
     def _resolve(self, target: Target) -> None:
-        if target.kind == "plugin":
-            entry = self.installer.plugin_entry(target.name)
-            if entry is None:
-                raise LookupError(f"'{target.name}' is not in the A2Assistant plugin catalog")
-            self.facts[target.name] = entry
-            target.extra = _plugin_row(entry, self.label)
-            target.required_env = [{"name": name, "required": False, "secret": True, "default": ""}
-                                   for name in entry.capabilities.requires_env]
-            self.installer.refuse(entry)
-            return
         meta = self.installer.skill_meta(target.name)
         if not meta:
             raise LookupError(f"'{target.name}' was not found in the skills hub")
@@ -226,13 +191,10 @@ class _Runner:
         self._spawn(operation, target, approved, options)
 
     def _check_answer(self, target: Target, env: dict[str, str]) -> str:
-        if target.kind == "plugin" and env.get("agent_half") == "0":
-            return "only the desktop half was selected; install it from Settings, Plugins"
         ref = env.get("ref")
         if ref and not _COMMIT_SHA.match(ref):
             return "the pin must be a full 40-character commit SHA"
-        declared = set(target_declared_env(self.facts.get(target.name)))
-        undeclared = sorted(k for k in env if k not in _OPTION_KEYS and k not in declared)
+        undeclared = sorted(k for k in env if k not in _OPTION_KEYS)
         if undeclared:
             return f"'{target.name}' does not declare {', '.join(undeclared)}"
         return ""
@@ -265,16 +227,10 @@ class _Runner:
         named = (env.get("target_profile") or "").strip()
         with target_scope(_named_home(named) if named else self.home):
             _save_credentials({k: v for k, v in env.items() if k not in _OPTION_KEYS and v})
-            if target.kind == "skill":
-                meta = self.facts[target.name]
-                identifier = str(meta.get("identifier") or target.name)
-                step(InstallPhase.downloading)
-                return self.installer.install_skill(identifier, force=options["force"], source=meta.get("source"))
-            result = self.installer.install_plugin(target.name, force=options["force"], enable=options["enable"],
-                                                   ref=options["ref"], on_step=step)
-        if not result.get("ok"):
-            raise RuntimeError(result.get("error") or "the install failed")
-        return {"enabled": options["enable"], **result}
+            meta = self.facts[target.name]
+            identifier = str(meta.get("identifier") or target.name)
+            step(InstallPhase.downloading)
+            return self.installer.install_skill(identifier, force=options["force"])
 
     # -- the watcher --------------------------------------------------------------------------------
 
@@ -305,56 +261,14 @@ class _Runner:
         return redact_sensitive_text(text, force=True) or "error"
 
 
-def target_declared_env(fact: Any) -> list[str]:
-    caps = getattr(fact, "capabilities", None)
-    return list(getattr(caps, "requires_env", None) or ())
-
-
-def _plugin_row(entry: Any, label: Optional[str]) -> dict[str, Any]:
-    from hermes_cli.plugin_catalog_presence import presence
-
-    row: dict[str, Any] = {
-        "display": getattr(entry, "title", "") or _display(entry.name),
-        "description": _first_sentence(entry.description),
-        "tier": entry.tier if entry.tier in _TIERS else "community",
-        "repo": entry.repo,
-        "sha": entry.sha,
-        "requires_hermes": entry.requires_hermes or None,
-        "has_desktop_half": False,
-        "target_profile": label,
-        "app_state": presence(entry).state,
-    }
-    if entry.platforms:
-        row["platforms"] = list(entry.platforms)
-    if entry.subdir:
-        row["subdir"] = entry.subdir
-    return row
-
-
 def _installed_row(target: Target, outcome: dict[str, Any]) -> tuple:
     """The connected row's fields (the drawn row plus what went live, as facts the card words) and
     the same notes in one English line for the model."""
     extra = dict(target.extra)
-    if target.kind == "skill":
-        already = bool(outcome.get("already_installed"))
-        detail = "already installed; left as it is (Advanced, force reinstall replaces it)" if already else ""
-        return {**extra, "skill": outcome["name"], "tools": [], "already_installed": already}, detail
-    live = (outcome.get("activation") or {}).get("live_now") or {}
-    servers = live.get("mcp_servers") or []
-    tools = [name for server in servers if server.get("connected") for name in server.get("tools") or ()]
-    server_errors = [{"name": s["name"], "error": s.get("error") or ""} for s in servers if not s.get("connected")]
-    enabled = bool(outcome.get("enabled", True))
-    missing_env = list(outcome.get("missing_env") or ())
-    notes = [f"MCP server {e['name']} not connected: {e['error'] or 'unknown error'}" for e in server_errors]
-    if not enabled:
-        notes.append("installed but not enabled")
-    if missing_env:
-        notes.append(f"set {', '.join(missing_env)} to finish setup")
-    skills = [s["name"] for s in live.get("skills") or () if s.get("name")]
-    if skills:
-        extra["skill"] = skills[0]
-    facts = {"tools": tools, "enabled": enabled, "missing_env": missing_env, "server_errors": server_errors}
-    return {**extra, **facts}, "; ".join(notes)
+    already = bool(outcome.get("already_installed"))
+    detail = "already installed; left as it is (Advanced, force reinstall replaces it)" if already else ""
+    return {**extra, "skill": outcome["name"], "tools": [], "already_installed": already}, detail
+
 
 
 def _save_credentials(env: dict[str, str]) -> None:

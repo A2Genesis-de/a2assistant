@@ -25,7 +25,6 @@ import { enNotifications } from './en_notifications'
 import { enOnboarding } from './en_onboarding'
 import { enPluginPreviewAccess } from './en_plugin_preview_access'
 import { enPluginUpdate } from './en_plugin_update'
-import { enPluginUpdateAll } from './en_plugin_update_all'
 import { enPreviewWeb } from './en_preview_web'
 import { enProjects } from './en_projects'
 import { enSharedMetrics } from './en_shared_metrics'
@@ -1495,7 +1494,7 @@ export const en: Translations = {
       sshErrHostKey:
         'The host key has CHANGED since you last connected. Verify this is expected, then run ssh-keygen -R <host> and reconnect.',
       sshErrNotInstalled:
-        'A2Assistant is not installed on the remote host. Install it there (curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh) or set the A2Assistant path.',
+        'A2Assistant is not installed on the remote host. Install it there (git clone https://github.com/A2Genesis-de/a2assistant.git) or set the A2Assistant path.',
       sshErrPlatform:
         'Unsupported remote platform. A2Assistant Desktop SSH mode supports Linux, macOS, and Windows remote hosts.',
       sshErrTimeout: 'SSH connection timed out. The host may be unreachable or asleep.',
@@ -2160,7 +2159,6 @@ export const en: Translations = {
         `Pinned to commit ${sha}. Updates are refused until it is reinstalled with a new pin.`,
       pinnedBadge: (sha: string) => `pinned @ ${sha}`,
       ...enPluginUpdate,
-      ...enPluginUpdateAll,
       ...enPluginPreviewAccess,
       uninstall: 'Uninstall',
       uninstallTip: (name: string, profile: string) => `Uninstall ${name} from ${profile}`,
@@ -2243,9 +2241,6 @@ export const en: Translations = {
       actionLog: 'Action log',
       alreadyInstalled: (name: string) => `"${name}" is already installed`,
       pickerTitle: 'Skills Hub',
-      pickerBrowse: 'Browse the full hub',
-      pickerHide: 'Hide the hub browser',
-      pickerHint: 'Hit "+ Add to this Agent" on any skill — it installs and appears in the list above.',
       loadFailed: 'Skill hub failed to load',
       previewFailed: 'Skill preview failed',
       scanFailed: 'Security scan failed',

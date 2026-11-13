@@ -17,7 +17,6 @@ import { ruNotices } from './ru_notices'
 import { ruNotifications } from './ru_notifications'
 import { ruOnboarding } from './ru_onboarding'
 import { ruPluginPreviewAccess } from './ru_plugin_preview_access'
-import { ruPluginUpdateAll } from './ru_plugin_update_all'
 import { ruPluginSettings, ruPluginsTab } from './ru_plugins'
 import { RU_NOUN, RU_PLURAL } from './ru_plural'
 import { ruPreviewWeb } from './ru_preview_web'
@@ -1209,7 +1208,7 @@ export const ruOverrides = {
       sshErrHostKey:
         'Ключ хоста ИЗМЕНИЛСЯ с последнего подключения. Убедитесь, что это ожидаемо, затем выполните ssh-keygen -R <host> и переподключитесь.',
       sshErrNotInstalled:
-        'A2Assistant не установлен на удалённой машине. Установите его там (curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh) или задайте путь к A2Assistant.',
+        'A2Assistant не установлен на удалённой машине. Установите его там (git clone https://github.com/A2Genesis-de/a2assistant.git) или задайте путь к A2Assistant.',
       sshErrPlatform:
         'Неподдерживаемая удалённая платформа. SSH-режим A2Assistant Desktop поддерживает удалённые хосты Linux, macOS и Windows.',
       sshErrTimeout: 'SSH-соединение истекло. Хост может быть недоступен или «спит».',
@@ -1436,7 +1435,7 @@ export const ruOverrides = {
   },
   skillDeepLink: ruSkillDeepLink,
   skills: {
-    plugins: { ...ruPluginPreviewAccess, ...ruPluginsTab, ...ruPluginUpdateAll },
+    plugins: { ...ruPluginPreviewAccess, ...ruPluginsTab },
     tabSkills: 'Навыки',
     tabToolsets: 'Инструменты',
     configuringProfile: 'Настраивается:',
@@ -1541,9 +1540,6 @@ export const ruOverrides = {
       actionLog: 'Журнал действий',
       alreadyInstalled: name => `«${name}» уже установлен`,
       pickerTitle: 'Хаб навыков',
-      pickerBrowse: 'Открыть весь хаб',
-      pickerHide: 'Скрыть браузер хаба',
-      pickerHint: 'Нажмите «+ Добавить к этому агенту» на любом навыке — он установится и появится в списке выше.',
       loadFailed: 'Не удалось загрузить хаб навыков',
       previewFailed: 'Не удалось получить предпросмотр навыка',
       scanFailed: 'Не удалось выполнить проверку безопасности',

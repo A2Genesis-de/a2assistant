@@ -8,8 +8,6 @@ export interface DelegationRoutingTranslations {
   pluginMissing: string
   pluginDisabled: string
   pluginNotLoaded: string
-  installPlugin: string
-  installUnavailable: string
   enablePlugin: string
   enableFailed: string
   modeFailed: string

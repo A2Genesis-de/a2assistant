@@ -30,9 +30,10 @@ def test_update_preserves_local_work_and_rescues_orphan_before_reset(
     git(t.clone, 'add', 'local.txt')
     git(t.clone, '-c', 'commit.gpgsign=false', 'commit', '-qm', 'local history')
     before = git(t.clone, 'rev-parse', 'HEAD')
-    (t.clone / 'untracked.txt').write_text('local edit\n', encoding='utf-8')
+    ignore = t.clone / '.gitignore'
+    clean_ignore = ignore.read_text(encoding='utf-8')
+    ignore.write_text(clean_ignore + '# local edit\n', encoding='utf-8')
     t.args.channel, t.args.keep_stash = 'main', keep
-    monkeypatch.setattr(hermes_main, '_sync_with_upstream_if_needed', update_cmd._sync_with_upstream_if_needed)
     monkeypatch.setattr(update_cmd, '_UPDATE_CRITICAL_MODULES', ())
     original = subprocess.run
     resets = []
@@ -58,17 +59,17 @@ def test_update_preserves_local_work_and_rescues_orphan_before_reset(
         assert error.value.code == 1
         assert not t.requests
         assert git(t.clone, 'rev-parse', 'HEAD') == before
-        assert not (t.clone / 'untracked.txt').exists()
+        assert ignore.read_text(encoding='utf-8') == clean_ignore
     else:
         hermes_main.cmd_update(t.args)
         assert len(t.requests) == 1
         assert git(t.clone, 'rev-parse', 'HEAD') == t.newer
-        assert (t.clone / 'untracked.txt').exists() is (not keep)
+        assert ('# local edit' in ignore.read_text(encoding='utf-8')) is (not keep)
     assert len(resets) == 1
     stashes = git(t.clone, 'stash', 'list')
     assert bool(stashes) is (keep or failure == 'reset')
     if stashes:
-        assert git(t.clone, 'show', 'stash@{0}^3:untracked.txt') == 'local edit'
+        assert git(t.clone, 'show', 'stash@{0}:.gitignore').endswith('# local edit')
     output = capsys.readouterr().out
     if failure == 'ref':
         assert 'backup write failed' in output and 'backed up current HEAD' not in output

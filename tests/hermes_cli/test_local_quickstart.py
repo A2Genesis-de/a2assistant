@@ -54,7 +54,6 @@ def test_quickstart_without_recommendation_requires_explicit_choice(client, monk
         ram_available_bytes=64 * gib, uma=False,
     )
     monkeypatch.setattr(lm.hardware, "probe_budget", lambda **kw: budget)
-    monkeypatch.setattr(lm.catalog, "refresh_catalog_soon", lambda: None)
     monkeypatch.setattr(lm.binaries, "installed_engine",
                         lambda *args, **kwargs: lm.binaries.Engine("cpu", "b1", Path("unused")))
     monkeypatch.setattr(lm, "_runtime_target", lambda requested=None: ("b1", "cpu"))

@@ -97,7 +97,6 @@ export interface Translations {
       chat: string;
       config: string;
       cron: string;
-      documentation: string;
       keys: string;
       logs: string;
       models: string;
@@ -109,7 +108,6 @@ export interface Translations {
     modelToolsSheetSubtitle: string;
     modelToolsSheetTitle: string;
     navigation: string;
-    openDocumentation: string;
     openNavigation: string;
     pluginNavSection: string;
     sessionsActiveCount: string;
@@ -397,35 +395,13 @@ export interface Translations {
     sourceBadge: string;
     authRequired: string;
     authRequiredHint: string;
-    updateGit: string;
-    updateAll: string;
-    updatingAll: string;
-    updateAllDone: (updated: number, needsReview: number, failed: number) => string;
-    autoUpdate: string;
-    autoUpdateDesc: (hours: number) => string;
     /** Optional: locales without it fall back to the English body at the call site. */
-    updateConsentBody?: (name: string, sha: string) => string;
     /** Optional, English fallback: the scan rated an update caution; confirming retries with force. */
-    updateScanBody?: (name: string, count: number) => string;
     /** Optional, English fallback: the scan rated an update dangerous; never overridable. */
-    updateScanBlocked?: (name: string) => string;
     versionBadge: string;
     showInSidebar: string;
     hideFromSidebar: string;
     // Catalog section (en-only fallback convention — optional keys).
-    catalogHeading?: string;
-    catalogHint?: string;
-    catalogSearchPlaceholder?: string;
-    catalogEmpty?: string;
-    catalogEmptyDocsLink?: string;
-    catalogInstallBtn?: string;
-    catalogInstalledBadge?: string;
-    catalogUpdateBtn?: string;
-    catalogRemovedBadge?: string;
-    catalogConfirmTitle?: string;
-    catalogConfirmInstallNote?: string;
-    catalogRequiresEnv?: string;
-    removedFromCatalog?: string;
   };
 
   // ── Profiles page ──

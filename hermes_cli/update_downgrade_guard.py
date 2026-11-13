@@ -24,7 +24,7 @@ _RUNTIME_SCHEMA_MARKER = "CREATE TABLE IF NOT EXISTS session_admissions"
 STATE_MODULES = ("hermes_state*.py", "src/hermes_agent/hermes_state*.py", "src/hermes_agent/hermes_state/*.py")
 _LEDGER_PROBE = ("SELECT EXISTS(SELECT 1 FROM session_admissions) "
                  "OR EXISTS(SELECT 1 FROM worker_executions)")
-_DOCS = "https://hermes-agent.nousresearch.com/docs/getting-started/updating#rolling-back-to-an-older-release"
+
 
 
 def _updater_git(git_cmd, root: Path) -> Callable[..., int]:
@@ -143,5 +143,5 @@ def downgrade_refusal(git_cmd, root: Path, target_ref: str, home: Path | None = 
         lines.append(f"    {h}: run `{hermes}` and enter `/snapshot restore {snapshot}`." if snapshot else
                      f"    {h}: no pre-update snapshot predates the upgrade; restore a full backup taken before "
                      f"it with `{hermes} import <backup.zip>`.")
-    lines += ["  Sessions created since the upgrade are not in that copy.", f"  Guide: {_DOCS}"]
+    lines += ["  Sessions created since the upgrade are not in that copy."]
     return "\n".join(lines)

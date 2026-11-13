@@ -1,3 +1,4 @@
+import { README_URL } from '@hermes/shared/repository'
 import { useStore } from '@nanostores/react'
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -106,8 +107,7 @@ export function SidebarLoadErrorState({ onRetry }: { onRetry: () => void }) {
   )
 }
 
-const SESSION_STORAGE_RECOVERY_URL =
-  'https://hermes-agent.nousresearch.com/docs/user-guide/session-storage-recovery#when-the-three-steps-do-not-work'
+const SESSION_STORAGE_RECOVERY_URL = README_URL
 
 interface SidebarStorageCorruptNoticeProps {
   openRecoveryGuide?: (url: string) => void

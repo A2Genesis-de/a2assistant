@@ -1,7 +1,6 @@
 import { useStore } from '@nanostores/react'
 import { useEffect } from 'react'
 
-import { lookupPluginCatalogEntry } from '@/lib/plugin-catalog'
 import type { GatewayRequest } from '@/store/agent-plugins'
 import {
   $agentPlugins,
@@ -10,8 +9,6 @@ import {
   loadAgentPlugins,
   toggleAgentPlugin
 } from '@/store/agent-plugins'
-import { notify } from '@/store/notifications'
-import { openCatalogPluginInstall } from '@/store/plugin-catalog-install'
 
 import { ADVANCED_DELEGATION_PLUGIN } from './routing-data'
 
@@ -46,19 +43,6 @@ export function useAdvancedDelegationPlugin(request: GatewayRequest, owner: null
         : 'disabled'
 
   return { row, state }
-}
-
-/** Open the reviewed catalog install dialog for the owner; a catalog without the entry says so. */
-export async function installAdvancedDelegation(owner: null | string, unavailableMessage: string) {
-  const result = await lookupPluginCatalogEntry(ADVANCED_DELEGATION_PLUGIN)
-
-  if (!result.ok) {
-    notify({ kind: 'error', message: unavailableMessage })
-
-    return
-  }
-
-  openCatalogPluginInstall(result.entry, owner)
 }
 
 export function enableAdvancedDelegation(

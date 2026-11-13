@@ -61,7 +61,7 @@ def test_branch_update_from_detached_head_parks_the_work(detached_work, capsys):
     (checkout / "shared.txt").write_text("edited\n", encoding="utf-8")
 
     plan = update_cmd._prepare_checkout_for_update(
-        GIT, "main", "HEAD", is_fork=False, assume_yes=True, gateway_mode=False, gw_input_fn=None,
+        GIT, "main", "HEAD", assume_yes=True, gateway_mode=False, gw_input_fn=None,
         switch_branch=False, _windows_gateway_resume=None)
     if plan.auto_stash_ref is not None:
         update_cmd._restore_stashed_changes(GIT, checkout, plan.auto_stash_ref, prompt_user=False)

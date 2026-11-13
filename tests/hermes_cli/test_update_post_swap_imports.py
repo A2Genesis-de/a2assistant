@@ -134,7 +134,7 @@ try:
         update_cmd._resume_paused_gateways_at_exit(token, request(token))
     elif CASE == "shallow_count":
         plan = update_cmd._prepare_checkout_for_update(
-            ["git"], "main", "main", is_fork=False, assume_yes=True, gateway_mode=False,
+            ["git"], "main", "main", assume_yes=True, gateway_mode=False,
             gw_input_fn=input, switch_branch=False, _windows_gateway_resume=None)
         outcome = f"commit_count={plan.commit_count}"
 except BaseException as exc:

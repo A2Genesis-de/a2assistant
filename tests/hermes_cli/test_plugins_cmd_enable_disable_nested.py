@@ -65,7 +65,7 @@ def test_dependency_free_enable_no_churn_and_tool_override_fails_closed(plugin_w
     selected = world.selected()
     origin, sha = world.origin(surface=None)
     facts = (world.home / "config.yaml").read_bytes()
-    world.command("install", identifier=origin.as_uri(), ref=sha, no_enable=True, allow_removed=True)
+    world.command("install", identifier=origin.as_uri(), ref=sha, no_enable=True)
     assert world.selected() == selected
     assert (world.home / "config.yaml").read_bytes() == facts
     monkeypatch.setattr(plugins_cmd.sys.stdin, "isatty", lambda: True)
@@ -104,7 +104,7 @@ def test_fallback_compares_the_preinteraction_selection(plugin_world, monkeypatc
 
     world = plugin_world
     origin, sha = world.origin()
-    world.command("install", identifier=origin.as_uri(), ref=sha, no_enable=True, allow_removed=True)
+    world.command("install", identifier=origin.as_uri(), ref=sha, no_enable=True)
     world.command("enable", name="plugin-worker-proof", no_allow_tool_override=True)
     config_path = world.home / "config.yaml"
     before = config_path.read_bytes()

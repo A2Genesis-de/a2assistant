@@ -1,4 +1,4 @@
-import { jsonRpcErrorReason, JsonRpcGatewayError, type PluginsManageParams } from '@hermes/shared'
+import { jsonRpcErrorReason, JsonRpcGatewayError } from '@hermes/shared'
 import { atom } from 'nanostores'
 
 import { notifyError } from '@/store/notifications'
@@ -44,20 +44,7 @@ export interface AgentPluginRow {
   status: 'enabled' | 'disabled' | 'not enabled'
   /** Agent Plugins v1 package (portable skills/MCP format) vs native Hermes. */
   portable?: boolean
-  /** Curated-catalog provenance (from the install sidecar), when present. */
-  catalog_name?: string
-  catalog_tier?: string
-  installed_sha?: string
-  /** Current catalog pin for this entry (backend-computed). */
-  catalog_sha?: string
-  /** Human label the catalog attaches to that pin ("1.4.0"); shown on the Update button when present. */
-  catalog_version?: string | null
-  /** An update is available: the catalog pin moved past the installed SHA, or (git installs) the last
-   *  update check found a newer remote commit. */
-  update_available?: boolean
-  /** Git installs: what the last update check found to move to (a commit or a feed version). */
-  update_target?: string
-  /** Full commit SHA a `--ref` install is pinned to (custom sources; refuses `update`). */
+  /** Full commit SHA a `--ref` install is pinned to. */
   pinned_sha?: string
   /** The package folder also ships `desktop/plugin.js` (unified agent+desktop package). */
   has_desktop_half?: boolean
@@ -346,9 +333,6 @@ export async function installAgentPlugin(
     identifier: string
     force?: boolean
     enable?: boolean
-    /** Curated-catalog install: the backend resolves repo + pinned SHA from
-     *  its own plugin-catalog and records provenance in the sidecar. */
-    catalogName?: string
     /** Pin a custom source to one full commit SHA (team-wide reproducible install). */
     ref?: string
     /** The commit the install dialog inspected: a custom source with no `ref` whose branch moved since is
@@ -364,7 +348,6 @@ export async function installAgentPlugin(
       identifier: opts.identifier,
       force: Boolean(opts.force),
       enable: opts.enable ?? true,
-      ...(opts.catalogName ? { catalog_name: opts.catalogName } : {}),
       ...(opts.ref ? { ref: opts.ref } : {}),
       ...(!opts.ref && opts.inspectedSha ? { inspected_sha: opts.inspectedSha } : {})
     },
@@ -421,8 +404,6 @@ export interface AgentPluginInspection {
   insecure?: boolean
   /** The commit the backend read; absent when it reported none or not a full SHA. */
   sha?: string
-  /** Read at the catalog entry's pin, as a catalog install checks it out: `sha` is what that install must be. */
-  catalogPin?: boolean
   unavailable?: boolean
   error?: string
 }
@@ -437,7 +418,7 @@ const INSTALL_DESKTOP_UNSUPPORTED_CODES = new Set([4017, -32601])
  *  (the browser-hosted app); native Desktop inspects in Electron. Never rejects. */
 export async function inspectAgentPlugin(
   request: GatewayRequest,
-  opts: { identifier: string; catalogName?: string; profile?: string | null }
+  opts: { identifier: string; profile?: string | null }
 ): Promise<AgentPluginInspection> {
   try {
     const result = await request<{
@@ -456,7 +437,6 @@ export async function inspectAgentPlugin(
         {
           action: 'inspect',
           identifier: opts.identifier,
-          ...(opts.catalogName ? { catalog_name: opts.catalogName } : {})
         },
         opts.profile
       ),
@@ -478,7 +458,6 @@ export async function inspectAgentPlugin(
       ...(ok && typeof result.sha === 'string' && COMMIT_SHA_RE.test(result.sha)
         ? { sha: result.sha.toLowerCase() }
         : {}),
-      ...(ok && opts.catalogName ? { catalogPin: true } : {}),
       ...(ok ? {} : { error: result?.error || 'Inspection failed' })
     }
   } catch (e) {
@@ -512,7 +491,7 @@ export interface DesktopHalfInstallResult {
 
 export async function installDesktopPluginHalf(
   request: GatewayRequest,
-  opts: { identifier: string; catalogName?: string; force?: boolean; profile?: string | null; ref?: string }
+  opts: { identifier: string; force?: boolean; profile?: string | null; ref?: string }
 ): Promise<DesktopHalfInstallResult & { pairedWithAgent?: boolean; warnings: string[] }> {
   try {
     const result = await request<{
@@ -528,7 +507,6 @@ export async function installDesktopPluginHalf(
           action: 'install_desktop',
           identifier: opts.identifier,
           force: Boolean(opts.force),
-          ...(opts.catalogName ? { catalog_name: opts.catalogName } : {}),
           ...(opts.ref ? { ref: opts.ref } : {})
         },
         opts.profile
@@ -574,90 +552,6 @@ export async function removeDesktopPluginHalf(
     return result?.ok ? { ok: true } : { ok: false, error: result?.error || 'Desktop plugin removal failed' }
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : String(e) }
-  }
-}
-
-/** One security-scan finding on an update the scan blocked. */
-export interface AgentPluginScanFinding {
-  severity: string
-  category: string
-  file: string
-  line: number
-  description: string
-}
-
-/** Outcome of `updateAgentPlugin`: `applied` when the update landed, `unchanged`
- *  when already current, `consent` when a new catalog pin widens the plugin
- *  (retry with `acceptCapabilities`), `scan` when the security scan blocked the
- *  new code (a `caution` verdict can be retried with `force`). The backend
- *  changed nothing for `consent` and `scan`. */
-export type AgentPluginUpdateOutcome =
-  | { kind: 'applied' | 'unchanged' | 'failed' }
-  | { kind: 'consent'; sha: string; deltaLines: string[] }
-  | { kind: 'scan'; verdict: string; findings: AgentPluginScanFinding[] }
-
-export interface AgentPluginUpdateOptions {
-  /** Apply a catalog re-pin the user confirmed after a `consent` outcome. */
-  acceptCapabilities?: boolean
-  /** Apply an update whose scan returned caution, after the user saw the findings. */
-  force?: boolean
-}
-
-/** Update an installed plugin (backend `plugins.manage update`): a catalog install
- *  re-pins to the current catalog SHA, a git install pulls. Refreshes the list on
- *  success. */
-export async function updateAgentPlugin(
-  request: GatewayRequest,
-  name: string,
-  failMessage: string,
-  profile?: string | null,
-  options: AgentPluginUpdateOptions = {}
-): Promise<AgentPluginUpdateOutcome> {
-  $agentPluginBusy.set(name)
-
-  const params: PluginsManageParams = { action: 'update', name }
-
-  if (options.acceptCapabilities) {
-    params.accept_capabilities = true
-  }
-
-  if (options.force) {
-    params.force = true
-  }
-
-  try {
-    const result = await request<{
-      ok?: boolean
-      unchanged?: boolean
-      consent_required?: boolean
-      sha?: string
-      delta_lines?: string[]
-      scan_blocked?: boolean
-      scan_verdict?: string
-      scan_findings?: AgentPluginScanFinding[]
-    }>('plugins.manage', withProfile({ ...params }, profile), PLUGIN_INSTALL_REQUEST_TIMEOUT_MS)
-
-    if (result?.consent_required) {
-      return { kind: 'consent', sha: (result.sha ?? '').slice(0, 8), deltaLines: result.delta_lines ?? [] }
-    }
-
-    if (result?.scan_blocked) {
-      return { kind: 'scan', verdict: result.scan_verdict ?? 'dangerous', findings: result.scan_findings ?? [] }
-    }
-
-    if (!result?.ok) {
-      throw new Error(failMessage)
-    }
-
-    await loadAgentPlugins(request, profile)
-
-    return { kind: result.unchanged ? 'unchanged' : 'applied' }
-  } catch (e) {
-    notifyError(e, failMessage)
-
-    return { kind: 'failed' }
-  } finally {
-    $agentPluginBusy.set(null)
   }
 }
 

@@ -3637,7 +3637,7 @@ tips:
   t064: "a2assistant sessions browse 會開啟可搜尋的互動式工作階段選擇器。"
   t065: "a2assistant sessions stats 會顯示各平台的工作階段數量與資料庫大小。"
   t066: "a2assistant sessions prune --older-than 30 會清理舊的工作階段。"
-  t067: "a2assistant skills search react --source skills-sh 會搜尋 skills.sh 公開目錄。"
+  t067: "a2assistant skills search pdf --source official 會搜尋官方選用技能。"
   t068: "a2assistant skills check 會掃描已安裝的 hub 技能是否有上游更新。"
   t069: "a2assistant skills tap add myorg/skills-repo 會新增自訂的 GitHub 技能來源。"
   t070: "a2assistant skills snapshot export setup.json 會匯出你的技能設定，供備份或分享。"

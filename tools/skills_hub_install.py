@@ -245,11 +245,8 @@ def bundle_content_hash(bundle: SkillBundle) -> str:
     return f"sha256:{h.hexdigest()[:16]}"
 
 
-_SOURCE_ID_ALIASES = {"skills.sh": "skills-sh"}
-
-
 def _source_matches(source: SkillSource, source_name: str) -> bool:
-    return source.source_id() == _SOURCE_ID_ALIASES.get(source_name, source_name)
+    return source.source_id() == source_name
 
 
 

@@ -135,7 +135,7 @@ def cmd_fallback_list(args) -> None:
         print(f"  Primary:   {primary}\n")
     _print_chain("Fallback chain", chain)
     print("  Tried in order when the primary fails (rate-limit, 5xx, connection errors).")
-    print("  Docs: https://hermes-agent.nousresearch.com/docs/user-guide/features/fallback-providers\n")
+    print()
 
 
 def cmd_fallback_add(args) -> None:

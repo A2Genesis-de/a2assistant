@@ -11,7 +11,7 @@ import logging
 import os
 import sys
 import tempfile
-from contextlib import ExitStack, contextmanager
+from contextlib import contextmanager
 from contextvars import ContextVar
 from pathlib import Path
 from typing import Any, Callable, Optional
@@ -204,14 +204,12 @@ def _prompt_plugin_env_vars(manifest: dict, console) -> None:
     console.print()
 
 
-def _display_after_install(plugin_dir: Path, identifier: str, *, brief: bool = False) -> None:
-    """Show after-install.md if it exists, otherwise a default message (skipped when *brief*)."""
+def _display_after_install(plugin_dir: Path, identifier: str) -> None:
+    """Show after-install.md if it exists, otherwise a default message."""
     from rich.markdown import Markdown
     from rich.panel import Panel
     console = _pc()._console()
     after_install = plugin_dir / "after-install.md"
-    if brief and not after_install.exists():
-        return
     if after_install.exists():
         body, title = Markdown(after_install.read_text(encoding="utf-8-sig")), None
     else:
@@ -323,14 +321,6 @@ def _refuse_unavailable_portable_plugin(plugin_name: str, tree: Path, app_title:
                                          failure_class="incompatible")
 
 
-def _known_issue_warnings(entry) -> list[str]:
-    """Catalog ``known_issues`` are informational (#124058): surface them as warnings, never a gate.
-
-    The guard for the traps they describe belongs at the mode-selection seam (#122341 / #123771).
-    """
-    return [f"Known issue: {issue}" for issue in entry.known_issues]
-
-
 def interactive_scan_decision(console, verb: str) -> Callable[[Any], bool]:
     """The terminal ``[y/N]`` that accepts a caution verdict, shared by install and update (*verb*)."""
     def decide(scan_result) -> bool:
@@ -357,18 +347,16 @@ def scan_blocked_result(exc) -> dict[str, Any]:
 
 
 def _clone_at_reviewed_commit(tmp_clone: Path, git_url: str, requested_revision: Optional[str],
-                              inspected_sha: Optional[str], subdir: Optional[str], *, catalog_pin: bool = False) -> str:
+                              inspected_sha: Optional[str], subdir: Optional[str]) -> str:
     """Clone *git_url* and return the checked-out sha. *inspected_sha* is the commit the install dialog's
     ``inspect`` read and the user reviewed: a branch that moved since is refused, never installed. The
     clone stays an ordinary checkout of the branch (a detached one at the old commit could not ``git
     pull`` later), so the install stays unpinned and ``update`` still follows the branch. A retained pin
-    that names another commit is refused too. A *catalog_pin* install clones the catalog's CURRENT pin
-    (possibly an annotated tag), which a re-pin since the dialog opened moves: the commit actually checked
-    out is what must equal the reviewed one."""
+    that names another commit is refused too."""
     if not inspected_sha:
         return _pc()._clone_plugin_repo(tmp_clone, git_url, requested_revision, subdir)
     sha = _pc()._normalize_exact_revision(inspected_sha)
-    if not catalog_pin and requested_revision is not None and requested_revision != sha:
+    if requested_revision is not None and requested_revision != sha:
         raise _pc().PluginOperationError(
             f"This plugin is pinned to commit {requested_revision[:12]}, not the commit {sha[:12]} you reviewed. "
             "Reinstall it with that pin, or re-open the install dialog.", failure_class="already_installed")
@@ -390,27 +378,18 @@ def _install_plugin_core(
     accept_caution: Optional[bool] = None,
     ref: Optional[str] = None,
     scan_decision_cb=None,
-    reviewed_pin: Optional[str] = None,
     python_deps: bool = True,
     assume_deps_consent: bool = False,
-    catalog: Optional[dict] = None,
-    allow_removed: bool = False,
     before_swap=None,
     app_title: Optional[str] = None,
     inspected_sha: Optional[str] = None,
 ) -> tuple[Path, dict, str]:
     """Clone a Git plugin and atomically record its source and exact revision.
 
-    *reviewed_pin* is the curated-catalog sha for this install; the scan trusts the tree
-    only when the checked-out revision is exactly that sha (an annotated-tag pin is peeled to
-    its commit first — HEAD can only ever be the commit). *python_deps* False refuses active
+    *python_deps* False refuses active
     replacements; it never bypasses PM dependency admission. *assume_deps_consent* is the
     caller's ``--yes-deps`` answer carried into the publication consent gate, so a headless
-    install of an active replacement is not refused non-interactively (#122134). *catalog*
-    (``{"name", "repo", "tier", "pin"}``) is recorded on the install-metadata record with the
-    checked-out sha — provenance lives OUTSIDE the plugin tree, so a repo cannot forge it;
-    its ``pin`` is kept only when the checkout satisfies it (a ``--ref`` install is off-pin).
-    *allow_removed* records that the user knowingly bypassed the kill list.
+    install of an active replacement is not refused non-interactively (#122134).
     *before_swap(manifest, tree)* runs on the manifest-checked clone BEFORE the security scan, so
     the single scan and portable-package check admit the merged tree (file-count/size limits
     included). It may return the relative paths it merged in, which a scan block then attributes,
@@ -435,39 +414,28 @@ def _install_plugin_core(
         if len(pins) == 1 and isinstance(pins[0].get("revision"), str):
             requested_revision = _pc()._normalize_exact_revision(pins[0]["revision"])
 
-    with tempfile.TemporaryDirectory(prefix=".install-", dir=plugins_dir) as tmp, ExitStack() as owner:
+    with tempfile.TemporaryDirectory(prefix=".install-", dir=plugins_dir) as tmp:
         tmp_clone = Path(tmp) / "plugin"
-        installed_revision = _clone_at_reviewed_commit(tmp_clone, git_url, requested_revision, inspected_sha, subdir,
-                                                       catalog_pin=bool(catalog))
-        git_exe = _pc()._resolve_git_executable()
-        at_reviewed_pin = bool(reviewed_pin) and installed_revision == (
-            _pc()._git_resolve_commit(tmp_clone, git_exe, reviewed_pin) if git_exe and reviewed_pin else reviewed_pin)
+        installed_revision = _clone_at_reviewed_commit(tmp_clone, git_url, requested_revision, inspected_sha, subdir)
         tmp_target = _pc()._resolve_subdir_within(tmp_clone, subdir) if subdir else tmp_clone
         _ensure_tree_readable(tmp_target, plugins_dir)
         manifest = _read_manifest_for_install(tmp_target)
         plugin_name = manifest.get("name") or (
             subdir.rstrip("/").rsplit("/", 1)[-1] if subdir else _pc()._repo_name_from_url(git_url))
-        if not allow_removed:  # every install surface lands here, before any dependency is resolved
-            from hermes_cli.plugins_cmd_catalog import raise_if_removed
-            raise_if_removed(identifier, git_url, str(plugin_name), *((catalog["name"],) if catalog else ()))
         link = plugins_dir / str(plugin_name)
         from pm.filesystem import is_junction
         if "/" not in str(plugin_name) and (link.is_symlink() or is_junction(link)):
             # A provider's own installer (e.g. `mnemosyne-hermes install`) links its package here; the
             # name is fine, the slot is taken. Say so instead of blaming the manifest.
             raise _pc().PluginOperationError(
-                f"Plugin '{plugin_name}' is already installed outside the catalog: {link} is a link to "
-                f"{os.path.realpath(link)}. Delete that link to install the catalog version.",
+                f"Plugin '{plugin_name}' is already installed elsewhere: {link} is a link to "
+                f"{os.path.realpath(link)}. Delete that link to install this source.",
                 failure_class="already_installed")
         try:
             target = _pc()._sanitize_plugin_name(plugin_name, plugins_dir)
         except ValueError as e:
             raise _pc().PluginOperationError(str(e), failure_class="manifest_invalid") from e
         _check_manifest_version(manifest, plugin_name)
-        # One owner per plugin: an `install --ref` publishing between an unattended updater's hold
-        # check and its publication would be overwritten (the updater holds this lock across both).
-        from hermes_cli.plugins_auto_update import plugin_update_lock
-        owner.enter_context(plugin_update_lock(target))
         old_metadata = _pc()._read_install_metadata()
         prior = old_metadata.get(plugin_name)
         # `install --force --ref` is the documented way to move a pin, so a reinstall of the same
@@ -475,18 +443,18 @@ def _install_plugin_core(
         tracked_edits: list[str] = []
         if (before_swap is None and force and target.is_dir() and not target.is_symlink()
                 and isinstance(prior, dict) and prior.get("source") == source):
-            from hermes_cli.plugins_cmd_catalog import _carry_user_files, _local_changes
-            local, tracked_edits = _local_changes(target)
+            from hermes_cli.plugins_user_files import carry_user_files, local_changes
+            local, tracked_edits = local_changes(target)
 
             def _carry(_manifest, tree):
-                return _carry_user_files(target, tree, local)
+                return carry_user_files(target, tree, local)
             before_swap = _carry
         # A callback may merge user-owned state into the candidate tree; run it first so one scan
         # admits the final bytes.
         merged = before_swap(manifest, tmp_target) if before_swap is not None else None
         # Scan BEFORE anything is moved into place; raises PluginScanBlocked when blocked.
         _pc()._scan_merged_tree(tmp_target, identifier, merged, force=force if accept_caution is None else accept_caution,
-                                scan_decision_cb=scan_decision_cb, reviewed_pin=at_reviewed_pin)
+                                scan_decision_cb=scan_decision_cb)
         if not python_deps:
             from pm.workspace import enabled_plugin_dirs
 
@@ -501,8 +469,8 @@ def _install_plugin_core(
             from pm.paths import repo_root
 
             raise _pc().PluginOperationError(
-                f"Plugin '{plugin_name}' already exists. Use force reinstall "
-                f"or run `{cli_command_name(repo_root())} plugins update {plugin_name}`.",
+                f"Plugin '{plugin_name}' already exists. Reinstall it with "
+                f"`{cli_command_name(repo_root())} plugins install --force`.",
                 failure_class="already_installed")
         if target.exists() and requested_revision is None and isinstance(prior, dict) and prior.get("pinned") is True:
             raise _pc().PluginOperationError(
@@ -514,36 +482,14 @@ def _install_plugin_core(
             "revision": installed_revision,
             "source": source,
         }
-        # Saved update_url tag (settled: claims vs provenance): the
-        # manifest's update_url is COPIED into the row at install. Check
-        # time compares manifest vs tag; a mismatch is needs-fixing and
-        # only `hermes plugins trust-update-url` moves the tag.
-        if manifest.get("update_url"):
-            from hermes_cli.plugins_updates import https_update_url
-            try:
-                record["update_url"] = https_update_url(manifest["update_url"])
-            except ValueError as exc:
-                raise _pc().PluginOperationError(f"Plugin '{plugin_name}' {exc}", failure_class="manifest_invalid") from exc
-        if catalog:
-            # ``sha`` = the commit checked out; ``pin`` = the reviewed catalog sha it satisfies (the
-            # annotated-tag object for a tag pin), empty when installed off-pin via ``--ref``.
-            record["catalog"] = {
-                **catalog,
-                "sha": installed_revision,
-                "pin": reviewed_pin if at_reviewed_pin else "",
-            }
-            from hermes_cli.plugins_cmd_catalog import write_catalog_sidecar_record
-            write_catalog_sidecar_record(tmp_target, catalog, installed_revision)
-        if allow_removed:
-            record["allow_removed"] = True
         new_metadata = {**old_metadata, plugin_name: record}
         from hermes_cli.plugins_transaction import publish_plugin
 
         if tracked_edits:
-            from hermes_cli.plugins_cmd_catalog import _stash_local_files
+            from hermes_cli.plugins_user_files import stash_local_files
             # Outside the plugins dir: the discovery scanners recurse into every subdirectory there.
             backup = plugins_dir.parent / "plugins-backup" / f"{target.name}-{str(prior.get('revision') or 'old')[:8]}"
-            _stash_local_files(target, tracked_edits, backup)
+            stash_local_files(target, tracked_edits, backup)
             _pc()._console().print(
                 f"[yellow]Local edits to {len(tracked_edits)} tracked file(s) were not carried over; "
                 f"copies are under {backup} (re-apply by hand).[/yellow]")
@@ -581,36 +527,22 @@ def _publish_failure_class(exc: BaseException) -> str:
 # ---- end iuf c1 ----
 
 
-def recorded_install(install: Callable[[], tuple], *, catalog_name: Optional[str], identifier: str) -> tuple:
+def recorded_install(install: Callable[[], tuple], *, identifier: str) -> tuple:
     """Run one plugin install attempt (a core ``(target, manifest, installed_name)`` call) and record
     it as a shared-metrics extension install: failed when it raises, success unless it replaced an
     already-installed plugin (a reinstall is not an install)."""
     from hermes_cli.observability.shared_metrics_events import record_extension_install
 
-    source = "catalog" if catalog_name else ("local" if identifier.startswith("file://") else "url")
+    source = "local" if identifier.startswith("file://") else "url"
     before = set(_pc()._read_install_metadata())
     try:
         result = install()
     except Exception as exc:
-        record_extension_install(kind="plugin", source=source, name=catalog_name, outcome="failed", error=exc)
+        record_extension_install(kind="plugin", source=source, name=None, outcome="failed", error=exc)
         raise
     if result[2] not in before:
-        record_extension_install(kind="plugin", source=source, name=catalog_name, outcome="success")
+        record_extension_install(kind="plugin", source=source, name=None, outcome="success")
     return result
-
-
-def _announce_source(identifier: str, console, *, brief: bool) -> tuple[Optional[Any], str]:
-    """``(catalog entry or None, install identifier)``, printing where the install comes from: the
-    catalog pin (plus the entry's description unless *brief*) or the custom-source warning."""
-    from hermes_cli import plugins_cmd_catalog as catalog
-    if not catalog.looks_like_catalog_name(identifier):
-        console.print("[yellow]Warning:[/yellow] custom (unreviewed) source — not from the A2Assistant catalog.")
-        return None, identifier
-    entry = catalog.resolve_catalog_name(identifier, console)
-    console.print(f"[bold]{entry.name}[/bold] [cyan]\\[{entry.tier}][/cyan] [dim]pinned @ {entry.sha[:8]}[/dim]")
-    if not brief:
-        console.print(catalog.entry_capability_summary(entry))
-    return entry, entry.install_identifier
 
 
 def cmd_install(
@@ -618,38 +550,23 @@ def cmd_install(
     force: bool = False,
     enable: Optional[bool] = None,
     ref: Optional[str] = None,
-    allow_removed: bool = False,
     no_deps: bool = False,
     yes_deps: bool = False,
-    brief: bool = False,
 ) -> None:
-    """Install a plugin from the curated catalog (bare name), a Git URL, or owner/repo shorthand.
+    """Install a plugin from a Git URL, owner/repo shorthand or local ``file://`` path.
 
-    A catalog hit installs the reviewed pinned SHA and records catalog membership in the shared install
-    metadata. An explicit different ``--ref`` is a custom pin. URLs/shorthand are custom sources. Every
-    install is checked against the catalog kill list unless *allow_removed*.
+    An explicit ``--ref`` pins one full commit SHA.
     *enable* None prompts "Enable now? [y/N]"; True/False skip the prompt.
     *yes_deps* is ``--yes-deps``: the explicit answer to the Python-deps consent
     question, so non-interactive installs (SSH automation, CI, Docker entrypoints)
     finish in one run instead of being refused and left for an ``enable`` that
     cannot recover a refused publication (#122134). The default without it stays
     fail-closed in non-interactive sessions.
-    *brief* is for a caller that already told the user what is being installed and why (first-time
-    setup): the catalog line, questions, warnings, errors and the outcome print, the catalog
-    description, clone line and default "Installed" panel do not.
     """
-    from hermes_cli import plugins_cmd_catalog as catalog
     console = _pc()._console()
-    entry, identifier = _announce_source(identifier, console, brief=brief)
-    if allow_removed:
-        console.print(
-            "[bold red]WARNING:[/bold red] [red]--allow-removed set — skipping the catalog kill-list check. "
-            "This plugin may have been removed for security reasons.[/red]")
-
+    console.print("[yellow]Warning:[/yellow] third-party source — review the plugin before enabling it.")
     try:
         git_url, _subdir = _pc()._resolve_git_url(identifier)
-        if not allow_removed:
-            catalog.raise_if_removed(identifier, git_url, *((entry.name,) if entry else ()))
     except (ValueError, _pc().PluginOperationError) as e:
         _pc()._fail(console, f"[red]Error:[/red] {e}")
     if git_url.startswith(("http://", "file://")):
@@ -657,22 +574,16 @@ def cmd_install(
             "[yellow]Warning:[/yellow] Using insecure/local URL scheme. "
             "Consider using https:// or git@ for production installs.")
 
-    if not brief:
-        console.print(f"[dim]Cloning {git_url}{f' (subdir: {_subdir})' if _subdir else ''}...[/dim]")
+    console.print(f"[dim]Cloning {git_url}{f' (subdir: {_subdir})' if _subdir else ''}...[/dim]")
     _interactive_scan_decision = interactive_scan_decision(console, "Install")
 
     def _install() -> tuple:
-        if entry is not None:
-            return catalog.install_catalog_entry(
-                entry, force=force, ref=ref, allow_removed=allow_removed, scan_decision_cb=_interactive_scan_decision,
-                python_deps=not no_deps, assume_deps_consent=yes_deps)
         return _pc()._install_plugin_core(
             identifier, force=force, ref=ref, scan_decision_cb=_interactive_scan_decision,
-            python_deps=not no_deps, allow_removed=allow_removed, assume_deps_consent=yes_deps)
+            python_deps=not no_deps, assume_deps_consent=yes_deps)
 
     try:
-        target, installed_manifest, installed_name = recorded_install(
-            _install, catalog_name=entry.name if entry is not None else None, identifier=identifier)
+        target, installed_manifest, installed_name = recorded_install(_install, identifier=identifier)
     except _pc().PluginOperationError as e:
         _pc()._fail(console, f"[red]{'Blocked' if isinstance(e, _pc().PluginScanBlocked) else 'Error'}:[/red] {e}")
     if not _pc()._looks_like_plugin_dir(target):
@@ -703,7 +614,7 @@ def cmd_install(
         deps_ok, deps_reason = _install_plugin_python_deps(installed_manifest, target, console,
                                                            assume_yes=yes_deps)
 
-    _pc()._display_after_install(target, identifier, brief=brief)
+    _pc()._display_after_install(target, identifier)
 
     # ONE admission transaction for the enable (C13): resolve the candidate
     # union (enabled members + this target) and commit the config in the
@@ -805,83 +716,35 @@ def _select_memory_provider(name: str, console, *, select: bool) -> None:
         f"Run `hermes memory setup {name}` to configure it; new sessions use it.")
 
 
-def _catalog_install_on_disk(catalog_name: str, ref: Optional[str],
-                             inspected_sha: Optional[str] = None) -> Optional[tuple]:
-    """``(target, manifest, installed_name)`` of the installed, not enabled tree whose install record
-    names catalog entry *catalog_name*, else None. A refused enable leaves the published clone in
-    place (there is no rollback), so the card's Try again, or the model asking again, stopped at
-    "already exists" on a second clone and the plugin could never be turned on from the card.
-    Like ``hermes plugins enable``, the tree is used at the commit it has; an explicit *ref*, or the
-    commit an install dialog reviewed (*inspected_sha*), only matches a tree checked out at that commit.
-    Any other tree is not reused: the fresh install then answers "already exists" instead of enabling
-    code nobody reviewed."""
-    from hermes_cli.plugins_cmd_catalog import catalog_install_record
-    target = _pc()._catalog_installed_dir(catalog_name)
-    if target is None:
-        return None
-    record = catalog_install_record(target) or {}
-    installed_sha = str(record.get("sha") or "").lower()
-    if ref and installed_sha != ref.lower():
-        return None
-    # The dialog may name the commit or, from the catalog entry, the annotated tag the tree was installed at.
-    if inspected_sha and inspected_sha.lower() not in {installed_sha, str(record.get("pin") or "").lower()} - {""}:
-        return None
-    manifest = _pc()._read_manifest(target)
-    installed_name = manifest.get("name") or target.name
-    return None if {installed_name, target.name} & _pc()._get_enabled_set() else (target, manifest, installed_name)
-
-
-def _resolve_source(identifier: str, catalog_name: Optional[str]) -> tuple:
-    """``(entry, identifier, warnings, error)``: the catalog entry (None for a custom source), the
-    identifier to clone, the warnings so far, and the refusal result when there is one."""
-    from hermes_cli import plugins_cmd_catalog as catalog
-    warnings: list[str] = []
-    entry = None
-    if catalog_name:
-        entry = catalog.get_live_catalog_entry(catalog_name)
-        if entry is None:
-            return None, identifier, warnings, {"ok": False, "error": f"'{catalog_name}' is not in the A2Assistant plugin catalog."}
-        warnings.extend(_known_issue_warnings(entry))
-        identifier = entry.install_identifier
-    else:
-        warnings.append("Custom (unreviewed) source — not from the A2Assistant catalog.")
+def _resolve_source(identifier: str) -> tuple:
+    """``(warnings, error)``: the warnings so far, and the refusal result when there is one."""
+    warnings: list[str] = ["Third-party source — review the plugin before enabling it."]
     try:
         git_url = _pc()._resolve_git_url(identifier)[0]
         if git_url.startswith(("http://", "file://")):
             warnings.append("Insecure URL scheme; prefer https:// or git@ for production installs.")
-        catalog.raise_if_removed(identifier, git_url, *((entry.name,) if entry else ()))
     except ValueError:
         pass
     except _pc().PluginOperationError as exc:
-        return entry, identifier, warnings, {"ok": False, "error": str(exc)}
-    return entry, identifier, warnings, None
+        return warnings, {"ok": False, "error": str(exc)}
+    return warnings, None
 
 
-def _place_tree(entry, identifier: str, *, force: bool, ref: Optional[str], assume_deps_consent: bool,
+def _place_tree(identifier: str, *, force: bool, ref: Optional[str], assume_deps_consent: bool,
                 step: Callable[[InstallPhase], None], inspected_sha: Optional[str] = None) -> tuple | dict:
-    """``(target, manifest, installed_name)`` of the tree to enable, or the error result. A catalog
-    entry already on disk and not enabled (an earlier enable was refused) is used as it is, unless
-    an approved *ref* names another commit; a fresh install clones at *ref* when set, else the pin.
-    With no *ref*, either source is held to *inspected_sha* when given: a catalog entry re-pinned since
-    the dialog read it is refused like a moved branch, and only a tree on disk at that commit is reused."""
-    from hermes_cli import plugins_cmd_catalog as catalog
+    """``(target, manifest, installed_name)`` of the cloned tree to enable, or the error result. The
+    clone is held to *inspected_sha* when given and no *ref* is: a branch that moved since the dialog
+    read it is refused."""
     ref = (ref or "").strip() or None
     inspected_sha = None if ref else inspected_sha
-    on_disk = _catalog_install_on_disk(entry.name, ref, inspected_sha) if entry is not None and not force else None
-    if on_disk is not None:
-        return on_disk
 
     def _install() -> tuple:
-        if entry is not None:
-            return catalog.install_catalog_entry(entry, force=force, ref=ref, allow_removed=False,
-                                                 assume_deps_consent=assume_deps_consent, inspected_sha=inspected_sha)
         return _pc()._install_plugin_core(identifier, force=force, ref=ref, assume_deps_consent=assume_deps_consent,
                                           inspected_sha=inspected_sha)
 
     step(InstallPhase.downloading)
     try:
-        return recorded_install(_install, catalog_name=entry.name if entry is not None else None,
-                                identifier=identifier)
+        return recorded_install(_install, identifier=identifier)
     except _pc().PluginScanBlocked as exc:
         return scan_blocked_result(exc)
     except _pc().PluginOperationError as exc:
@@ -904,31 +767,28 @@ def _enable_placed(installed_name: str, deps, step: Callable[[InstallPhase], Non
 
 
 def dashboard_install_plugin(
-    identifier: str, *, force: bool, enable: bool, catalog_name: Optional[str] = None,
+    identifier: str, *, force: bool, enable: bool,
     ref: Optional[str] = None, assume_deps_consent: Optional[bool] = None,
     on_step: Optional[Callable[[InstallPhase], None]] = None, inspected_sha: Optional[str] = None,
 ) -> dict[str, Any]:
-    """Non-interactive install for the dashboard/TUI. *catalog_name* installs a curated entry at its
-    pinned SHA (identifier may be empty); *ref* pins either source to one full commit SHA (same
-    contract as ``--ref``); every path enforces the kill list (no GUI bypass). *assume_deps_consent*
+    """Non-interactive install for the dashboard/TUI. *ref* pins the source to one full commit SHA (same
+    contract as ``--ref``). *assume_deps_consent*
     is consent the caller holds for the Python deps, so no terminal is needed to answer the gate.
     None (a user's Install click) is the consent the fresh-install enable already acts on: a plugin
     the config already selects (``memory.provider``) would otherwise be refused every time, while
     the same plugin unselected installs and enables. A forced replacement still needs explicit consent.
-    *on_step* hears each slow phase as it starts (the catalog card draws it under its bar). *inspected_sha*
-    is the commit an install dialog reviewed: a custom source whose branch moved since, or a catalog entry
-    re-pinned since, is refused."""
+    *on_step* hears each slow phase as it starts. *inspected_sha* is the commit an install dialog
+    reviewed: a source whose branch moved since is refused."""
     if assume_deps_consent is None:
         assume_deps_consent = enable and not force
     step = on_step or (lambda _phase: None)
     if inspected_sha:
-        # The dialog's inspection is spent either way; re-opening it must read the source again.
         from hermes_cli.plugins_cmd_inspect import forget_inspection
-        forget_inspection(identifier, catalog_name=catalog_name)
-    entry, identifier, warnings, error = _resolve_source(identifier, catalog_name)
+        forget_inspection(identifier)
+    warnings, error = _resolve_source(identifier)
     if error is not None:
         return error
-    placed = _place_tree(entry, identifier, force=force, ref=ref, assume_deps_consent=assume_deps_consent, step=step,
+    placed = _place_tree(identifier, force=force, ref=ref, assume_deps_consent=assume_deps_consent, step=step,
                          inspected_sha=inspected_sha)
     if isinstance(placed, dict):
         return placed
@@ -949,5 +809,4 @@ def dashboard_install_plugin(
         "python_dependencies": deps,
         "missing_env": [s["name"] for s in _pc()._missing_env_specs(installed_manifest)],
         "after_install_path": str(ap) if ap.exists() else None, "enabled": enable, **activated,
-        "known_issues": list(entry.known_issues) if entry else [],
     }

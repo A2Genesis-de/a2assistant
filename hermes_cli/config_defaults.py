@@ -1700,13 +1700,6 @@ DEFAULT_CONFIG = {
         # skipped with the reason "load timed out" and the rest keep loading; the stuck worker thread is
         # abandoned. 0 = no deadline (load inline). Max 600.
         "load_timeout_seconds": 10,
-        # Read-only plugin update-check cadence, hours (gateway tick; 0 disables). Applying stays
-        # explicit: `hermes plugins update <name>`, or auto_apply below (catalog and tracked git
-        # plugins, scan-gated by that same pipeline).
-        "auto_update_check_hours": 24,
-        # Opt-in unattended apply (`hermes plugins auto-update on`, Desktop's Plugins tab): catalog +
-        # tracked git plugins, same scan/consent pipeline as the manual update (never a widened pin).
-        "auto_apply": False,
         # Where third-party Python plugins run. in_process: imported into Hermes (default).
         # host: one plugin-host process per profile runs them and they reach Hermes only through
         # ctx (a crashing or hanging plugin takes down its host, which restarts; Hermes keeps
@@ -2013,19 +2006,12 @@ DEFAULT_CONFIG = {
         "max_size_mb": 5,      # max size per log file before rotation
         "backup_count": 3,     # rotated backups to keep
     },
-    # Remote model-catalog manifest: curated OpenRouter / Nous Portal model lists fetched from this
-    # URL (falls back to the in-repo snapshot on network failure), so picker lists update without a
-    # release. Default URL is served by the docs-site GitHub Pages deploy.
+    # Live provider model lists behind the /model picker (filtered from the in-repo curated lists).
     "model_catalog": {
-        "enabled": True,
-        "url": "https://hermes-agent.nousresearch.com/docs/api/model-catalog.json",
         # Disk cache TTL in minutes. The gateway refreshes in the background on this cadence; the
         # CLI refetches on the next /model or `hermes model` once the cache is older. Network
         # failures silently use the stale cache. Legacy `ttl_hours` is honoured if set.
         "ttl_minutes": 20,
-        # Per-provider override URLs for self-hosted curation lists using the same schema, e.g.
-        # providers: {openrouter: {url: https://example.com/my-curation.json}}.
-        "providers": {},
     },
     # Per-model metadata overrides. Fields: context_window, supports_tools,
     # supports_vision, supports_reasoning, model_family. <provider>.<model_id> wins over
@@ -2911,8 +2897,7 @@ OPTIONAL_ENV_VARS = OptionalEnvVars({
         "Notion API key", "https://www.notion.so/my-integrations"),
     "LINEAR_API_KEY": _skill("Linear personal API key (used by the `linear` skill)",
         "Linear API key", "https://linear.app/settings/account/security"),
-    "TENOR_API_KEY": _skill("Tenor API key for GIF search (used by the `gif-search` skill)",
-        "Tenor API key", "https://developers.google.com/tenor/guides/quickstart"),
+
     # ── Honcho ──
     "HONCHO_API_KEY": _tool("Honcho API key for AI-native persistent memory", "Honcho API key",
         "https://app.honcho.dev", tools=["honcho_context"]),

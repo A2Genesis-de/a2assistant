@@ -4328,16 +4328,6 @@ def _housekeeping_curator() -> None:
     maybe_run_curator(idle_for_seconds=float("inf"), on_summary=lambda msg: logger.info("curator: %s", msg))
 
 
-def _housekeeping_plugin_update_check() -> None:
-    """Plugin update-check cadence (plugins_cadence): due-gated by
-    plugins.auto_update_check_hours, read-only, receipt-surfaced; the
-    opt-in auto-apply rides the manual update pipeline. A network error
-    costs one warning and a stamped marker — never an apply."""
-    from hermes_cli.plugins_cadence import maybe_run_gateway_check
-
-    maybe_run_gateway_check(log=logger)
-
-
 def _launch_sessions_dir(config) -> Optional[tuple[Path, Path]]:
     """``(launch home, its configured transcript dir)``, or ``None`` when the gateway carries none.
 
@@ -4493,10 +4483,6 @@ def _start_gateway_housekeeping(
             # Default-bound now, i.e. OUTSIDE any profile scope: this is the launch home's override.
             lambda _launch=_launch_sessions_dir(getattr(runner, "config", None)):
                 _housekeeping_state_db_maintenance(_launch))),
-        # Due-gated inside: the first tick after startup runs an overdue check, not tick 60.
-        # Per served profile: plugins dir, last-run marker and plugins.auto_apply are all the
-        # profile's own (get_hermes_home()/load_config_readonly() bind to the scope).
-        (1, "Plugin update check", profile_scoped_chore(runner, _housekeeping_plugin_update_check)),
         (1, "Deferred FTS retry tick", _housekeeping_deferred_fts_retry),
         (1, "gateway housekeeping memory trim", _housekeeping_memory_trim),
         (1, "MCP config reconcile", _mcp_config_reconciler(runner)),

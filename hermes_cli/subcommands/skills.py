@@ -13,7 +13,7 @@ def _flag(parser, *names, help, **kw):
 
 # Registry sources, then provider filters (GitHub taps stored under source="github").
 _SOURCE_CHOICES = [
-    "all", "official", "skills-sh", "well-known", "github", "clawhub", "lobehub", "browse-sh",
+    "all", "official", "well-known", "url", "github",
     "nvidia", "openai", "anthropic", "huggingface", "voltagent", "gstack", "minimax"]
 
 
@@ -21,7 +21,7 @@ def build_skills_parser(subparsers, *, cmd_skills: Callable) -> None:
     """Attach the ``skills`` subcommand to ``subparsers``."""
     skills_parser = subparsers.add_parser(
         "skills", help="Search, install, configure, and manage skills",
-        description="Search, install, inspect, audit, configure, and manage skills from skills.sh, well-known agent skill endpoints, GitHub, ClawHub, and other registries.",
+        description="Search, install, inspect, audit, configure, and manage skills from the official optional skills, well-known agent skill endpoints, direct URLs and GitHub.",
     )
     skills_subparsers = skills_parser.add_subparsers(dest="skills_action")
 
@@ -148,7 +148,7 @@ def build_skills_parser(subparsers, *, cmd_skills: Callable) -> None:
     skills_publish = skills_subparsers.add_parser("publish", help="Publish a skill to a registry")
     skills_publish.add_argument("skill_path", help="Path to skill directory")
     skills_publish.add_argument(
-        "--to", default="github", choices=["github", "clawhub"], help="Target registry")
+        "--to", default="github", choices=["github"], help="Target registry")
     skills_publish.add_argument(
         "--repo", default="", help="Target GitHub repo (e.g. openai/skills)")
 

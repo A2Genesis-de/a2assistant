@@ -1,0 +1,5 @@
+REPOSITORY = "A2Genesis-de/a2assistant"
+REPOSITORY_URL = f"https://github.com/{REPOSITORY}"
+REPOSITORY_GIT_URL = f"{REPOSITORY_URL}.git"
+README_URL = f"{REPOSITORY_URL}#readme"
+ISSUES_URL = f"{REPOSITORY_URL}/issues"

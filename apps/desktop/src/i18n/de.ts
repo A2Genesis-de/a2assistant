@@ -22,7 +22,6 @@ import { deNotifications } from './de_notifications'
 import { deOnboarding } from './de_onboarding'
 import { dePluginPreviewAccess } from './de_plugin_preview_access'
 import { dePluginUpdate } from './de_plugin_update'
-import { dePluginUpdateAll } from './de_plugin_update_all'
 import { dePreviewWeb } from './de_preview_web'
 import { deProjects } from './de_projects'
 import { deSharedMetrics } from './de_shared_metrics'
@@ -1853,7 +1852,7 @@ const deBaseOverrides = {
       sshErrHostKey:
         'Der Host-Key hat sich seit Ihrer letzten Verbindung GEÄNDERT. Prüfen Sie, ob das erwartet ist, führen Sie dann ssh-keygen -R <host> aus und verbinden Sie sich erneut.',
       sshErrNotInstalled:
-        'A2Assistant ist auf dem Remote-Host nicht installiert. Installieren Sie es dort (curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh) oder legen Sie den A2Assistant-Pfad fest.',
+        'A2Assistant ist auf dem Remote-Host nicht installiert. Installieren Sie es dort (git clone https://github.com/A2Genesis-de/a2assistant.git) oder legen Sie den A2Assistant-Pfad fest.',
       sshErrPlatform:
         'Nicht unterstützte Remote-Plattform. Der Desktop-SSH-Modus von A2Assistant unterstützt Linux-, macOS- und Windows-Remote-Hosts.',
       sshErrTimeout: 'SSH-Verbindung ist ausgelaufen. Der Host ist möglicherweise nicht erreichbar oder schläft.',
@@ -2533,7 +2532,6 @@ const deBaseOverrides = {
         `An Commit ${sha} gepinnt. Updates werden abgelehnt, bis es mit einem neuen Pin neu installiert wird.`,
       pinnedBadge: sha => `gepinnt @ ${sha}`,
       ...dePluginUpdate,
-      ...dePluginUpdateAll,
       ...dePluginPreviewAccess,
       uninstall: 'Deinstallieren',
       uninstallTip: (name: string, profile: string) => `${name} aus ${profile} deinstallieren`,
@@ -2615,10 +2613,6 @@ const deBaseOverrides = {
       actionLog: 'Aktionsprotokoll',
       alreadyInstalled: (name: string) => `"${name}" ist bereits installiert`,
       pickerTitle: 'Skills Hub',
-      pickerBrowse: 'Den ganzen Hub durchstöbern',
-      pickerHide: 'Hub-Durchsucher ausblenden',
-      pickerHint:
-        'Klicken Sie bei einem beliebigen Skill auf „+ Zu diesem Agenten hinzufügen“ – er wird installiert und erscheint in der Liste oben.',
       loadFailed: 'Skill-Hub konnte nicht geladen werden',
       previewFailed: 'Skill-Vorschau fehlgeschlagen',
       scanFailed: 'Sicherheitsscan fehlgeschlagen',

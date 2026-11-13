@@ -30,15 +30,8 @@ def _connected() -> dict:
     return {"connected": sorted(connected_slugs(ConnectorClient()))}
 
 
-def _installed() -> dict:
-    from hermes_cli.plugin_catalog_presence import onboarding_names
-    from hermes_cli.plugins_cmd import _catalog_installed_dir
-
-    return {"installed": [name for name in onboarding_names() if _catalog_installed_dir(name) is not None]}
-
-
 # A card closed without its own answer (words, a value, a skip, the deadline) still reports these.
-_PRESENT = {"connectors": _connected, "plugins": _installed}
+_PRESENT = {"connectors": _connected}
 
 
 def _present(beat: str) -> dict | None:
@@ -76,13 +69,11 @@ def _reply_event(beat: str, reply: Mapping[str, Any] | None) -> flow.Event:
 
 
 def _skill_resolver() -> Callable[[str], str | None]:
-    """A written first-task skill name -> the name skill_view loads it with here, or None. A plugin skill
-    (``blender:blender``) resolves through the installed catalog plugin to its registered name."""
-    from hermes_cli.plugins_activation_live import catalog_plugin_skill
+    """A written first-task skill name -> the name skill_view loads it with here, or None."""
     from tools.skills_tool import find_all_skills
 
     bundled = {skill["name"] for skill in find_all_skills()}
-    return lambda name: catalog_plugin_skill(name) if ":" in name else (name if name in bundled else None)
+    return lambda name: name if name in bundled else None
 
 
 def _result(step: flow.Step, beat: str | None = None, extra: str = "") -> str:

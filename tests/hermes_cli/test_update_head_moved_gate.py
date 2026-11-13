@@ -56,7 +56,6 @@ def _patch_update_deps(monkeypatch, tmp_path, run_side_effect):
         hermes_main, "_get_origin_url",
         lambda *a, **k: "https://github.com/NousResearch/hermes-agent.git",
     )
-    monkeypatch.setattr(update_cmd, "_is_fork", lambda *a, **k: False)
     monkeypatch.setattr(
         hermes_main, "_stash_local_changes_if_needed", lambda *a, **k: None
     )

@@ -19,13 +19,11 @@ from agent.onboarding_text import _LOOK_AROUND, opening_prompt, reminder, turn_n
 NOTES = [{"id": "notes", "label": "Notes to wiki"}]
 
 MACHINES = {
-    "mac": Facts(os="macos", arch="arm64", machine_kind="Mac", plugins=("blender",)),
-    "windows_rtx": Facts(os="windows", arch="arm64", machine_kind="Spark", nvidia_platform="rtx_spark",
-                         plugins=("nvidia-app", "nvidia-broadcast", "blender")),
-    "spark": Facts(os="linux", arch="arm64", machine_kind="Spark", nvidia_platform="dgx_spark", plugins=("blender",)),
-    "linux": Facts(os="linux", arch="amd64", machine_kind="computer", plugins=()),
-    "windows_laptop": Facts(os="windows", arch="amd64", machine_kind="PC", nvidia_platform="discrete",
-                            plugins=("nvidia-app", "nvidia-broadcast", "blender")),
+    "mac": Facts(os="macos", arch="arm64", machine_kind="Mac"),
+    "windows_rtx": Facts(os="windows", arch="arm64", machine_kind="Spark", nvidia_platform="rtx_spark"),
+    "spark": Facts(os="linux", arch="arm64", machine_kind="Spark", nvidia_platform="dgx_spark"),
+    "linux": Facts(os="linux", arch="amd64", machine_kind="computer"),
+    "windows_laptop": Facts(os="windows", arch="amd64", machine_kind="PC", nvidia_platform="discrete"),
     "remote": Facts(os="linux", arch="amd64", machine_kind="computer", facts_source="remote", tours=False),
 }
 
@@ -43,8 +41,7 @@ def run(facts: Facts, *events):
 def answer_all(facts: Facts) -> list:
     """The happy path for a machine: every beat it gets, shown and answered on its card."""
     answers = {"name": {"name": "Sid"}, "theme": {"accent": "Ultraviolet"}, "layout": {"layout": "terminal-deck"},
-               "connectors": {"connected": ["slack"], "newly_connected": ["slack"]},
-               "plugins": {"installed": list(facts.plugins[:1])}, "tour": {"tour": "quick"}}
+               "connectors": {"connected": ["slack"], "newly_connected": ["slack"]}, "tour": {"tour": "quick"}}
     record, events = new_record(facts), []
     while (beat := next_beat(record)) is not None:
         first = eligible_tasks(facts, record["picks"])[0]
@@ -66,7 +63,6 @@ def test_happy_path_settles_every_beat_this_machine_gets_and_completes(machine):
     assert final.result == {"completed": True} and final.reminder == "complete"
     assert final.record["phase"] == flow.COMPLETE and final.record["ended_by"] == "done"
     assert set(final.record["beats"].values()) <= {DONE, SKIPPED}
-    assert (final.record["beats"]["plugins"] == SKIPPED) is not bool(facts.plugins)
     assert (final.record["beats"]["tour"] == SKIPPED) is not facts.tours
     # Every answer names the next beat, and every reminder renders.
     for step in steps:
@@ -152,7 +148,7 @@ def test_run_hrs0_off_script_questions_keep_one_card_and_continue_settles_it():
     steps = run(facts, *events)
 
     assert all(step.record["waiting"] is None for step in steps if step.result.get("wrote_instead"))
-    assert steps[-1].result == {"recorded": "connectors", "next": "plugins"}
+    assert steps[-1].result == {"recorded": "connectors", "next": "tour"}
     assert steps[-1].record["beats"]["connectors"] == DONE
 
 
@@ -281,7 +277,7 @@ def test_a_value_outside_the_cards_options_is_refused():
 
 
 def test_a_beat_this_machine_skips_is_never_carded():
-    step = run(MACHINES["linux"], Shown("plugins"))[-1]
+    step = run(MACHINES["remote"], Shown("tour"))[-1]
 
     assert step.result["skipped"] is True and step.record["waiting"] is None
 
@@ -382,7 +378,7 @@ def test_a_card_answer_outside_the_cards_options_is_refused_and_the_beat_stays_o
     assert "error" in step.result and step.record["beats"]["build"] == SHOWN
     assert step.record["picks"]["build"] is None and step.record["waiting"] is None
     for beat, answer in [("name", {"name": "  "}), ("layout", {"layout": "x"}), ("theme", {"accent": 3}),
-                         ("plugins", {"installed": ["nvidia-app"]}), ("connectors", {"installed": ["blender"]})]:
+                         ("connectors", {"installed": ["blender"]})]:
         assert "error" in apply(new_record(facts), Answered(beat, answer), facts, now=1.0).result
 
 

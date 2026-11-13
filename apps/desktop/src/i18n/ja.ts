@@ -20,7 +20,6 @@ import { jaNotices } from './ja_notices'
 import { jaNotifications } from './ja_notifications'
 import { jaOnboarding } from './ja_onboarding'
 import { jaPluginPreviewAccess } from './ja_plugin_preview_access'
-import { jaPluginUpdateAll } from './ja_plugin_update_all'
 import { jaPluginSettings, jaPluginsTab } from './ja_plugins'
 import { jaPreviewWeb } from './ja_preview_web'
 import { jaProjects } from './ja_projects'
@@ -1103,7 +1102,7 @@ export const jaOverrides = {
       sshErrHostKey:
         '前回の接続以降、ホスト鍵が変更されています。想定どおりか確認し、ssh-keygen -R <host> を実行してから再接続してください。',
       sshErrNotInstalled:
-        'リモートホストに A2Assistant がインストールされていません。リモートでインストールする（curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh）か、A2Assistant パスを設定してください。',
+        'リモートホストに A2Assistant がインストールされていません。リモートでインストールする（git clone https://github.com/A2Genesis-de/a2assistant.git）か、A2Assistant パスを設定してください。',
       sshErrPlatform:
         'サポートされていないリモートプラットフォームです。A2Assistant Desktop の SSH モードは Linux、macOS、Windows のリモートホストに対応しています。',
       sshErrTimeout: 'SSH 接続がタイムアウトしました。ホストが到達不能、またはスリープ中の可能性があります。',
@@ -1331,16 +1330,13 @@ export const jaOverrides = {
 
   skillDeepLink: jaSkillDeepLink,
   skills: {
-    plugins: { ...jaPluginPreviewAccess, ...jaPluginsTab, ...jaPluginUpdateAll },
+    plugins: { ...jaPluginPreviewAccess, ...jaPluginsTab },
     hub: {
       search: '検索',
       searching: '検索中…',
       noResults: '一致するスキルがハブにありません。',
       installed: 'インストール済み',
-      installStarted: name => `「${name}」をインストール中…`,
-      pickerBrowse: 'ハブ全体を見る',
-      pickerHide: 'ハブのブラウザーを隠す',
-      pickerHint: 'スキルの「+ Add to this Agent」を押すと、インストールされて上の一覧に表示されます。'
+      installStarted: name => `「${name}」をインストール中…`
     },
     tabSkills: 'スキル',
     tabToolsets: 'ツールセット',

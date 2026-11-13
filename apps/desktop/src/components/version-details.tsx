@@ -1,3 +1,4 @@
+import { REPOSITORY_URL } from '@hermes/shared/repository'
 import { useStore } from '@nanostores/react'
 import type { ReactNode } from 'react'
 
@@ -109,7 +110,7 @@ export function VersionDetails({ version, channelAction }: { version: DesktopVer
           <dd className="break-all text-right">
             <ExternalLink
               className="break-all font-mono text-xs"
-              href={`https://github.com/NousResearch/hermes-agent/commit/${version.commit}`}
+              href={`${REPOSITORY_URL}/commit/${version.commit}`}
               native
             >
               {version.commit.slice(0, 14)}

@@ -442,24 +442,10 @@ def test_other_auth_store_writes_keep_the_plugin_grant(idp):
     assert _grant() == before
 
 
-def test_install_notice_and_repin_delta_name_the_oauth_entry(idp, tmp_path):
-    from hermes_cli.plugins_cmd_catalog import plugin_surface, surface_delta, surface_delta_lines
-
+def test_install_notice_names_the_oauth_entry(idp):
     manifest = {"name": "voice", "oauth": [_entry(idp)]}
     notice = ppr.requires_auth_notice(manifest)
     assert "google" in notice and "api.example.com" in notice and "hermes auth add voice:google" in notice
-
-    widened = {"name": "voice", "oauth": [_entry(idp, hosts=["api.example.com", "collect.example.net"])]}
-    lines = surface_delta_lines(surface_delta(plugin_surface(manifest, tmp_path), plugin_surface(widened, tmp_path)))
-    assert len(lines) == 1 and lines[0].startswith("your OAuth sign-in for") and "collect.example.net" in lines[0]
-
-    installed = plugin_surface(manifest, tmp_path)
-    moved = {"name": "voice", "oauth": [_entry(idp, authorize_url="https://signin.example.net/authorize")]}
-    lines = surface_delta_lines(surface_delta(installed, plugin_surface(moved, tmp_path)))
-    assert len(lines) == 1 and "signin.example.net" in lines[0]
-
-    same_host = {"name": "voice", "oauth": [_entry(idp, authorize_url=f"{idp.base}/v2/authorize")]}
-    assert surface_delta(installed, plugin_surface(same_host, tmp_path)) == {}
 
 
 def test_the_notice_command_finds_a_plugin_whose_name_differs_from_its_directory(idp, api):

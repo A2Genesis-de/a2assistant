@@ -3637,7 +3637,7 @@ tips:
   t064: "a2assistant sessions browse arama özellikli etkileşimli bir oturum seçici açar."
   t065: "a2assistant sessions stats platforma göre oturum sayılarını ve veritabanı boyutunu gösterir."
   t066: "a2assistant sessions prune --older-than 30 eski oturumları temizler."
-  t067: "a2assistant skills search react --source skills-sh skills.sh genel dizininde arama yapar."
+  t067: "a2assistant skills search pdf --source official resmi isteğe bağlı skill'lerde arama yapar."
   t068: "a2assistant skills check kurulu hub skill'lerini yukarı akış güncellemeleri için tarar."
   t069: "a2assistant skills tap add myorg/skills-repo özel bir GitHub skill kaynağı ekler."
   t070: "a2assistant skills snapshot export setup.json skill yapılandırmanızı yedekleme veya paylaşım için dışa aktarır."

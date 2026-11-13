@@ -1834,15 +1834,10 @@
                 },
                 "registry": {
                   "enum": [
-                    "browse-sh",
-                    "clawhub",
                     "github",
-                    "hermes-index",
-                    "lobehub",
                     "none",
                     "official",
                     "other",
-                    "skills-sh",
                     "unresolved",
                     "url",
                     "well-known"

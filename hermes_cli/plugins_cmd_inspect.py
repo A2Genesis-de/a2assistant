@@ -3,7 +3,7 @@
 The gateway's answer to the install dialog's repository check, for a client with no Git of its own
 (the browser-hosted app). Native Desktop runs the same check in Electron
 (``apps/desktop/electron/desktop-plugin-install.ts`` ``probePluginRepo``); the detection rules and the
-result shape match it. The source goes through the installer's own resolution, kill list and
+result shape match it. The source goes through the installer's own resolution and
 clone (non-interactive, credentials scrubbed, ``plugins.clone_timeout_seconds``) into a temporary
 directory outside every profile's ``plugins/``. Nothing is installed, imported or run: only the
 manifest files are read, as text.
@@ -25,7 +25,7 @@ import hermes_yaml as yaml
 _MANIFEST_MAX_BYTES = 256 * 1024
 #: How long a successful inspection answers a repeat of the same request (see ``inspect_plugin_source``).
 _RESULT_TTL_SECONDS = 600
-#: ``(home, catalog_name, identifier)`` -> ``[future, finished_at]``; ``finished_at`` is None while it runs.
+#: ``(home, identifier)`` -> ``[future, finished_at]``; ``finished_at`` is None while it runs.
 _inspections: dict[tuple[str, str, str], list] = {}
 _inspections_lock = threading.Lock()
 
@@ -98,20 +98,19 @@ def _failure(error: str, warnings: list[str], insecure: bool) -> dict[str, Any]:
             "error": error}
 
 
-def inspect_plugin_source(identifier: str, *, catalog_name: Optional[str] = None) -> dict[str, Any]:
+def inspect_plugin_source(identifier: str) -> dict[str, Any]:
     """``{ok, agent, desktop, agent_name, desktop_name, sha, warnings, insecure}``, or ``ok: False`` with
-    ``error``. *catalog_name* inspects the curated entry at its reviewed pin (its repo replaces
-    *identifier*), so the dialog shows exactly what the catalog install will put down. ``sha`` is the
+    ``error``. ``sha`` is the
     commit that was read: a source that moves after review must not install a tree nobody inspected,
     so the install is held to it, as native Desktop's probe is.
 
-    A repeat of a request (same profile home, catalog name and source) joins the clone still running
+    A repeat of a request (same profile home and source) joins the clone still running
     for it, or reads a successful answer it produced within :data:`_RESULT_TTL_SECONDS`. The browser
     stops waiting before a slow clone can finish (``plugins.clone_timeout_seconds`` reaches an hour per
     Git step); its Retry must collect that clone's answer, not start another under the same deadline.
     A failed read is never kept, so a Retry after one inspects afresh."""
     from hermes_constants import get_hermes_home
-    key = (str(get_hermes_home()), catalog_name or "", identifier)
+    key = (str(get_hermes_home()), identifier)
     now = time.monotonic()
     with _inspections_lock:
         for stale in [k for k, (_, done) in _inspections.items()
@@ -125,7 +124,7 @@ def inspect_plugin_source(identifier: str, *, catalog_name: Optional[str] = None
     if not owner:
         return _copy(future.result())
     try:
-        result = _inspect(identifier, catalog_name)
+        result = _inspect(identifier)
     except BaseException as exc:
         with _inspections_lock:
             _inspections.pop(key, None)
@@ -145,27 +144,19 @@ def _copy(result: dict[str, Any]) -> dict[str, Any]:
     return {**result, "warnings": list(result["warnings"])}
 
 
-def forget_inspection(identifier: str, *, catalog_name: Optional[str] = None) -> None:
+def forget_inspection(identifier: str) -> None:
     """Drop the kept answer for this source in the current profile home once an install consumed it: a
     source that moved since must be read afresh when the dialog re-opens, not served for the rest of
     :data:`_RESULT_TTL_SECONDS`. A read still running is left for the requests joined to it."""
     from hermes_constants import get_hermes_home
-    key = (str(get_hermes_home()), catalog_name or "", identifier)
+    key = (str(get_hermes_home()), identifier)
     with _inspections_lock:
         if _inspections.get(key, [None, None])[1] is not None:
             del _inspections[key]
 
 
-def _inspect(identifier: str, catalog_name: Optional[str]) -> dict[str, Any]:
+def _inspect(identifier: str) -> dict[str, Any]:
     pc = _pc()
-    revision = None
-    names: tuple[str, ...] = ()
-    if catalog_name:
-        from hermes_cli import plugins_cmd_catalog as catalog
-        entry = catalog.get_live_catalog_entry(catalog_name)
-        if entry is None:
-            return _failure(f"'{catalog_name}' is not in the A2Assistant plugin catalog.", [], False)
-        identifier, revision, names = entry.install_identifier, entry.sha or None, (entry.name,)
     try:
         git_url, subdir = pc._resolve_git_url(identifier)
     except ValueError as exc:
@@ -174,11 +165,9 @@ def _inspect(identifier: str, catalog_name: Optional[str]) -> dict[str, Any]:
     warnings = ["This URL uses an insecure or local scheme. Prefer https:// or git@ for production installs."] \
         if insecure else []
     try:
-        from hermes_cli.plugins_cmd_catalog import raise_if_removed
-        raise_if_removed(identifier, git_url, *names)
         with tempfile.TemporaryDirectory(prefix="hermes-plugin-inspect-") as tmp:
             clone = Path(tmp) / "plugin"
-            sha = pc._clone_plugin_repo(clone, git_url, revision, subdir)
+            sha = pc._clone_plugin_repo(clone, git_url, None, subdir)
             root = pc._resolve_subdir_within(clone, subdir) if subdir else clone
             fallback = subdir.rstrip("/").rsplit("/", 1)[-1] if subdir else pc._repo_name_from_url(git_url)
             found = detect_components(root, fallback)

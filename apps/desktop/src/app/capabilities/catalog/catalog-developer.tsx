@@ -1,15 +1,18 @@
+import { README_URL, REPOSITORY_URL } from '@hermes/shared/repository'
 import type { ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Codicon } from '@/components/ui/codicon'
 import { useI18n } from '@/i18n'
 import { openExternalLink } from '@/lib/external-link'
-import { PLUGIN_CATALOG_DOCS_URL, SKILLS_DOCS_URL, SUBMIT_MOD_URL } from '@/lib/plugin-catalog'
 
 import type { CatalogKind } from './catalog-data'
 
+const SKILLS_DOCS_URL = README_URL
+const SUBMIT_MOD_URL = REPOSITORY_URL
+
 /** One banner for every catalog. The wing, copy and docs links are shared; the page supplies its own management actions. */
-export function CatalogDeveloper({ kind, actions }: { kind: CatalogKind; actions?: ReactNode }) {
+export function CatalogDeveloper({ actions }: { kind: CatalogKind; actions?: ReactNode }) {
   const { t } = useI18n()
   const d = t.catalog.developer
 
@@ -26,7 +29,7 @@ export function CatalogDeveloper({ kind, actions }: { kind: CatalogKind; actions
             <Button onClick={() => void openExternalLink(SUBMIT_MOD_URL)} size="sm" variant="default">
               {d.submit}<Codicon name="arrow-up-right" />
             </Button>
-            <Button onClick={() => void openExternalLink(kind === 'plugins' ? PLUGIN_CATALOG_DOCS_URL : SKILLS_DOCS_URL)} size="sm" variant="secondary">
+            <Button onClick={() => void openExternalLink(SKILLS_DOCS_URL)} size="sm" variant="secondary">
               {d.docs}<Codicon name="arrow-up-right" />
             </Button>
           </div>

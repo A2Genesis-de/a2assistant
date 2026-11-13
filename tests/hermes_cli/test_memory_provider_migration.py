@@ -119,9 +119,10 @@ def test_unattended_migration_install_carries_lazy_install_consent(tmp_path, mon
     monkeypatch.setattr("sys.stdout", _Stream())
     monkeypatch.setattr(pm_install, "lazy_installs_allowed", lambda: lazy)
     seen = {}
-    monkeypatch.setattr(plugins_cmd, "dashboard_install_plugin", lambda *a, **kw: seen.update(kw) or {"ok": True})
+    monkeypatch.setattr(plugins_cmd, "dashboard_install_plugin",
+                        lambda identifier, **kw: seen.update(kw, identifier=identifier) or {"ok": True})
     assert mig._install_into(tmp_path)(name) == {"ok": True}
-    assert seen["catalog_name"] == name
+    assert seen["identifier"] == name
     assert seen.get("assume_deps_consent", False) is consent
 
 
@@ -230,10 +231,10 @@ def test_unattended_update_refusal_in_one_profile_does_not_skip_the_others(tmp_p
     monkeypatch.setattr("sys.stdin", io.StringIO())  # Desktop / scripted `hermes update`: no terminal
     monkeypatch.setattr(pm_install, "lazy_installs_allowed", lambda: get_hermes_home() == work)
 
-    def install(*_a, catalog_name, assume_deps_consent, **_kw):
+    def install(identifier, *, assume_deps_consent, **_kw):
         if not assume_deps_consent:
             return {"ok": False, "error": "dependency install skipped (non-interactive)"}
-        (get_hermes_home() / "plugins" / catalog_name).mkdir(parents=True)
+        (get_hermes_home() / "plugins" / identifier).mkdir(parents=True)
         return {"ok": True}
 
     monkeypatch.setattr(plugins_cmd, "dashboard_install_plugin", install)
@@ -259,37 +260,13 @@ def test_startup_hint_installs_into_the_profile_that_printed_it(tmp_path, monkey
         assert f"`{command}`" in said[0]
 
 
-def test_missing_catalog_provider_recovery_names_the_profile_install_command(tmp_path, monkeypatch, capsys):
-    """Offline, lazy installs off, or a failed migration: every surface a user turns to (doctor,
-    ``memory status``, ``memory setup honcho``, ``hermes honcho``) names the one command that installs
-    the catalog plugin into THIS profile. Real in-tree catalog, nothing installed."""
-    from types import SimpleNamespace
-    from hermes_cli import doctor_state, memory_setup
-    from hermes_cli._parser import build_top_level_parser
-
-    home = tmp_path / "profiles" / "work"
-    home.mkdir(parents=True)
-    (home / "config.yaml").write_text("memory:\n  provider: honcho\n", encoding="utf-8")
-    monkeypatch.setenv("HERMES_HOME", str(home))
-    want = "hermes -p work plugins install honcho"
-
-    doctor_state._memory_provider_generic("honcho")
-    memory_setup.cmd_status(SimpleNamespace())
-    memory_setup.cmd_setup_provider("honcho")
-    assert capsys.readouterr().out.count(want) == 3
-    parser, _subparsers, _chat = build_top_level_parser()
-    with pytest.raises(SystemExit):
-        parser.parse_args(["honcho", "status"])
-    assert want in capsys.readouterr().err
 
 
 def test_recovery_copy_without_a_catalog_memory_entry_keeps_the_generic_hint(tmp_path, monkeypatch, capsys):
     from hermes_cli import doctor_state
 
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))  # not a profile home: no -p to add
-    assert mig.catalog_install_hint("honcho", category="memory") == "hermes plugins install honcho"
-    assert mig.catalog_install_hint("honcho", category="tools") is None
-    assert mig.catalog_install_hint("no-such-provider") is None
+    assert mig.catalog_install_hint("honcho", category="memory") is None
     doctor_state._memory_provider_generic("no-such-provider")
     assert "run: hermes memory setup" in capsys.readouterr().out
 

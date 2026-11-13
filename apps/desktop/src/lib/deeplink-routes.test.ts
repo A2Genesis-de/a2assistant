@@ -19,24 +19,12 @@ describe('resolveDeepLinkAction', () => {
     })
   })
 
-  it('routes catalog= to the catalog lookup, never to a git-path install', () => {
-    expect(
-      resolveDeepLinkAction({ kind: 'plugin', name: 'install', params: { catalog: ' web-search-plus ' } })
-    ).toEqual({ type: 'plugin-catalog-install', name: 'web-search-plus' })
+  it('ignores catalog=, never falling through to a git-path install', () => {
+    const cases: Record<string, string>[] = [{ catalog: 'web-search-plus' }, { catalog: 'nope', repo: 'evil/repo' }, { catalog: '' }]
 
-    // A repo riding along must not win: the reviewed catalog verdict decides.
-    expect(
-      resolveDeepLinkAction({
-        kind: 'plugin',
-        name: 'install',
-        params: { catalog: 'nope', repo: 'evil/repo' }
-      })
-    ).toEqual({ type: 'plugin-catalog-install', name: 'nope' })
-
-    // An empty catalog name is still a catalog request (→ error toast), not a fall-through.
-    expect(
-      resolveDeepLinkAction({ kind: 'plugin', name: 'install', params: { catalog: '', repo: 'evil/repo' } })
-    ).toEqual({ type: 'plugin-catalog-install', name: '' })
+    for (const params of cases) {
+      expect(resolveDeepLinkAction({ kind: 'plugin', name: 'install', params })).toEqual({ type: 'ignore' })
+    }
   })
 
   it('does not trust URL catalog metadata on a repository install', () => {

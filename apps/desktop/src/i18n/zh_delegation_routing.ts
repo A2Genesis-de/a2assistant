@@ -17,8 +17,6 @@ export const zhDelegationRouting: DelegationRoutingTranslations = {
   pluginMissing: '模型路由和配置档案路由来自 Advanced Delegation 插件。',
   pluginDisabled: 'Advanced Delegation 已安装，但在此配置档案中处于关闭状态。',
   pluginNotLoaded: 'Advanced Delegation 已开启，但 A2Assistant 尚未加载它。请重启 A2Assistant 以完成设置。',
-  installPlugin: '安装插件',
-  installUnavailable: 'Advanced Delegation 尚未加入插件目录。请在 技能与工具 › 插件 中安装。',
   enablePlugin: '开启',
   enableFailed: '无法开启 Advanced Delegation',
   modeFailed: '无法更改子智能体路由',

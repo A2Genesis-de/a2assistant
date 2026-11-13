@@ -1146,7 +1146,7 @@ def _install_into(home: Path, *, consent: Optional[bool] = None) -> Callable[[st
         from hermes_constants import reset_hermes_home_override, set_hermes_home_override
         token = set_hermes_home_override(home)
         try:
-            return dashboard_install_plugin("", force=False, enable=True, catalog_name=name,
+            return dashboard_install_plugin(name, force=False, enable=True,
                                             assume_deps_consent=_unattended_consent() if consent is None
                                             else consent)
         finally:

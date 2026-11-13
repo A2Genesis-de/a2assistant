@@ -4492,7 +4492,7 @@ export interface PluginToolsetRow {
   label: string
   description: string
 }
-/** ``toggle``: ``key``/``name`` + ``enable``; ``install``: ``identifier``/``repo`` or ``catalog_name`` (+ ``force``, ``enable``, ``ref``, ``inspected_sha`` = the commit ``inspect`` read: a custom source with no ``ref`` whose branch moved since is refused); ``inspect``: ``identifier``/``repo`` or ``catalog_name``; ``install_desktop``: ``identifier``/``repo`` (any source ``install`` takes) or ``catalog_name``, always with ``ref`` (the commit ``inspect`` read and the dialog showed; another commit is refused) (+ ``force``) — the desktop half onto the host that serves this client; ``remove_desktop``: ``name`` (+ ``force`` for a package's own half); ``update``: ``name`` (+ ``accept_capabilities`` to apply a re-pin that widened the plugin after the user confirmed the ``delta``, + ``force`` to apply an update whose security scan returned caution after the user saw the findings); ``remove``: ``name`` (user installs only); ``settings``: ``key`` + ``values`` (``{setting_key: value}``, non-secret schema keys only); ``presence``: ``names`` (catalog names, answered in that order); ``update_all``: no fields; ``auto_update``: ``enable`` to set ``plugins.auto_apply`` (omit to read it). */
+/** ``toggle``: ``key``/``name`` + ``enable``; ``install``: ``identifier``/``repo`` (+ ``force``, ``enable``, ``ref``, ``inspected_sha`` = the commit ``inspect`` read: a source with no ``ref`` whose branch moved since is refused); ``inspect``: ``identifier``/``repo``; ``install_desktop``: ``identifier``/``repo`` (any source ``install`` takes), always with ``ref`` (the commit ``inspect`` read and the dialog showed; another commit is refused) (+ ``force``) — the desktop half onto the host that serves this client; ``remove_desktop``: ``name`` (+ ``force`` for a package's own half); ``remove``: ``name`` (user installs only); ``settings``: ``key`` + ``values`` (``{setting_key: value}``, non-secret schema keys only). */
 export interface PluginsManageParams {
   profile?: string | null
   action?: PluginsAction
@@ -4501,16 +4501,13 @@ export interface PluginsManageParams {
   enable?: boolean | null
   identifier?: string | null
   repo?: string | null
-  catalog_name?: string | null
   force?: boolean | null
   ref?: string | null
   inspected_sha?: string | null
-  accept_capabilities?: boolean | null
   values?: Record<string, unknown> | null
-  names?: string[] | null
 }
-export type PluginsAction = 'list' | 'toggle' | 'install' | 'inspect' | 'install_desktop' | 'remove_desktop' | 'update' | 'remove' | 'settings' | 'onboarding' | 'presence' | 'update_all' | 'auto_update'
-/** ``list`` → ``plugins`` + counts; ``toggle`` → ``ok``/``unchanged``/``restart_required``/``name`` (the canonical key written)/``plugin``; ``install`` → ``hermes_cli.plugins_cmd.dashboard_install_plugin``'s ok payload; ``inspect`` → ``ok``/``agent``/``desktop``/``agent_name``/``desktop_name``/``sha`` (the commit read)/``warnings``/``insecure`` or ``ok=false`` + ``error``; ``toggle``/``install``/``update`` that loaded a plugin also carry ``gateway_reloaded`` (the running gateway picked it up and re-wired its handlers) and ``activation`` — the honest split of what is live now vs deferred, so ``restart_required`` is True only when no gateway answered or the running gateway/backend cannot import the plugin's Python dependencies (``activation.missing_dependencies``); ``update`` → ``ok``/``unchanged``/``sha``, or ``ok=false`` + ``consent_required`` with the ``delta`` (``{surface: [added...]}``) / ``delta_lines`` a widened pin adds — nothing changed until the client retries with ``accept_capabilities`` — or ``ok=false`` + ``scan_blocked`` with ``scan_verdict`` / ``scan_findings`` (retry a caution verdict with ``force``); ``remove`` → ``ok``/``name`` plus ``cleared_memory_provider`` when the removed plugin was the live ``memory.provider``. */
+export type PluginsAction = 'list' | 'toggle' | 'install' | 'inspect' | 'install_desktop' | 'remove_desktop' | 'remove' | 'settings'
+/** ``list`` → ``plugins`` + counts; ``toggle`` → ``ok``/``unchanged``/``restart_required``/``name`` (the canonical key written)/``plugin``; ``install`` → ``hermes_cli.plugins_cmd.dashboard_install_plugin``'s ok payload; ``inspect`` → ``ok``/``agent``/``desktop``/``agent_name``/``desktop_name``/``sha`` (the commit read)/``warnings``/``insecure`` or ``ok=false`` + ``error``; ``toggle``/``install`` that loaded a plugin also carry ``gateway_reloaded`` (the running gateway picked it up and re-wired its handlers) and ``activation`` — the honest split of what is live now vs deferred, so ``restart_required`` is True only when no gateway answered or the running gateway/backend cannot import the plugin's Python dependencies (``activation.missing_dependencies``); an ``install`` the security scan blocked answers ``ok=false`` + ``scan_blocked`` with ``scan_verdict`` / ``scan_findings`` (retry a caution verdict with ``force``); ``remove`` → ``ok``/``name`` plus ``cleared_memory_provider`` when the removed plugin was the live ``memory.provider``. */
 export interface PluginsManageResult {
   plugins?: AgentPluginRow[] | null
   user_count?: number | null
@@ -4527,20 +4524,14 @@ export interface PluginsManageResult {
   warnings?: string[] | null
   missing_env?: string[] | null
   python_dependencies?: string[] | null
-  known_issues?: string[] | null
   after_install_path?: string | null
   enabled?: boolean | null
   sha?: string | null
-  consent_required?: boolean | null
-  delta?: Record<string, string[]> | null
-  delta_lines?: string[] | null
   scan_blocked?: boolean | null
   scan_verdict?: string | null
   scan_findings?: PluginScanFinding[] | null
   error?: string | null
   written?: string[] | null
-  onboarding?: OnboardingCatalogPlugin[] | null
-  presence?: CatalogPluginPresence[] | null
   agent?: boolean | null
   desktop?: boolean | null
   agent_name?: string | null
@@ -4549,13 +4540,8 @@ export interface PluginsManageResult {
   path?: string | null
   paired_with_agent?: boolean | null
   unpaired_from?: string | null
-  results?: PluginUpdateAllRow[] | null
-  skipped?: PluginUpdateAllSkip[] | null
-  current?: number | null
-  auto_apply?: boolean | null
-  check_hours?: number | null
 }
-/** ``methods_tools._plugin_rows`` + ``plugins_cmd_catalog.catalog_row_fields`` provenance. */
+/** ``methods_tools._plugin_rows``. */
 export interface AgentPluginRow {
   name: string
   key: string
@@ -4567,13 +4553,6 @@ export interface AgentPluginRow {
   install_dir: string
   has_desktop_half: boolean
   servers: PluginServerRow[]
-  catalog_name?: string | null
-  catalog_tier?: string | null
-  installed_sha?: string | null
-  catalog_sha?: string | null
-  catalog_version?: string | null
-  update_available?: boolean | null
-  update_target?: string | null
   pinned_sha?: string | null
   settings_schema?: PluginSettingField[] | null
   tools?: string[]
@@ -4633,53 +4612,6 @@ export interface PluginScanFinding {
   file: string
   line: number
   description: string
-}
-/** A catalog plugin curated for the onboarding card (``onboarding: true``) that this OS runs. ``app_state`` is the pinned ``plugin.json`` declaration judged on this host; ``sentence`` names what is missing (empty when present or unknown). */
-export interface OnboardingCatalogPlugin {
-  name: string
-  title: string
-  description: string
-  tier: CatalogTier
-  platforms: string[]
-  app_state: CatalogAppState
-  sentence: string
-}
-/** A named catalog plugin this OS runs. ``state`` is the pinned ``plugin.json`` app declaration judged on this host; ``sentence`` names what is missing (empty when present or unknown); ``disclosure`` is the catalog description's ``Disclosure:`` sentence (empty when it has none). */
-export interface CatalogPluginPresence {
-  name: string
-  title: string
-  state: CatalogAppState
-  sentence: string
-  disclosure: string
-}
-/** One plugin ``update_all`` tried. ``needs_review``: nothing changed because the update widens the plugin or its scan returned caution; the plugin's own ``update`` walks that review. */
-export interface PluginUpdateAllRow {
-  name: string
-  status: PluginUpdateAllStatus
-  detail?: string
-}
-export type PluginUpdateAllStatus = 'updated' | 'current' | 'failed' | 'needs_review'
-export interface PluginUpdateAllSkip {
-  name: string
-  reason: string
-}
-export interface PluginCatalogLookupParams {
-  profile?: string | null
-  name: string
-}
-/** ``found`` carries ``entry``. ``unknown`` covers a name the catalog doesn't list and one it removed; ``unavailable`` means neither the live catalog nor the in-tree fallback could be read. */
-export interface PluginCatalogLookupResult {
-  status: PluginCatalogLookupStatus
-  entry?: PluginCatalogLookupEntry | null
-}
-export type PluginCatalogLookupStatus = 'found' | 'invalid_name' | 'unknown' | 'unavailable'
-/** The fields an install needs: the same ones the embedded catalog picker posts on a pick. */
-export interface PluginCatalogLookupEntry {
-  name: string
-  repo: string
-  sha: string
-  subdir: string
-  tier?: string
 }
 export interface GroupsAttachmentUploadParams {
   profile?: string | null
@@ -5582,15 +5514,15 @@ export interface ClarifyResult {
   answers?: Record<string, string | null> | null
   outcome?: 'submitted' | 'timed_out' | 'cancelled' | null
 }
-/** ``card`` is the beat's data (``agent/onboarding_flow.py::BEATS``): name, theme, connectors and plugins have their own shape; layout, tour and build carry ``options``. ``tool_call_id`` is the setup_beat call the card belongs to: only that transcript row draws it. */
+/** ``card`` is the beat's data (``agent/onboarding_flow.py::BEATS``): name, theme and connectors have their own shape; layout, tour and build carry ``options``. ``tool_call_id`` is the setup_beat call the card belongs to: only that transcript row draws it. */
 export interface SetupBeatRequestParams {
   session_id: string
   beat: SetupBeat
   question?: string | null
   tool_call_id?: string | null
-  card: SetupNameCard | SetupThemeCard | SetupOptionsCard | SetupConnectorsCard | SetupPluginsCard
+  card: SetupNameCard | SetupThemeCard | SetupOptionsCard | SetupConnectorsCard
 }
-export type SetupBeat = 'name' | 'theme' | 'layout' | 'connectors' | 'plugins' | 'tour' | 'build'
+export type SetupBeat = 'name' | 'theme' | 'layout' | 'connectors' | 'tour' | 'build'
 export interface SetupNameCard {
   suggested?: string | null
 }
@@ -5607,12 +5539,9 @@ export interface SetupOption {
 export interface SetupConnectorsCard {
   suggested: string[]
 }
-export interface SetupPluginsCard {
-  plugins: string[]
-}
 /** ``answer`` holds the shown beat's picks; ids must be one of the card's options (the backend rejects any other answer). ``said`` is composer text typed while the name card waited: the name. ``wrote_instead``: the user sent a message instead of answering; the backend ends the turn and the client sends that message as the next one. A response with none of these, or none within 300 s, closes the card unanswered. */
 export interface SetupBeatResult {
-  answer?: SetupNameAnswer | SetupThemeAnswer | SetupLayoutAnswer | SetupConnectorsAnswer | SetupPluginsAnswer | SetupTourAnswer | SetupBuildAnswer | null
+  answer?: SetupNameAnswer | SetupThemeAnswer | SetupLayoutAnswer | SetupConnectorsAnswer | SetupTourAnswer | SetupBuildAnswer | null
   said?: string | null
   wrote_instead?: boolean
 }
@@ -5629,10 +5558,6 @@ export interface SetupLayoutAnswer {
 export interface SetupConnectorsAnswer {
   connected: string[]
   newly_connected?: string[]
-}
-export interface SetupPluginsAnswer {
-  installed: string[]
-  label?: string | null
 }
 export interface SetupTourAnswer {
   tour: string
@@ -6545,11 +6470,9 @@ export interface RpcMethods {
   'pet.thumb': { params: PetThumbParams; result: PetThumbResult }
   /** Cheapest liveness probe; answered on the WS reader thread even while every agent is mid-turn. */
   ping: { params: PingParams; result: PingResult }
-  /** One curated plugin-catalog entry by name, from the backend's live catalog (cached, with the in-tree fallback and kill list); backs hermes://plugin/install?catalog= deep links. */
-  'plugins.catalog.lookup': { params: PluginCatalogLookupParams; result: PluginCatalogLookupResult }
   /** Loaded plugin manager entries (legacy flat view); the Plugins Hub uses plugins.manage list. */
   'plugins.list': { params: PluginsListParams; result: PluginsListResult }
-  /** Plugins Hub backend: list installed plugins, toggle, git-install, re-pin a catalog install, or remove a user install. */
+  /** Plugins Hub backend: list installed plugins, toggle, git-install or remove a user install. */
   'plugins.manage': { params: PluginsManageParams; result: PluginsManageResult }
   /** Spawn a hidden agent that brings the desktop preview's dev server back up. */
   'preview.restart': { params: PreviewRestartParams; result: TaskIdResult }
@@ -6935,7 +6858,6 @@ export const RPC_METHODS = [
   'pet.select',
   'pet.thumb',
   'ping',
-  'plugins.catalog.lookup',
   'plugins.list',
   'plugins.manage',
   'preview.restart',

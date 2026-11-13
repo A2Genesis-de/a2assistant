@@ -100,7 +100,6 @@ HERMES_CADUCEUS = """[#CD7F32]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⡀⠀⣀⣀�
 # is distinguishable from "not yet computed". Reset by assigning ``None`` (tests, ``hermes skills``).
 _available_skills_cache: Optional[tuple] = None
 _git_banner_state_cache: Optional[tuple] = None
-_latest_release_cache: Optional[tuple] = None
 
 _UNCACHED = object()  # compute() result that must not be memoized
 
@@ -187,20 +186,6 @@ def _compute_git_banner_state(repo_dir: Optional[Path] = None) -> Optional[dict]
     ahead = source_check._git_count(["rev-list", "--count", "origin/main..HEAD"], cwd=repo_dir) or 0
     return {"upstream": upstream, "local": local, "ahead": max(ahead, 0)}
 
-
-_RELEASE_URL_BASE = "https://github.com/NousResearch/hermes-agent/releases/tag"
-
-
-def get_latest_release_tag(repo_dir: Optional[Path] = None) -> Optional[tuple]:
-    """Return ``(tag, release_url)`` for the latest local git tag, or None (a miss is cached too).
-
-    Release URL always points at the canonical NousResearch/hermes-agent repo (forks get no link).
-    """
-    def _compute():
-        rd = repo_dir or _resolve_repo_dir()
-        tag = source_check._git_stdout(["describe", "--tags", "--abbrev=0"], cwd=rd, timeout=3) if rd else None
-        return (tag, f"{_RELEASE_URL_BASE}/{tag}") if tag else None
-    return _memo("_latest_release_cache", _compute)
 
 
 def format_banner_version_label() -> str:
@@ -310,7 +295,7 @@ def prefetch_banner_data():
         return
     _banner_data_prefetch_started = True
     _daemon("banner-data-prefetch", lambda: [_quiet(warm) for warm in (
-        get_git_banner_state, get_latest_release_tag, get_available_skills)])
+        get_git_banner_state, get_available_skills)])
 
 
 def get_update_result(timeout: float = 0.5) -> Optional[int]:
@@ -754,9 +739,6 @@ def build_welcome_banner(
     layout_table.add_column("right", justify="left")
     layout_table.add_row("\n".join(left_lines), "\n".join(right_lines))
     version_label = format_banner_version_label()
-    release_info = get_latest_release_tag()
-    if release_info:
-        version_label = f"[link={release_info[1]}]{version_label}[/link]"
     outer_panel = Panel(
         layout_table, title=f"[bold {_skin_color('banner_title', '#FFD700')}]{version_label}[/]",
         border_style=_skin_color("banner_border", "#CD7F32"), padding=(0, 2))

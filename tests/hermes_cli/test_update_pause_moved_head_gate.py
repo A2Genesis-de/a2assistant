@@ -76,7 +76,7 @@ def test_a_switch_that_moved_head_past_an_unwritten_file_stays_held(parked, unli
     if unlink_fails:
         (root / "locked").chmod(0o555)
     update_cmd._prepare_checkout_for_update(
-        ["git"], "main", "feature", is_fork=False, assume_yes=True, gateway_mode=False,
+        ["git"], "main", "feature", assume_yes=True, gateway_mode=False,
         gw_input_fn=None, switch_branch=False, _windows_gateway_resume=token)
     assert git(root, "rev-parse", "HEAD") == b, "fixture: the switch did not move HEAD"
     assert (root / "a.py").read_text() == "A=2\n"

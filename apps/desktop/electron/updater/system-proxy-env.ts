@@ -32,14 +32,13 @@ export const UPDATE_PROXY_MARKER = 'HERMES_UPDATE_SYSTEM_PROXY'
 /** `${SAVED_PREFIX}NO_PROXY` holds the user's own NO_PROXY that the Desktop extended. */
 export const SAVED_PREFIX = 'HERMES_UPDATE_USER_'
 
-// git + the GitHub API and assets, the release pointer, npm, PyPI + uv, Electron downloads.
+// git + the GitHub API and assets, npm, PyPI + uv, Electron downloads.
 export const UPDATE_HOSTS = [
   'github.com',
   'api.github.com',
   'codeload.github.com',
   'objects.githubusercontent.com',
   'release-assets.githubusercontent.com',
-  'hermes-assets.nousresearch.com',
   'registry.npmjs.org',
   'pypi.org',
   'files.pythonhosted.org',

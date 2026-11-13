@@ -17,8 +17,6 @@ export const arDelegationRouting: DelegationRoutingTranslations = {
   pluginMissing: 'مسارات النماذج ومسارات الملفات الشخصية مصدرها الإضافة Advanced Delegation.',
   pluginDisabled: 'الإضافة Advanced Delegation مثبتة لكنها متوقفة لهذا الملف الشخصي.',
   pluginNotLoaded: 'الإضافة Advanced Delegation مفعّلة، لكن A2Assistant لم يحمّلها بعد. أعد تشغيل A2Assistant لإكمال ذلك.',
-  installPlugin: 'تثبيت الإضافة',
-  installUnavailable: 'الإضافة Advanced Delegation ليست في كتالوج الإضافات بعد. ثبّتها من المهارات ← الإضافات.',
   enablePlugin: 'تفعيل',
   enableFailed: 'تعذّر تفعيل Advanced Delegation',
   modeFailed: 'تعذّر تغيير توجيه الوكلاء الفرعيين',

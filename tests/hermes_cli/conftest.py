@@ -79,27 +79,15 @@ def _private_repo_checkout_lock(monkeypatch, tmp_path_factory):
 
 @pytest.fixture(autouse=True)
 def _source_channels_resolve_locally(request, monkeypatch):
-    """Every unflagged ``hermes update`` resolves its channel through R2; tests must
-    not reach the network for that. Default every channel to a ``source-branch``
-    record delivering ``origin/<name>`` through the documented seam. Channel tests
-    that model records themselves re-patch ``_resolve_channel`` after this runs;
-    the marker opts out entirely for tests of the reader's own network path.
+    """``stable`` reads GitHub releases; tests must not reach the network for that, so it
+    delivers ``origin/stable`` instead. The marker opts out for tests of the release lookup.
     """
     if request.node.get_closest_marker("real_release_channels"):
         return
     from hermes_cli import source_releases
-    from hermes_cli.release_channels import ChannelResolution
 
-    def resolve(name, repository):
-        record = {"schema": 1, "name": name, "repository": repository, "policy": "source-branch",
-                  "state": "active", "identity": None, "nextSequence": 1, "head": None,
-                  "delivery": {"kind": "source-branch", "branch": name}}
-        return ChannelResolution(record, record, None)
-
-    monkeypatch.setattr(source_releases, "_resolve_channel", resolve)
-    # stable reads GitHub releases directly; keep it off the network the same way.
     monkeypatch.setattr(source_releases, "_resolve_stable", lambda repository, *_: source_releases.SourceTarget(
-        "stable", "stable", repository, branch="stable"))
+        "stable", repository, branch="stable"))
 
 
 @pytest.fixture(autouse=True)

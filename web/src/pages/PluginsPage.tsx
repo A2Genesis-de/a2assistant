@@ -1,15 +1,10 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { ExternalLink, RefreshCw, Trash2, Eye, EyeOff } from "lucide-react";
 import type { Translations } from "@/i18n/types";
 import { Link } from "react-router";
 import { api } from "@/lib/api";
-import { runDashboardPluginUpdate } from "@/lib/plugin-update";
-import { InstalledPluginsHeader } from "@/pages/PluginsPage_updateAll";
 import { setupHasDetails, setupHasInstallableSteps } from "@/lib/memory-provider-setup";
 import type {
-  CatalogEntry,
-  CatalogRemovedEntry,
-  CatalogResponse,
   HubAgentPluginRow,
   MemoryProviderConfig,
   MemoryProviderField,
@@ -30,7 +25,6 @@ import { Label } from "@nous-research/ui/ui/components/label";
 import { useToast } from "@nous-research/ui/hooks/use-toast";
 import { Toast } from "@nous-research/ui/ui/components/toast";
 import { useI18n } from "@/i18n";
-import { en } from "@/i18n/en";
 import { PluginSlot } from "@/plugins";
 import { cn } from "@/lib/utils";
 import { usePageHeader } from "@/contexts/usePageHeader";
@@ -270,11 +264,6 @@ function MemoryProviderSetupHint({
 export default function PluginsPage() {
   const [hub, setHub] = useState<PluginsHubResponse | null>(null);
   const [loading, setLoading] = useState(true);
-  const [catalog, setCatalog] = useState<CatalogResponse | null>(null);
-  const [catalogLoading, setCatalogLoading] = useState(true);
-  const [catalogSearch, setCatalogSearch] = useState("");
-  const [catalogConfirm, setCatalogConfirm] = useState<CatalogEntry | null>(null);
-  const [catalogBusy, setCatalogBusy] = useState<string | null>(null);
   const [installId, setInstallId] = useState("");
   const [installForce, setInstallForce] = useState(false);
   const [installEnable, setInstallEnable] = useState(true);
@@ -310,17 +299,9 @@ export default function PluginsPage() {
       .catch(() => showToast(t.common.loading, "error"));
   }, [showToast, t.common.loading]);
 
-  const loadCatalog = useCallback(() => {
-    return api
-      .getPluginsCatalog()
-      .then(setCatalog)
-      .catch(() => setCatalog(null));
-  }, []);
-
   useEffect(() => {
     void loadHub().finally(() => setLoading(false));
-    void loadCatalog().finally(() => setCatalogLoading(false));
-  }, [loadHub, loadCatalog]);
+  }, [loadHub]);
 
   useEffect(() => {
     const provider = memorySel === MEMORY_PROVIDER_BUILTIN ? "" : memorySel;
@@ -390,27 +371,6 @@ export default function PluginsPage() {
       showToast(e instanceof Error ? e.message : "Install failed", "error");
     } finally {
       setInstallBusy(false);
-    }
-  };
-
-  const onCatalogInstall = async (entry: CatalogEntry) => {
-    setCatalogConfirm(null);
-    setCatalogBusy(entry.name);
-    try {
-      const r = await api.installAgentPlugin({
-        identifier: "",
-        catalog_name: entry.name,
-        force: entry.installed,
-        enable: false,
-      });
-      showToast(`${r.plugin_name ?? entry.name} installed`, "success");
-      if ((r.missing_env?.length ?? 0) > 0)
-        showToast(`${t.pluginsPage.missingEnvWarn} ${r.missing_env!.join(", ")}`, "error");
-      await Promise.all([loadHub(), loadCatalog()]);
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : "Install failed", "error");
-    } finally {
-      setCatalogBusy(null);
     }
   };
 
@@ -529,26 +489,6 @@ export default function PluginsPage() {
 
   const rows = hub?.plugins ?? [];
   const providers = hub?.providers;
-
-  const catalogEntries = useMemo(() => {
-    const entries = catalog?.entries ?? [];
-    const q = catalogSearch.trim().toLowerCase();
-    if (!q) return entries;
-    return entries.filter((entry) =>
-      [
-        entry.name,
-        entry.description,
-        entry.maintainer,
-        ...entry.capabilities.provides_tools,
-      ].some((haystack) => haystack.toLowerCase().includes(q)),
-    );
-  }, [catalog, catalogSearch]);
-
-  const removedByName = useMemo(() => {
-    const map = new Map<string, CatalogRemovedEntry>();
-    for (const r of catalog?.removed ?? []) map.set(r.name, r);
-    return map;
-  }, [catalog]);
 
   const selectedMemoryName = memorySel === MEMORY_PROVIDER_BUILTIN ? "" : memorySel;
   const selectedMemoryInfo = selectedMemoryName
@@ -877,62 +817,11 @@ export default function PluginsPage() {
           </CardContent>
         </Card>
 
-        <div className="flex flex-col gap-3" data-testid="plugin-catalog-section">
-
-          <h3 className="font-mondwest text-display text-xs tracking-[0.12em] text-text-secondary">
-            {t.pluginsPage.catalogHeading ?? "Plugin catalog"}
-          </h3>
-
-          <p className="text-xs tracking-[0.06em] text-text-tertiary">
-            {t.pluginsPage.catalogHint ??
-              "Curated, Nous-reviewed plugins pinned to exact commits."}
-          </p>
-
-          <Input
-            className="max-w-md"
-            placeholder={t.pluginsPage.catalogSearchPlaceholder ?? "Search catalog..."}
-            value={catalogSearch}
-            onChange={(e) => setCatalogSearch(e.target.value)}
-            aria-label={t.pluginsPage.catalogSearchPlaceholder ?? "Search catalog..."}
-          />
-
-          {catalogLoading ? (
-            <div className="flex items-center gap-2 py-4 text-xs text-text-tertiary">
-              <Spinner />
-              <span>{t.common.loading}</span>
-            </div>
-          ) : catalogEntries.length === 0 ? (
-            <p className="text-xs text-text-tertiary">
-              {t.pluginsPage.catalogEmpty ?? "No catalog entries match."}{" "}
-              <a
-                className="underline"
-                href="https://hermes-agent.nousresearch.com/docs/plugins"
-                target="_blank"
-                rel="noreferrer"
-              >
-                {t.pluginsPage.catalogEmptyDocsLink ?? "Learn about A2Assistant plugins"}
-              </a>
-            </p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {catalogEntries.map((entry) => (
-                <li key={entry.name}>
-                  <CatalogEntryCard
-                    busy={catalogBusy === entry.name}
-                    entry={entry}
-                    onInstall={() => setCatalogConfirm(entry)}
-                    removed={removedByName.get(entry.name) ?? null}
-                    t={t}
-                  />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
         <div className="flex flex-col gap-3">
 
-          <InstalledPluginsHeader pluginCount={rows.length} {...{ loading, loadHub, showToast, t }} />
+          <h3 className="font-mondwest text-display text-xs tracking-[0.12em] text-text-secondary">
+            {t.pluginsPage.pluginListHeading}
+          </h3>
 
           {loading ? (
 
@@ -1003,29 +892,6 @@ export default function PluginsPage() {
       <Toast toast={toast} />
       <PluginSlot name="plugins:bottom" />
 
-      <ConfirmDialog
-        open={catalogConfirm !== null}
-        onCancel={() => setCatalogConfirm(null)}
-        onConfirm={() => {
-          if (catalogConfirm) void onCatalogInstall(catalogConfirm);
-        }}
-        title={t.pluginsPage.catalogConfirmTitle ?? "Install this plugin?"}
-        description={
-          catalogConfirm
-            ? [
-                catalogConfirm.capability_summary,
-                catalogConfirm.capabilities.requires_env.length
-                  ? `${t.pluginsPage.catalogRequiresEnv ?? "Requires env"}: ${catalogConfirm.capabilities.requires_env.join(", ")}`
-                  : "",
-                t.pluginsPage.catalogConfirmInstallNote ??
-                  "Plugins install disabled; enable it after install to activate.",
-              ]
-                .filter(Boolean)
-                .join("\n\n")
-            : ""
-        }
-        confirmLabel={t.pluginsPage.catalogInstallBtn ?? "Install"}
-      />
     </div>
   );
 }
@@ -1092,11 +958,6 @@ function PluginRowCard(props: PluginRowCardProps) {
               <Badge tone="destructive">{t.pluginsPage.authRequired}</Badge>
             ) : null}
 
-            {row.removed_reason ? (
-              <Badge tone="destructive">
-                {t.pluginsPage.catalogRemovedBadge ?? "Removed"}
-              </Badge>
-            ) : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-2 shrink-0">
@@ -1154,29 +1015,6 @@ function PluginRowCard(props: PluginRowCardProps) {
               </Link>
             ) : null}
 
-            {row.can_update_git ? (
-
-              <Button
-                disabled={busy}
-                ghost
-                size="sm"
-                onClick={() => {
-                  void setRuntimeLoading(row.name, async () => {
-                    const pp = t.pluginsPage;
-                    const applied = await runDashboardPluginUpdate(row.name, {
-                      consentBody: pp.updateConsentBody ?? en.pluginsPage.updateConsentBody!,
-                      scanBody: pp.updateScanBody ?? en.pluginsPage.updateScanBody!,
-                      scanBlocked: pp.updateScanBlocked ?? en.pluginsPage.updateScanBlocked!,
-                    });
-                    if (applied) showToast(pp.updateGit, "success");
-                  });
-                }}
-              >
-                {busy ? <Spinner /> : null}
-                {t.pluginsPage.updateGit}
-              </Button>
-            ) : null}
-
             {row.has_dashboard_manifest ? (
               <Button
                 disabled={busy}
@@ -1221,11 +1059,6 @@ function PluginRowCard(props: PluginRowCardProps) {
           </p>
         ) : null}
 
-        {row.removed_reason ? (
-          <p className="border border-destructive/50 px-3 py-2 text-xs text-destructive">
-            {t.pluginsPage.removedFromCatalog ?? "Removed from catalog"}: {row.removed_reason}
-          </p>
-        ) : null}
 
         {dm?.slots?.length ? (
 
@@ -1265,130 +1098,6 @@ function PluginRowCard(props: PluginRowCardProps) {
         destructive
         confirmLabel={t.common.delete}
       />
-    </Card>
-  );
-}
-
-interface CatalogEntryCardProps {
-  busy: boolean;
-  entry: CatalogEntry;
-  onInstall: () => void;
-  removed: CatalogRemovedEntry | null;
-  t: Translations;
-}
-
-function CatalogEntryCard(props: CatalogEntryCardProps) {
-  const { busy, entry, onInstall, removed, t } = props;
-
-  const caps = entry.capabilities;
-  const chips: string[] = [];
-  if (caps.provides_tools.length) chips.push(`${caps.provides_tools.length} tools`);
-  if (caps.provides_hooks.length) chips.push(`${caps.provides_hooks.length} hooks`);
-  if (caps.provides_middleware.length)
-    chips.push(`${caps.provides_middleware.length} middleware`);
-  if (caps.requires_env.length) chips.push(`env: ${caps.requires_env.join(", ")}`);
-
-  const isRemoved = removed !== null;
-
-  return (
-    <Card className={cn(busy ? "opacity-70" : undefined)}>
-      <CardContent className="flex flex-col gap-3 px-6 py-4">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
-            <span className="truncate font-semibold">{entry.name}</span>
-
-            <Badge tone={entry.tier === "community" ? "secondary" : "success"}>
-              {entry.tier}
-            </Badge>
-
-            {entry.installed && entry.runtime_status ? (
-              <Badge tone="outline">{entry.runtime_status}</Badge>
-            ) : null}
-
-            {isRemoved ? (
-              <Badge tone="destructive">
-                {t.pluginsPage.catalogRemovedBadge ?? "Removed"}
-              </Badge>
-            ) : null}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            {isRemoved ? null : entry.installed && !entry.update_available ? (
-              <Badge tone="success">
-                {t.pluginsPage.catalogInstalledBadge ?? "Installed ✓"}
-              </Badge>
-            ) : (
-              <Button disabled={busy} ghost size="sm" onClick={onInstall}>
-                {busy ? <Spinner /> : null}
-                {entry.update_available
-                  ? t.pluginsPage.catalogUpdateBtn ?? "Update available"
-                  : t.pluginsPage.catalogInstallBtn ?? "Install"}
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {isRemoved ? (
-          <p className="border border-destructive/50 px-3 py-2 text-xs text-destructive">
-            {t.pluginsPage.removedFromCatalog ?? "Removed from catalog"}
-            {removed.reason ? `: ${removed.reason}` : ""}
-            {removed.date ? ` (${removed.date})` : ""}
-          </p>
-        ) : null}
-
-        {entry.description ? (
-          <p className="min-w-0 w-full text-xs tracking-[0.06em] text-text-secondary break-words">
-            {entry.description}
-          </p>
-        ) : null}
-
-        {chips.length ? (
-          <div className="flex flex-wrap gap-2">
-            {chips.map((chip) => (
-              <code
-                key={chip}
-                className="border border-border bg-background/40 px-2 py-1 font-mono text-[0.6875rem]"
-              >
-                {chip}
-              </code>
-            ))}
-          </div>
-        ) : null}
-
-        <div className="flex flex-wrap items-center gap-3 text-xs text-text-tertiary">
-          <span>{entry.maintainer}</span>
-
-          <a
-            className="inline-flex items-center gap-1 font-mono underline"
-            href={`${entry.repo.replace(/\.git$/, "")}/tree/${entry.sha}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {entry.sha_short}
-            <ExternalLink className="h-3 w-3 opacity-65" />
-          </a>
-
-          {entry.docs_url ? (
-            <a
-              className="inline-flex items-center gap-1 underline"
-              href={entry.docs_url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              docs
-              <ExternalLink className="h-3 w-3 opacity-65" />
-            </a>
-          ) : null}
-
-          {entry.requires_hermes ? (
-            <span>hermes {entry.requires_hermes}</span>
-          ) : null}
-
-          {entry.platforms.length ? (
-            <span>{entry.platforms.join(", ")}</span>
-          ) : null}
-        </div>
-      </CardContent>
     </Card>
   );
 }

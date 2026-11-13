@@ -1,7 +1,7 @@
 """Every remote-party-supplied URL fetch refuses internal targets before a socket opens.
 
-Provider response URLs, model-supplied image refs, manifest-derived pet URLs, and remote
-sitemap ``<loc>`` entries all route through ``tools.url_safety``: the URL is checked up
+Provider response URLs, model-supplied image refs and manifest-derived pet URLs all route
+through ``tools.url_safety``: the URL is checked up
 front and every redirect hop is re-validated at TCP connect. A loopback listener records
 hits — the invariant is that it sees none for the hostile target.
 """
@@ -11,7 +11,6 @@ import http.server
 import importlib
 import threading
 from pathlib import Path
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -35,11 +34,7 @@ class _Handler(http.server.BaseHTTPRequestHandler):
             self.send_header("Location", METADATA)
             self.end_headers()
             return
-        if self.path.endswith(".xml"):
-            body = (f"<sitemapindex><sitemap><loc>http://{self.headers['Host']}/sitemap-skills-1.xml"
-                    "</loc></sitemap></sitemapindex>").encode()
-            ctype = "application/xml"
-        elif self.path.endswith(".json"):
+        if self.path.endswith(".json"):
             body, ctype = b'{"pets": []}', "application/json"
         else:
             body, ctype = PNG, "image/png"
@@ -60,17 +55,6 @@ def listener(tmp_path, monkeypatch):
     yield f"http://127.0.0.1:{httpd.server_address[1]}", _Handler.hits
     httpd.shutdown()
 
-
-def _sitemap_catalog(url: str, monkeypatch):
-    from tools import skills_hub_skillssh
-    from tools.skills_hub_github import GitHubAuth
-
-    monkeypatch.setattr(skills_hub_skillssh, "_cached_metas", lambda key: None)
-    monkeypatch.setattr(skills_hub_skillssh, "_cache_metas", lambda key, metas: None)
-    src = skills_hub_skillssh.SkillsShSource(auth=MagicMock(spec=GitHubAuth))
-    monkeypatch.setattr(src, "SITEMAP_INDEX_URL", url)
-    monkeypatch.setattr(src, "_featured_skills", lambda limit: [])  # the network fallback
-    return src._sitemap_catalog(limit=5)
 
 
 def _fetch_manifest(url: str, monkeypatch):
@@ -95,19 +79,15 @@ SITES = {
     "pet/manifest::fetch_manifest": lambda u, mp, tmp: _fetch_manifest(u, mp),
     "tui_gateway/methods_images::_image_to_data_url": lambda u, mp, tmp: importlib.import_module(
         "tui_gateway.methods_images")._image_to_data_url(u, 1_000_000),
-    "skills_hub_skillssh::_sitemap_catalog": lambda u, mp, tmp: _sitemap_catalog(u, mp),
 }
 
 
 def _run(site, url, monkeypatch, tmp_path):
     """Return the body-bearing result, or None when the site refused (raised or returned None)."""
     try:
-        result = SITES[site](url, monkeypatch, tmp_path)
+        return SITES[site](url, monkeypatch, tmp_path)
     except Exception:
         return None
-    if isinstance(result, list):  # catalogs: any entry means a hostile <loc> body was consumed
-        return result or None
-    return result
 
 
 @pytest.mark.parametrize("site", list(SITES))
@@ -115,7 +95,7 @@ def test_remote_fetch_sites_refuse_internal_targets_before_connect(site, listene
     from tools import url_safety
 
     base, hits = listener
-    suffix = "/index.xml" if "sitemap" in site else ("/manifest.json" if "manifest" in site else "/img.png")
+    suffix = "/manifest.json" if "manifest" in site else "/img.png"
 
     # Direct loopback target: refused up front, listener never sees a connection.
     monkeypatch.delenv("HERMES_ALLOW_PRIVATE_URLS", raising=False)
@@ -125,8 +105,6 @@ def test_remote_fetch_sites_refuse_internal_targets_before_connect(site, listene
 
     # Safe-looking first hop that 302s to the metadata endpoint: the hop is re-validated
     # (metadata stays blocked even when private URLs are allowed), so nothing is cached.
-    if "sitemap" in site:
-        return  # <loc> entries are filtered per URL; the redirect case is the shared guarded client's
     monkeypatch.setenv("HERMES_ALLOW_PRIVATE_URLS", "1")
     url_safety._reset_allow_private_cache()
     try:

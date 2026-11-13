@@ -110,10 +110,7 @@ def _server_declarations(
         if not isinstance(raw, dict):
             raise AgentPluginError(f"server declaration '{name}' must be an object")
         # A key added by a newer Hermes must not make the package uninstallable here: the older
-        # release ignores it with a diagnostic, like unknown top-level fields. A key whose absence
-        # would be unsafe needs the catalog entry's requires_hermes, not a hard failure on every release:
-        # plugin.json has no version floor, and install/update by catalog name enforce the entry's
-        # (plugins_cmd_catalog.refuse_incompatible_catalog_entry / repin_catalog_plugin).
+        # release ignores it with a diagnostic, like unknown top-level fields.
         unknown = set(raw) - _SERVER_DECLARATION_KEYS
         if unknown:
             if diagnostics is not None:

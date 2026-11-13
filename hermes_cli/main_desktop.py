@@ -1720,8 +1720,7 @@ def cmd_gui(args: argparse.Namespace):
             print(
                 "  This A2Assistant came from Homebrew, which does not ship the desktop app's\n"
                 "  source tree, so it cannot be built from this install.\n"
-                "  Install the desktop app from https://hermes-agent.nousresearch.com,\n"
-                "  or run `hermes desktop` from a source checkout."
+                "  Run `hermes desktop` from a source checkout instead."
             )
         sys.exit(1)
 

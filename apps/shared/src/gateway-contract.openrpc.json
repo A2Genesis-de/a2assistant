@@ -2473,24 +2473,6 @@
       }
     },
     {
-      "name": "plugins.catalog.lookup",
-      "summary": "One curated plugin-catalog entry by name, from the backend's live catalog (cached, with the in-tree fallback and kill list); backs hermes://plugin/install?catalog= deep links.",
-      "params": [
-        {
-          "name": "params",
-          "schema": {
-            "$ref": "#/components/schemas/PluginCatalogLookupParams"
-          }
-        }
-      ],
-      "result": {
-        "name": "result",
-        "schema": {
-          "$ref": "#/components/schemas/PluginCatalogLookupResult"
-        }
-      }
-    },
-    {
       "name": "plugins.list",
       "summary": "Loaded plugin manager entries (legacy flat view); the Plugins Hub uses plugins.manage list.",
       "params": [
@@ -2510,7 +2492,7 @@
     },
     {
       "name": "plugins.manage",
-      "summary": "Plugins Hub backend: list installed plugins, toggle, git-install, re-pin a catalog install, or remove a user install.",
+      "summary": "Plugins Hub backend: list installed plugins, toggle, git-install or remove a user install.",
       "params": [
         {
           "name": "params",
@@ -5065,7 +5047,7 @@
       },
       "AgentPluginRow": {
         "additionalProperties": false,
-        "description": "``methods_tools._plugin_rows`` + ``plugins_cmd_catalog.catalog_row_fields`` provenance.",
+        "description": "``methods_tools._plugin_rows``.",
         "properties": {
           "name": {
             "title": "Name",
@@ -5109,90 +5091,6 @@
             },
             "title": "Servers",
             "type": "array"
-          },
-          "catalog_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Catalog Name"
-          },
-          "catalog_tier": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Catalog Tier"
-          },
-          "installed_sha": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Installed Sha"
-          },
-          "catalog_sha": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Catalog Sha"
-          },
-          "catalog_version": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Catalog Version"
-          },
-          "update_available": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Update Available"
-          },
-          "update_target": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Update Target"
           },
           "pinned_sha": {
             "anyOf": [
@@ -11901,40 +11799,6 @@
           "enable"
         ],
         "title": "CatalogApproved",
-        "type": "object"
-      },
-      "CatalogPluginPresence": {
-        "additionalProperties": false,
-        "description": "A named catalog plugin this OS runs. ``state`` is the pinned ``plugin.json`` app declaration judged\non this host; ``sentence`` names what is missing (empty when present or unknown); ``disclosure`` is the\ncatalog description's ``Disclosure:`` sentence (empty when it has none).",
-        "properties": {
-          "name": {
-            "title": "Name",
-            "type": "string"
-          },
-          "title": {
-            "title": "Title",
-            "type": "string"
-          },
-          "state": {
-            "$ref": "#/components/schemas/CatalogAppState"
-          },
-          "sentence": {
-            "title": "Sentence",
-            "type": "string"
-          },
-          "disclosure": {
-            "title": "Disclosure",
-            "type": "string"
-          }
-        },
-        "required": [
-          "name",
-          "title",
-          "state",
-          "sentence",
-          "disclosure"
-        ],
-        "title": "CatalogPluginPresence",
         "type": "object"
       },
       "CatalogScan": {
@@ -25655,52 +25519,6 @@
         "title": "OkResult",
         "type": "object"
       },
-      "OnboardingCatalogPlugin": {
-        "additionalProperties": false,
-        "description": "A catalog plugin curated for the onboarding card (``onboarding: true``) that this OS runs.\n``app_state`` is the pinned ``plugin.json`` declaration judged on this host; ``sentence`` names what\nis missing (empty when present or unknown).",
-        "properties": {
-          "name": {
-            "title": "Name",
-            "type": "string"
-          },
-          "title": {
-            "title": "Title",
-            "type": "string"
-          },
-          "description": {
-            "title": "Description",
-            "type": "string"
-          },
-          "tier": {
-            "$ref": "#/components/schemas/CatalogTier"
-          },
-          "platforms": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Platforms",
-            "type": "array"
-          },
-          "app_state": {
-            "$ref": "#/components/schemas/CatalogAppState"
-          },
-          "sentence": {
-            "title": "Sentence",
-            "type": "string"
-          }
-        },
-        "required": [
-          "name",
-          "title",
-          "description",
-          "tier",
-          "platforms",
-          "app_state",
-          "sentence"
-        ],
-        "title": "OnboardingCatalogPlugin",
-        "type": "object"
-      },
       "OnboardingEndedPayload": {
         "additionalProperties": false,
         "description": "``agent/onboarding_record.py::_transition``: the run ``run_id`` stopped being in progress.\n``stored_session_id`` is its chat at the compression tip. ``done``: the first-task card was answered;\n``skipped``: Skip setup; ``replaced``: a rerun opened a new run; ``deleted``: its chat was deleted.",
@@ -28276,102 +28094,6 @@
         "title": "PluginActivation",
         "type": "object"
       },
-      "PluginCatalogLookupEntry": {
-        "additionalProperties": false,
-        "description": "The fields an install needs: the same ones the embedded catalog picker posts on a pick.",
-        "properties": {
-          "name": {
-            "title": "Name",
-            "type": "string"
-          },
-          "repo": {
-            "title": "Repo",
-            "type": "string"
-          },
-          "sha": {
-            "title": "Sha",
-            "type": "string"
-          },
-          "subdir": {
-            "title": "Subdir",
-            "type": "string"
-          },
-          "tier": {
-            "default": "community",
-            "title": "Tier",
-            "type": "string"
-          }
-        },
-        "required": [
-          "name",
-          "repo",
-          "sha",
-          "subdir"
-        ],
-        "title": "PluginCatalogLookupEntry",
-        "type": "object"
-      },
-      "PluginCatalogLookupParams": {
-        "additionalProperties": false,
-        "properties": {
-          "profile": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Profile"
-          },
-          "name": {
-            "title": "Name",
-            "type": "string"
-          }
-        },
-        "required": [
-          "name"
-        ],
-        "title": "PluginCatalogLookupParams",
-        "type": "object"
-      },
-      "PluginCatalogLookupResult": {
-        "additionalProperties": false,
-        "description": "``found`` carries ``entry``. ``unknown`` covers a name the catalog doesn't list and one it removed;\n``unavailable`` means neither the live catalog nor the in-tree fallback could be read.",
-        "properties": {
-          "status": {
-            "$ref": "#/components/schemas/PluginCatalogLookupStatus"
-          },
-          "entry": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/PluginCatalogLookupEntry"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null
-          }
-        },
-        "required": [
-          "status"
-        ],
-        "title": "PluginCatalogLookupResult",
-        "type": "object"
-      },
-      "PluginCatalogLookupStatus": {
-        "enum": [
-          "found",
-          "invalid_name",
-          "unknown",
-          "unavailable"
-        ],
-        "title": "PluginCatalogLookupStatus",
-        "type": "string"
-      },
       "PluginLiveNow": {
         "additionalProperties": false,
         "properties": {
@@ -28687,59 +28409,6 @@
         "title": "PluginToolsetRow",
         "type": "object"
       },
-      "PluginUpdateAllRow": {
-        "additionalProperties": false,
-        "description": "One plugin ``update_all`` tried. ``needs_review``: nothing changed because the update widens the\nplugin or its scan returned caution; the plugin's own ``update`` walks that review.",
-        "properties": {
-          "name": {
-            "title": "Name",
-            "type": "string"
-          },
-          "status": {
-            "$ref": "#/components/schemas/PluginUpdateAllStatus"
-          },
-          "detail": {
-            "default": "",
-            "title": "Detail",
-            "type": "string"
-          }
-        },
-        "required": [
-          "name",
-          "status"
-        ],
-        "title": "PluginUpdateAllRow",
-        "type": "object"
-      },
-      "PluginUpdateAllSkip": {
-        "additionalProperties": false,
-        "properties": {
-          "name": {
-            "title": "Name",
-            "type": "string"
-          },
-          "reason": {
-            "title": "Reason",
-            "type": "string"
-          }
-        },
-        "required": [
-          "name",
-          "reason"
-        ],
-        "title": "PluginUpdateAllSkip",
-        "type": "object"
-      },
-      "PluginUpdateAllStatus": {
-        "enum": [
-          "updated",
-          "current",
-          "failed",
-          "needs_review"
-        ],
-        "title": "PluginUpdateAllStatus",
-        "type": "string"
-      },
       "PluginsAction": {
         "enum": [
           "list",
@@ -28748,13 +28417,8 @@
           "inspect",
           "install_desktop",
           "remove_desktop",
-          "update",
           "remove",
-          "settings",
-          "onboarding",
-          "presence",
-          "update_all",
-          "auto_update"
+          "settings"
         ],
         "title": "PluginsAction",
         "type": "string"
@@ -28814,7 +28478,7 @@
       },
       "PluginsManageParams": {
         "additionalProperties": false,
-        "description": "``toggle``: ``key``/``name`` + ``enable``; ``install``: ``identifier``/``repo`` or ``catalog_name``\n(+ ``force``, ``enable``, ``ref``, ``inspected_sha`` = the commit ``inspect`` read: a custom source with no\n``ref`` whose branch moved since is refused); ``inspect``: ``identifier``/``repo`` or ``catalog_name``;\n``install_desktop``: ``identifier``/``repo`` (any source ``install`` takes) or ``catalog_name``, always\nwith ``ref`` (the commit ``inspect`` read and the dialog showed; another commit is refused) (+ ``force``) \u2014 the desktop half onto\nthe host that serves this client; ``remove_desktop``: ``name``\n(+ ``force`` for a package's own half); ``update``: ``name`` (+ ``accept_capabilities`` to apply a re-pin\nthat widened the plugin after the user confirmed the ``delta``, + ``force`` to apply an update whose\nsecurity scan returned caution after the user saw the findings); ``remove``: ``name`` (user installs only);\n``settings``: ``key`` + ``values`` (``{setting_key: value}``, non-secret schema keys only);\n``presence``: ``names`` (catalog names, answered in that order); ``update_all``: no fields;\n``auto_update``: ``enable`` to set ``plugins.auto_apply`` (omit to read it).",
+        "description": "``toggle``: ``key``/``name`` + ``enable``; ``install``: ``identifier``/``repo``\n(+ ``force``, ``enable``, ``ref``, ``inspected_sha`` = the commit ``inspect`` read: a source with no\n``ref`` whose branch moved since is refused); ``inspect``: ``identifier``/``repo``;\n``install_desktop``: ``identifier``/``repo`` (any source ``install`` takes), always\nwith ``ref`` (the commit ``inspect`` read and the dialog showed; another commit is refused) (+ ``force``) \u2014 the desktop half onto\nthe host that serves this client; ``remove_desktop``: ``name``\n(+ ``force`` for a package's own half); ``remove``: ``name`` (user installs only);\n``settings``: ``key`` + ``values`` (``{setting_key: value}``, non-secret schema keys only).",
         "properties": {
           "profile": {
             "anyOf": [
@@ -28892,18 +28556,6 @@
             "default": null,
             "title": "Repo"
           },
-          "catalog_name": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Catalog Name"
-          },
           "force": {
             "anyOf": [
               {
@@ -28940,18 +28592,6 @@
             "default": null,
             "title": "Inspected Sha"
           },
-          "accept_capabilities": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Accept Capabilities"
-          },
           "values": {
             "anyOf": [
               {
@@ -28964,21 +28604,6 @@
             ],
             "default": null,
             "title": "Values"
-          },
-          "names": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Names"
           }
         },
         "title": "PluginsManageParams",
@@ -28986,7 +28611,7 @@
       },
       "PluginsManageResult": {
         "additionalProperties": false,
-        "description": "``list`` \u2192 ``plugins`` + counts; ``toggle`` \u2192 ``ok``/``unchanged``/``restart_required``/``name``\n(the canonical key written)/``plugin``; ``install`` \u2192 ``hermes_cli.plugins_cmd.dashboard_install_plugin``'s\nok payload; ``inspect`` \u2192 ``ok``/``agent``/``desktop``/``agent_name``/``desktop_name``/``sha`` (the commit\nread)/``warnings``/``insecure`` or ``ok=false`` + ``error``; ``toggle``/``install``/``update`` that loaded a plugin also carry ``gateway_reloaded`` (the\nrunning gateway picked it up and re-wired its handlers) and ``activation`` \u2014 the honest split of what is\nlive now vs deferred, so ``restart_required`` is True only when no gateway answered or the running\ngateway/backend cannot import the plugin's Python dependencies (``activation.missing_dependencies``); ``update`` \u2192 ``ok``/``unchanged``/``sha``, or ``ok=false`` + ``consent_required`` with the\n``delta`` (``{surface: [added...]}``) / ``delta_lines`` a widened pin adds \u2014 nothing changed until the\nclient retries with ``accept_capabilities`` \u2014 or ``ok=false`` + ``scan_blocked`` with ``scan_verdict`` /\n``scan_findings`` (retry a caution verdict with ``force``); ``remove`` \u2192 ``ok``/``name`` plus\n``cleared_memory_provider`` when the removed plugin was the live ``memory.provider``.",
+        "description": "``list`` \u2192 ``plugins`` + counts; ``toggle`` \u2192 ``ok``/``unchanged``/``restart_required``/``name``\n(the canonical key written)/``plugin``; ``install`` \u2192 ``hermes_cli.plugins_cmd.dashboard_install_plugin``'s\nok payload; ``inspect`` \u2192 ``ok``/``agent``/``desktop``/``agent_name``/``desktop_name``/``sha`` (the commit\nread)/``warnings``/``insecure`` or ``ok=false`` + ``error``; ``toggle``/``install`` that loaded a plugin also carry ``gateway_reloaded`` (the\nrunning gateway picked it up and re-wired its handlers) and ``activation`` \u2014 the honest split of what is\nlive now vs deferred, so ``restart_required`` is True only when no gateway answered or the running\ngateway/backend cannot import the plugin's Python dependencies (``activation.missing_dependencies``);\nan ``install`` the security scan blocked answers ``ok=false`` + ``scan_blocked`` with ``scan_verdict`` /\n``scan_findings`` (retry a caution verdict with ``force``); ``remove`` \u2192 ``ok``/``name`` plus\n``cleared_memory_provider`` when the removed plugin was the live ``memory.provider``.",
         "properties": {
           "plugins": {
             "anyOf": [
@@ -29178,21 +28803,6 @@
             "default": null,
             "title": "Python Dependencies"
           },
-          "known_issues": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Known Issues"
-          },
           "after_install_path": {
             "anyOf": [
               {
@@ -29228,51 +28838,6 @@
             ],
             "default": null,
             "title": "Sha"
-          },
-          "consent_required": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Consent Required"
-          },
-          "delta": {
-            "anyOf": [
-              {
-                "additionalProperties": {
-                  "items": {
-                    "type": "string"
-                  },
-                  "type": "array"
-                },
-                "type": "object"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Delta"
-          },
-          "delta_lines": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Delta Lines"
           },
           "scan_blocked": {
             "anyOf": [
@@ -29339,36 +28904,6 @@
             ],
             "default": null,
             "title": "Written"
-          },
-          "onboarding": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/OnboardingCatalogPlugin"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Onboarding"
-          },
-          "presence": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/CatalogPluginPresence"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Presence"
           },
           "agent": {
             "anyOf": [
@@ -29465,72 +29000,6 @@
             ],
             "default": null,
             "title": "Unpaired From"
-          },
-          "results": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/PluginUpdateAllRow"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Results"
-          },
-          "skipped": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/PluginUpdateAllSkip"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Skipped"
-          },
-          "current": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Current"
-          },
-          "auto_apply": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Auto Apply"
-          },
-          "check_hours": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Check Hours"
           }
         },
         "title": "PluginsManageResult",
@@ -41039,7 +40508,6 @@
           "theme",
           "layout",
           "connectors",
-          "plugins",
           "tour",
           "build"
         ],
@@ -41048,7 +40516,7 @@
       },
       "SetupBeatRequestParams": {
         "additionalProperties": false,
-        "description": "``card`` is the beat's data (``agent/onboarding_flow.py::BEATS``): name, theme, connectors and\nplugins have their own shape; layout, tour and build carry ``options``. ``tool_call_id`` is the\nsetup_beat call the card belongs to: only that transcript row draws it.",
+        "description": "``card`` is the beat's data (``agent/onboarding_flow.py::BEATS``): name, theme and connectors\nhave their own shape; layout, tour and build carry ``options``. ``tool_call_id`` is the\nsetup_beat call the card belongs to: only that transcript row draws it.",
         "properties": {
           "session_id": {
             "title": "Session Id",
@@ -41094,9 +40562,6 @@
               },
               {
                 "$ref": "#/components/schemas/SetupConnectorsCard"
-              },
-              {
-                "$ref": "#/components/schemas/SetupPluginsCard"
               }
             ],
             "title": "Card"
@@ -41127,9 +40592,6 @@
               },
               {
                 "$ref": "#/components/schemas/SetupConnectorsAnswer"
-              },
-              {
-                "$ref": "#/components/schemas/SetupPluginsAnswer"
               },
               {
                 "$ref": "#/components/schemas/SetupTourAnswer"
@@ -41313,52 +40775,6 @@
           "options"
         ],
         "title": "SetupOptionsCard",
-        "type": "object"
-      },
-      "SetupPluginsAnswer": {
-        "additionalProperties": false,
-        "properties": {
-          "installed": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Installed",
-            "type": "array"
-          },
-          "label": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Label"
-          }
-        },
-        "required": [
-          "installed"
-        ],
-        "title": "SetupPluginsAnswer",
-        "type": "object"
-      },
-      "SetupPluginsCard": {
-        "additionalProperties": false,
-        "properties": {
-          "plugins": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Plugins",
-            "type": "array"
-          }
-        },
-        "required": [
-          "plugins"
-        ],
-        "title": "SetupPluginsCard",
         "type": "object"
       },
       "SetupReadyPayload": {

@@ -17,6 +17,7 @@ from contextvars import ContextVar
 from pathlib import Path
 from typing import Callable
 
+from hermes_cli.repository import README_URL
 from hermes_cli.curses_ui import MenuNavigationEvent, MenuNavigationStart
 # Config helpers are re-exported (tests patch them on this module). display_hermes_home is
 # imported lazily at call sites (stale-module safety during hermes update).
@@ -35,7 +36,7 @@ from hermes_cli._startup_fast import project_root_str
 
 PROJECT_ROOT = Path(project_root_str())
 
-_DOCS_BASE = "https://hermes-agent.nousresearch.com/docs"
+
 _BRACKETED_PASTE_PATTERN = re.compile(r"\x1b\[\s*200~|\x1b\[\s*201~")
 
 
@@ -384,7 +385,7 @@ def setup_model_provider(config: dict, *, quick: bool = False):
     from hermes_cli.config import load_config, save_config
     print_header("Inference Provider")
     _info("Choose how to connect to your main chat model.",
-          f"   Guide: {_DOCS_BASE}/integrations/providers", None)
+          f"   Guide: {README_URL}", None)
     from hermes_cli.main import select_provider_and_model
     from hermes_cli.observability.shared_metrics_setup import provider_setup_surface
     try:
@@ -453,7 +454,7 @@ _TOOL_PROGRESS_HELP = (
 def setup_agent_settings(config: dict):
     """Configure agent behavior: iterations, progress display and compression."""
     print_header("Agent Settings")
-    _info(f"   Guide: {_DOCS_BASE}/user-guide/configuration", None)
+    _info(f"   Guide: {README_URL}", None)
 
     # ── Max Iterations ── (config.yaml is authoritative; never surface a stale legacy .env value)
     # If a legacy .env entry is still around (from pre-PR#18413 setups), prefer the config value so we don't
@@ -583,7 +584,6 @@ from hermes_cli.setup_terminal import setup_terminal_backend
 from hermes_cli.setup_platforms import setup_gateway
 from hermes_cli.setup_summary import _print_setup_summary
 from hermes_cli.setup_migration import _skip_configured_section
-from hermes_cli.setup_agent_import import offer_agent_import
 from hermes_cli.setup_quick import _run_portal_one_shot, _run_quick_setup
 
 
@@ -733,10 +733,6 @@ def _run_setup_wizard_impl(args):
         print()
         if reconfigure_requested or quick_requested:
             _info("No existing configuration found — running first-time setup.", None)
-        # Before configuration begins. The plugin install and the import write config.yaml from
-        # outside this dict (the import from another process), so reload it.
-        imported_from = offer_agent_import(hermes_home)
-        config = load_config()
         setup_mode = prompt_choice("How would you like to set up A2Assistant?", [label for label, _ in _FIRST_TIME_MODES], 0)
         label, runner = _FIRST_TIME_MODES[setup_mode]
         if runner is not None:

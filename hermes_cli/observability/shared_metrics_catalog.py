@@ -142,10 +142,8 @@ def bundled_platform_names() -> frozenset[str]:
 
 @functools.cache
 def catalog_platform_names() -> frozenset[str]:
-    """``plugin-catalog/`` entries whose category is ``platform`` (in-tree only: never a network fetch)."""
-    from hermes_cli.plugin_catalog import CATALOG_TIERS, load_catalog
-
-    return frozenset(e.name for e in load_catalog() if e.category == "platform" and e.tier in CATALOG_TIERS)
+    """No plugin catalog ships platforms any more."""
+    return frozenset()
 
 
 def platform_metric_name(raw: object, core: frozenset[str]) -> str:

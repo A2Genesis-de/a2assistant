@@ -3637,7 +3637,7 @@ tips:
   t064: "a2assistant sessions browse 打开一个带搜索功能的交互式会话选择器。"
   t065: "a2assistant sessions stats 按平台显示会话数量以及数据库大小。"
   t066: "a2assistant sessions prune --older-than 30 清理旧会话。"
-  t067: "a2assistant skills search react --source skills-sh 在 skills.sh 公共目录中搜索。"
+  t067: "a2assistant skills search pdf --source official 在官方可选技能中搜索。"
   t068: "a2assistant skills check 扫描已安装的 hub 技能是否有上游更新。"
   t069: "a2assistant skills tap add myorg/skills-repo 添加自定义的 GitHub 技能源。"
   t070: "a2assistant skills snapshot export setup.json 导出你的技能配置，用于备份或分享。"

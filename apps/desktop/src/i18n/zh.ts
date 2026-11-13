@@ -20,7 +20,6 @@ import { zhNotifications } from './zh_notifications'
 import { zhOnboarding } from './zh_onboarding'
 import { zhPluginPreviewAccess } from './zh_plugin_preview_access'
 import { zhPluginUpdate } from './zh_plugin_update'
-import { zhPluginUpdateAll } from './zh_plugin_update_all'
 import { zhPreviewWeb } from './zh_preview_web'
 import { zhProjects } from './zh_projects'
 import { zhSharedMetrics } from './zh_shared_metrics'
@@ -1537,7 +1536,7 @@ export const zhOverrides = {
         'SSH 认证失败。请将密钥加载到 ssh-agent（ssh-add），或在 ~/.ssh/config 中设置 IdentityFile——A2Assistant 以非交互方式运行 ssh。',
       sshErrHostKey: '自上次连接以来主机密钥已更改。请确认这是预期的，然后运行 ssh-keygen -R <host> 并重新连接。',
       sshErrNotInstalled:
-        '远程主机上未安装 A2Assistant。请在远程安装（curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh）或设置 A2Assistant 路径。',
+        '远程主机上未安装 A2Assistant。请在远程安装（git clone https://github.com/A2Genesis-de/a2assistant.git）或设置 A2Assistant 路径。',
       sshErrPlatform: '不支持的远程平台。A2Assistant Desktop 的 SSH 模式支持 Linux、macOS 和 Windows 远程主机。',
       sshErrTimeout: 'SSH 连接超时。主机可能无法访问或处于休眠状态。',
       sshErrUpdateRequired: '使用 Desktop SSH 连接前，请更新远程主机上的 A2Assistant。',
@@ -2112,7 +2111,6 @@ export const zhOverrides = {
       pinnedProvenance: (sha: string) => `已固定到提交 ${sha}。重新固定前将拒绝更新。`,
       pinnedBadge: (sha: string) => `固定 @ ${sha}`,
       ...zhPluginUpdate,
-      ...zhPluginUpdateAll,
       uninstall: '卸载',
       uninstallTip: (name: string, profile: string) => `从 ${profile} 卸载 ${name}`,
       uninstallConfirmTitle: (name: string) => `卸载 ${name}？`,
@@ -2175,9 +2173,6 @@ export const zhOverrides = {
       actionLog: '操作日志',
       alreadyInstalled: name => `“${name}”已安装`,
       pickerTitle: '技能中心',
-      pickerBrowse: '浏览完整技能中心',
-      pickerHide: '隐藏技能中心浏览器',
-      pickerHint: '点击任意技能上的“+ Add to this Agent”即可安装，安装后会出现在上方列表中。',
       loadFailed: '技能中心加载失败',
       previewFailed: '技能预览失败',
       scanFailed: '安全扫描失败',

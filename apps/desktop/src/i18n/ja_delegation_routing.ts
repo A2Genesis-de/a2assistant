@@ -21,9 +21,6 @@ export const jaDelegationRouting: DelegationRoutingTranslations = {
   pluginDisabled: 'Advanced Delegation はインストール済みですが、このプロファイルではオフです。',
   pluginNotLoaded:
     'Advanced Delegation はオンですが、A2Assistant がまだ読み込んでいません。完了するには A2Assistant を再起動してください。',
-  installPlugin: 'プラグインをインストール',
-  installUnavailable:
-    'Advanced Delegation はまだプラグインカタログにありません。スキルとツール › プラグイン からインストールしてください。',
   enablePlugin: 'オンにする',
   enableFailed: 'Advanced Delegation をオンにできませんでした',
   modeFailed: 'サブエージェントのルーティングを変更できませんでした',

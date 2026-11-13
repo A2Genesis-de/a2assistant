@@ -667,9 +667,6 @@ def local_models_catalog():
     get. The row advertises the BEST build for this machine (highest quality fully on GPU at the 64K floor;
     else the smallest that works, spilled and priced). No entry is hidden; unaffordable models show WHY.
     Sync def: blocking I/O -> threadpool."""
-    # Serve the in-memory catalog; a TTL-gated background fetch lands new entries for the next call
-    # (day-0 models without an app release).
-    catalog.refresh_catalog_soon()
     # Planning budget: machine capacity, not live-free VRAM — a loaded model must not make every row unaffordable.
     budget = hardware.probe_budget(planning=True)
     # The reason key ships with the row so the Recommended badge's tooltip is the branch that actually
