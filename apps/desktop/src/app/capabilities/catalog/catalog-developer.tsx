@@ -1,13 +1,15 @@
+import { README_URL, REPOSITORY_URL } from '@hermes/shared/repository'
 import type { ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Codicon } from '@/components/ui/codicon'
 import { useI18n } from '@/i18n'
 import { openExternalLink } from '@/lib/external-link'
-import { CATALOG_ORIGIN, type CatalogKind } from './catalog-data'
 
-const SKILLS_DOCS_URL = `${CATALOG_ORIGIN}/docs/skills/`
-const SUBMIT_MOD_URL = 'https://github.com/NousResearch/hermes-agent/compare'
+import type { CatalogKind } from './catalog-data'
+
+const SKILLS_DOCS_URL = README_URL
+const SUBMIT_MOD_URL = REPOSITORY_URL
 
 /** One banner for every catalog. The wing, copy and docs links are shared; the page supplies its own management actions. */
 export function CatalogDeveloper({ actions }: { kind: CatalogKind; actions?: ReactNode }) {
