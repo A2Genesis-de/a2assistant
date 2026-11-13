@@ -380,7 +380,6 @@ gateway:
     save_failed: "無法儲存主頻道：{error}"
     success: "✅ 主頻道已設定為 **{name}**（ID：{chat_id}）。\n排程任務和跨平台訊息將傳送至此處。"
     err_missing_platform: "缺少邏輯平台"
-    err_relay_unauthenticated: "中繼未驗證此邏輯主目標"
   context:
     header: "🧠 **上下文視窗**"
     model: "模型：`{model}`"

@@ -200,15 +200,14 @@ def test_clone_channels_refusal_lives_in_create_profile(home, monkeypatch):
 _SHARED_ENV = (
     "OPENAI_API_KEY=sk\n"
     "GATEWAY_ALLOW_ALL_USERS=true\nGATEWAY_ALLOWED_USERS=1,2\n"
-    "GATEWAY_RELAY_ID=gw-1\nGATEWAY_RELAY_SECRET=s\nGATEWAY_RELAY_DELIVERY_KEY=k\n"
     "WECOM_DM_POLICY=open\nSMS_WEBHOOK_PORT=8700\n"
     "TWILIO_ACCOUNT_SID=AC1\nTWILIO_AUTH_TOKEN=tw\nTWILIO_PHONE_NUMBER=+1\n"
     "EMAIL_ADDRESS=a@b\nEMAIL_PASSWORD=p\nEMAIL_SMTP_HOST=smtp\nEMAIL_IMAP_HOST=imap\nEMAIL_ALLOWED_USERS=x@y\n"
 )
 
 
-def test_ownership_inventory_strips_policy_relay_and_aliases_but_keeps_tool_credentials(home):
-    """Gateway-wide policy, relay identity and alias-prefixed keys are channel settings. TWILIO/EMAIL
+def test_ownership_inventory_strips_policy_and_aliases_but_keeps_tool_credentials(home):
+    """Gateway-wide policy and alias-prefixed keys are channel settings. TWILIO/EMAIL
     credentials are shared with tools: they leave with the channel only when the source's gateway would
     run that adapter (email here — complete creds, not disabled); an explicitly disabled channel means
     the key is a tool credential and stays. Its policy keys (allowlists, ports) go regardless."""

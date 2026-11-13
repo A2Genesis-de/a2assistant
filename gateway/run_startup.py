@@ -98,7 +98,7 @@ class GatewayStartupMixin:
                     "unlimited" if limit == TURN_LIMIT_UNLIMITED else limit)
 
     # A configured platform failed non-retryably this boot and is parked: every "we are serving"
-    # status stamp (startup, drain release, scale-to-zero wake) must say ``degraded``, not ``running``.
+    # status stamp (startup, drain release) must say ``degraded``, not ``running``.
     _startup_parked_platforms: bool = False
     # A startup platform failure was a live foreign token/profile holder (exit 78 when nothing else runs).
     _startup_ownership_conflict: bool = False
@@ -928,7 +928,7 @@ class GatewayStartupMixin:
                     start_time=getattr(self, "_gateway_started_at", 0.0),
                 )
             )
-            # PERMANENT watcher tag so the scale-to-zero idle check doesn't count it as busy forever.
+            # PERMANENT watcher tag so the background-work check does not count it as busy forever.
             task._hermes_supervised_watcher = True  # type: ignore[attr-defined]
             _bg = getattr(self, "_background_tasks", None)
             if _bg is not None:
@@ -1122,8 +1122,8 @@ class GatewayStartupMixin:
         return False
 
     @staticmethod
-    def _start_register_plugins_relay_hooks() -> None:
-        """Plugin discovery, relay registration and shell-hook/webhook registration. Never raises."""
+    def _start_register_plugins_hooks() -> None:
+        """Plugin discovery and shell-hook/webhook registration. Never raises."""
         # Discover plugins before shell hooks (plugin block decisions win ties). Explicit: the gateway
         # lazily imports run_agent, so model_tools' discover_plugins() side-effect may not have run.
         with _log_suppressed(logging.WARNING, "plugin discovery failed at gateway startup", exc_info=True):
@@ -1131,41 +1131,7 @@ class GatewayStartupMixin:
             from hermes_cli.plugins_cmd_remove import sweep_pending_plugin_deletes
             sweep_pending_plugin_deletes()  # trees a previous life still held when they were uninstalled
             discover_plugins()
-        # Relay entrypoints share the effective profile opt-out, including when a
-        # deployment injects a URL. No URL or explicitly disabled -> no side effects.
-        try:
-            from gateway.relay import (
-                register_relay_adapter, relay_url, self_provision_relay, send_relay_policy
-            )
-            # Relay self-provision sets GATEWAY_RELAY_* in os.environ BEFORE registration reads them.
-            self_provision_relay()
-            if register_relay_adapter():
-                logger.info("relay adapter registered (connector at %s)", relay_url())
-                # Declare the relevance policy to the connector so the SAME behavior governs relay delivery.
-                send_relay_policy()
-        except Exception:
-            logger.warning("relay adapter registration failed at gateway startup", exc_info=True)
         GatewayStartupMixin._register_launch_profile_config_hooks()
-
-    def _start_relay_provision_retry(self) -> None:
-        """Keep provisioning in the background when the boot attempt left the relay without
-        credentials; cancelled with ``_background_tasks`` at shutdown. Never raises."""
-        try:
-            from gateway.relay import relay_provision_pending, retry_self_provision
-            if relay_provision_pending():
-                self._retain_background_task(asyncio.create_task(
-                    retry_self_provision(self._on_relay_provisioned), name="relay-provision-retry"))
-        except Exception:
-            logger.warning("relay self-provision retry could not start", exc_info=True)
-
-    def _on_relay_provisioned(self) -> None:
-        """Credentials arrived after boot: the reconnect watcher builds every relay adapter from
-        the live env, so pull its queued retry forward instead of waiting out the backoff.
-        ``retry_now`` keeps it forward if a pass that began without them is still dialing."""
-        info = getattr(self, "_failed_platforms", {}).get(Platform.RELAY)
-        if info is not None:
-            info["next_retry"] = 0.0
-            info["retry_now"] = True
 
     @staticmethod
     def _register_launch_profile_config_hooks() -> None:
@@ -1228,8 +1194,7 @@ class GatewayStartupMixin:
     async def _start_recover_previous_run(self) -> None:
         """Plugins, relay, hooks, then crash/clean-exit recovery of processes and sessions."""
         from gateway.run import _hermes_home
-        self._start_register_plugins_relay_hooks()
-        self._start_relay_provision_retry()
+        self._start_register_plugins_hooks()
         # Plugins that load later (force re-discovery, install/enable nudge) re-wire live adapters (#87770).
         with _log_suppressed(logging.WARNING, "plugin re-wire subscription failed", exc_info=True):
             from hermes_cli.plugins import get_plugin_manager
@@ -1486,9 +1451,6 @@ class GatewayStartupMixin:
                     "the platform is not being served. Add its token to the profile that should "
                     "own it, or disable the platform.", _skipped.value,
                 )
-        # The mirror image: a SECONDARY enabled shared ingress (WhatsApp/Relay) that only the default can run.
-        for _line in self._unserved_shared_ingress_warnings():
-            logger.warning(_line)
         return False, connected_count
 
     def _start_handle_no_connections(
@@ -1687,19 +1649,6 @@ class GatewayStartupMixin:
             self._spawn_supervised(getattr(self, method), method[1:])
         from gateway.runtime_downgrade_exit import runtime_downgrade_watcher
         self._spawn_supervised(lambda: runtime_downgrade_watcher(self), "runtime_downgrade_watcher")
-        # Scale-to-zero watcher ONLY when opted in, messaging is relay-only/absent, and a wakeUrl exists.
-        try:
-            if self._scale_to_zero_should_arm():
-                logger.info(
-                    "scale-to-zero: armed (idle timeout %.0fs) — watching for idle",
-                    self._scale_to_zero_idle_timeout_seconds(),
-                )
-                self._spawn_supervised(self._scale_to_zero_watcher, "scale_to_zero_watcher")
-            else:
-                # Say WHY an OPTED-IN instance didn't arm (non-opted stays silent).
-                self._log_scale_to_zero_not_armed_reason()
-        except Exception:
-            logger.debug("scale-to-zero: arm check failed at startup", exc_info=True)
         # Drain-control watcher: reconciles new-turn acceptance with the dashboard's ``.drain_request.json``
         # marker (prior-instantiation markers are ignored via epoch).
         self._spawn_supervised(self._drain_control_watcher, "drain_control_watcher")
@@ -1830,8 +1779,6 @@ class GatewayStartupMixin:
         except (ValueError, KeyError):
             raise RuntimeError(f"unknown platform '{platform_name}'")
         handoff_config, handoff_adapters = self._handoff_resolve_scope(profile_name)
-        # Alias-aware transport: a relay-fronted gateway registers ONE Platform.RELAY adapter fronting
-        # N logical platforms, so a literal adapters.get() would miss a deliverable one.
         transport = resolve_delivery_transport(platform, handoff_config, handoff_adapters)
         if not transport:
             raise RuntimeError(f"platform '{platform_name}' is not active in this gateway")
@@ -1987,13 +1934,9 @@ class GatewayStartupMixin:
         if not response_text:
             # Streaming may have delivered inline; the agent ran without raising — success.
             return
-        # Reply into the new thread (else the home channel) via the resolved transport, so a relay-fronted
-        # logical platform is stamped on the outbound frame.
         send_metadata = {"thread_id": dest.effective_thread_id} if dest.effective_thread_id else None
         try:
-            result = await dest.transport.send(
-                dest.platform, str(dest.home.chat_id), response_text, send_metadata,
-            )
+            result = await dest.transport.send(str(dest.home.chat_id), response_text, send_metadata)
         except Exception as exc:
             raise RuntimeError(f"adapter.send failed: {exc}") from exc
         if not getattr(result, "success", True):

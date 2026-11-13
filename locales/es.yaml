@@ -380,7 +380,6 @@ gateway:
     save_failed: "No se pudo guardar el canal principal: {error}"
     success: "✅ Canal principal establecido en **{name}** (ID: {chat_id}).\nLas tareas cron y los mensajes entre plataformas se entregarán aquí."
     err_missing_platform: "Falta la plataforma lógica"
-    err_relay_unauthenticated: "El relay no autentica este destino home lógico"
   context:
     header: "🧠 **Ventana de contexto**"
     model: "Modelo: `{model}`"

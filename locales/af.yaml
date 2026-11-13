@@ -380,7 +380,6 @@ gateway:
     save_failed: "Kon nie tuiste-kanaal stoor nie: {error}"
     success: "✅ Tuiste-kanaal gestel op **{name}** (ID: {chat_id}).\nKron-take en kruisplatform-boodskappe sal hier afgelewer word."
     err_missing_platform: "Logiese platform ontbreek"
-    err_relay_unauthenticated: "Relay verifieer nie hierdie logiese tuiste-teiken nie"
   context:
     header: "🧠 **Konteksvenster**"
     model: "Model: `{model}`"

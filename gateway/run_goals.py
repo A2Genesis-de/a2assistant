@@ -215,7 +215,7 @@ class GatewayGoalsMixin:
         try:
             task = self._heartbeat_poll_task = asyncio.create_task(_poll_loop())
             # PERMANENT once started (infinite loop) — tag it like a _spawn_supervised watcher so
-            # _scale_to_zero_has_live_background_work() doesn't treat the gateway as busy forever.
+            # _has_live_background_work() doesn't treat the gateway as busy forever.
             task._hermes_supervised_watcher = True  # type: ignore[attr-defined]
             _bg = getattr(self, "_background_tasks", None)
             if _bg is not None:

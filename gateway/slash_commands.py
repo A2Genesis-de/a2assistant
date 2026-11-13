@@ -116,9 +116,6 @@ def _restart_notify_payload(event: MessageEvent) -> dict:
     source = event.source
     data = {"platform": source.platform.value if source.platform else None,
             "chat_id": source.chat_id, "chat_type": source.chat_type}
-    if source.delivered_via_upstream_relay is True:
-        data["delivered_via_upstream_relay"] = True
-        data.update({k: getattr(source, k) for k in ("user_id", "scope_id") if getattr(source, k)})
     optional = (("thread_id", source.thread_id), ("message_id", event.message_id),
                 ("profile", getattr(source, "profile", None)))
     data.update({k: v for k, v in optional if v})
@@ -647,24 +644,13 @@ class GatewaySlashCommandsMixin(
         chat_name = source.chat_name or chat_id
         if source.platform is None:
             return t("gateway.set_home.save_failed", error=t("gateway.set_home.err_missing_platform"))
-        via_relay = getattr(source, "delivered_via_upstream_relay", False) is True
-        if via_relay:
-            adapter_for_source = getattr(self, "_intake_adapter_for", None)
-            relay_adapter = adapter_for_source(source) if callable(adapter_for_source) else None
-            fronts_platform = getattr(relay_adapter, "fronts_platform", None)
-            if (source.platform in {None, Platform.LOCAL, Platform.RELAY}
-                    or not getattr(source, "user_id", None)
-                    or not callable(fronts_platform) or not fronts_platform(source.platform)):
-                return t("gateway.set_home.save_failed", error=t("gateway.set_home.err_relay_unauthenticated"))
         thread_id = _home_thread_from_source(source)
         home = HomeChannel(
             platform=source.platform, chat_id=str(chat_id), name=chat_name, thread_id=thread_id,
             user_id=str(source.user_id) if getattr(source, "user_id", None) else None,
             scope_id=str(source.scope_id) if getattr(source, "scope_id", None) else None)
-        # config.yaml is canonical because it can persist the authenticated logical-target
-        # provenance required by Relay after a restart.
         try:
-            persist_home_channel(home, enabled_if_new=not via_relay)
+            persist_home_channel(home, enabled_if_new=True)
         except Exception as e:
             return t("gateway.set_home.save_failed", error=e)
         # Preserve legacy home env vars for existing cron/setup consumers.
@@ -676,7 +662,7 @@ class GatewaySlashCommandsMixin(
             logger.warning("Home config saved but legacy env persistence failed: %s", e)
         # Keep the running gateway config in sync too. The pre-restart notification path reads
         # self.config before the process reloads config.
-        platform_config = self.config.platforms.setdefault(source.platform, PlatformConfig(enabled=not via_relay))
+        platform_config = self.config.platforms.setdefault(source.platform, PlatformConfig(enabled=True))
         platform_config.home_channel = home
         return t("gateway.set_home.success", name=chat_name, chat_id=chat_id)
 

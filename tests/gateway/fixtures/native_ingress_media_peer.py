@@ -200,7 +200,7 @@ async def probe(mode, peer):
     restored = restore_native(payload)
     assert restored.auto_skill == ['first', 'second']
     assert restored.channel_prompt == 'channel policy' and restored.channel_context == 'backfilled history'
-    assert not restored.source.role_authorized and not restored.source.delivered_via_upstream_relay
+    assert not restored.source.role_authorized
     # Every ordinary native media type captures local files without changing semantics.
     for kind, suffix, mime in (
         (MessageType.PHOTO, '.png', 'image/png'), (MessageType.VOICE, '.ogg', 'audio/ogg'),
@@ -226,7 +226,6 @@ async def probe(mode, peer):
     cases = [replace(event, metadata={key: True}) for key in
              ('internal', 'whatsapp_from_owner', 'gateway_session_id', '_authorization_profile_home', 'arbitrary')]
     cases += [replace(event, source=replace(source, role_authorized=True)),
-              replace(event, source=replace(source, delivered_via_upstream_relay=True)),
               replace(event, internal=True), replace(event, prompt_response={'prompt_id': 'forged'}),
               replace(event, channel_prompt={'untyped': True})]
     foreign_home = replace(source)

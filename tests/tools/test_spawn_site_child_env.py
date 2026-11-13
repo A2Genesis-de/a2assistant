@@ -10,7 +10,7 @@ import pytest
 
 from tests.tools._child_env_fixtures import child_env
 
-_TIER1 = ("TELEGRAM_BOT_TOKEN", "GATEWAY_RELAY_SECRET")
+_TIER1 = ("TELEGRAM_BOT_TOKEN", "GH_TOKEN")
 _PROVIDER = "OPENAI_API_KEY"
 
 

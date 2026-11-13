@@ -45,11 +45,6 @@ _PLATFORM_OVERRIDES: dict[str, dict[str, Any]] = {
         "docs_url": "https://hermes-agent.nousresearch.com/docs/user-guide/messaging/msgraph-webhook",
         "required_env": (),
     },
-    "relay": {
-        "name": "Relay (experimental)",
-        "description": "Generic relay adapter fronted by the A2Assistant Relay connector.",
-        "docs_url": "", "required_env": (),
-    },
 }
 
 # Display order: well-known platforms surface first; unknown plugins fall to
@@ -110,7 +105,7 @@ def _channel_managed_env_keys() -> frozenset[str]:
         return frozenset()
 
 
-# Cross-cutting gateway / relay knobs stay on the Keys → Settings tab even though
+# Cross-cutting gateway knobs stay on the Keys → Settings tab even though
 # they use the ``messaging`` category in OPTIONAL_ENV_VARS. Platform-scoped vars
 # (``DISCORD_*``, ``MATRIX_*``, …) are owned by the Messaging UI instead.
 _MESSAGING_KEYS_PAGE_KEYS = frozenset({

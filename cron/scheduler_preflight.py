@@ -287,7 +287,6 @@ def _preflight_check_delivery(job: dict) -> Optional[str]:
                 from gateway.config import load_gateway_config
                 gateway_config = load_gateway_config()
                 connected = {p.value for p in gateway_config.get_connected_platforms()}
-                connected |= _delivery._relay_fronted_delivery_platforms(connected)
             except Exception:
                 logger.debug(
                     "preflight: gateway config unavailable — skipping "

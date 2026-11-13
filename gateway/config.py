@@ -238,7 +238,6 @@ class Platform(Enum):
     WEIXIN = "weixin"
     BLUEBUBBLES = "bluebubbles"
     QQBOT = "qqbot"
-    RELAY = "relay"  # generic relay adapter fronted by the connector (EXPERIMENTAL)
 
     @classmethod
     def _missing_(cls, value):
@@ -312,9 +311,6 @@ PORT_BINDING_CONDITIONAL_MODES: dict[str, str] = {"feishu": "webhook"}
 # Port-binders whose /p/<profile>/ surface is a MIRROR served by the default's own adapter; a secondary
 # never gets an instance of these (api_server: /p/<profile>/v1/..., webhook: profile-bound routes).
 SHARED_LISTENER_MIRROR_PLATFORMS = frozenset({"api_server", "webhook"})
-# Everything a served profile reads from the default's own entry: the listener mirrors plus Relay,
-# process-level shared ingress whose one adapter serves every profile (no per-profile URL).
-SERVED_PROFILE_MIRROR_PLATFORMS = SHARED_LISTENER_MIRROR_PLATFORMS | frozenset({"relay"})
 # Path a client appends to ``<default listener>/p/<profile>`` to reach each mirror.
 SHARED_LISTENER_MIRROR_PATHS: dict[str, str] = {"api_server": "/v1", "webhook": "/webhooks/<route>"}
 
@@ -346,7 +342,6 @@ class HomeChannel:
     chat_id: str
     name: str
     thread_id: Optional[str] = None
-    # Authenticated logical-target provenance (relay egress re-attaches; connector stays the authz boundary).
     user_id: Optional[str] = None
     scope_id: Optional[str] = None
 
@@ -367,7 +362,7 @@ class HomeChannel:
 
 
 def persist_home_channel(home: HomeChannel, *, enabled_if_new: bool = False) -> None:
-    """Persist a logical home without falsely enabling a Relay-fronted adapter."""
+    """Persist a platform's home channel in config.yaml."""
     from hermes_cli.config import load_config, save_config
     config = load_config()
     platform_config = _dict_slot(_dict_slot(config, "platforms"), home.platform.value)
@@ -422,9 +417,6 @@ class PlatformConfig:
     typing_status_text: Optional[str] = None
     channel_overrides: dict[str, ChannelOverride] = field(default_factory=dict)
     extra: dict[str, Any] = field(default_factory=dict)  # Platform-specific settings
-    # Runtime-only, never serialized: set when the GATEWAY_RELAY_URL relay-exclusive rule
-    # (config_env._relay) switched an enabled platform off, so surfaces can say why (#141175).
-    disabled_by_relay: bool = False
 
     def to_dict(self) -> dict[str, Any]:
         result = {
@@ -565,8 +557,6 @@ _PLATFORM_CONNECTED_CHECKERS: dict[Platform, Callable[[PlatformConfig], bool]] =
     Platform.API_SERVER: lambda cfg: _has_usable_api_server_key(cfg.extra.get("key") if cfg else None),
     Platform.WEBHOOK: lambda cfg: True,
     Platform.MSGRAPH_WEBHOOK: lambda cfg: bool(str(cfg.extra.get("client_state") or "").strip()),
-    # Relay dials OUT: "connected" once an endpoint URL is configured. EXPERIMENTAL.
-    Platform.RELAY: lambda cfg: bool(cfg.extra.get("relay_url") or cfg.extra.get("url")),
 }
 
 

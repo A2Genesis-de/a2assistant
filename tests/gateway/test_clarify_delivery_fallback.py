@@ -15,10 +15,13 @@ from types import SimpleNamespace
 import pytest
 
 from gateway.platforms.base import BasePlatformAdapter, SendResult
+from gateway.send_decline import SEND_DECLINE_CODE
 from tools import clarify_gateway as cm
 
 UNDELIVERED = "[clarify prompt could not be delivered"  # prefix shared by every delivery notice
 PICK = [{"qid": "q0", "question": "Pick?", "choices": ["alpha", "beta"], "multi_select": False}]
+_DECLINED = SendResult(success=False, error="destination not allowed",
+                       raw_response={"success": False, "code": SEND_DECLINE_CODE, "error": "destination not allowed"})
 
 
 class _CardAdapter(BasePlatformAdapter):
@@ -103,10 +106,9 @@ def test_rejected_card_is_reasked_as_plain_text_and_the_typed_answer_counts(loop
 
 
 def test_declined_card_is_never_reasked_as_text(loop, monkeypatch):
-    """A connector egress DECLINE refused the destination: re-sending the question as text into
-    that chat is the exfiltration the guard exists to stop."""
+    """A DECLINE refused the destination: the question is never re-sent there as text."""
     async def declined():
-        return SendResult(success=False, error="egress declined: destination not allowed")
+        return _DECLINED
 
     adapter = _CardAdapter(declined)
     reply = _runner(adapter, loop, monkeypatch)._clarify_callback_sync(PICK)
@@ -198,7 +200,7 @@ def test_card_and_text_both_failing_late_release_the_wait_with_the_delivery_noti
 
 
 def test_card_declined_after_the_ack_window_releases_with_the_declined_notice(loop, monkeypatch):
-    """A late connector DECLINE is as definitive as an immediate one: no text retry, and the
+    """A late DECLINE is as definitive as an immediate one: no text retry, and the
     notice names the refusal (``UNDELIVERED_DECLINED``) instead of the generic delivery failure."""
     from gateway import run_turn_runner_clarify_delivery as delivery
 
@@ -206,7 +208,7 @@ def test_card_declined_after_the_ack_window_releases_with_the_declined_notice(lo
 
     async def late_decline():
         await asyncio.sleep(0.6)
-        return SendResult(success=False, error="egress declined: destination not allowed")
+        return _DECLINED
 
     adapter = _CardAdapter(late_decline)
     response, answered = _runner(adapter, loop, monkeypatch, timeout=30)._ask_clarify_question(

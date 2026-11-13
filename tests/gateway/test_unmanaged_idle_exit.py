@@ -35,7 +35,7 @@ def _runner(tmp_path, monkeypatch, *, window=0.2):
         _profile_adapters={}, _profile_failed_platforms={}, _failed_platforms={},
         config=SimpleNamespace(platforms={}), session_ticket_store=TicketStore("i", frozenset({str(home)})),
         session_runtime_descriptor={"state": "ready", "capabilities": ["x"]}, _exit_reason=None,
-        _active_work_count=lambda: 0, _scale_to_zero_has_live_background_work=lambda: False, stop=stop)
+        _active_work_count=lambda: 0, _has_live_background_work=lambda: False, stop=stop)
     monkeypatch.setattr(run_idle_exit, "idle_exit_seconds", lambda r: window)
     monkeypatch.setattr("gateway.run._cron_tick_profile_homes", lambda config: [("default", home)])
     monkeypatch.setattr(run_idle_exit, "_kanban_busy", lambda: None)

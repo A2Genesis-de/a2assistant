@@ -1,5 +1,5 @@
 """The ``/approve`` text fallback on an adapter whose ``send`` caps a split message (Discord's
-``MAX_SPLIT_MESSAGES``) or cannot report a lost chunk (the relay): the uncut command must not push the
+``MAX_SPLIT_MESSAGES``): the uncut command must not push the
 answer instructions and the deadline past what is delivered (#62359)."""
 from __future__ import annotations
 
@@ -70,19 +70,6 @@ def test_discord_fallback_past_the_chunk_cap_keeps_instructions_and_offers_only_
     assert TAIL not in delivered and "/approve" not in delivered  # an unseen tail is never offered for approval
     assert len(sent) <= adapter.MAX_SPLIT_MESSAGES
 
-
-def test_relay_fallback_longer_than_one_message_keeps_instructions_and_offers_only_deny(pending):
-    from tests.gateway.relay.test_relay_full_command_proof import _Connector, _relay
-
-    connector = _Connector()
-    adapter = _relay(connector)
-
-    async def card_fails(**_kwargs):
-        raise RuntimeError("card send failed")
-    adapter.send_exec_approval, adapter.pause_typing_for_chat = card_fails, lambda _c: None
-    _render(adapter, "echo " + "A" * 6000 + " " + TAIL)
-    assert len(connector.sends) == 1 and len(connector.sends[0]) <= 2000  # nothing left for the connector to split
-    assert "/deny" in connector.sends[0] and "/approve" not in connector.sends[0] and TAIL not in connector.sends[0]
 
 
 def test_discord_fallback_within_the_chunk_cap_keeps_every_choice(pending):

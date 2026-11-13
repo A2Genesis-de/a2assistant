@@ -36,7 +36,7 @@ def _runner(tmp_path, monkeypatch, *, work):
         _profile_adapters={}, _profile_failed_platforms={}, _failed_platforms={},
         config=SimpleNamespace(platforms={}), session_ticket_store=TicketStore("i", frozenset({str(home)})),
         session_runtime_descriptor={"state": "ready", "capabilities": ["x"]}, _exit_reason=None,
-        _active_work_count=active_work_count, _scale_to_zero_has_live_background_work=lambda: False, stop=stop)
+        _active_work_count=active_work_count, _has_live_background_work=lambda: False, stop=stop)
     # The default 600 s window: only a pending restart may end it within this test.
     monkeypatch.setattr(run_idle_exit, "idle_exit_seconds", lambda r: 600.0)
     for probe in ("_ledger_busy", "_cron_busy", "_store_gates_busy"):

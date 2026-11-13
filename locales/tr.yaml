@@ -380,7 +380,6 @@ gateway:
     save_failed: "Ana kanal kaydedilemedi: {error}"
     success: "✅ Ana kanal **{name}** (ID: {chat_id}) olarak ayarlandı.\nCron işleri ve platformlar arası mesajlar buraya iletilecek."
     err_missing_platform: "Mantıksal platform eksik"
-    err_relay_unauthenticated: "Relay bu mantıksal ana hedefi doğrulamıyor"
   context:
     header: "🧠 **Bağlam Penceresi**"
     model: "Model: `{model}`"

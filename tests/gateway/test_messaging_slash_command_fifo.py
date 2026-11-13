@@ -223,50 +223,6 @@ async def test_an_admitted_turn_never_answers_a_pending_prompt(monkeypatch, prom
     assert answered == [] and 'C' in [m for m, _ in order], (answered, order)
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize('command', ['/queue C', '/steer C'])  # no agent can steer: the queue fallback
-async def test_queued_turn_keeps_the_relay_callback(monkeypatch, command):
-    """The rebuilt turn carries the command's authenticated relay callback, so a relay-fronted chat
-    can queue; the strict identity check in ``capture_provenance`` still holds."""
-    from pathlib import Path
-    from unittest.mock import AsyncMock
-    from gateway import session_ingress_context as ctx
-    from gateway.config import Platform
-    from gateway.platforms.event import MessageEvent, MessageType
-    from gateway.run_busy import GatewayBusySessionMixin
-    from gateway.session import SessionSource
-
-    accepted, transport, home = [], object(), Path.cwd()
-
-    class Runner(GatewayBusySessionMixin):
-        session_authority = SimpleNamespace(route_epoch=lambda route: 0)
-
-        def _peek_session_state(self, key):
-            return None
-
-        def _delivery_adapter_for(self, source):
-            return adapter
-
-        def _queue_depth(self, *args, **kwargs):
-            return 0
-    runner = Runner()
-
-    async def handler(event):  # the observer's message handler: native callback, then provenance
-        with ctx.native_callback(runner, event, home):
-            ctx.capture_provenance(runner, event)
-        accepted.append(event.text)
-    adapter = SimpleNamespace(_transport=transport, _background_tasks=set(), gateway_runner=None, name='relay',
-                              _message_handler=handler, _release_turn_marker=AsyncMock(),
-                              _unwrap_ephemeral=lambda response: (response, 0))
-    monkeypatch.setattr(ctx, '_binding', lambda *a: (adapter, home, home, {'relay': 'seal'}))
-    source = SessionSource(platform=Platform.TELEGRAM, chat_id='42', user_id='42', chat_type='dm',
-                           delivered_via_upstream_relay=True)
-    original = MessageEvent(text=command, message_type=MessageType.COMMAND, source=source, message_id='C')
-    method = runner._busy_queue_command if command.startswith('/queue') else runner._busy_steer_command
-    with ctx.relay_callback(transport, original), ctx.native_callback(runner, original, home):
-        await method(original, 'chat', source)
-    assert accepted == ['C']
-
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize('caller', ['adapter', 'runner'])

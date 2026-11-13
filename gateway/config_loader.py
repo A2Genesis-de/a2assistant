@@ -489,9 +489,7 @@ def read_yaml_layers(home: Path) -> dict:
 
     Raises on a malformed user file (the loader then falls back to env + gateway.json WITHOUT the
     managed layer). An ABSENT user file is an empty layer, not a reason to skip the administrator's
-    values: a fleet host with no ``config.yaml`` must still honor them. Any pre-activation predicate
-    (``gateway.relay.relay_explicitly_disabled``) reads through here so it cannot disagree with
-    ``load_gateway_config()`` on which files count.
+    values: a fleet host with no ``config.yaml`` must still honor them.
     """
     from hermes_cli.config_backend import config_exists, read_config_doc
 

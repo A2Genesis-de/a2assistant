@@ -180,7 +180,7 @@ def yuanbao_in_use(home: Path, *, process_env: bool = False) -> bool:
 
 # ``gateway.config.Platform`` members in neither table above. Named, not imported: gateway.config imports
 # hermes_cli.config, which loads this module (the left-core test asserts every member is covered).
-_GATEWAY_ONLY_PLATFORMS = ("msgraph_webhook", "relay")
+_GATEWAY_ONLY_PLATFORMS = ("msgraph_webhook",)
 
 
 def _core_platforms_except(platform: str, *others: str) -> tuple[str, ...]:

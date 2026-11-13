@@ -380,7 +380,6 @@ gateway:
     save_failed: "홈 채널 저장에 실패했습니다: {error}"
     success: "✅ 홈 채널이 **{name}**(ID: {chat_id})(으)로 설정되었습니다.\n크론 작업과 플랫폼 간 메시지가 여기로 전달됩니다."
     err_missing_platform: "논리 플랫폼이 없어요"
-    err_relay_unauthenticated: "릴레이가 이 논리 홈 대상을 인증하지 않아요"
   context:
     header: "🧠 **컨텍스트 윈도우**"
     model: "모델: `{model}`"

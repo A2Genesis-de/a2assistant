@@ -4,13 +4,11 @@ import asyncio
 
 import pytest
 
-from gateway.config import Platform, PlatformConfig
 from gateway.platforms.event import MessageEvent
-from gateway.session import SessionSource
 from gateway.session_identity import replace_source
-from hermes_state_runtime import RuntimeStoreError, get_session_admission, list_session_admissions
+from hermes_state_runtime import RuntimeStoreError, list_session_admissions
 from tests.gateway.test_automation_compression_media import _admit_human, _discord_owner
-from tests.gateway.test_automation_notification_category import _SOURCE, _authority, _native_owner
+from tests.gateway.test_automation_notification_category import _SOURCE, _native_owner
 
 
 @pytest.mark.asyncio
@@ -170,42 +168,3 @@ async def test_process_notice_from_a_subagent_of_a_resumed_delegate_reaches_the_
     await asyncio.sleep(0)
 
 
-def _relay_adapter():
-    from gateway.relay.adapter import RelayAdapter
-    from gateway.relay.descriptor import CapabilityDescriptor
-    from gateway.relay.ws_transport import WebSocketRelayTransport
-    descriptor = CapabilityDescriptor(1, 'relay', 'Fixture', 4096, False, True, False, 'plain', 'chars')
-    transport = WebSocketRelayTransport('http://127.0.0.1:1/relay', 'relay', '',
-                                        gateway_id='fixture-gateway', upgrade_secret='fixture-secret')
-    transport._ws = object()  # the connector proof requires a live socket
-    transport._descriptors_by_platform['relay'] = descriptor
-    return RelayAdapter(PlatformConfig(), descriptor, transport=transport), transport
-
-
-def _relay_source(message_id=None):
-    return SessionSource(platform=Platform.RELAY, chat_id='hub', chat_type='group', user_id='alex',
-                         message_id=message_id, delivered_via_upstream_relay=True)
-
-
-@pytest.mark.asyncio
-async def test_relay_wake_row_reverifies_the_source_it_stores(tmp_path, monkeypatch):
-    from gateway.session_envelope import restore_native
-    from gateway.session_ingress_context import native_callback, register_transport_home, relay_callback
-    runner, authority = await _authority(tmp_path, monkeypatch)
-    adapter, transport = _relay_adapter()
-    runner.adapters = {Platform.RELAY: adapter}
-    runner._wire_adapter_handlers(adapter)
-    register_transport_home(runner, None, tmp_path)
-    try:
-        human = MessageEvent(text='human', source=_relay_source('human-1'), message_id='human-1')
-        with native_callback(runner, human, tmp_path), relay_callback(transport, human):
-            await authority.admit_native(human)
-        route = runner.session_store._generate_session_key(human.source)
-        event = MessageEvent(text='notice', source=_relay_source(), internal=True, metadata={
-            'gateway_session_key': route, 'gateway_session_id': runner.session_store.peek_session_id(route)})
-        row = get_session_admission(authority.db, admission_id=(
-            await authority.admit_automation(adapter, event, 'notice')).admission_id)
-        assert row is not None
-        assert restore_native(row['payload'], runner).source.message_id is None
-    finally:
-        authority.db.close()

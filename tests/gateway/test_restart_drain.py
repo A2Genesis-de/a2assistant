@@ -675,7 +675,7 @@ async def test_request_restart_still_waits_for_worker_without_its_own_scope(monk
     monkeypatch.setattr("cron.jobs.load_jobs", list)
     runner, _adapter = make_restart_runner()
     runner._restart_after_turn_timeout = 300.0
-    runner._scale_to_zero_status = MagicMock()
+    runner._runtime_status_best_effort = MagicMock()
     assert sched.try_register_running_job("degraded-job")
     try:
         sched._record_external_cron_worker("degraded-job", 4322, scope_isolated=False)

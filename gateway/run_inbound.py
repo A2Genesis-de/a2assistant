@@ -48,9 +48,6 @@ if TYPE_CHECKING:  # string annotations only; never imported at runtime (cycle)
 # Log-record parity with the origin module.
 logger = logging.getLogger("gateway.run")
 
-# ``RelayMediaClient.download`` temp-file prefix: the rest of such a basename is random, not a name.
-_RELAY_MEDIA_PREFIX = "relay_media_"
-_UNKNOWN_ATTACHMENT_NAME = "(original filename unknown)"
 
 
 def discord_triggering_note(message_id: Any) -> str:
@@ -215,9 +212,6 @@ class GatewayInboundMixin(GatewayInboundHooksMixin, GatewayInboundTranscriptionM
         if getattr(event, "_fifo_only", False):  # a slash command's queued turn: its command passed ingress
             return event, source, False
 
-        # scale-to-zero: only real user-originated inbound stamps the last-inbound clock;
-        # counting internal/system events would keep a genuinely idle gateway awake.
-        self._scale_to_zero_note_real_inbound()
         event = await self._hm_pre_gateway_dispatch_hook(event, source)
         if event is None:
             return None
@@ -1572,14 +1566,10 @@ class GatewayInboundMixin(GatewayInboundHooksMixin, GatewayInboundTranscriptionM
     def _inbound_attachment_display_name(path: str, original_name: str = "") -> tuple[str, str]:
         """``(display_name, agent_visible_path)``. The display name is the adapter-supplied
         original name when known (``MessageEvent.media_filenames``), else parsed from the native
-        cache filename ``<id>_<id>_<original>``. A relay temp file (``relay_media_<random>``)
-        carries no name, so it is labelled unknown rather than shown as the random basename.
-        The path is translated to the in-container mount under a Docker backend."""
+        cache filename ``<id>_<id>_<original>``. The path is translated to the in-container mount under a Docker backend."""
         from tools.credential_files import to_agent_visible_cache_path
         basename = os.path.basename(path)
         name = clean_attachment_filename(original_name)
-        if not name and basename.startswith(_RELAY_MEDIA_PREFIX):
-            return _UNKNOWN_ATTACHMENT_NAME, to_agent_visible_cache_path(path)
         if not name:
             parts = basename.split("_", 2)
             name = parts[2] if len(parts) >= 3 else basename

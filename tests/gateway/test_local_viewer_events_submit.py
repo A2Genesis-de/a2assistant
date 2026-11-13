@@ -100,7 +100,7 @@ def _gateway_runner():
     runner._refresh_fallback_model.return_value = None
     runner._consume_pending_native_image_paths.return_value = []
     runner._consume_pending_turn_sidecar_notes.return_value = []
-    for lane in ("_is_telegram_topic_lane", "_is_discord_auto_thread_lane", "_is_relay_discord_channel_lane"):
+    for lane in ("_is_telegram_topic_lane", "_is_discord_auto_thread_lane"):
         getattr(runner, lane).return_value = False
     return runner
 

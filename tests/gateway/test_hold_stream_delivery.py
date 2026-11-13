@@ -1,8 +1,7 @@
 """A ``hold_stream`` plugin's session shows the user only the rewritten final, on every chat shape.
 
 Real ``GatewayRunner._run_agent`` + real ``AIAgent`` against a loopback model streaming a reply
-that a ``transform_llm_output`` redactor rewrites. The adapters are recording transports (and the
-real ``RelayAdapter`` over the stub connector for Slack's stream-is-the-message lane); the base
+that a ``transform_llm_output`` redactor rewrites. The adapters are recording transports; the base
 adapter's own ``_process_message_background`` runs the typing loop and the final send. With
 ``hold_stream=True`` no draft, edit, native stream frame, split head or commentary bubble ever
 carries the raw text, the typing indicator runs while the reply is held, and the final goes out
@@ -69,30 +68,11 @@ class _NativeStreamChat(_Chat):
         return True
 
 
-def _relay_slack():
-    """Slack fronted by the relay: native ``chat.*Stream`` drafts ARE the message."""
-    from gateway.relay.adapter import RelayAdapter
-    from tests.gateway.relay.stub_connector import StubConnector
-    from tests.gateway.relay.test_relay_slack_dm_streaming import _slack_desc
-
-    desc = _slack_desc(supports_draft_streaming=True)
-    adapter = RelayAdapter(PlatformConfig(), desc, transport=StubConnector(desc))
-    assert adapter.draft_stream_is_message is True
-    return adapter
-
-
-def _frames(chat):
-    if hasattr(chat, "log"):
-        return chat.log
-    return [(frame["op"], frame.get("content") or frame.get("text") or "") for frame in chat._transport.sent]
-
-
 CHATS = {
     "edits_in_place": lambda: _Chat(editable=True),
     "cannot_edit": lambda: _Chat(editable=False),
     "splits_long_replies": lambda: _Chat(editable=True, limit=60),
     "native_stream": lambda: _NativeStreamChat(editable=False),
-    "relay_stream_is_the_message": _relay_slack,
 }
 
 
@@ -101,7 +81,7 @@ async def _deliver(chat, *, hold, monkeypatch):
     from hermes_cli import plugins
 
     home = Path(os.environ["HERMES_HOME"])
-    platform = Platform.SLACK if chat.platform == Platform.RELAY else Platform.TELEGRAM
+    platform = Platform.TELEGRAM
     source = SessionSource(platform=platform, chat_id="c1", chat_type="dm", user_id="u1")
     event = MessageEvent(text="show me the config", source=source, message_type=MessageType.TEXT)
     session_key = f"agent:main:{platform.value}:dm:c1"
@@ -115,8 +95,6 @@ async def _deliver(chat, *, hold, monkeypatch):
         runner.adapters[platform] = chat
         runner.config.streaming = StreamingConfig(enabled=True, transport="auto", edit_interval=0.01,
                                                   buffer_threshold=1, cursor="")
-        if hasattr(chat, "_capture_scope"):
-            chat._capture_scope(event)
 
         async def handler(event):
             result = await runner._run_agent(message=event.text, context_prompt="", history=[], source=source,
@@ -129,7 +107,7 @@ async def _deliver(chat, *, hold, monkeypatch):
             await chat._process_message_background(event, session_key)
         finally:
             plugins._reset_plugin_managers_for_tests()
-    return _frames(chat)
+    return chat.log
 
 
 @pytest.mark.asyncio
@@ -147,7 +125,7 @@ async def test_a_held_reply_reaches_the_chat_only_as_the_rewrite(shape, monkeypa
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("shape", ["edits_in_place", "relay_stream_is_the_message"])
+@pytest.mark.parametrize("shape", ["edits_in_place"])
 async def test_a_transform_that_did_not_ask_keeps_streaming(shape, monkeypatch):
     frames = await _deliver(CHATS[shape](), hold=False, monkeypatch=monkeypatch)
 

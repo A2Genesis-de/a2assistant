@@ -350,19 +350,6 @@ class GatewayNotificationsMixin(GatewayUpdateNotificationsMixin, GatewayNotifica
                                 "Queued-lane final reconciled by editing message %s in place (no duplicate send).",
                                 _sc_msg_id,
                             )
-                        else:
-                            # P5(b): a DECLINE is not "editing unavailable". The
-                            # send below re-delivers the whole response to the
-                            # chat the connector just refused.
-                            from gateway.relay.egress import declined_send
-
-                            if declined_send(_edit_res):
-                                logger.warning(
-                                    "Queued-lane reconcile edit DECLINED by the "
-                                    "connector's egress guard; not falling back "
-                                    "to a send (the destination is not approved)."
-                                )
-                                return True
                     except Exception as _qe:
                         logger.debug("Queued-lane reconcile edit failed (%s); falling back to send.", _qe)
                 if not _reconciled:
@@ -424,7 +411,7 @@ class GatewayNotificationsMixin(GatewayUpdateNotificationsMixin, GatewayNotifica
             if not platform_str or not chat_id:
                 return None
             platform = Platform(platform_str)
-            # Relay-aware transport over the REQUESTER'S profile adapter map; ``self.adapters`` is the
+            # Transport over the REQUESTER'S profile adapter map; ``self.adapters`` is the
             # default profile's, so a secondary's "restarted" notice would leave through the wrong bot.
             transport = resolve_delivery_transport(
                 platform, self.config, self._adapters_for_profile(self._marker_profile(data)))
@@ -438,13 +425,8 @@ class GatewayNotificationsMixin(GatewayUpdateNotificationsMixin, GatewayNotifica
                 )
                 return None
             metadata = self._pending_marker_metadata(platform, chat_id, data, transport.adapter)
-            if data.get("delivered_via_upstream_relay") is True:
-                metadata = dict(metadata or {})
-                for field in ("user_id", "scope_id"):
-                    if data.get(field):
-                        metadata[field] = str(data[field])
             result = await transport.send(
-                platform, str(chat_id), t("gateway.startup.restarted"),
+                str(chat_id), t("gateway.startup.restarted"),
                 metadata=_non_conversational_metadata(metadata, platform=platform),
             )
             # adapter.send() catches provider errors (e.g. "Chat not found") and returns
@@ -508,15 +490,9 @@ class GatewayNotificationsMixin(GatewayUpdateNotificationsMixin, GatewayNotifica
         from gateway.run import _non_conversational_metadata
         try:
             metadata = self._thread_metadata_for_target(platform, home.chat_id, home.thread_id, adapter=transport.adapter)
-            if transport.is_relay:
-                metadata = dict(metadata or {})
-                if home.user_id:
-                    metadata["user_id"] = home.user_id
-                if home.scope_id:
-                    metadata["scope_id"] = home.scope_id
             send_metadata = _non_conversational_metadata(metadata, platform=platform)
-            if send_metadata is not None or transport.is_relay:
-                result = await transport.send(platform, str(home.chat_id), message, metadata=send_metadata)
+            if send_metadata is not None:
+                result = await transport.send(str(home.chat_id), message, metadata=send_metadata)
             else:
                 result = await transport.adapter.send(str(home.chat_id), message)
             if _send_failed(result):
@@ -719,18 +695,9 @@ class GatewayNotificationsMixin(GatewayUpdateNotificationsMixin, GatewayNotifica
         def _opt(field: str) -> Optional[str]:
             return str(evt.get(field) or "").strip() or None
 
-        scope_id = _opt("scope_id")
-        if scope_id is None and chat_type not in ("dm", "thread"):
-            # Reconstructed scoped-chat source without scope_id: a relay connector's tenant guard may
-            # decline the reply. Warn, don't fail (native adapters need no scope_id).
-            logger.warning(
-                "Synthetic event source for %s chat=%s (%s) reconstructed "
-                "without scope_id; scoped relay egress may be declined by "
-                "the connector's tenant guard (user_id fallback only).", platform_name, chat_id, chat_type,
-            )
         return SessionSource(
             platform=platform, chat_id=chat_id, chat_type=chat_type, thread_id=_opt("thread_id"),
-            user_id=_opt("user_id"), user_name=_opt("user_name"), scope_id=scope_id, profile=profile,
+            user_id=_opt("user_id"), user_name=_opt("user_name"), scope_id=_opt("scope_id"), profile=profile,
         )
 
     async def _drain_watch_notifications(self, completion_queue) -> None:
@@ -870,8 +837,7 @@ class GatewayNotificationsMixin(GatewayUpdateNotificationsMixin, GatewayNotifica
                      if name != primary and session_owned_by_profile(self.config, name, raw_sid)), None)
 
     def _resolve_injection_adapter(self, platform_name: str, source=None):
-        """Adapter for a synthetic-event platform: alias-aware transport resolver first (one
-        Platform.RELAY adapter fronts N logical platforms; native wins), literal ``p.value`` scan as
+        """Adapter for a synthetic-event platform: transport resolver first, literal ``p.value`` scan as
         fallback for minimal runner stubs / exotic platform strings when the resolver can't run."""
         from gateway.delivery import resolve_delivery_transport
         from gateway.session_detached import detached_route_of
@@ -881,8 +847,6 @@ class GatewayNotificationsMixin(GatewayUpdateNotificationsMixin, GatewayNotifica
             owner = self._transport_owner(source)
             if owner is not None:
                 return owner[0]
-            if getattr(source, "delivered_via_upstream_relay", False) is True:
-                return self.adapters.get(Platform.RELAY)
         # A pinned identity names the bot that received the conversation: it answers, as
         # ``_delivery_adapter_for`` rules (a ``bot_profile`` route's runtime may own no adapter for this
         # platform, #139726). Otherwise one resolver with authz/kanban/cron: a secondary's own map, or the
@@ -901,32 +865,7 @@ class GatewayNotificationsMixin(GatewayUpdateNotificationsMixin, GatewayNotifica
             return _transport.adapter
         if not pinned and source is not None and (borrowed := self._routed_primary_adapter(source)) is not None:
             return borrowed
-        if source is not None and (relay := self._committed_relay_adapter(source)) is not None:
-            return relay
         return next((a for p, a in adapters.items() if p.value == platform_name), None)
-
-    def _committed_relay_adapter(self, source):
-        """The relay a restored *source* was admitted through, proven by its route's last committed
-        admission. Persisted origins omit relay trust, so a connector-stamped profile with no local
-        route to borrow the primary relay by otherwise finds no adapter after a restart."""
-        from gateway.session_authorities import active_authority
-        from gateway.session_automation import committed_route_envelope
-        from gateway.session_envelope import restore_native
-        from hermes_state_runtime import RuntimeStoreError
-        authority = active_authority(self)
-        if authority is None:
-            return None
-        entry = self.session_store.lookup_by_session_key(self.session_store._generate_session_key(source))
-        envelope = committed_route_envelope(authority, entry) if entry is not None else None
-        if envelope is None or 'relay' not in envelope['provenance']:
-            return None
-        # The seal is rechecked against the live connector, as ``snapshot_automation`` does.
-        try:
-            restored = restore_native({'text': '', 'native_text_v1': {
-                key: value for key, value in envelope.items() if key != 'media'}}, self)
-        except RuntimeStoreError:
-            return None
-        return self._adapter_for_source(restored.source)
 
     async def _inject_watch_notification(
         self, synth_text: str, evt: dict, *, raise_not_accepted: bool = False,
@@ -999,11 +938,6 @@ class GatewayNotificationsMixin(GatewayUpdateNotificationsMixin, GatewayNotifica
                 "Watch pattern notification — injecting for %s chat=%s thread=%s",
                 platform_name, source.chat_id, source.thread_id,
             )
-            # Relay egress priming: post-restart routing caches are cold (they warm only on inbound), so
-            # replies would egress without tenant discriminators and be declined by the connector.
-            _prime = getattr(adapter, "prime_routing_cache", None)
-            if callable(_prime):
-                _prime(synth_event)
             from gateway.session_authorities import active_authority
             authority = active_authority(self)
             if authority is not None:

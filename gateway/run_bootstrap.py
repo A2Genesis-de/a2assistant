@@ -287,7 +287,6 @@ async def _start_gateway_start_control_socket(runner):
         )
         from gateway.run_plugin_rewire import reload_plugins_verb
         from gateway.run_active_work_verb import active_work_verb
-        from gateway.relay.link import relay_link_verb
         from gateway.drain_control import RESTART_WAIT_REASON
         descriptor = runner.session_runtime_descriptor
 
@@ -363,10 +362,7 @@ async def _start_gateway_start_control_socket(runner):
                            "active-work": active_work_verb(runner, _main_loop),
                            # A plugin installed/enabled by another process loads now and re-wires the
                            # live adapters' handlers (#87770); tools/prompt still wait for the next session.
-                           "reload-plugins": reload_plugins_verb(runner, _main_loop),
-                           # The per-gateway relay secret exists only in this process: the dashboard
-                           # mints Team Gateway link codes through it.
-                           "relay-link": relay_link_verb})
+                           "reload-plugins": reload_plugins_verb(runner, _main_loop)})
         _control_server.ticket_store = runner.session_ticket_store
         # The public client lookup answers from the same descriptor ``identify`` does.
         from gateway.control_resolve import resolve_profile_handler

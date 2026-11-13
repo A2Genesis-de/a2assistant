@@ -55,7 +55,7 @@ CRED_ENV = {
 _PLATFORM_ENV_PREFIXES = (
     "TELEGRAM_", "DISCORD_", "SLACK_", "WEIXIN_", "WHATSAPP_", "HASS_", "EMAIL_",
     "TWILIO_", "DINGTALK_", "FEISHU_", "WECOM_", "BLUEBUBBLES_", "QQ_", "QQBOT_",
-    "GATEWAY_RELAY", "SIGNAL_", "MATTERMOST_", "MATRIX_",
+    "SIGNAL_", "MATTERMOST_", "MATRIX_",
 )
 
 def _isolate(monkeypatch, tmp_path, env):

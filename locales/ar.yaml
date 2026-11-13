@@ -380,7 +380,6 @@ gateway:
     save_failed: "فشل حفظ القناة الرئيسية: {error}"
     success: "✅ ضُبطت القناة الرئيسية إلى **{name}** (المعرّف: {chat_id}).\nستُسلَّم مهام cron والرسائل عبر المنصّات هنا."
     err_missing_platform: "المنصة المنطقية مفقودة"
-    err_relay_unauthenticated: "المُرحِّل لا يصادق على هذا الهدف المنطقي الرئيسي"
   context:
     header: "🧠 **نافذة السياق**"
     model: "النموذج: `{model}`"

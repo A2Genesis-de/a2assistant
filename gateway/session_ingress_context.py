@@ -1,70 +1,12 @@
 """Process-local callback provenance; private snapshots are revalidated, not grants."""
 from contextlib import contextmanager
-from copy import copy
 from contextvars import ContextVar
 from pathlib import Path
 import weakref
-import hashlib
-import hmac
-import json
 
 from hermes_state_runtime import RuntimeStoreError
 
 _callback: ContextVar[tuple | None] = ContextVar('native_ingress_callback', default=None)
-_relay_callback: ContextVar[tuple | None] = ContextVar('relay_ingress_callback', default=None)
-
-
-@contextmanager
-def relay_callback(transport, event):
-    # Only the authenticated WS reader installs this; wire fields cannot mint it.
-    token = _relay_callback.set((transport, event))
-    try:
-        yield
-    finally:
-        _relay_callback.reset(token)
-
-
-@contextmanager
-def relay_passthrough_event(transport, forward, event):
-    # A passthrough frame is decoded after the reader bound its proof to the raw forward; move
-    # that proof onto the decoded event. Without the reader's binding nothing is minted.
-    bound = _relay_callback.get()
-    if bound is None or bound[0] is not transport or bound[1] is not forward:
-        yield
-        return
-    with relay_callback(transport, event):
-        yield
-
-
-def _relay_connector(adapter, source):
-    from gateway.relay.ws_transport import WebSocketRelayTransport
-    transport = getattr(adapter, '_transport', None)
-    if (not isinstance(transport, WebSocketRelayTransport)
-            or not transport._gateway_id or not transport._upgrade_secret
-            or transport.auth_revoked or transport._closing or transport._ws is None
-            or transport.descriptor_for_platform(source.platform.value) is None
-            or transport._bot_id_for(source.platform.value) is None):
-        raise RuntimeStoreError('permission_denied')
-    identity = json.dumps([transport._url, transport._gateway_id, transport._identities],
-                          sort_keys=True, separators=(',', ':'))
-    connector = hmac.new(transport._upgrade_secret.encode(), identity.encode(), hashlib.sha256).hexdigest()
-    return transport, connector
-
-
-def _relay_seal(transport, source, provenance):
-    binding = [provenance, source.to_dict(), source.is_bot]
-    return hmac.new(transport._upgrade_secret.encode(),
-                    json.dumps(binding, sort_keys=True, separators=(',', ':')).encode(),
-                    hashlib.sha256).hexdigest()
-
-
-def reseal_relay(adapter, source, provenance):
-    """*provenance* bound to the stored *source* dict instead; only for a seal the caller verified."""
-    from gateway.session import SessionSource
-    stored = SessionSource.from_dict(source)
-    stored.is_bot = source['is_bot']
-    base = {key: value for key, value in provenance.items() if key != 'relay'}
-    return {**base, 'relay': _relay_seal(adapter._transport, stored, base)}
 
 
 def register_transport_home(runner, profile, home):
@@ -93,16 +35,15 @@ def carry_callback(event, rewritten):
     """Gateway code that rebuilds a callback's event (a ``pre_gateway_dispatch`` rewrite, the
     ``/retry`` re-send) keeps the callback's provenance, but only on the source object the callback
     authenticated: a new event with a swapped source carries nothing (#139045, #139040)."""
-    for bound_var in (_callback, _relay_callback):
-        bound = bound_var.get()
-        if bound is not None and bound[1] is event and rewritten.source is event.source:
-            bound_var.set((bound[0], rewritten, *bound[2:]))
+    bound = _callback.get()
+    if bound is not None and bound[1] is event and rewritten.source is event.source:
+        _callback.set((bound[0], rewritten, *bound[2:]))
 
 
 _PREFIX_PRODUCERS = ('webhook', 'api_server', 'msgraph_webhook')
 
 
-def _runtime_profile(runner, source, profile, owner_name, homes, relay):
+def _runtime_profile(runner, source, profile, owner_name):
     """The multiplexed runtime profile *source* routes to; ``_binding`` checks it is served."""
     # Same matcher as ingress stamping, ``user_id`` included: a ``user_id`` route stamps the
     # source upstream, so it must resolve here too. A route applies only to its bot_profile's
@@ -122,19 +63,12 @@ def _runtime_profile(runner, source, profile, owner_name, homes, relay):
         if len(best) != 1:
             raise RuntimeStoreError('admission_conflict')
         return best[0].profile
-    if relay and profile is None and source.profile in homes:
-        # The instance's one authenticated connector (relay is process-level) routes scopes to
-        # served profiles (Team Gateway); the relay seal covers ``source.profile``.
-        return source.profile
     return owner_name
 
 
 def _binding(runner, source, profile):
     registries = [(None, runner.adapters), *getattr(runner, '_profile_adapters', {}).items()]
-    from gateway.config import Platform
-    relay = source.delivered_via_upstream_relay is True
-    platform = Platform.RELAY if relay else source.platform
-    candidates = [(owner, mapping.get(platform)) for owner, mapping in registries]
+    candidates = [(owner, mapping.get(source.platform)) for owner, mapping in registries]
     adapter = next((adapter for owner, adapter in candidates if owner == profile), None)
     if adapter is None or sum(item is adapter for _, item in candidates) != 1:
         raise RuntimeStoreError('not_found')
@@ -167,7 +101,7 @@ def _binding(runner, source, profile):
         owner_name = profile or primary
         if homes.get(owner_name) != home:
             raise RuntimeStoreError('profile_mismatch')
-        runtime_profile = _runtime_profile(runner, source, profile, owner_name, homes, relay)
+        runtime_profile = _runtime_profile(runner, source, profile, owner_name)
         if (source.profile or primary) != runtime_profile or runtime_profile not in homes:
             raise RuntimeStoreError('profile_mismatch')
         runtime_home = homes[runtime_profile]
@@ -180,23 +114,18 @@ def _binding(runner, source, profile):
     authority = authority_for_home(runner, runtime_home)
     if authority is None:
         raise RuntimeStoreError('profile_mismatch')
-    if relay:
-        transport, connector = _relay_connector(adapter, source)
-    else:
-        # The connector pins "the same credential still serves this route" across a restart. A
-        # plugin platform with no discoverable credential (in-memory / socket-only adapters) is
-        # still one registered adapter; it binds by platform + owning profile rather than being
-        # refused as not_found.
-        connector = (runner._adapter_credential_fingerprint(adapter)
-                     or f'adapter:{source.platform.value}:{profile or ""}')
+    # The connector pins "the same credential still serves this route" across a restart. A
+    # plugin platform with no discoverable credential (in-memory / socket-only adapters) is
+    # still one registered adapter; it binds by platform + owning profile rather than being
+    # refused as not_found.
+    connector = (runner._adapter_credential_fingerprint(adapter)
+                 or f'adapter:{source.platform.value}:{profile or ""}')
     if connector is None:
         raise RuntimeStoreError('not_found')
     provenance = {'transport_home': str(home), 'runtime_home': str(runtime_home),
                   'platform': source.platform.value, 'connector': connector}
     if multiplex:
         provenance['transport_profile'] = profile
-    if relay:
-        provenance['relay'] = _relay_seal(transport, source, provenance)
     return adapter, home, runtime_home, provenance
 
 
@@ -205,13 +134,7 @@ def capture_provenance(runner, event):
     if context is None or context[0] is not runner or context[1] is not event:
         return None
     adapter, home, _, provenance = _binding(runner, event.source, context[3])
-    if event.source.delivered_via_upstream_relay:
-        delivery = _relay_callback.get()
-        if delivery is None or delivery[0] is not adapter._transport or delivery[1] is not event:
-            raise RuntimeStoreError('permission_denied')
-        owner = (adapter, context[3])
-    else:
-        owner = runner._transport_owner(event.source)
+    owner = runner._transport_owner(event.source)
     if owner is None or owner[0] is not adapter or home != context[2]:
         raise RuntimeStoreError('not_found')
     return provenance
@@ -221,12 +144,9 @@ def restore_provenance(runner, source, provenance):
     """Resolve current owned connector/home before installing in-process auth context."""
     if not isinstance(provenance, dict):
         raise RuntimeStoreError('invalid_params')
-    candidate = copy(source)
-    candidate.delivered_via_upstream_relay = 'relay' in provenance
-    adapter, home, runtime_home, expected = _binding(runner, candidate, provenance.get('transport_profile'))
+    adapter, home, runtime_home, expected = _binding(runner, source, provenance.get('transport_profile'))
     if provenance != expected:
         raise RuntimeStoreError('profile_mismatch')
-    source.delivered_via_upstream_relay = candidate.delivered_via_upstream_relay
     source._transport_adapter_ref = weakref.ref(adapter)
     # Re-pin the identity ingress resolved: the drained turn's route records the receiving bot from it
     # (``SessionEntry.transport_profile``), so after a restart its session still answers through that bot.
@@ -240,7 +160,7 @@ async def reauthorize_roles(runner, source, provenance):
     """A role flag requests a connector check; it never supplies permission."""
     if not source.role_authorized:
         return False
-    if provenance is None or source.delivered_via_upstream_relay:
+    if provenance is None:
         raise RuntimeStoreError('invalid_params')
     restore_provenance(runner, source, provenance)
     adapter = runner._adapter_for_source(source)

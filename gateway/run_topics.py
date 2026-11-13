@@ -407,7 +407,7 @@ class GatewayTopicThreadsMixin:
         survives restarts. ``replace_source`` keeps the live transport owner and message id."""
         if (
             source.platform != Platform.DISCORD or source.chat_type != "thread" or not source.thread_id
-            or source.delivered_via_upstream_relay or self._is_discord_auto_thread_lane(source)
+            or self._is_discord_auto_thread_lane(source)
         ):
             return source
         entry = self.session_store.lookup_by_session_key(session_key)
@@ -437,98 +437,20 @@ class GatewayTopicThreadsMixin:
             source, auto_thread_created=True, auto_thread_initial_name=origin.auto_thread_initial_name,
         )
 
-    def _is_relay_discord_channel_lane(self, source: SessionSource) -> bool:
-        """Shape-only check: a relay-delivered Discord CHANNEL event whose reply the connector MAY
-        auto-thread (title-turn registration gate). Deliberately does NOT consult the send-result
-        cache — before delivery the feedback can't exist; the rename lane polls it at fire time."""
-        return (
-            source.platform == Platform.DISCORD and bool(source.chat_id) and not source.thread_id
-            and source.chat_type in ("group", "channel")
-            and getattr(source, "delivered_via_upstream_relay", False) is True
-        )
-
-    def _relay_auto_thread_info(self, source: SessionSource) -> Optional[tuple[str, str]]:
-        """(thread_id, initial_name) when the RELAY connector auto-threaded our reply — the title-turn
-        sibling of _is_discord_auto_thread_lane (whose markers only exist from turn 2 on; the title
-        turn's source is the PARENT channel event).
-
-        Preferred: the connector's per-message ``prospective_thread_id`` stamp (anchor message id ==
-        the thread it will create), exact even when several auto-threads spawn from one channel;
-        the connector's created-name guard enforces no-clobber. Fallback: the per-chat send-result
-        cache (older connectors), which only ever renamed the FIRST thread.
-        """
-        from gateway.run import _as_thread_info
-        if (
-            source.platform != Platform.DISCORD or not source.chat_id
-            or not getattr(source, "delivered_via_upstream_relay", False)
-        ):
-            return None
-        prospective = getattr(source, "prospective_thread_id", None)
-        if prospective:
-            # Deterministic per-thread identity; the empty initial-name marker signals the caller
-            # to rely on the connector-side no-clobber guard.
-            return (str(prospective), "")
-        info_fn = getattr(self._delivery_adapter_for(source), "auto_thread_info_for_chat", None)
-        if not callable(info_fn):
-            return None
-        with suppress(Exception):
-            return _as_thread_info(info_fn(str(source.chat_id)))
-        return None
-
-    async def _await_relay_auto_thread_info(self, source: SessionSource) -> Optional[tuple[str, str]]:
-        """``_relay_auto_thread_info``, waited out until this turn delivers (the legacy send-result
-        path can only answer once the reply is sent; the caller asks at title time, one turn early).
-        The timeout is only a backstop for a turn that never sends: the turn's own inactivity limit."""
-        from gateway.run import _as_thread_info, _float_env
-        # The connector-stamped prospective id is known at ingest, so most sessions answer here.
-        known = self._relay_auto_thread_info(source)
-        if known is not None:
-            return known
-        wait_fn = getattr(self._delivery_adapter_for(source), "wait_for_auto_thread_info", None)
-        if not callable(wait_fn) or not source.chat_id:
-            return None
-        # 0 means the operator disabled the turn limit; the backstop still needs one.
-        timeout = _float_env("HERMES_AGENT_TIMEOUT", 1800) or 1800
-        with suppress(Exception):
-            return _as_thread_info(await wait_fn(str(source.chat_id), timeout))
-        return None
-
     async def _rename_discord_auto_thread_for_session_title(
         self, source: SessionSource, session_id: str, title: str,
-        relay_info: Optional[tuple[str, str]] = None,
     ) -> None:
-        """Best-effort semantic rename of a newly auto-created Discord thread. ``relay_info`` is the
-        connector's (thread_id, initial_name) feedback, supplied on the title turn where the source
-        is the parent-channel event without auto-thread markers (see _relay_auto_thread_info)."""
-        if relay_info is None and not await asyncio.to_thread(self._is_discord_auto_thread_lane, source):
-            # Relay title turn with no feedback captured at schedule time: the title comes off the
-            # user's opening message, so it beats the delivery that produces the connector's
-            # send-result feedback by the whole length of the turn. None here = a true miss.
-            if not self._is_relay_discord_channel_lane(source):
-                return
-            relay_info = await self._await_relay_auto_thread_info(source)
-            if relay_info is None:
-                return
+        """Best-effort semantic rename of a newly auto-created Discord thread."""
+        if not await asyncio.to_thread(self._is_discord_auto_thread_lane, source):
+            return
         adapter = self._delivery_adapter_for(source) if getattr(self, "adapters", None) else None
         rename_thread = getattr(adapter, "rename_thread", None)
         if rename_thread is None:
             return
-        relay = relay_info is not None
-        target_thread_id = relay_info[0] if relay else str(source.thread_id)
+        target_thread_id = str(source.thread_id)
         thread_name = self._sanitize_discord_thread_title(title)
-        # Relay: ask the CONNECTOR to enforce the no-clobber guard from its own created-name memory —
-        # the gateway can't reproduce the initial name byte-for-byte (normalization drift silently
-        # declined every rename). Its egress guard resolves the tenant from caches keyed by the PARENT
-        # channel chat_id, so pass it or the lookup misses. Native: the source IS the thread; guard on
-        # the initial name.
-        rename_kwargs = (
-            {"prefer_connector_created": True, "parent_chat_id": str(source.chat_id) if source.chat_id else None}
-            if relay else {"only_if_current_name": getattr(source, "auto_thread_initial_name", None)}
-        )
-        logger.info(
-            "discord auto-thread rename: thread=%s lane=%s new_title=%r",
-            target_thread_id, "relay" if relay else "native", thread_name,
-        )
+        rename_kwargs = {"only_if_current_name": getattr(source, "auto_thread_initial_name", None)}
+        logger.info("discord auto-thread rename: thread=%s new_title=%r", target_thread_id, thread_name)
         try:
             renamed = await rename_thread(target_thread_id, thread_name, **rename_kwargs)
             logger.info("discord auto-thread rename result: thread=%s applied=%s", target_thread_id, bool(renamed))
@@ -573,22 +495,11 @@ class GatewayTopicThreadsMixin:
 
     def _schedule_discord_semantic_thread_rename(self, source: SessionSource, session_id: str, title: str) -> None:
         """Schedule Discord auto-thread rename from the auto-title background thread."""
-        if not title:
+        if not title or not self._is_discord_auto_thread_lane(source):
             return
-        relay_info = None
-        if not self._is_discord_auto_thread_lane(source):
-            # Relay title turn: the source is the PARENT channel event (thread didn't exist at
-            # ingest). The auto-title races the delivery that fills the send-result cache, so a
-            # miss HERE is not a verdict: schedule whenever the SHAPE matches; the async rename
-            # lane polls the cache (bounded wait) and no-ops on a true miss.
-            relay_info = self._relay_auto_thread_info(source)
-            if relay_info is None and not self._is_relay_discord_channel_lane(source):
-                return
         self._schedule_rename_from_title_thread(
             source,
-            lambda copied: self._rename_discord_auto_thread_for_session_title(
-                copied, session_id, title, relay_info=relay_info
-            ),
+            lambda copied: self._rename_discord_auto_thread_for_session_title(copied, session_id, title),
             "Discord semantic thread rename",
         )
 

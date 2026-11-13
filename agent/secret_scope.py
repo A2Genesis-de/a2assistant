@@ -199,16 +199,6 @@ _GLOBAL_ENV_EXACT = frozenset({
     # See #64674, #69379.
     "API_SERVER_ENABLED", "API_SERVER_HOST", "API_SERVER_PORT",
     "API_SERVER_CORS_ORIGINS",
-    # Relay-connector ROUTING stamps injected by managed deploys. Every reader
-    # (gateway.config, relay_url()/registration/self-provision) must resolve
-    # the SAME value or the adapter registers while the platform is absent
-    # from config. GATEWAY_RELAY_SECRET/_ID/_DELIVERY_KEY and IDP_* are auth
-    # material and deliberately stay profile-scoped.
-    "GATEWAY_RELAY_URL", "GATEWAY_RELAY_ENDPOINT",
-    "GATEWAY_RELAY_ALLOW_DIRECT_PLATFORMS",
-    "GATEWAY_RELAY_PLATFORMS", "GATEWAY_RELAY_BOT_IDS",
-    "GATEWAY_RELAY_ROUTE_KEYS", "GATEWAY_RELAY_INSTANCE_ID",
-    "GATEWAY_RELAY_WAKE_URL", "GATEWAY_RELAY_DISPLAY_NAME",
 })
 _GLOBAL_ENV_PREFIXES = (
     "HERMES_KANBAN_",

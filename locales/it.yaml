@@ -380,7 +380,6 @@ gateway:
     save_failed: "Salvataggio del canale home non riuscito: {error}"
     success: "✅ Canale home impostato su **{name}** (ID: {chat_id}).\nI cron job e i messaggi cross-platform verranno consegnati qui."
     err_missing_platform: "Piattaforma logica mancante"
-    err_relay_unauthenticated: "Il relay non autentica questa destinazione home logica"
   context:
     header: "🧠 **Finestra di contesto**"
     model: "Modello: `{model}`"

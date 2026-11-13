@@ -100,10 +100,6 @@ class SessionSource:
     # The adapter declares this chat's session shared by every participant even though the
     # sender id is kept (Telegram observe mode: commands keep user_id for slash access checks).
     shared_session: bool = False
-    # Wire-INVISIBLE trust signal (never in to_dict/from_dict, so a peer cannot forge it): came
-    # over the authenticated relay WebSocket. ``platform`` is the UNDERLYING platform, not
-    # ``relay``, so authz must key upstream trust off THIS flag.
-    delivered_via_upstream_relay: bool = False
     # Wire-INVISIBLE: the key of a conversation its chat moved past, still run from the apps
     # (gateway/session_detached.py). It replaces the chat's key, so nothing keyed by route reaches
     # the chat's current conversation, and delivery goes nowhere.

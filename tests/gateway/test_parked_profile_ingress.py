@@ -6,7 +6,6 @@ sender told to resend: the park can last until a manual rescan, and the connecto
 in order, ack-gated. A webhook gets a retryable 503 before its delivery id is recorded, so the
 provider's retry is processed, not answered as a duplicate.
 """
-import asyncio
 import json
 import sqlite3
 from pathlib import Path
@@ -103,86 +102,6 @@ async def _rescan_retaining_beta(runner, beta, monkeypatch):
     result = await runner._apply_profile_changes({}, ['beta'], [], [], reason='control-socket', live={'beta': beta})
     assert result['parked'] == ['beta'] and runner.session_authorities.for_home(beta).retiring, result
 
-
-@pytest.mark.asyncio
-@pytest.mark.parametrize('retained', [False, True])
-async def test_a_relay_frame_for_a_parked_profile_is_refused_to_its_sender_not_held(tmp_path, monkeypatch, retained):
-    """website/docs/developer-guide/relay-connector-contract.md §3.2: on reconnect the connector drains
-    its per-instance buffer in order, ack-gated. b1 routes to the parked beta, b2 to the healthy
-    default profile and is sent only once b1 is acknowledged: holding b1 for the park would hold b2.
-    Also when the park retained beta's retiring authority, which refuses every admission."""
-    websockets = pytest.importorskip('websockets')
-    from gateway.parked_route_refusal import PARKED_ROUTE_NOTICE
-    from gateway.profile_routing import ProfileRoute
-    from gateway.relay.adapter import RelayAdapter
-    from gateway.relay.descriptor import CapabilityDescriptor
-    from gateway.relay.ws_transport import WebSocketRelayTransport
-    homes = _homes(tmp_path, monkeypatch)
-    runner = await _runner_with_beta_parked(
-        tmp_path, monkeypatch, homes,
-        profile_routes=[ProfileRoute(name='to-beta', platform='telegram', profile='beta', chat_id='C')])
-    if retained:
-        await _rescan_retaining_beta(runner, homes[1][1].resolve(), monkeypatch)
-    descriptor = CapabilityDescriptor(1, 'telegram', 'Fixture', 4096, False, True, False, 'plain', 'chars')
-    acks, sent, outbound, adapter = asyncio.Queue(), [], [], None
-
-    def frame(buffer_id, chat):
-        return json.dumps({'type': 'inbound', 'bufferId': buffer_id, 'event': {
-            'text': f'message for {chat}', 'message_id': buffer_id,
-            'source': {'platform': 'telegram', 'chat_id': chat, 'chat_type': 'group', 'user_id': 'U'}}}) + '\n'
-
-    async def connector(ws):
-        await ws.recv()  # hello
-        await ws.send(json.dumps({'type': 'descriptor', 'descriptor': json.loads(descriptor.to_json())}) + '\n')
-
-        async def reader():
-            async for line in ws:
-                msg = json.loads(line)
-                if msg.get('type') == 'inbound_ack':
-                    await acks.put(msg['bufferId'])
-                elif msg.get('type') == 'outbound':
-                    outbound.append(msg['action'])
-                    await ws.send(json.dumps({'type': 'outbound_result', 'requestId': msg['requestId'],
-                                              'result': {'success': True, 'message_id': 'notice'}}) + '\n')
-        task = asyncio.create_task(reader())
-        try:
-            for buffer_id, chat in (('b1', 'C'), ('b2', 'D')):  # in order, ack-gated
-                while True:
-                    sent.append(buffer_id)
-                    await ws.send(frame(buffer_id, chat))
-                    try:
-                        # The connector's redelivery wait. A loaded runner can take seconds to ack
-                        # (tests/AGENTS.md: >= 2 s), and a withheld ack never comes at all: then b2
-                        # is never sent and the wait below fails, so a long wait still proves it.
-                        if await asyncio.wait_for(acks.get(), 10.0) == buffer_id:
-                            break
-                    except TimeoutError:
-                        continue  # redeliver the unacknowledged head
-            await ws.wait_closed()
-        finally:
-            task.cancel()
-
-    told = lambda: [a for a in outbound if a.get('op') == 'send' and a.get('chat_id') == 'C']
-    try:
-        async with websockets.serve(connector, '127.0.0.1', 0) as relay:
-            transport = WebSocketRelayTransport(
-                f'ws://127.0.0.1:{relay.sockets[0].getsockname()[1]}/relay', 'telegram', 'fixture-bot',
-                gateway_id='fixture-gateway', upgrade_secret='fixture-secret', reconnect=True,
-                reconnect_backoff_s=.05)
-            adapter = RelayAdapter(PlatformConfig(enabled=True), descriptor, transport)
-            adapter.gateway_runner = runner
-            runner.adapters[Platform.RELAY] = adapter
-            runner._wire_adapter_handlers(adapter)
-            assert await adapter.connect()
-            await async_wait_until(lambda: _admissions(homes[0][1]) == 1 and told(),
-                                   what="the healthy profile's b2 admitted and b1's sender told")
-            assert sent.count('b1') == 1, f'the parked profile\'s frame was withheld and redelivered: {sent}'
-            assert [a['content'] for a in told()] == [PARKED_ROUTE_NOTICE]
-            assert _admissions(homes[1][1]) == 0
-    finally:
-        if adapter is not None:
-            await adapter.disconnect()
-        _close(runner, homes)
 
 
 def _webhook_request(delivery_id, body, route='events', profile='beta'):

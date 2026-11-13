@@ -380,7 +380,6 @@ gateway:
     save_failed: "无法保存主频道：{error}"
     success: "✅ 主频道已设置为 **{name}**（ID：{chat_id}）。\n定时任务和跨平台消息将发送到此处。"
     err_missing_platform: "缺少逻辑平台"
-    err_relay_unauthenticated: "中继未对该逻辑主频道目标进行认证"
   context:
     header: "🧠 **上下文窗口**"
     model: "模型：`{model}`"

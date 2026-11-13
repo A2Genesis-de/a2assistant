@@ -46,7 +46,7 @@ _config_passthrough: dict[str, frozenset[str]] = {}
 def _is_hermes_provider_credential(name: str) -> bool:
     """True if ``name`` is a Hermes-managed provider credential per
     ``_HERMES_PROVIDER_ENV_BLOCKLIST`` or a dynamic Hermes-internal secret
-    (AUXILIARY_*_API_KEY / _BASE_URL, GATEWAY_RELAY_*). Skill-declared
+    (AUXILIARY_*_API_KEY / _BASE_URL). Skill-declared
     ``required_environment_variables`` must not override this — that was the
     GHSA-rhgp-j443-p4rf bypass (a skill registered ``OPENAI_API_KEY`` and received it
     in the ``execute_code`` child); non-Hermes keys (TENOR_API_KEY, …) stay

@@ -333,11 +333,6 @@ class GatewayAuthorizationMixin:
         owner = self._transport_owner(source)
         if owner is not None:
             return owner[0]
-        # Relay ingress keeps the underlying platform on the source, but the one process-level
-        # RelayAdapter owns the connector socket; a profile-aware lookup would silently disable
-        # streaming/typing/tool progress.
-        if getattr(source, "delivered_via_upstream_relay", False) is True:
-            return self._primary_adapters().get(Platform.RELAY)
         platform = getattr(source, "platform", None)
         from gateway.session_identity import identity_of
         identity = identity_of(source)
@@ -617,16 +612,8 @@ class GatewayAuthorizationMixin:
 
     def _chat_scoped_grant(self, source, adapter_profile, is_group: bool, allow_adapter_delegation: bool) -> bool:
         """Grants that need no ``user_id`` (checked before the no-user-id guard)."""
-        # Trusted-upstream delegation (relay): the connector authenticates this gateway's WS and
-        # resolves owner bindings BEFORE delivering, so there is no local RELAY_ALLOWED_USERS. Not a
-        # fail-open: fires only for events actually delivered over the relay WS
-        # (``delivered_via_upstream_relay``) or whose adapter declares ``authorization_is_upstream``.
-        # The delivery marker is PRIMARY because a relayed message carries the UNDERLYING platform,
-        # not ``Platform.RELAY``. ``is True``: a MagicMock stand-in must not auto-truthy into authz.
-        if allow_adapter_delegation and (
-            source.delivered_via_upstream_relay is True
-            or self._adapter_flag(source.platform, "authorization_is_upstream", adapter_profile)
-        ):
+        if allow_adapter_delegation and self._adapter_flag(
+                source.platform, "authorization_is_upstream", adapter_profile):
             return True
         # Chat-scoped group allowlists must work with ``user_id is None`` (anonymous admins,
         # sender_chat posts, channel broadcasts).

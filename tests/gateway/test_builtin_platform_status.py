@@ -20,8 +20,6 @@ def _plain_process(monkeypatch):
     from hermes_cli import managed_scope
 
     monkeypatch.setattr(secret_scope, "_MULTIPLEX_ACTIVE", False)
-    for name in ("GATEWAY_RELAY_URL", "GATEWAY_RELAY_ALLOW_DIRECT_PLATFORMS"):  # not in the suite's env filter
-        monkeypatch.delenv(name, raising=False)
     managed_scope.invalidate_managed_cache()
     yield
     managed_scope.invalidate_managed_cache()

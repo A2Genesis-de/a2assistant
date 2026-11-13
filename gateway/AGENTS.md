@@ -28,7 +28,7 @@ lifecycle.
 
 ## Streaming delivery contract (stream-is-the-message adapters)
 
-Adapters with `draft_stream_is_message = True` (relay Slack native streaming) keep ONE cumulative
+Adapters with `draft_stream_is_message = True` (none ships one today) keep ONE cumulative
 native stream per turn; the stream IS the final message. Four invariants, each from a live
 duplicate-final incident (NS-658 canary ledger, hermes#85796 / gateway-gateway#210); violating any
 re-creates a duplicate or frozen stream:
@@ -43,8 +43,7 @@ re-creates a duplicate or frozen stream:
    `delivered_final_matches` mismatch → corrective duplicate send.
 3. **Interim sends carry `metadata["_interim_send"] = True`.** Any consumer-side `adapter.send()`
    that is not the turn-final (commentary, segment-tail flushes) must set it or seal-interception
-   seals the live stream with interim text. Seal-interception exists at BOTH egress doors (`send()`
-   and `send_for_platform()`); a new egress door needs the same two checks.
+   seals the live stream with interim text; a new egress door needs the same check.
 4. **Reconcile by edit, never by plain send.** A lane delivering a final beside a sealed stream
    (queued follow-ups, media-accompanied finals) first tries `edit_message` on the consumer's
    `message_id`; plain `send()` only when no editable message exists. A sealed native stream is a
@@ -101,8 +100,6 @@ gateway under the backend, and do NOT "fix" update locks by widening the tree-ki
   with one WARNING at the first seam it reaches, never keyed into `agent:main`
   (`parked_route_refusal.drop_rejected_route`; a route to a *parked* profile also tells the sender
   in-channel to resend, since a direct bot's update is already confirmed and never redelivered; a
-  relay frame is ACKed and refused alike (`ParkedProfileRefusal`: a withheld one stalls the
-  ack-gated drain); a
   dispatch its transport has not acknowledged yet, e.g. Google Chat HTTP events, runs in
   `retryable_ingress()` and answers `ParkedRouteRefused` (503) instead, releasing its dedup claim).
   `_transport_owner`, `_authorization_home_for_source`, `_resolve_profile_home_for_source`, `_session_key_profile` and
@@ -112,8 +109,8 @@ gateway under the backend, and do NOT "fix" update locks by widening the tree-ki
   (shared bot → routed satellite). A source copy goes through `session_identity.replace_source`
   so the identity travels with it (`_apply_topic_recovery` does).
 - **Intake vs delivery adapter.** `authz_mixin.py::_intake_adapter_for(source)` is the bot that
-  RECEIVED the event (live transport ref → relay socket → identity's `transport_profile`); it gates
-  intake policy (ignored channels, relay fronting, re-dispatch of a still-live event) and fails
+  RECEIVED the event (live transport ref → identity's `transport_profile`); it gates
+  intake policy (ignored channels, re-dispatch of a still-live event) and fails
   closed to `None` for a source with no live provenance. `_delivery_adapter_for(source)` is the bot
   that ANSWERS — the receiving bot whenever known, else the unique owner of `(platform,
   runtime_profile)` via `_adapters_for_profile`. Never read `self.adapters[platform]` for a source;
@@ -136,8 +133,7 @@ gateway under the backend, and do NOT "fix" update locks by widening the tree-ki
   adapter or nothing (never the default bot by heuristic). Rows without the column (pre-PR-5)
   keep the `_is_shared_bot_satellite` fallback. Deferred callbacks capture the identity/home at
   command time (`/model` picker); `_run_in_executor_with_context` carries the scope over thread
-  hops. Relay: `_with_scope` echoes the routed `profile` on every outbound frame and `follow_up`
-  derives it from the key namespace so the connector stamps it on the next `passthrough_forward`.
+  hops.
   Ambient `get_active_profile_name()` reads in `gateway/` are boot-only and marked
   `# launch profile, pre-identity`; a path with an identity reads `identity.runtime_profile`.
 - **Token locks.** An adapter that connects with a unique credential (bot token, API key) calls
@@ -198,9 +194,9 @@ gateway under the backend, and do NOT "fix" update locks by widening the tree-ki
   profile's scope; gate/allowlist reads go through `platform_gate_env`. A `if not os.getenv(X):
   os.environ[X] = …` bridge is first-profile-wins across the process — test two profiles with
   conflicting flags before touching precedence.
-- **Unserved is reported, never silent.** Shared-ingress platforms (Relay) run on the default
-  profile only; a secondary enabling one is logged once with the remedy and stamped into runtime
-  status (`run_adapters.py::_note_unserved_secondary_platform`). The WhatsApp bridge is per profile:
+- **Unserved is reported, never silent.** A secondary profile's platform the multiplexer cannot
+  serve is logged once with the remedy and stamped into runtime status
+  (`run_adapters.py::_note_unserved_secondary_platform`). The WhatsApp bridge is per profile:
   a paired secondary gets its own adapter and port (`plugins/platforms/whatsapp/bridge_ownership.py`),
   an unpaired one is reported as `whatsapp_unpaired`, and a secondary never adopts or signals a
   bridge its own pidfile (pid + start time + port) does not identify. `needs_attention` is

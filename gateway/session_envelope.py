@@ -135,8 +135,6 @@ def _event_clause(runner, event, provenance, fresh_roles):
         return 'prompt_response'
     if source.role_authorized and not fresh_roles:
         return 'role_authorized_without_fresh_roles'
-    if source.delivered_via_upstream_relay and not (provenance and 'relay' in provenance):
-        return 'upstream_relay_without_provenance'
     if source.profile_route_rejected:
         return 'profile_route_rejected'
     if getattr(source, '_authorization_profile_home', None) is not None and provenance is None:
@@ -153,13 +151,8 @@ def _validate_native(runner, event, provenance=None, fresh_roles=False):
     if provenance is not None:
         from gateway.session_ingress_context import restore_provenance
         restore_provenance(runner, source, provenance)
-    delegated = fresh_roles or bool(provenance and 'relay' in provenance)
+    delegated = fresh_roles
     if not delegated:
-        # An adapter declaring ``authorization_is_upstream`` (A2A peers: bearer-token
-        # authenticated in do_POST) owns the whole authorization, so its fresh native inputs
-        # carry no relay seal to derive delegation from. Without this they fell to the
-        # principal allowlist and — with no {PLATFORM}_ALLOWED_USERS — the admission
-        # re-check denied what the inbound filter had just accepted (#139199).
         delegated = runner._adapter_flag(
             source.platform, "authorization_is_upstream", runner._adapter_profile_for_source(source))
     if not runner._is_user_authorized_for_source(source, allow_adapter_delegation=delegated):

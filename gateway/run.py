@@ -28,7 +28,7 @@ from collections import OrderedDict
 from contextvars import Context, copy_context
 from pathlib import Path
 from datetime import datetime
-from typing import Callable, Dict, Optional, Any, List, Tuple, cast
+from typing import Callable, Dict, Optional, Any, List, Tuple
 
 from agent.async_utils import safe_schedule_threadsafe
 from agent.i18n import t
@@ -774,38 +774,14 @@ def _approval_send_outcome(future, timeout: float) -> str:
         return "failed"
     if getattr(result, "success", False):
         return "sent"
-    # P5(b): a connector DECLINE is not a lane failure. The connector authorized the destination and refused it;
-    # re-sending the same content as plain text into that same chat is the exfiltration the egress guard exists
-    # to stop. `failed` is the cue to fall back, so a decline needs its own verdict — callers must surface it 
-    # and send nothing further.
-    #
-    # CLASSIFY THE STRUCTURED RESPONSE, NOT THE ERROR STRING. The adapter
-    # preserves the connector's own dict in `raw_response`; rebuilding a dict
-    # from `error` alone loses two things review demonstrated:
-    #   * a decline carrying `code: egress_declined` and NO text renders as
-    #     "relay egress declined" — no marker colon — so the string check
-    #     missed it and the fallback fired into the refused chat;
-    #   * `ambiguous: True` (lost ack, mid-write drop) was flattened into a
-    #     DEFINITE failure, which re-sends a card that may well have posted.
-    # I fixed the text-marker path and tested only the text-marker path.
-    from gateway.relay.egress import declined_send
+    from gateway.send_decline import declined_send
 
     _raw = getattr(result, "raw_response", None)
     if isinstance(_raw, dict) and _raw.get("ambiguous"):
-        # The frame may have been applied. Same physics as a scheduling
-        # timeout: possibly-delivered, so never re-send. Checked BEFORE the
-        # decline classification because an ambiguous result is a transport
-        # outcome, not an authorization one, and this lane has three verdicts
-        # rather than the boolean the shared helper answers.
         logger.warning("Prompt send AMBIGUOUS (lost ack): %s", _raw.get("error"))
         return "ambiguous"
     if declined_send(result):
-        # Both shapes, one classifier: a structured body, or the uniform
-        # decline sentence from an older connector.
-        logger.warning(
-            "Prompt send DECLINED by connector egress guard: %s",
-            getattr(result, "error", None),
-        )
+        logger.warning("Prompt send DECLINED: %s", getattr(result, "error", None))
         return "declined"
     logger.warning("Prompt send failed: %s", getattr(result, "error", None) or "unknown error")
     return "failed"
@@ -989,15 +965,6 @@ def _warm_turn_machinery_sync() -> int:
     except Exception:
         logger.debug("model-context warm-up failed (non-fatal)", exc_info=True)
     return len(tool_defs)
-
-
-def _as_thread_info(info: Any) -> Optional[tuple[str, str]]:
-    """*info* as a (thread_id, initial_name) pair, or None if it isn't one.
-
-    The pair crosses the relay connector boundary, so its shape is the connector's word, not ours."""
-    if isinstance(info, tuple) and len(info) == 2 and all(isinstance(x, str) for x in info):
-        return cast(tuple[str, str], info)
-    return None
 
 
 def _float_env(name: str, default: float) -> float:

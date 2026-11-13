@@ -476,8 +476,6 @@ def snapshot_automation(authority, adapter, event, identity):
     envelope = committed_route_envelope(authority, entry)
     if envelope is None:
         raise RuntimeStoreError('not_found')
-    # Persisted origins deliberately omit relay trust. Borrow only an exact
-    # committed source's private proof, revalidated against the live connector.
     # Recheck only the source/provenance: a completed input's retained media is already released.
     restored = restore_native({'text': event.text, 'native_text_v1': {
         key: value for key, value in envelope.items() if key != 'media'}}, runner)
@@ -491,10 +489,6 @@ def snapshot_automation(authority, adapter, event, identity):
     source = deepcopy(envelope['source'])
     # Never anchor the wake to the stale human message; ``to_dict`` already omits a null anchor.
     source.pop('message_id', None)
-    if 'relay' in provenance:
-        # The relay seal binds the source; restore_native verified it over the anchored source.
-        from gateway.session_ingress_context import reseal_relay
-        provenance = reseal_relay(adapter, source, provenance)
     # Producer timestamps and platform reply IDs change on retry. Neither belongs
     # in the identity/fingerprint of the same immutable completion.
     envelope = {'source': source, 'route': entry.session_key,
@@ -612,12 +606,7 @@ async def admit_automation(authority, adapter, event, identity, replaces=None, f
     from gateway.session_authority import LiveSession
     sid = (payload.get('local_automation_v1') or payload['native_text_v1']['automation'])['owner']
     ref = SessionRef(authority.profile_id, sid)
-    source, envelope = event.source, payload.get('native_text_v1')
-    if envelope is not None and 'relay' in envelope['provenance']:
-        # A restored origin carries no relay trust: bind the source the snapshot verified, or the
-        # drain resolves no adapter for this session after a restart.
-        from gateway.session_envelope import restore_native_source
-        source = restore_native_source(payload, authority.runner)
+    source = event.source
     authority.sessions.setdefault(ref.session_id, LiveSession(source, entry.session_key))
     from functools import partial
     from gateway.session_runtime_workers import tracked_write

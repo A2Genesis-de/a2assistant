@@ -383,7 +383,6 @@ gateway:
     save_failed: "Nem sikerült menteni a kezdőcsatornát: {error}"
     success: "✅ Kezdőcsatorna beállítva: **{name}** (ID: {chat_id}).\nA cron-feladatok és a platformok közötti üzenetek ide érkeznek."
     err_missing_platform: "Hiányzik a logikai platform"
-    err_relay_unauthenticated: "A relé nem hitelesíti ezt a logikai home célt"
   context:
     header: "🧠 **Kontextusablak**"
     model: "Modell: `{model}`"

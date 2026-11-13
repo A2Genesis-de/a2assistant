@@ -387,79 +387,6 @@ class TestDeliverResultWrapping:
         )
         return media_file.resolve()
 
-    def test_relay_fronted_home_uses_relay_config_and_live_adapter(self, monkeypatch, tmp_path):
-        """Persisted Slack home survives restart without native Slack config."""
-        from concurrent.futures import Future
-
-        from gateway.config import GatewayConfig, HomeChannel, Platform, PlatformConfig
-
-        relay = MagicMock()
-        relay.fronts_platform.side_effect = lambda platform: platform == Platform.SLACK
-        relay.send_for_platform = AsyncMock(return_value=MagicMock(success=True))
-        relay.send_voice = AsyncMock(return_value=MagicMock(success=True))
-        relay.supports_inchannel_continuable = False
-        # Not a real RelayAdapter: keep the auto-created accessor from
-        # shadowing the scalar False (MagicMock fabricates truthy callables).
-        relay.supports_inchannel_continuable_for_platform = None
-
-        config = GatewayConfig(
-            platforms={
-                Platform.RELAY: PlatformConfig(enabled=True),
-                Platform.SLACK: PlatformConfig(
-                    enabled=False,
-                    home_channel=HomeChannel(
-                        platform=Platform.SLACK,
-                        chat_id="D123",
-                        name="Owner DM",
-                        user_id="U123",
-                    ),
-                ),
-            },
-        )
-        loop = MagicMock()
-        loop.is_running.return_value = True
-
-        def fake_run_coro(coro, _loop):
-            import asyncio as _asyncio
-
-            future = Future()
-            try:
-                future.set_result(_asyncio.run(coro))
-            except BaseException as exc:
-                future.set_exception(exc)
-            return future
-
-        standalone_send = AsyncMock(return_value={"success": True})
-        media_path = self._safe_media_path(tmp_path, monkeypatch, "relay-voice.mp3")
-        monkeypatch.setenv("SLACK_HOME_CHANNEL", "D123")
-        job = {
-            "id": "relay-cron",
-            "deliver": "slack",
-        }
-
-        with (
-            patch("gateway.config.load_gateway_config", return_value=config),
-            patch("cron.scheduler.load_config", return_value={"cron": {"wrap_response": False}}),
-            patch("asyncio.run_coroutine_threadsafe", side_effect=fake_run_coro),
-            patch("tools.send_message_tool._send_to_platform", new=standalone_send),
-        ):
-            result = _deliver_result(
-                job,
-                f"scheduled result\nMEDIA:{media_path}",
-                adapters={Platform.RELAY: relay},
-                loop=loop,
-            )
-
-        assert result is None
-        relay.send_for_platform.assert_awaited_once()
-        args = relay.send_for_platform.await_args.args
-        assert args[:3] == (Platform.SLACK, "D123", "scheduled result")
-        assert relay.send_for_platform.await_args.kwargs["metadata"]["user_id"] == "U123"
-        relay.send_voice.assert_awaited_once()
-        media_metadata = relay.send_voice.await_args.kwargs["metadata"]
-        assert media_metadata["_relay_logical_platform"] == "slack"
-        assert media_metadata["user_id"] == "U123"
-        standalone_send.assert_not_awaited()
 
     def test_live_adapter_sends_media_as_attachments(self, tmp_path, monkeypatch):
         """When a live adapter is available, MEDIA files should be sent as native
@@ -2259,15 +2186,7 @@ class TestCronContinuableSurfaceInChannel:
         adapter.send.return_value = MagicMock(
             success=True, message_id="msg_1", raw_response=None,
         )
-        # Capability flag read via getattr in the scheduler.
         adapter.supports_inchannel_continuable = supports_inchannel
-        # Pin the per-platform accessor OFF: an unspecced AsyncMock would
-        # auto-create it as a truthy callable, silently routing every test
-        # through the relay accessor branch instead of the native scalar
-        # fallback these tests describe (and making supports_inchannel=False
-        # unenforceable). None -> not callable -> scalar path, like a real
-        # native adapter that never defines the method.
-        adapter.supports_inchannel_continuable_for_platform = None
         # A live session store so the in_channel seed can CREATE the flat row
         # (the real bug: without a create step the mirror no-ops on a missing
         # session and the brief is lost). Use a plain MagicMock store.
@@ -2337,7 +2256,7 @@ class TestCronContinuableSurfaceInChannel:
         adapter = self._slack_adapter(supports_inchannel=True)
         with patch("cron.scheduler_delivery._seed_cron_channel_session", return_value=True) as seed_mock:
             self._run_inchannel_delivery(
-                {"slack": {"cron_continuable_surface": "in_channel"}}, adapter,
+                {"cron_continuable_surface": "in_channel"}, adapter,
                 attach_to_session=False,
             )
         seed_mock.assert_called_once()
@@ -2373,7 +2292,7 @@ class TestCronContinuableSurfaceInChannel:
         with patch("gateway.delivery.DeliveryRouter", _SpyRouter), \
              patch("cron.scheduler_delivery._seed_cron_channel_session", return_value=True) as seed_mock:
             self._run_inchannel_delivery(
-                {"slack": {"cron_continuable_surface": "in_channel"}}, adapter,
+                {"cron_continuable_surface": "in_channel"}, adapter,
                 attach_to_session=False, origin=origin_with_thread,
             )
         seed_mock.assert_called_once()
@@ -2413,7 +2332,7 @@ class TestCronContinuableSurfaceInChannel:
         with patch("gateway.delivery.DeliveryRouter", _SpyRouter), \
              patch("cron.scheduler_delivery._seed_cron_channel_session", return_value=True):
             self._run_inchannel_delivery(
-                {"slack": {"cron_continuable_surface": "in_channel"}}, adapter,
+                {"cron_continuable_surface": "in_channel"}, adapter,
                 attach_to_session=False, origin=scoped_origin,
             )
         assert captured["metadata"].get("scope_id") == "T0AAAA111", (
@@ -2439,7 +2358,7 @@ class TestCronContinuableSurfaceInChannel:
         with patch("gateway.delivery.DeliveryRouter", _SpyRouter), \
              patch("cron.scheduler_delivery._seed_cron_channel_session", return_value=True):
             self._run_inchannel_delivery(
-                {"slack": {"cron_continuable_surface": "in_channel"}}, adapter,
+                {"cron_continuable_surface": "in_channel"}, adapter,
                 attach_to_session=False,
             )
         assert "scope_id" not in captured["metadata"]
@@ -2464,12 +2383,9 @@ class TestCronContinuableSurfaceInChannel:
                                  raw_response=None)
 
         adapter = _NativeShapedAdapter()
-        assert not callable(
-            getattr(adapter, "supports_inchannel_continuable_for_platform", None)
-        )
         with patch("cron.scheduler_delivery._seed_cron_channel_session") as seed_mock:
             self._run_inchannel_delivery(
-                {"slack": {"cron_continuable_surface": "in_channel"}}, adapter,
+                {"cron_continuable_surface": "in_channel"}, adapter,
                 attach_to_session=False,
             )
         # Delivery must have gone through the LIVE adapter — otherwise a
@@ -2518,7 +2434,7 @@ class TestCronContinuableSurfaceInChannel:
         with patch("cron.scheduler_delivery._seed_cron_channel_session", return_value=True), \
              patch("cron.scheduler_delivery._seed_cron_thread_session") as thread_seed_mock:
             self._run_inchannel_delivery(
-                {"slack": {"cron_continuable_surface": "in_channel"}}, adapter,
+                {"cron_continuable_surface": "in_channel"}, adapter,
                 attach_to_session=False,
             )
         thread_seed_mock.assert_called_once()

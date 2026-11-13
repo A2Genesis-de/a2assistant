@@ -81,79 +81,6 @@ def _notify_provider_jobs_changed_safe() -> None:
 # Manual run execution (claim -> run_one_job -> report)
 # ---------------------------------------------------------------------------
 
-def _relay_fronted_delivery_platforms(job: dict[str, Any]) -> set:
-    """Delivery-platform names for this job that the relay connector fronts."""
-    try:
-        from gateway.relay import relay_fronted_platforms
-    except Exception:
-        return set()
-    fronted = relay_fronted_platforms()
-    if not fronted:
-        return set()
-    try:
-        from cron.scheduler import _resolve_delivery_targets
-        targets = _resolve_delivery_targets(job) or []
-    except Exception:
-        return set()
-    return {t.get("platform") for t in targets if t.get("platform")} & fronted
-
-
-def _api_server_base_url() -> str:
-    """``http://host:port`` of the local api_server, mirroring its bind resolution
-    (extra.host -> API_SERVER_HOST -> 127.0.0.1); a wildcard bind listens on loopback too."""
-    import os
-    port_raw = os.getenv("API_SERVER_PORT", "").strip()
-    try:
-        port = int(port_raw) if port_raw else 8642
-    except ValueError:
-        port = 8642
-    try:
-        from hermes_cli.config import cfg_get, load_config_readonly
-        host = str(cfg_get(load_config_readonly(), "platforms", "api_server", "extra", "host", default="") or "").strip()
-    except Exception:
-        host = ""
-    host = host or os.getenv("API_SERVER_HOST", "").strip()
-    if not host or host in ("0.0.0.0", "::", "*"):
-        host = "127.0.0.1"
-    if ":" in host and not host.startswith("["):
-        host = f"[{host}]"  # bare IPv6 literal
-    return f"http://{host}:{port}"
-
-
-def _forward_relay_fronted_run(job: dict[str, Any], extra_prompt: Optional[str] = None) -> Optional[str]:
-    """Forward a manual run to the gateway when it targets a relay-fronted platform: such delivery
-    has no standalone sender — the gateway's live relay adapter is the only path, reached via
-    ``POST /api/jobs/{id}/run`` (marks the job due; ``extra_prompt`` rides in the body). Returns a
-    JSON result string when forwarding engages, else None (normal in-process run)."""
-    if not _relay_fronted_delivery_platforms(job):
-        return None
-    from agent.secret_scope import get_secret
-    key = get_secret("API_SERVER_KEY", "") or ""
-    try:
-        import httpx
-        resp = httpx.post(
-            f"{_api_server_base_url()}/api/jobs/{job['id']}/run", headers={"Authorization": f"Bearer {key}"},
-            json=({"prompt": extra_prompt} if extra_prompt else {}), timeout=10.0)
-    except Exception:
-        resp = None
-    if resp is not None and resp.status_code < 300:
-        return _dumps({
-            "success": True,
-            "forwarded_to_gateway": True,
-            "note": (
-                "This job targets a relay-fronted platform; it was dispatched "
-                "to the running gateway, whose live relay adapter owns that "
-                "delivery."),
-        })
-    return _dumps({
-        "success": False,
-        "error": (
-            "This job targets a relay-fronted platform, which has no "
-            "standalone sender. Start the gateway — its ticker will "
-            "deliver the job on schedule via the live relay adapter."),
-    })
-
-
 def _primary_routed_delivery_platforms(job: dict[str, Any]) -> set:
     """Delivery-platform names this satellite profile reaches only through the primary gateway's
     ``profile_routes``: routed here, with no credential of its own to send standalone."""
@@ -819,10 +746,6 @@ def _action_run(job: dict[str, Any], a: dict[str, Any]) -> str:
     if bg is not None:
         exec_result = bg  # terminal result: claim lost or inline fallback
     else:
-        # Relay-fronted manual run: no live adapter here — forward to the running gateway.
-        forwarded = _forward_relay_fronted_run(job, extra_prompt=extra_prompt)
-        if forwarded is not None:
-            return forwarded
         exec_result = _execute_job_now(job, extra_prompt=extra_prompt)
     # A claimed direct run advances next_run_at and may race an external provider's
     # one-shot for the same occurrence; a lost consumed fire cannot re-arm itself, so

@@ -110,8 +110,6 @@ def _safe_instance_id(raw: Any) -> str:
 
 def subsystem_for_logger(logger_name: str) -> str:
     parts = logger_name.split(".")
-    if parts[:2] == ["gateway", "relay"]:
-        return "platform.relay"
     if parts[:2] == ["gateway", "platforms"] and len(parts) >= 3 and parts[2]:
         return f"platform.{parts[2]}"
     return "platform" if logger_name.startswith("gateway.platforms") else "gateway"

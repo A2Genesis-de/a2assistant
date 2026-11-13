@@ -139,20 +139,6 @@ def test_first_reply_latency_is_one_row_per_turn_stopped_only_by_reply_text(rows
     assert rows("hermes.gateway.reply_latency") == [{"first_response_bucket": "lt_2s", "platform": "telegram"}] * 2
 
 
-def test_a_relay_delivered_turn_stops_the_clock_its_inbound_started(rows):
-    # The connector's inbound names the platform it came from; the reply leaves through the relay.
-    relay = _Adapter(platform=Platform.RELAY)
-    smg.start_reply_clock(SimpleNamespace(platform=Platform.DISCORD, chat_id="c1"))
-    consumer = GatewayStreamConsumer(relay, "c1", StreamConsumerConfig(cursor=""))
-    assert asyncio.run(consumer._send_or_edit("first streamed chunk"))
-    event = MessageEvent(text="hi", message_type=MessageType.TEXT, message_id="in-2",
-                         source=SimpleNamespace(platform=Platform.SLACK, chat_id="C2", thread_id=None))
-    smg.start_reply_clock(event.source)
-    asyncio.run(relay.send_final_ledgered(event, "k", "final answer", {}, reply_to=None))
-    assert rows("hermes.gateway.reply_latency") == [
-        {"first_response_bucket": "lt_2s", "platform": "discord"}, {"first_response_bucket": "lt_2s", "platform": "slack"}]
-    assert not smg._reply_clocks
-
 
 def test_a_delivery_sent_after_the_routed_scope_resets_lands_in_the_owning_profile(rows, tmp_path):
     # Multiplexed gateway: the turn starts in profile B's scope, the final send runs after it is reset.
@@ -207,14 +193,13 @@ def test_fatal_handlers_count_lost_connections_in_the_owning_profile_only(rows, 
     runner._profile_adapters["b"] = {Platform.TELEGRAM: secondary}
     # The secondary's notification arrives on a task scoped to the launch profile, not to b.
     asyncio.run(runner._handle_profile_adapter_fatal_error("b", Platform.TELEGRAM, secondary))
-    for code in ("relay_disabled", "telegram_auth_error"):  # the user's relay opt-out is not a disconnect
-        primary = _fatal(_Adapter(platform=Platform.RELAY), code)
-        runner.adapters[Platform.RELAY] = primary
-        asyncio.run(runner._handle_adapter_fatal_error_impl(primary))
+    primary = _fatal(_Adapter(), "telegram_auth_error")
+    runner.adapters[Platform.TELEGRAM] = primary
+    asyncio.run(runner._handle_adapter_fatal_error_impl(primary))
     launch_home = str(get_hermes_home())
     assert rows("hermes.platform.health", with_home=True) == [
         (str(home_b), {"error_class": "network", "event": "disconnect", "platform": "telegram"}),
-        (launch_home, {"error_class": "auth", "event": "disconnect", "platform": "relay"}),
+        (launch_home, {"error_class": "auth", "event": "disconnect", "platform": "telegram"}),
     ]
 
 

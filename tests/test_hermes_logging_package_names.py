@@ -44,10 +44,9 @@ def test_gateway_diagnostics_keep_their_subsystem_under_the_package_name(package
     events = []
     monkeypatch.setattr(emitter, "get_emitter", lambda: type("Sink", (), {"emit": staticmethod(events.append)})())
     handler = GatewayDiagnosticLogHandler()
-    for name in ("gateway.platforms.slack", "gateway.relay.egress", "gateway.run"):
+    for name in ("gateway.platforms.slack", "gateway.run"):
         handler.emit(logging.LogRecord(f"{package}{name}", logging.ERROR, __file__, 1, "boom", (), None))
     assert [(e.subsystem, e.source_logger) for e in events] == [
         ("platform.slack", "gateway.platforms.slack"),
-        ("platform.relay", "gateway.relay.egress"),
         ("gateway", "gateway.run"),
     ]

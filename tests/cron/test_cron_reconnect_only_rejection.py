@@ -41,9 +41,8 @@ def _deliver_through_router(monkeypatch, loop, *, live_error: str):
     raises it), then the standalone lane on a token-less worker. Returns (standalone calls, errors)."""
     class Transport:
         adapter = type("Adapter", (), {"_owner_profile": "satellite"})()
-        is_relay = False
 
-        async def send(self, platform, chat_id, content, metadata=None):
+        async def send(self, chat_id, content, metadata=None):
             return SendResult(success=False, error=live_error, retryable=live_error == "send_path_degraded")
 
     fields = {name: None for name in sd._TargetDelivery.__dataclass_fields__}

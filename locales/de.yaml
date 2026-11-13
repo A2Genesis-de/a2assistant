@@ -380,7 +380,6 @@ gateway:
     save_failed: "Home-Kanal konnte nicht gespeichert werden: {error}"
     success: "✅ Home-Kanal auf **{name}** (ID: {chat_id}) gesetzt.\nCron-Jobs und plattformübergreifende Nachrichten werden hierher geliefert."
     err_missing_platform: "Logische Plattform fehlt"
-    err_relay_unauthenticated: "Das Relay authentifiziert dieses logische Home-Ziel nicht"
   context:
     header: "🧠 **Kontextfenster**"
     model: "Modell: `{model}`"

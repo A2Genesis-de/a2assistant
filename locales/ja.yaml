@@ -380,7 +380,6 @@ gateway:
     save_failed: "ホームチャンネルを保存できませんでした: {error}"
     success: "✅ ホームチャンネルを **{name}** (ID: {chat_id}) に設定しました。\nCron ジョブとプラットフォーム間メッセージはここに配信されます。"
     err_missing_platform: "論理プラットフォームが指定されていません"
-    err_relay_unauthenticated: "リレーはこの論理ホームターゲットを認証していません"
   context:
     header: "🧠 **コンテキストウィンドウ**"
     model: "モデル: `{model}`"

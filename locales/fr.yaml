@@ -420,7 +420,6 @@ gateway:
     save_failed: "Impossible d'enregistrer le canal principal : {error}"
     success: "✅ Canal principal défini sur **{name}** (ID : {chat_id}).\nLes tâches cron et les messages multi-plateformes seront livrés ici."
     err_missing_platform: "Plateforme logique manquante"
-    err_relay_unauthenticated: "Le relais n'authentifie pas cette cible de foyer logique"
   context:
     header: "🧠 **Fenêtre de contexte**"
     model: "Modèle : `{model}`"

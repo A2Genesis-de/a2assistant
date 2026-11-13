@@ -96,7 +96,6 @@ async def test_ingress_gate_counts_an_authorized_bot_once_and_drops_it_when_refu
     from gateway.run import GatewayRunner
 
     runner = object.__new__(GatewayRunner)
-    runner._scale_to_zero_note_real_inbound = lambda: None
     async def _passthrough_hook(event, source):  # the inbound path awaits the hook
         return event
     runner._hm_pre_gateway_dispatch_hook = _passthrough_hook
@@ -137,7 +136,6 @@ async def test_busy_path_counts_a_bot_message_once_before_steering(monkeypatch, 
     assert handled == [True, True, True]
     assert steer.await_count == 1
 
-    runner._scale_to_zero_note_real_inbound = lambda: None
     async def _passthrough_hook(event, source):  # the inbound path awaits the hook
         return event
     runner._hm_pre_gateway_dispatch_hook = _passthrough_hook
@@ -161,7 +159,6 @@ async def test_routed_bot_traffic_is_metered_by_the_transport_profiles_policy(tm
     runner._bot_loop_guard = BotLoopGuard(clock=clock.now)
     runner._principal_authorized = lambda *a, **kw: True
     runner._adapter_profile_for_source = lambda source: "transport"
-    runner._scale_to_zero_note_real_inbound = lambda: None
     async def _passthrough_hook(event, source):  # the inbound path awaits the hook
         return event
     runner._hm_pre_gateway_dispatch_hook = _passthrough_hook
