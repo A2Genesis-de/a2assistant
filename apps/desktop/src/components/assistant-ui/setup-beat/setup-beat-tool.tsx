@@ -8,7 +8,6 @@ import { type ComponentType, type ReactNode, useState } from 'react'
 
 import { useSessionView } from '@/app/chat/session-view'
 import { CLARIFY_ICON_CLASS } from '@/components/assistant-ui/clarify/core/shell'
-import { ConnectorDirectoryCard } from '@/components/assistant-ui/connector-directory-card'
 import { AccentPickerCard } from '@/components/assistant-ui/theme-picker/accent-picker-card'
 import { LayoutPickerCard } from '@/components/assistant-ui/theme-picker/layout-picker-card'
 import { LayoutDashboard, MessageQuestion, Palette, Plug } from '@/lib/icons'
@@ -149,18 +148,6 @@ export function SetupBeatTool(props: ToolCallMessagePartProps) {
     setSettled({ answer: picks, beat: request.beat, kind: 'answer' })
 
     return true
-  }
-
-  // The directory card has its own header and plug icon; a frame label above it would be a second header.
-  if (request.beat === 'connectors') {
-    return (
-      <div data-setup-beat="connectors">
-        <ConnectorDirectoryCard
-          onContinue={({ connected, newly_connected }) => answer({ connected, newly_connected })}
-          suggested={Array.isArray(request.card.suggested) ? request.card.suggested : []}
-        />
-      </div>
-    )
   }
 
   return (

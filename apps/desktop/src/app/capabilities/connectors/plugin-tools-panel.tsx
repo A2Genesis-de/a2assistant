@@ -84,7 +84,6 @@ export function PluginToolsPanel({ card, onOpenPlugins, plugin, scope }: PluginT
           connectorName={card.name}
           editor={editor}
           listKey={name}
-          onReload={() => void probe.refetch()}
           onRetry={() => void probe.refetch()}
           preview
           readOnly

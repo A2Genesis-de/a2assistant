@@ -1,9 +1,8 @@
 import { PanelEmpty } from '@/app/overlays/panel'
-import { Button } from '@/components/ui/button'
 import { useI18n } from '@/i18n'
 import type { Translations } from '@/i18n/types'
 
-import type { ConflictDifference, ToolsEditorPhase } from './types'
+import type { ToolsEditorPhase } from './types'
 
 export function ToolsWash({ label, rows = 8 }: { label?: string; rows?: number }) {
   const { t } = useI18n()
@@ -23,59 +22,28 @@ export function ToolsWash({ label, rows = 8 }: { label?: string; rows?: number }
   )
 }
 
-type PageCopy = Translations['connectorsPage']
-type ToolsCopy = PageCopy['tools']
+type ToolsCopy = Translations['connectorsPage']['tools']
 
-export type ToolsStatusAction = 'keepMine' | 'reload' | 'remove' | 'signIn'
-export type ToolsStatusPhase = 'conflict' | 'gone' | 'needsAuth' | 'off' | 'signedOut'
-
-interface StatusContext {
-  connectorName: string
-  difference: ConflictDifference
-}
+export type ToolsStatusPhase = 'needsAuth' | 'off'
 
 interface StatusView {
-  actions: { id: ToolsStatusAction; label: (copy: PageCopy) => string; variant?: 'secondary' }[]
-  body: (copy: ToolsCopy, context: StatusContext) => string
+  body: (copy: ToolsCopy) => string
   icon: string
-  title: (copy: ToolsCopy, context: StatusContext) => string
+  title: (copy: ToolsCopy, connectorName: string) => string
 }
 
 type StatusTable = { readonly [phase in ToolsStatusPhase]: StatusView }
 
 const STATUS: StatusTable = {
-  conflict: {
-    actions: [
-      { id: 'reload', label: copy => copy.tools.conflictReload, variant: 'secondary' },
-      { id: 'keepMine', label: copy => copy.tools.conflictSave }
-    ],
-    body: (copy, { difference }) => copy.conflictBody(difference.theyOff, difference.theyOn),
-    icon: 'git-merge',
-    title: copy => copy.conflictTitle
-  },
-  gone: {
-    actions: [{ id: 'remove', label: copy => copy.tools.remove, variant: 'secondary' }],
-    body: copy => copy.goneBody,
-    icon: 'circle-slash',
-    title: (copy, { connectorName }) => copy.goneTitle(connectorName)
-  },
   needsAuth: {
-    actions: [],
     body: copy => copy.needsAuthBody,
     icon: 'key',
-    title: (copy, { connectorName }) => copy.needsAuthTitle(connectorName)
+    title: (copy, connectorName) => copy.needsAuthTitle(connectorName)
   },
   off: {
-    actions: [],
     body: copy => copy.offBody,
     icon: 'plug',
-    title: (copy, { connectorName }) => copy.offTitle(connectorName)
-  },
-  signedOut: {
-    actions: [{ id: 'signIn', label: copy => copy.page.signIn }],
-    body: copy => copy.signedOutBody,
-    icon: 'sign-in',
-    title: copy => copy.signedOutTitle
+    title: (copy, connectorName) => copy.offTitle(connectorName)
   }
 }
 
@@ -83,38 +51,10 @@ export function isToolsStatusPhase(phase: ToolsEditorPhase): phase is ToolsStatu
   return phase in STATUS
 }
 
-export function ToolsStatus({
-  connectorName,
-  difference,
-  onAction,
-  phase
-}: {
-  connectorName: string
-  difference: ConflictDifference
-  onAction: (id: ToolsStatusAction) => void
-  phase: ToolsStatusPhase
-}) {
+export function ToolsStatus({ connectorName, phase }: { connectorName: string; phase: ToolsStatusPhase }) {
   const { t } = useI18n()
   const copy = t.connectorsPage.tools
   const view = STATUS[phase]
-  const context = { connectorName, difference }
 
-  return (
-    <PanelEmpty
-      action={
-        view.actions.length > 0 ? (
-          <div className="flex items-center gap-2">
-            {view.actions.map(action => (
-              <Button key={action.id} onClick={() => onAction(action.id)} size="xs" variant={action.variant}>
-                {action.label(t.connectorsPage)}
-              </Button>
-            ))}
-          </div>
-        ) : undefined
-      }
-      description={view.body(copy, context)}
-      icon={view.icon}
-      title={view.title(copy, context)}
-    />
-  )
+  return <PanelEmpty description={view.body(copy)} icon={view.icon} title={view.title(copy, connectorName)} />
 }

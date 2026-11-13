@@ -1,7 +1,7 @@
 import type { ToolCallMessagePartProps } from '@assistant-ui/react'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { atom } from 'nanostores'
-import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
+import { useLocation } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { type SessionView, SessionViewProvider } from '@/app/chat/session-view'
@@ -125,36 +125,6 @@ function Where() {
 
   return <output data-testid="where">{`${pathname}${search}`}</output>
 }
-
-describe('ConnectorOffer named-account notice', () => {
-  it('says which name A2Assistant chose once the account connected, and Rename opens that account (by id) on the Connectors tab', () => {
-    const request = {
-      ...REQUEST,
-      settled: true,
-      targets: [{ ...GMAIL, alias: 'work', connectionId: 'ca_work', state: 'connected' as const }]
-    }
-
-    setConnectionRequest(request)
-    render(
-      <I18nProvider configClient={null} initialLocale="en">
-        <MemoryRouter initialEntries={['/chat']}>
-          <Routes>
-            <Route element={<ConnectorOffer owner={PRIMARY_OWNER} request={request} />} path="/chat" />
-            <Route element={<Where />} path="*" />
-          </Routes>
-        </MemoryRouter>
-      </I18nProvider>
-    )
-
-    expect(screen.getAllByText('A2Assistant named this Gmail account work.')).toHaveLength(1)
-
-    fireEvent.click(screen.getByRole('button', { name: 'Rename' }))
-
-    expect(screen.getByTestId('where').textContent).toBe(
-      '/capabilities?tab=connectors&connector=gmail&profile=default&rename=ca_work'
-    )
-  })
-})
 
 describe('ConnectorTool operation card', () => {
   it('offers one verb per row and Continue below; nothing per row says no', () => {

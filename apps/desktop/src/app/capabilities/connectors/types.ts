@@ -1,30 +1,4 @@
-import type { ConnectorAccountRow } from '@hermes/shared'
-
-export type ConnectorResidency = 'hosted' | 'local'
-
 export type LocalServerStatus = 'error' | 'needs-auth' | 'off' | 'ok' | 'probing' | 'unknown'
-
-/** One hosted account; `disabled` marks an account a reconnect replaced. */
-export type AccountRow = ConnectorAccountRow
-
-export interface HostedConnectorInput {
-  accountLabel?: string
-  /** The app's live accounts, active first, then newest. */
-  accounts?: readonly AccountRow[]
-  connected: boolean
-  connectedAt?: string
-  connectionStatus?: string
-  description?: string
-  disabledTools?: readonly string[]
-  enabled: boolean
-  inCatalog?: boolean
-  orgLocked?: boolean
-  /** Accounts a reconnect replaced: listed, never counted, never offered for reconnect. */
-  retiredAccounts?: readonly AccountRow[]
-  slug: string
-  statusReason?: string
-  toolsOff?: number
-}
 
 export interface LocalServerInput {
   canAuthenticate?: boolean
@@ -62,19 +36,10 @@ export interface ToolInput {
   slug: string
 }
 
-export type ConnectorState = 'available' | 'broken' | 'connected' | 'connecting' | 'expired' | 'off' | 'unknown'
-
-export type ConnectorOffBy = 'me' | 'org'
+export type ConnectorState = 'available' | 'broken' | 'connected' | 'connecting' | 'off'
 
 export type ConnectorStateWord =
-  | 'accessExpired'
   | 'available'
-  | 'connected'
-  | 'connecting'
-  | 'connectionUnknown'
-  | 'couldNotConnect'
-  | 'offByYourOrganisation'
-  | 'offForYou'
   | 'serverConnecting'
   | 'serverError'
   | 'serverNeedsAuth'
@@ -82,7 +47,7 @@ export type ConnectorStateWord =
   | 'serverOn'
   | 'serverOnUnused'
 
-export type ConnectorFactKey = 'tools' | 'toolsOff' | 'toolsOn' | 'toolsSomeOn'
+export type ConnectorFactKey = 'tools' | 'toolsOn' | 'toolsSomeOn'
 
 export interface ConnectorFact {
   count: number
@@ -91,26 +56,10 @@ export interface ConnectorFact {
 }
 
 export interface ConnectorReason {
-  key: 'finishSignIn' | 'reconnect' | 'serverError' | 'serverNeedsAuth'
-  text?: string
+  key: 'serverError' | 'serverNeedsAuth'
 }
 
-export type ConnectorVerb =
-  'authenticate' | 'connect' | 'install' | 'openLogs' | 'reconnect' | 'stopWaiting' | 'tryAgain' | 'turnBackOn'
-
-export interface ConnectorWayHosted {
-  accountLabel?: string
-  accounts: readonly AccountRow[]
-  connected: boolean
-  connectedAt?: string
-  disabledTools?: readonly string[]
-  fact?: ConnectorFact
-  offBy?: ConnectorOffBy
-  reason?: ConnectorReason
-  retiredAccounts: readonly AccountRow[]
-  state: ConnectorState
-  verb?: ConnectorVerb
-}
+export type ConnectorVerb = 'authenticate' | 'install' | 'openLogs'
 
 export interface ConnectorWayLocal {
   authType?: ConnectorAuthType
@@ -129,18 +78,17 @@ export interface ConnectorWayLocal {
   verb?: ConnectorVerb
 }
 
-export type ConnectorWays =
-  { hosted: ConnectorWayHosted; local: ConnectorWayLocal | null } | { hosted: null; local: ConnectorWayLocal }
+export interface ConnectorWays {
+  local: ConnectorWayLocal
+}
 
 export interface ConnectorCardModel {
   description?: string
   fact?: ConnectorFact
   inCatalog: boolean
   name: string
-  offBy?: ConnectorOffBy
   plugin?: string
   reason?: ConnectorReason
-  residency: ConnectorResidency
   slug: string
   state: ConnectorState
   stateWord: ConnectorStateWord
@@ -148,7 +96,7 @@ export interface ConnectorCardModel {
   ways: ConnectorWays
 }
 
-export type ConnectorGroupId = 'available' | 'connected' | 'local' | 'off'
+export type ConnectorGroupId = 'available' | 'local'
 
 export interface ConnectorGroupModel {
   cards: ConnectorCardModel[]
@@ -174,15 +122,12 @@ export interface ConnectorPageModel {
   segments: ConnectorSegmentModel[]
 }
 
-export type HostedPhase = 'failed' | 'loading' | 'ready' | 'signedOut' | 'unavailable'
-
 export interface ToolRowModel {
   categories: string[]
   deprecated: boolean
   description: string
   facet: string
   hints: string[]
-  lockedBy: 'org' | null
   name: string
   on: boolean
   slug: string
@@ -196,13 +141,9 @@ export interface ToolsFilter {
   showDeprecated: boolean
 }
 
-export type ToolsEditorPhase =
-  'conflict' | 'gone' | 'loading' | 'needsAuth' | 'off' | 'ready' | 'saving' | 'signedOut' | 'unavailable'
+export type ToolsEditorPhase = 'loading' | 'needsAuth' | 'off' | 'ready' | 'saving' | 'unavailable'
 
-export type ToolsEditorStatus = Extract<
-  ToolsEditorPhase,
-  'gone' | 'loading' | 'needsAuth' | 'off' | 'signedOut' | 'unavailable'
->
+export type ToolsEditorStatus = Extract<ToolsEditorPhase, 'loading' | 'needsAuth' | 'off' | 'unavailable'>
 
 export interface FacetSummaryRow {
   facet: string
@@ -222,9 +163,4 @@ export type QuickActionId = 'everything-on' | 'no-destructive' | 'read-only'
 export interface QuickAction {
   facets: readonly string[]
   id: QuickActionId
-}
-
-export interface ConflictDifference {
-  theyOn: number
-  theyOff: number
 }
