@@ -203,7 +203,7 @@ def _default_user_data_dir(key: str, home_key: str) -> str:
 def _launch_timeout(timeout: Optional[float]) -> float:
     if timeout is not None:
         return float(timeout)
-    from tools.browser_session_cloud import command_timeout
+    from tools.browser_config import command_timeout
     return float(max(command_timeout(), _MIN_FIRST_LAUNCH_TIMEOUT_S))
 
 
@@ -215,7 +215,7 @@ def _resolve_headed(headed: Optional[bool], env: dict) -> bool:
     """Headless unless ``browser.headed``; a display-less Linux host stays headless (a headed launch
     would die there). Windows obeys the same rule: headless unless the user opted in (#64867)."""
     if headed is None:
-        from tools.browser_session_cloud import is_headed_mode
+        from tools.browser_config import is_headed_mode
         headed = is_headed_mode()
     if not headed:
         return False
@@ -223,7 +223,7 @@ def _resolve_headed(headed: Optional[bool], env: dict) -> bool:
 
 
 def _configured_chromium_args() -> list[str]:
-    from tools.browser_session_cloud import chromium_args
+    from tools.browser_config import chromium_args
     return chromium_args()
 
 

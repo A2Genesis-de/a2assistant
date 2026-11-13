@@ -33,6 +33,7 @@ def test_legacy_search_entry_is_reported_then_cleared_by_enabling_web():
     assert config["agent"]["disabled_toolsets"] == ["browser", "memory"]
     enabled = _get_platform_tools(config, "cli", include_default_mcp_servers=False)
     assert toolsets_partially_stripped(config, enabled) == {}
-    names = {t["function"]["name"] for t in get_tool_definitions(
-        enabled_toolsets=sorted(enabled), disabled_toolsets=config["agent"]["disabled_toolsets"], quiet_mode=True)}
-    assert {"web_search", "web_extract", "terminal"} <= names
+    with patch("tools.web_tools._ddgs_package_importable", return_value=True):
+        names = {t["function"]["name"] for t in get_tool_definitions(
+            enabled_toolsets=sorted(enabled), disabled_toolsets=config["agent"]["disabled_toolsets"], quiet_mode=True)}
+    assert {"web_search", "terminal"} <= names

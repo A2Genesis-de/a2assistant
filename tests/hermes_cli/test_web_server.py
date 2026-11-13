@@ -66,7 +66,7 @@ def _install_example_plugin(_isolate_hermes_home):
     The user-plugin source is preferred over a transient
     ``HERMES_BUNDLED_PLUGINS`` override because the bundled dir is
     resolved per-call (other tests in the suite implicitly rely on the
-    real bundled plugins — kanban, hermes-achievements, model providers
+    real bundled plugins — kanban, model providers
     — being available, and globally swapping that root would yank them
     all). User plugins are first in the discovery search order, so
     laying down the fixture here is enough.
@@ -2841,11 +2841,9 @@ class TestNewEndpoints:
         """Each provider row carries a server-computed readiness `status`.
 
         Regression: the GUI pilled every zero-env-var row "Ready" — including
-        logged-out Nous Subscription rows, xAI TTS without Grok OAuth, and
-        never-installed KittenTTS/Piper. The endpoint now reports the honest
+        logged-out Nous Subscription rows and never-installed KittenTTS/Piper. The endpoint now reports the honest
         state so keyless ≠ ready.
         """
-        from hermes_cli import tools_config
         from hermes_cli.nous_account import NousPortalAccountInfo
 
         # Logged out of Nous Portal → managed subscription rows need sign-in.
@@ -2855,13 +2853,11 @@ class TestNewEndpoints:
                 logged_in=False, source="none", fresh=False, paid_service_access=None
             ),
         )
-        # No xAI credentials → the Grok OAuth-backed row needs sign-in.
         from hermes_cli import tools_config_post_setup
 
-        monkeypatch.setattr(tools_config, "_xai_credentials_present", lambda: False)
         # Local TTS engines not installed → their rows need setup.
         monkeypatch.setattr(tools_config_post_setup, "_module_installed", lambda name: False)
-        monkeypatch.delenv("ELEVENLABS_API_KEY", raising=False)
+        monkeypatch.delenv("VOICE_TOOLS_OPENAI_KEY", raising=False)
 
         resp = self.client.get("/api/tools/toolsets/tts/config")
         assert resp.status_code == 200
@@ -2870,51 +2866,12 @@ class TestNewEndpoints:
 
         valid = {"ready", "needs_keys", "needs_auth", "needs_setup"}
         assert all(p["status"] in valid for p in data["providers"])
-        # Genuinely-free keyless row stays Ready.
-        assert by_name["Microsoft Edge TTS"]["status"] == "ready"
         # Keyless ≠ ready for gated rows:
         assert by_name["Nous Subscription"]["status"] == "needs_auth"
-        assert by_name["xAI TTS"]["status"] == "needs_auth"
         assert by_name["KittenTTS"]["status"] == "needs_setup"
         assert by_name["Piper"]["status"] == "needs_setup"
         # Keyed row with the key unset:
-        assert by_name["ElevenLabs"]["status"] == "needs_keys"
-
-
-    def test_select_managed_nous_provider_reports_needs_nous_auth(self, monkeypatch):
-        """Selecting a managed Nous row while logged out flags needs_nous_auth.
-
-        Regression: the GUI PUT wrote browser.cloud_provider + use_gateway
-        but skipped the Portal entitlement handshake the CLI runs inline
-        (ensure_nous_portal_access) — so the row never activated and nothing
-        told the user to sign in. The endpoint now reports the entitlement
-        gap so the client can drive the existing Nous OAuth flow.
-        """
-        from hermes_cli.nous_account import NousPortalAccountInfo
-
-        monkeypatch.setattr(
-            "hermes_cli.nous_subscription.get_nous_portal_account_info",
-            lambda *a, **k: NousPortalAccountInfo(
-                logged_in=False, source="none", fresh=False, paid_service_access=None
-            ),
-        )
-
-        resp = self.client.put(
-            "/api/tools/toolsets/browser/provider",
-            json={"provider": "Nous Subscription (Browser Use cloud)"},
-        )
-        assert resp.status_code == 200
-        data = resp.json()
-        assert data["ok"] is True
-        assert data["needs_nous_auth"] is True
-        assert data["feature"] == "browser"
-        # The selection is still persisted — activation is what's gated.
-        # Managed rows store the single 'nous' provider string (the runtime
-        # maps it to the Browser Use cloud through the Nous Tool Gateway).
-        from hermes_cli.config import load_config
-        cfg = load_config()
-        assert cfg["browser"]["cloud_provider"] == "nous"
-        assert "use_gateway" not in cfg["browser"]
+        assert by_name["OpenAI TTS"]["status"] == "needs_keys"
 
 
     # -- Web capability split (search vs extract backends) ------------------
@@ -2923,42 +2880,52 @@ class TestNewEndpoints:
     def test_select_web_search_backend_matches_runtime_resolution(self, monkeypatch):
         """PUT provider with capability=search writes web.search_backend and the
         runtime search dispatcher resolves to it — while extract is untouched."""
-        # Make SearXNG available so both the endpoint gate and the runtime
-        # availability check agree it's usable.
-        monkeypatch.setenv("SEARXNG_URL", "http://localhost:8888")
-        # Give extract an explicit shared backend so the assertion isn't
-        # hostage to whatever creds exist on the machine running the tests.
-        monkeypatch.setenv("FIRECRAWL_API_URL", "http://localhost:3002")
-        base = self.client.put(
-            "/api/tools/toolsets/web/provider",
-            json={"provider": "Firecrawl Self-Hosted"},
-        )
-        assert base.status_code == 200
+        from agent import web_search_registry
+        from agent.web_search_provider import WebSearchProvider
 
-        resp = self.client.put(
-            "/api/tools/toolsets/web/provider",
-            json={"provider": "SearXNG", "capability": "search"},
-        )
-        assert resp.status_code == 200
-        body = resp.json()
-        assert body["ok"] is True
-        assert body["capability"] == "search"
+        class ExampleProvider(WebSearchProvider):
+            name = "example"
+            display_name = "Example"
 
-        from hermes_cli.config import load_config
-        cfg = load_config()
-        assert cfg["web"]["search_backend"] == "searxng"
-        # The shared backend selected first must be preserved for extract.
-        assert cfg["web"]["backend"] == "firecrawl"
+            def is_available(self):
+                return True
 
-        # The REAL runtime resolution — not a parallel reimplementation.
-        from tools.web_tools import _get_extract_backend, _get_search_backend
-        assert _get_search_backend() == "searxng"
-        assert _get_extract_backend() == "firecrawl"
+            def supports_extract(self):
+                return True
 
-        # And the config endpoint reports the same split.
-        data = self.client.get("/api/tools/toolsets/web/config").json()
-        assert data["active_search_backend"] == "searxng"
-        assert data["active_extract_backend"] == "firecrawl"
+            def get_setup_schema(self):
+                return {"name": "Example", "badge": "plugin", "tag": "search + extract", "env_vars": []}
+
+        from hermes_cli.plugins import _ensure_plugins_discovered
+        _ensure_plugins_discovered()
+        web_search_registry.register_provider(ExampleProvider())
+        try:
+            base = self.client.put("/api/tools/toolsets/web/provider", json={"provider": "Example"})
+            assert base.status_code == 200
+
+            resp = self.client.put(
+                "/api/tools/toolsets/web/provider",
+                json={"provider": "DuckDuckGo (ddgs)", "capability": "search"},
+            )
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["ok"] is True
+            assert body["capability"] == "search"
+
+            from hermes_cli.config import load_config
+            cfg = load_config()
+            assert cfg["web"]["search_backend"] == "ddgs"
+            assert cfg["web"]["backend"] == "example"
+
+            from tools.web_tools import _get_extract_backend, _get_search_backend
+            assert _get_search_backend() == "ddgs"
+            assert _get_extract_backend() == "example"
+
+            data = self.client.get("/api/tools/toolsets/web/config").json()
+            assert data["active_search_backend"] == "ddgs"
+            assert data["active_extract_backend"] == "example"
+        finally:
+            web_search_registry._providers.pop("example", None)
 
 
     # -- Terminal execution backend picker ---------------------------------
@@ -4468,12 +4435,10 @@ class TestPluginAPIAuth:
         """Auth must be plugin-agnostic, not kanban-specific.
 
         The middleware fix is at the gate level (no per-plugin allowlist),
-        so any plugin's API surface — kanban, hermes-achievements, future
-        plugins — must require the session token. Hit a non-kanban plugin
+        so any plugin's API surface — kanban, future plugins — must require the session token. Hit a non-kanban plugin
         path to lock that in.
         """
-        # Real plugin path (hermes-achievements is loaded by default).
-        resp = self.client.get("/api/plugins/hermes-achievements/overview")
+        resp = self.client.get("/api/plugins/kanban/board")
         assert resp.status_code == 401
         # Same for an arbitrary plugin namespace that doesn't even exist —
         # the middleware should 401 before routing decides 404, so an

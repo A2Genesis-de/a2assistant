@@ -23,7 +23,7 @@ logger = logging.getLogger("hermes_cli.model_switch")
 # Rows never capped by max_models: aggregators whose full catalogs (70+ models) must stay visible, and
 # rows that are already a curated list (Nous = curated + Portal picks, OpenRouter = curated ∩ live),
 # where the cap only cut the bottom "Free tier" block and the Portal's appended recommendations.
-_UNCAPPED_PICKER_PROVIDERS: frozenset[str] = frozenset({"opencode-zen", "opencode-go", "nous", "openrouter"})
+_UNCAPPED_PICKER_PROVIDERS: frozenset[str] = frozenset({"nous", "openrouter"})
 
 
 def _save_discovered_models_to_config(
@@ -335,72 +335,17 @@ def _pool_usable(slug: str, *, for_picker: bool = False) -> bool:
 
 
 def _overlay_has_env_creds(pid: str, hermes_slug: str, overlay, read_env) -> bool:
-    """Section-2 env/SDK credential check shared by the picker and the prefetch scan.
-
-    Vertex authenticates via OAuth2 (service-account JSON / ADC), not an API key, so it gets its
-    own probe; otherwise the provider is hidden from the picker even when fully configured."""
+    """Section-2 env credential check shared by the picker and the prefetch scan."""
     from hermes_cli.auth import PROVIDER_REGISTRY
     has_creds = False
-    if overlay.auth_type == "vertex":
-        try:
-            from agent.vertex_adapter import has_vertex_credentials
-            has_creds = has_vertex_credentials()
-        except Exception as exc:
-            logger.debug("Vertex credential check failed: %s", exc)
-    elif overlay.extra_env_vars:
+    if overlay.extra_env_vars:
         has_creds = _any_env(overlay.extra_env_vars, read_env)
     if not has_creds and overlay.auth_type == "api_key":
         for key in (pid, hermes_slug):
             pcfg = PROVIDER_REGISTRY.get(key)
             if pcfg and pcfg.api_key_env_vars and _any_env(pcfg.api_key_env_vars, read_env):
                 return True
-    if not has_creds and hermes_slug == "azure-foundry":
-        has_creds = _azure_entra_configured(read_env)
     return has_creds
-
-
-def _azure_entra_configured(read_env=os.environ.get) -> bool:
-    """Azure Foundry under ``model.auth_mode: entra_id`` mints a per-request bearer, so no
-    ``AZURE_FOUNDRY_API_KEY`` ever exists; the row is configured once the runtime resolver's own
-    inputs are (provider + auth_mode + an endpoint). No token is minted here (#27989)."""
-    from hermes_cli.models import _get_model_config_dict
-    model_cfg = _get_model_config_dict()
-    if (str(model_cfg.get("provider") or "").strip().lower() != "azure-foundry"
-            or str(model_cfg.get("auth_mode") or "").strip().lower() != "entra_id"):
-        return False
-    return bool(str(model_cfg.get("base_url") or "").strip() or read_env("AZURE_FOUNDRY_BASE_URL"))
-
-
-def _has_fast_aws_sdk_signal() -> bool:
-    """True when explicit AWS auth config is present in the environment.
-
-    Deliberately avoids botocore's full credential chain: picker discovery runs for non-Bedrock
-    providers too, and botocore may probe EC2 IMDS (169.254.169.254) before giving up."""
-    def _set(name: str) -> bool:
-        return bool(os.environ.get(name, "").strip())
-    return (
-        _set("AWS_BEARER_TOKEN_BEDROCK")
-        or (_set("AWS_ACCESS_KEY_ID") and _set("AWS_SECRET_ACCESS_KEY"))
-        or any(_set(name) for name in (
-            "AWS_PROFILE", "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI",
-            "AWS_CONTAINER_CREDENTIALS_FULL_URI", "AWS_WEB_IDENTITY_TOKEN_FILE")))
-
-
-def _has_aws_sdk_creds_for_listing(slug: str, current_provider: str) -> bool:
-    """AWS SDK credential check; the full boto3 chain is only consulted for the *current* provider."""
-    if _has_fast_aws_sdk_signal():
-        return True
-    if str(slug or "").strip().lower() != str(current_provider or "").strip().lower():
-        return False
-    try:
-        from agent.bedrock_adapter import has_aws_credentials
-        return bool(has_aws_credentials())
-    except Exception:
-        return False
-
-
-def _is_aws_sdk(pconfig) -> bool:
-    return bool(pconfig) and getattr(pconfig, "auth_type", "") == "aws_sdk"
 
 
 def _live_or_curated_ids(slug: str, curated: dict, *fallback_keys: str, merge_models_dev: bool = True,
@@ -428,17 +373,6 @@ def _first_curated(curated: dict, keys) -> list:
         if model_ids:
             break
     return model_ids
-
-
-def _aws_live_or_curated_ids(slug: str, curated: dict, *fallback_keys: str,
-                             non_blocking: bool = False) -> list:
-    """Bedrock: live discovery reflects the active region (eu.*, ap.*) rather than the static
-    us.* list; any failure falls back to the curated list."""
-    try:
-        return _live_or_curated_ids(slug, curated, *fallback_keys, merge_models_dev=False,
-                                    non_blocking=non_blocking) or []
-    except Exception:
-        return _first_curated(curated, fallback_keys or (slug,)) or []
 
 
 def _nous_picker_model_ids(curated: dict, force_fresh_nous_tier: bool) -> list:
@@ -678,7 +612,7 @@ def _collect_authed_provider_slugs(
     mdev_to_hermes = {v: k for k, v in models_dev_provider_map().items()}
     for pid, overlay in hermes_overlays().items():
         hermes_slug = mdev_to_hermes.get(pid, pid)
-        if _skip(seen, excluded_set, pid, hermes_slug) or overlay.auth_type == "aws_sdk":
+        if _skip(seen, excluded_set, pid, hermes_slug):
             continue
         if (
             _overlay_has_env_creds(pid, hermes_slug, overlay, _scoped_key_env)
@@ -866,11 +800,8 @@ def _lap_builtin_rows(b: _PickerBuild, data: dict, user_providers: dict) -> None
 def _overlay_has_creds(b: _PickerBuild, pid: str, hermes_slug: str, overlay) -> bool:
     """Section-2 credential ladder: env/SDK, external-process executable, auth store, pool,
     anthropic's external credential files."""
-    if overlay.auth_type == "aws_sdk":
-        has_creds = _has_aws_sdk_creds_for_listing(hermes_slug, b.current_provider)
-    else:
-        from hermes_cli.model_switch import _scoped_key_env
-        has_creds = _overlay_has_env_creds(pid, hermes_slug, overlay, _scoped_key_env)
+    from hermes_cli.model_switch import _scoped_key_env
+    has_creds = _overlay_has_env_creds(pid, hermes_slug, overlay, _scoped_key_env)
     # External-process providers (ACP CLIs) hold no key/token/pool entry by design — the
     # spawned subprocess brings its own auth. "Configured" means the executable resolves.
     # "Configured" means the executable resolves, which is exactly what get_auth_status() reports for them;
@@ -927,9 +858,6 @@ def _lap_overlay_rows(b: _PickerBuild, data: dict, user_providers: dict) -> None
             # appear; falls back to curated when unreachable (or not yet cached on the read path).
             model_ids = _live_or_curated_ids(hermes_slug, b.curated, merge_models_dev=False,
                                              non_blocking=b.non_blocking_catalogs)
-        elif overlay.auth_type == "aws_sdk":
-            model_ids = _aws_live_or_curated_ids(hermes_slug, b.curated, hermes_slug, pid,
-                                                 non_blocking=b.non_blocking_catalogs)
         elif hermes_slug == "nous":
             # A guest identity never needs the Portal catalog: add_builtin_row pins nous/welcome
             # (or drops the row when nous.guest is off), so only a real account fetches.
@@ -968,8 +896,7 @@ def _lap_canonical_rows(b: _PickerBuild) -> None:
             sib_vars = set(sib.api_key_env_vars) if sib else set()
             if lit and lit <= sib_vars < set(cp_config.api_key_env_vars) and cp.slug != b.current_provider:
                 continue
-        has_creds = has_creds or _auth_store_has_provider(cp.slug) or _pool_usable(cp.slug, for_picker=b.for_picker) or (
-            _is_aws_sdk(cp_config) and _has_aws_sdk_creds_for_listing(cp.slug, b.current_provider))
+        has_creds = has_creds or _auth_store_has_provider(cp.slug) or _pool_usable(cp.slug, for_picker=b.for_picker)
         if not has_creds and cp_config is not None and cp_config.auth_type == "external_process":
             # Subprocess-backed providers own their auth; the binary resolving is the credential
             # evidence for listing (same gate as the section-2 overlay rows and hermes auth status).
@@ -980,11 +907,8 @@ def _lap_canonical_rows(b: _PickerBuild) -> None:
                 logger.debug("External-process check failed for %s: %s", cp.slug, exc)
         if not has_creds:
             continue
-        if _is_aws_sdk(cp_config):
-            model_ids = _aws_live_or_curated_ids(cp.slug, b.curated, non_blocking=b.non_blocking_catalogs)
-        else:
-            model_ids = _live_or_curated_ids(cp.slug, b.curated, merge_models_dev=False,
-                                             non_blocking=b.non_blocking_catalogs)
+        model_ids = _live_or_curated_ids(cp.slug, b.curated, merge_models_dev=False,
+                                         non_blocking=b.non_blocking_catalogs)
         b.add_builtin_row(
             cp.slug, cp.label, cp.slug == b.current_provider, model_ids, "canonical", uncapped_ok=False)
 
@@ -1199,10 +1123,6 @@ def _build_curated_lists(current_provider: str, current_base_url: str, current_m
             curated[_pp.name] = rows
     # Remote manifest so new Portal models surface without a release; in-repo snapshot fallback.
     curated["nous"] = get_curated_nous_model_ids()
-    if "ollama-cloud" not in curated:
-        from hermes_cli.models import fetch_ollama_cloud_models
-        # Read path: cache only; the row's own SWR refresh (cached_provider_model_ids) warms it.
-        curated["ollama-cloud"] = fetch_ollama_cloud_models(cache_only=non_blocking)
     # LM Studio has no static catalog: probe its native endpoint live. Base URL precedence:
     # LM_BASE_URL > active config base_url (when current) > default. On auth rejection /
     # unreachable, fall back to the current model so the picker still shows something offline.

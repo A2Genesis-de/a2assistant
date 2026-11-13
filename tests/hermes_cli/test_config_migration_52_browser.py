@@ -97,7 +97,7 @@ def test_boot_migration_shows_the_off_notice_at_the_first_agent_start_once(tmp_p
 @pytest.mark.parametrize(("value", "reason"), [
     ("camofox", "Camofox is now the camofox plugin (`hermes plugins install camofox`)"),
     ("local", "browser_exec launches A2Assistant's packaged Chromium itself"),
-    ("browserbase", "a cloud browser is chosen with browser.cloud_provider"),
+    ("browserbase", "the bundled cloud browsers were removed"),
     ("Browser-Use", "browser_exec (Browser Use mode) is the only browser now"),
     ("agent-browser", "agent-browser left A2Assistant"),
     ("lynx", "browser_exec is the only browser now"),

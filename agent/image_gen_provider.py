@@ -4,8 +4,7 @@ Providers register via ``PluginContext.register_image_gen_provider()`` (from
 ``<repo>/plugins/image_gen/<name>/`` or ``~/.hermes/plugins/image_gen/<name>/``);
 the one selected by ``image_gen.provider`` services every ``image_generate`` call.
 One tool covers text-to-image and editing: ``image_url`` / ``reference_image_urls``
-route to the provider's edit endpoint, otherwise text-to-image. Mirrors
-``agent/video_gen_provider.py``. Response dicts come from :func:`success_response`
+route to the provider's edit endpoint, otherwise text-to-image. Response dicts come from :func:`success_response`
 / :func:`error_response` (``success, image, model, prompt, aspect_ratio, modality,
 provider`` + ``error, error_type`` on failure).
 """

@@ -843,10 +843,6 @@ class PluginContext(PluginCapabilityCtxMixin):
         return register_scoped_provider(self, "register_image_gen_provider", provider)
 
     @scoped_provider_registrar
-    def register_video_gen_provider(self, provider):
-        return register_scoped_provider(self, "register_video_gen_provider", provider)
-
-    @scoped_provider_registrar
     def register_web_search_provider(self, provider):
         return register_scoped_provider(self, "register_web_search_provider", provider)
 

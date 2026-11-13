@@ -90,7 +90,6 @@ class TestConfigPrompt:
         from hermes_cli import tools_config
 
         monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-        monkeypatch.delenv("FAL_KEY", raising=False)
 
         image_gen_registry.register_provider(_FakeProvider("avail-img", available=True))
 
@@ -125,79 +124,3 @@ class TestConfigWriting:
 
         assert config["image_gen"]["provider"] == "noenv"
         assert config["image_gen"]["model"] == "noenv-model-v1"
-
-
-    def test_plugin_provider_active_overrides_managed_nous_active_label(self, monkeypatch):
-        from hermes_cli import tools_config
-
-        monkeypatch.setattr(
-            tools_config,
-            "get_nous_subscription_features",
-            lambda config, **kwargs: SimpleNamespace(
-                features={"image_gen": SimpleNamespace(managed_by_nous=True)}
-            ),
-        )
-
-        config = {"image_gen": {"provider": "openai", "use_gateway": False}}
-        nous_row = {
-            "name": "Nous Subscription",
-            "managed_nous_feature": "image_gen",
-        }
-        openai_row = {
-            "name": "OpenAI",
-            "image_gen_plugin_name": "openai",
-        }
-
-        assert tools_config._is_provider_active(openai_row, config) is True
-        assert tools_config._is_provider_active(nous_row, config) is False
-
-
-
-class TestCodexOAuthBootstrapHook:
-    """#102144: the Image Generation 'OpenAI (Codex auth)' row is keyless, so its ``post_setup``
-    hook is the only thing that can sign the user in. Selecting it with no Codex credentials must
-    start the device-code flow and save tokens without hijacking ``model.provider``; with existing
-    credentials it must not re-prompt."""
-
-    @pytest.mark.parametrize("logged_in", [False, True])
-    def test_hook_starts_codex_oauth_only_when_credentials_missing(self, monkeypatch, logged_in):
-        from hermes_cli import auth, tools_config_post_setup
-
-        monkeypatch.setattr(auth, "get_codex_auth_status", lambda: {"logged_in": logged_in})
-        monkeypatch.setattr("hermes_cli.setup.prompt_choice", lambda *a, **kw: 0)
-        started, saved = [], []
-        monkeypatch.setattr(auth, "_codex_device_code_login",
-                            lambda: started.append(1) or {"tokens": {"access_token": "t"}, "last_refresh": "x"})
-        monkeypatch.setattr(auth, "_save_codex_tokens", lambda tokens, last_refresh=None, **kw: saved.append(kw))
-
-        tools_config_post_setup._POST_SETUP_HOOKS["openai_codex"]()
-
-        assert len(started) == (0 if logged_in else 1)
-        # Side-tool sign-in must not make Codex the active inference provider.
-        assert saved == ([] if logged_in else [{"set_active": False}])
-
-    def test_hook_prints_auth_command_instead_of_device_login_when_noninteractive(self, monkeypatch, capsys):
-        """Desktop's PostSetupRunner spawns `hermes tools post-setup openai_codex` with stdin=DEVNULL and
-        HERMES_NONINTERACTIVE=1: nobody can complete a device-code login there, so the hook must name
-        the real command and return instead of starting one."""
-        from hermes_cli import auth, tools_config_post_setup
-
-        monkeypatch.setenv("HERMES_NONINTERACTIVE", "1")
-        monkeypatch.setattr(auth, "get_codex_auth_status", lambda: {"logged_in": False})
-        monkeypatch.setattr("hermes_cli.setup.prompt_choice", lambda *a, **kw: 0)
-        monkeypatch.setattr(auth, "_codex_device_code_login",
-                            lambda: pytest.fail("device-code login must not start without a human"))
-
-        tools_config_post_setup._POST_SETUP_HOOKS["openai_codex"]()
-
-        assert "hermes auth add openai-codex" in capsys.readouterr().out
-
-    def test_readiness_reports_codex_row_from_auth_store(self, monkeypatch):
-        from hermes_cli import auth, tools_config
-
-        row = {"name": "OpenAI (Codex auth)", "env_vars": [], "image_gen_plugin_name": "openai-codex",
-               "post_setup": "openai_codex"}
-        monkeypatch.setattr(auth, "get_codex_auth_status", lambda: {"logged_in": False})
-        assert tools_config.provider_readiness_status(row, {}) == "needs_auth"
-        monkeypatch.setattr(auth, "get_codex_auth_status", lambda: {"logged_in": True})
-        assert tools_config.provider_readiness_status(row, {}) == "ready"

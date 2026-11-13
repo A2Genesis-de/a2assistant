@@ -6,16 +6,13 @@ docs of config.yaml.
 
 from hermes_cli.config_defaults_auxiliary import _aux
 
-#: Image every container terminal backend (docker/modal/daytona, the singularity plugin) uses unless the
+#: Image every container terminal backend (docker, the singularity plugin) uses unless the
 #: user pins one. LEGACY_SANDBOX_IMAGES are the plain defaults that preceded the desktop stack
 #: (the 3.14 pin shipped between the two without a migration); a saved config still holding one
 #: is the template copied, and the config migration unsets it, never a user's own pin.
 DEFAULT_SANDBOX_IMAGE = "nousresearch/hermes-sandbox:desktop"
 LEGACY_SANDBOX_IMAGES = ("nikolaik/python-nodejs:python3.11-nodejs20", "nikolaik/python-nodejs:python3.14-nodejs22")
 LEGACY_SANDBOX_IMAGE = LEGACY_SANDBOX_IMAGES[0]
-# Vercel Sandbox managed image (Vercel deprecated its `runtime` presets in Aug 2026).
-DEFAULT_VERCEL_IMAGE = "vercel/sandbox/universal:latest"
-LEGACY_VERCEL_RUNTIME = "node24"  # the seeded pre-49 default, never a user choice
 
 
 DEFAULT_CONFIG = {
@@ -176,7 +173,7 @@ DEFAULT_CONFIG = {
         "parallel_tool_call_guidance": True,
         # Toolchain probe: surfaces Python/pip/uv/PEP-668 state in the system prompt only when
         # something non-default is detected (no pip module, pip/python mismatch, PEP 668 without
-        # uv); zero tokens when clean. Skipped for docker/modal/ssh backends (own probe).
+        # uv); zero tokens when clean. Skipped for docker/ssh backends (own probe).
         "environment_probe": True,
         # Bot Mode teammate-messaging protocol section (silent unless desktop Bot Mode manages it).
         "bot_mode_protocol": True,
@@ -283,7 +280,6 @@ DEFAULT_CONFIG = {
 
     "terminal": {
         "backend": "local",
-        "modal_mode": "auto",
         # Remote-backend connection-class failures (SSH host unreachable, Docker daemon down):
         # "warn" = structured degraded tool result with reason + retry hint; "fail" = raise error +
         # traceback.
@@ -340,11 +336,7 @@ DEFAULT_CONFIG = {
         # reads host values) — useful under systemd without the user's shell env. Example:
         # {"SSH_AUTH_SOCK": "/run/user/1000/ssh-agent.sock"}
         "docker_env": {},
-        "modal_image": DEFAULT_SANDBOX_IMAGE,
-        "daytona_image": DEFAULT_SANDBOX_IMAGE,
-        "vercel_image": DEFAULT_VERCEL_IMAGE,  # vercel_sandbox backend only: a Vercel-managed or VCR image
-        "vercel_runtime": "",  # deprecated by Vercel; a legacy runtime pin (node24 | node22 | python3.13) overrides vercel_image
-        # Container limits (docker, modal, daytona, vercel_sandbox, container plugin backends; not local/ssh).
+        # Container limits (docker, container plugin backends; not local/ssh).
         "container_cpu": 1,
         "container_memory": 5120,       # MB (default 5GB)
         "container_disk": 51200,        # MB (default 50GB)
@@ -378,24 +370,10 @@ DEFAULT_CONFIG = {
 
     "web": {
         "backend": "",           # shared fallback — applies to both search and extract
-        "search_backend": "",    # per-capability override for web_search (e.g. "searxng")
-        "extract_backend": "",   # per-capability override for web_extract (e.g. "native")
+        "search_backend": "",    # per-capability override for web_search (e.g. "ddgs")
+        "extract_backend": "",   # per-capability override for web_extract (a plugin provider)
         # per-page char budget for web_extract; larger pages truncate, full text kept in cache/web
         "extract_char_limit": 15000,
-        # Keyless free-tier ring: with NO web backend configured or keyed, web_search/web_extract
-        # rotate round-robin across exa, parallel, firecrawl, keenable public free tiers, failing
-        # over on rate limits. Never pre-empts a configured/keyed backend. false = disable.
-        "keyless_fallback": True,
-        # One-shot rescue: when the chosen/keyed backend fails a call, THAT call retries once on the
-        # keyless ring; the next call tries the chosen backend again (no sticky failover). Off when
-        # keyless_fallback is false.
-        "keyless_rescue": True,
-        # Per-vendor tier for vendors with both a keyless free endpoint and a keyed paid path (exa,
-        # parallel, firecrawl, keenable; tavily is opt-in keyless via `hermes tools`, not a ring
-        # member). Set by the `hermes tools` picker. "free" = always anonymous endpoint even with a
-        # key; "paid" = always keyed (missing key = error; vendor excluded from the ring); unset =
-        # keyed when the key is present, else the ring.
-        "provider_tier": {},
         # TTL caching for web_search + web_extract: repeat searches (same query + provider) within
         # the TTL come from an in-process memo; repeat extracts from the cache/web store. Concurrent
         # identical searches coalesce into one vendor request. Only successes cached.
@@ -455,7 +433,7 @@ DEFAULT_CONFIG = {
         # profile: the session gets a fresh browser without the user's logins.
         "real_profile_pin": "",
         # CDP supervisor: dialog + frame detection over a persistent WebSocket; active only with a
-        # CDP-capable backend (Browserbase, or local Chrome via /browser connect). See
+        # CDP-capable backend (a cloud browser plugin, or local Chrome via /browser connect). See
         # website/docs/developer-guide/browser-supervisor.md.
         "dialog_policy": "must_respond",  # must_respond | auto_dismiss | auto_accept
         "dialog_timeout_s": 300,  # safety auto-dismiss after N seconds under must_respond
@@ -770,7 +748,6 @@ DEFAULT_CONFIG = {
             "language": "",
         },
         "memory_query_rewrite": _aux(8, reasoning_effort=False),
-        "tts_audio_tags": _aux(30),
         "voice_chat": {**_aux(120), "reasoning_effort": "none"},  # agent/voice_turn_route.py; off = lowest valid
         # Kanban: triage_specifier expands a Triage one-liner into a spec; kanban_decomposer a JSON graph.
         "triage_specifier": _aux(120),
@@ -1054,13 +1031,11 @@ DEFAULT_CONFIG = {
         "redact_pii": False,  # hash user IDs and strip phone numbers from LLM context
     },
     # Text-to-speech. Each provider accepts an optional `max_text_length:` override for the
-    # per-request input-character cap; omit to use the provider's documented limit (OpenAI 4096, xAI
-    # 15000, MiniMax 10000, ElevenLabs 5k-40k model-aware, Gemini 32000, Edge 5000, Mistral 4000,
-    # NeuTTS/KittenTTS 2000).
+    # per-request input-character cap; omit to use the provider's documented limit (OpenAI 4096,
+    # Piper 5000, KittenTTS 2000).
     "tts": {
-        # "edge" (free) | "elevenlabs" (premium) | "openai" | "xai" | "minimax" | "mistral" |
-        # "gemini" | "deepinfra" | "neutts" (local) | "kittentts" (local) | "piper" (local)
-        "provider": "edge",
+        # "openai" (any OpenAI-compatible endpoint) | "kittentts" (local) | "piper" (local)
+        "provider": "openai",
         # Seconds a local engine (Piper, KittenTTS) stays loaded after the last speech toggle
         # turns off, so a quick re-activation (wake word, voice-chat restart) skips the reload.
         # 0 unloads immediately.
@@ -1069,14 +1044,6 @@ DEFAULT_CONFIG = {
             # Shortest first sentence (chars) spoken on its own by streaming TTS; shorter openers
             # ride with the next sentence. 20 suits English; CJK voice setups use ~6.
             "min_len": 20,
-        },
-        "edge": {
-            # Popular: AriaNeural, JennyNeural, AndrewNeural, BrianNeural, SoniaNeural
-            "voice": "en-US-AriaNeural",
-        },
-        "elevenlabs": {
-            "voice_id": "pNInz6obpgDQGcFmaJgB",  # Adam
-            "model_id": "eleven_multilingual_v2",
         },
         "openai": {
             "model": "gpt-4o-mini-tts",
@@ -1090,38 +1057,9 @@ DEFAULT_CONFIG = {
             # reports its rate (X-Audio-Sample-Rate header) overrides this automatically.
             "pcm_sample_rate": 24000,
         },
-        "gemini": {
-            "model": "gemini-2.5-flash-preview-tts",
-            "voice": "Kore",
-            # Gemini 3.1: aux-model rewrite inserts [audio tags] into the TTS script only.
-            "audio_tags": False,
-            # Optional local text file with performance direction; may include a `{transcript}`
-            # placeholder, else the live transcript is appended.
-            "persona_prompt_file": "",
-        },
-        "xai": {
-            "voice_id": "eve",  # or a custom voice ID (docs.x.ai custom voices)
-            "language": "en",  # BCP-47 code ("en", "pt-BR") or "auto"
-            "speed": 1.0,  # 0.7–1.5
-            "auto_speech_tags": False,  # insert expressive audio tags via LLM rewrite
-            "optimize_streaming_latency": 0,  # 0–2, trades quality for lower latency
-            "sample_rate": 24000,  # 22050 / 24000 / 44100 / 48000
-            "bit_rate": 128000,  # MP3 bitrate; only applies when codec=mp3
-        },
-        "mistral": {
-            "model": "voxtral-mini-tts-2603",
-            "voice_id": "c69964a6-ab8b-4f8a-9465-ec0925096ec8",  # Paul - Neutral
-        },
-        "minimax": {"model": "speech-02-hd", "voice_id": "English_expressive_narrator"},
         "kittentts": {
             "model": "KittenML/kitten-tts-nano-0.8-int8",  # nano 25MB; micro 41MB; mini 80MB
             "voice": "Jasper",
-        },
-        "neutts": {
-            "ref_audio": "",  # path to reference voice audio (empty = bundled default)
-            "ref_text": "",   # path to reference voice transcript (empty = bundled default)
-            "model": "neuphonic/neutts-air-q4-gguf",  # HuggingFace model repo
-            "device": "cpu",  # cpu, cuda, or mps
         },
         "piper": {
             # Voice name (downloaded on first use) or absolute path to a .onnx file; list:
@@ -1130,22 +1068,17 @@ DEFAULT_CONFIG = {
             # noise_scale, noise_w_scale, volume, normalize_audio.
             "voice": "en_US-lessac-medium",
         },
-        "deepinfra": {
-            "model": "",  # empty = first tts-tagged model from the live catalog
-            "voice": "default",
-            # optional "base_url" key overrides DEEPINFRA_BASE_URL for TTS only
-        },
     },
 
     "stt": {
         "enabled": True,
         # Echo the raw transcript of gateway voice messages back as a 🎙️ message.
         "echo_transcripts": True,
-        # No seeded "provider" (a stored value is an explicit pick; unset = autodetect): local | groq |
-        # openai | mistral | elevenlabs | deepinfra | xai. Global language hint unless a per-provider one
+        # No seeded "provider" (a stored value is an explicit pick; unset = autodetect): local |
+        # local_command | openai. Global language hint unless a per-provider one
         # overrides it; "en" because Whisper auto-detect misreads short clips; "" = auto; "es", ...
         "language": "en",
-        "streaming": False,  # live partial text while speaking (openai/xai/elevenlabs); failure = file path
+        "streaming": False,  # live partial text while speaking (openai); failure = file path
         # Pre-upload ffmpeg silence trim (local whisper uses VAD); failure = raw upload.
         "cloud_trim_silence": True,
         "cloud_trim_threshold_db": -40,  # quieter than this counts as silence
@@ -1163,10 +1096,6 @@ DEFAULT_CONFIG = {
             "logprob_threshold": -1.0,
             "unload_after_idle_seconds": 0,  # 0 = never; e.g. 300 frees the model after 5min
         },
-        "groq": {
-            "model": "whisper-large-v3-turbo",  # whisper-large-v3-turbo, whisper-large-v3
-            "language": "",  # blank = inherit stt.language; set "en", "es", ... to force
-        },
         "openai": {
             # whisper-1, gpt-4o-mini-transcribe, gpt-4o-transcribe, gpt-transcribe
             "model": "whisper-1",
@@ -1174,24 +1103,6 @@ DEFAULT_CONFIG = {
             "language": "",  # blank = inherit stt.language; set "en", "es", ... to force
             "timeout": 60,  # seconds; allow self-hosted backends time to cold-start
             "max_retries": 1,  # OpenAI SDK transport retries
-        },
-        "mistral": {
-            "model": "voxtral-mini-latest",  # voxtral-mini-latest, voxtral-mini-2602
-            "language": "",  # blank = inherit stt.language; set "en", "es", ... to force
-        },
-        "xai": {
-            "model": "",  # "" = STT_XAI_MODEL or grok-voice-transcribe-2.0; or grok-voice-transcribe-1.0
-            "language": "",  # blank = inherit stt.language; set "en", "es", ... to force
-        },
-        "elevenlabs": {
-            "model_id": "scribe_v2",  # scribe_v2, scribe_v1
-            "language_code": "",  # blank = inherit stt.language; set "eng", "spa", ... to force
-            "tag_audio_events": False,
-            "diarize": False,
-        },
-        "deepinfra": {
-            "model": "",  # empty = first stt-tagged model from the live catalog
-            # optional "base_url" key overrides DEEPINFRA_BASE_URL for STT only
         },
     },
 
@@ -1304,8 +1215,8 @@ DEFAULT_CONFIG = {
         "user_char_limit": 1375,     # ~500 tokens at 2.75 chars/token
         # Periodic built-in memory review; 0 when an external provider auto-extracts.
         "nudge_interval": 10,
-        # One external provider: bundled (retaindb, byterover) or catalog-installed (honcho,
-        # hindsight, supermemory, mem0, openviking, holographic). Empty = built-in only.
+        # One external provider, catalog-installed (honcho, hindsight, supermemory, mem0,
+        # openviking, holographic). Empty = built-in only.
         "provider": "",
     },
     # Subagent delegation: `backend` = task-routing strategy ("default": keys below), `backends.<name>` = its settings.
@@ -1764,7 +1675,7 @@ DEFAULT_CONFIG = {
         # hermes_cli/security_advisories.py.
         "acked_advisories": [],
         # Lazy-install opt-in backend packages from PyPI when a backend that needs them is first
-        # enabled (e.g. `elevenlabs`). False = require explicit pip install for everything beyond
+        # enabled (e.g. `kittentts`). False = require explicit pip install for everything beyond
         # the base set (restricted/audited/air-gapped environments).
         "allow_lazy_installs": True,
     },
@@ -2396,18 +2307,6 @@ DEFAULT_CONFIG = {
         # language_id: "..." (didOpen languageId), description: "...". Manual install only.
         "servers": {},
     },
-    # X (Twitter) Search via xAI's x_search Responses tool. Registers when xAI creds exist
-    # (SuperGrok OAuth or XAI_API_KEY) AND the toolset is enabled in `hermes tools`.
-    "x_search": {
-        # xAI model for the Responses call; any Grok model with x_search access works.
-        "model": "grok-4.5",
-        # Reasoning effort for models that support it; null keeps the model default.
-        "reasoning_effort": None,
-        # Request timeout in seconds (minimum 30); complex queries can take 60-120s.
-        "timeout_seconds": 180,
-        # Retries on 5xx / ReadTimeout / ConnectionError (backoff 1.5x attempt s, cap 5s).
-        "retries": 2,
-    },
     # External secret sources — pull credentials from secret managers at startup instead of storing
     # them in ~/.hermes/.env.
     # Browser credential vault: which login sources browser_vault may draw from. The local
@@ -2498,8 +2397,8 @@ DEFAULT_CONFIG = {
         # Where the screen (and with it computer_use and the bot's browser) runs.
         #   auto      follow the terminal backend: inside the docker / ssh / streaming plugin sandbox when one is
         #             configured, on the gateway host when terminal.backend is local. A sandbox backend that
-        #             cannot host a screen (modal, daytona, vercel) REFUSES rather than quietly running the
-        #             desktop on the host beside the sandbox you chose for the agent.
+        #             cannot host a screen REFUSES rather than quietly running the desktop on the host
+        #             beside the sandbox you chose for the agent.
         #   terminal  always inside the terminal backend (error when it cannot host one).
         #   gateway   always on the gateway host, even with a sandbox terminal: the agent's screen, browser
         #             and computer_use then act OUTSIDE the terminal sandbox. Explicit opt-in.
@@ -2659,16 +2558,6 @@ DEFAULT_CONFIG = {
         # up and nothing is used.
         "guest": True,
     },
-    # Google Vertex AI (Gemini). Auth is OAuth2 from a service-account JSON or ADC, NOT an API key;
-    # the credential path lives in .env (VERTEX_CREDENTIALS_PATH / GOOGLE_APPLICATION_CREDENTIALS).
-    # Bridged to VERTEX_PROJECT_ID / VERTEX_REGION.
-    "vertex": {
-        # GCP project ID. Empty → project_id from the service-account JSON (or ADC).
-        "project_id": "",
-        # "global" is required for Gemini 3.x preview models (regional endpoints silently 404); use
-        # e.g. "us-central1" only if your models are region-pinned.
-        "region": "global",
-    },
     # Managed llama.cpp runtime (docs: user-guide/local-models): official binaries, one supervised
     # llama-server in router mode. No context/VRAM knobs by design.
     "local_runtime": {
@@ -2709,110 +2598,18 @@ OPTIONAL_ENV_VARS = OptionalEnvVars({
     "GEMINI_API_KEY": _prov("Google AI Studio API key (alias for GOOGLE_API_KEY)", "Gemini API key",
         "https://aistudio.google.com/app/apikey"),
     "GEMINI_BASE_URL": _base_url("Google AI Studio", "Gemini"),
-    "VERTEX_CREDENTIALS_PATH": _prov(
-        "Path to a Google Cloud service account JSON for Vertex AI (Gemini). Vertex uses "
-        "OAuth2, not a static API key — this points at the credentials A2Assistant mints short-lived "
-        "tokens from. Falls back to GOOGLE_APPLICATION_CREDENTIALS, then to ADC (gcloud auth "
-        "application-default login). Set project/region under vertex: in config.yaml.",
-        "Vertex service account JSON path (leave empty to use ADC / "
-        "GOOGLE_APPLICATION_CREDENTIALS)", "https://cloud.google.com/iam/docs/keys-create-delete",
-        password=False),
     "XAI_API_KEY": _prov("xAI API key", "xAI API key", "https://console.x.ai/"),
     "XAI_BASE_URL": _base_url("xAI"),
-    "NVIDIA_API_KEY": _prov("NVIDIA NIM API key (build.nvidia.com or local NIM endpoint)",
-        "NVIDIA NIM API key", "https://build.nvidia.com/"),
-    "NVIDIA_BASE_URL": _prov(
-        "NVIDIA NIM base URL override (e.g. http://localhost:8000/v1 for local NIM)",
-        "NVIDIA NIM base URL (leave empty for default)", None, password=False),
     "LM_API_KEY": _prov("LM Studio bearer token for auth-enabled local servers",
         "LM Studio API key / bearer token", None),
     "LM_BASE_URL": _base_url("LM Studio"),
-    "GLM_API_KEY": _prov("Z.AI / GLM API key (also recognized as ZAI_API_KEY / Z_AI_API_KEY)",
-        "Z.AI / GLM API key", "https://z.ai/"),
-    "ZAI_API_KEY": _prov("Z.AI API key (alias for GLM_API_KEY)", "Z.AI API key", "https://z.ai/"),
-    "Z_AI_API_KEY": _prov("Z.AI API key (alias for GLM_API_KEY)", "Z.AI API key", "https://z.ai/"),
-    "GLM_BASE_URL": _base_url("Z.AI / GLM"),
-    "KIMI_API_KEY": _prov("Kimi / Moonshot API key", "Kimi API key",
-        "https://platform.moonshot.cn/"),
-    "KIMI_BASE_URL": _base_url("Kimi / Moonshot", "Kimi"),
-    "KIMI_CN_API_KEY": _prov("Kimi / Moonshot China API key", "Kimi (China) API key",
-        "https://platform.moonshot.cn/"),
-    "STEPFUN_API_KEY": _prov("StepFun Step Plan API key", "StepFun Step Plan API key",
-        "https://platform.stepfun.com/"),
-    "STEPFUN_BASE_URL": _base_url("StepFun Step Plan"),
-    "ARCEEAI_API_KEY": _prov("Arcee AI API key", "Arcee AI API key", "https://chat.arcee.ai/"),
-    "ARCEE_BASE_URL": _base_url("Arcee AI", "Arcee"),
-    "GMI_API_KEY": _prov("GMI Cloud API key", "GMI Cloud API key", "https://www.gmicloud.ai/"),
-    "GMI_BASE_URL": _base_url("GMI Cloud"),
-    "ACTUAL_API_KEY": _prov("Actual Computer inference key (ac_...)",
-        "Actual Computer inference key", "https://actual.inc/user/keys"),
-    "FIREWORKS_API_KEY": _prov("Fireworks AI API key", "Fireworks AI API key",
-        "https://app.fireworks.ai/settings/users/api-keys"),
     "MINIMAX_API_KEY": _prov("MiniMax API key (international)", "MiniMax API key",
         "https://www.minimax.io/"),
-    "MINIMAX_BASE_URL": _base_url("MiniMax"),
     "MINIMAX_CN_API_KEY": _prov("MiniMax API key (China endpoint)", "MiniMax (China) API key",
         "https://www.minimaxi.com/"),
-    "MINIMAX_CN_BASE_URL": _base_url("MiniMax (China)"),
-    "DEEPSEEK_API_KEY": _prov("DeepSeek API key for direct DeepSeek access", "DeepSeek API Key",
-        "https://platform.deepseek.com/api_keys", advanced=False),
-    "DEEPSEEK_BASE_URL": _prov("Custom DeepSeek API base URL (advanced)", "DeepSeek Base URL", "",
-        password=False, advanced=False),
-    "DASHSCOPE_API_KEY": _prov("Alibaba Cloud DashScope API key (Qwen + multi-provider models)",
-        "DashScope API Key", "https://modelstudio.console.alibabacloud.com/", advanced=False),
-    "DASHSCOPE_BASE_URL": _prov(
-        "Custom DashScope base URL (default: coding-intl OpenAI-compat endpoint)",
-        "DashScope Base URL", "", password=False),
-    "HERMES_QWEN_BASE_URL": _prov(
-        "Qwen Portal base URL override (default: https://portal.qwen.ai/v1)",
-        "Qwen Portal base URL (leave empty for default)", None, password=False),
-    "OPENCODE_ZEN_API_KEY": _prov("OpenCode Zen API key (pay-as-you-go access to curated models)",
-        "OpenCode Zen API key", "https://opencode.ai/auth"),
-    "COMMANDCODE_API_KEY": _prov(
-        "CommandCode API key (GOAT/Pro/Max/Provider plans — 30+ models via one key)",
-        "CommandCode API key", "https://commandcode.ai/studio/"),
-    "OPENCODE_ZEN_BASE_URL": _base_url("OpenCode Zen"),
-    "OPENCODE_GO_API_KEY": _prov("OpenCode Go API key ($10/month subscription for open models)",
-        "OpenCode Go API key", "https://opencode.ai/auth"),
-    "OPENCODE_GO_BASE_URL": _base_url("OpenCode Go"),
-    "HF_TOKEN": _prov(
-        "Hugging Face token for Inference Providers (20+ open models via router.huggingface.co)",
-        "Hugging Face Token", "https://huggingface.co/settings/tokens", advanced=False),
-    "HF_BASE_URL": _base_url("Hugging Face Inference Providers", "HF"),
-    "OLLAMA_API_KEY": _prov("Ollama Cloud API key (ollama.com — cloud-hosted open models)",
-        "Ollama Cloud API key", "https://ollama.com/settings"),
-    "OLLAMA_BASE_URL": _prov("Ollama Cloud base URL override (default: https://ollama.com/v1)",
-        "Ollama base URL (leave empty for default)", None, password=False),
-    "XIAOMI_API_KEY": _prov(
-        "Xiaomi MiMo API key for MiMo models (mimo-v2.5-pro, mimo-v2.5, mimo-v2-pro, "
-        "mimo-v2-omni, mimo-v2-flash)", "Xiaomi MiMo API Key", "https://platform.xiaomimimo.com",
-        advanced=False),
-    "XIAOMI_BASE_URL": _prov(
-        "Xiaomi MiMo base URL override (default: https://api.xiaomimimo.com/v1)",
-        "Xiaomi base URL (leave empty for default)", None, password=False),
-    "UPSTAGE_API_KEY": _prov("Upstage API key for Solar LLM models", "Upstage API Key",
-        "https://console.upstage.ai/api-keys", advanced=False),
-    "UPSTAGE_BASE_URL": _prov("Upstage base URL override (default: https://api.upstage.ai/v1)",
-        "Upstage base URL (leave empty for default)", None, password=False),
-    "AWS_REGION": _prov("AWS region for Bedrock API calls (e.g. us-east-1, eu-central-1)",
-        "AWS Region", "https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-regions.html",
-        password=False),
-    "AWS_PROFILE": _prov("AWS named profile for Bedrock authentication (from ~/.aws/credentials)",
-        "AWS Profile", None, password=False),
-    "AZURE_FOUNDRY_API_KEY": _prov("Azure Foundry API key for custom Azure endpoints",
-        "Azure Foundry API Key", "https://ai.azure.com/", advanced=False),
-    "AZURE_FOUNDRY_BASE_URL": _prov(
-        "Azure Foundry base URL (set via 'hermes model' for endpoint-specific config)",
-        "Azure Foundry base URL", None, password=False),
     # ── Tool API keys ──
-    "EXA_API_KEY": _tool("Exa API key for AI-native web search and contents", "Exa API key",
-        "https://exa.ai/", tools=["web_search", "web_extract"]),
-    "PARALLEL_API_KEY": _tool("Parallel API key for AI-native web search and extract",
-        "Parallel API key", "https://parallel.ai/", tools=["web_search", "web_extract"]),
-    "FIRECRAWL_API_KEY": _tool("Firecrawl API key for web search and scraping", "Firecrawl API key",
-        "https://firecrawl.dev/", tools=["web_search", "web_extract"]),
-    "FIRECRAWL_API_URL": _tool("Firecrawl API URL for self-hosted instances (optional)",
-        "Firecrawl API URL (leave empty for cloud)", None, password=False, advanced=True),
+    "FIRECRAWL_API_KEY": _tool("Firecrawl API key for hosted OCR of scanned documents in read_file",
+        "Firecrawl API key", "https://firecrawl.dev/", tools=["read_file"]),
     "FIRECRAWL_GATEWAY_URL": _tool(
         "Exact Firecrawl tool-gateway origin override for Nous Subscribers only (optional)",
         "Firecrawl gateway URL (leave empty to derive from domain)", None, password=False,
@@ -2836,58 +2633,17 @@ OPTIONAL_ENV_VARS = OptionalEnvVars({
     "TOOL_GATEWAY_USER_TOKEN": _tool(
         "Explicit Nous Subscriber access token for tool-gateway requests (optional; otherwise "
         "read from the A2Assistant auth store)", "Tool-gateway user token", None, advanced=True),
-    "TAVILY_API_KEY": _tool(
-        "Tavily API key for AI-native web search and extract (optional — keyless works when "
-        "Tavily is selected)", "Tavily API key", "https://app.tavily.com/home",
-        tools=["web_search", "web_extract"]),
-    "PERPLEXITY_API_KEY": _tool(
-        "Perplexity API key for the Search API web backend (ranked results + query-relevant page "
-        "snippets)", "Perplexity API key", "https://www.perplexity.ai/account/api",
-        tools=["web_search", "web_extract"]),
-    "KEENABLE_API_KEY": _tool(
-        "Keenable API key for fast independent-index web search and page fetch (optional — "
-        "keyless free tier works without it)", "Keenable API key", "https://keenable.ai",
-        tools=["web_search", "web_extract"]),
-    "SEARXNG_URL": _tool("URL of your SearXNG instance for free self-hosted web search",
-        "SearXNG URL (e.g. http://localhost:8080)", "https://searxng.github.io/searxng/",
-        tools=["web_search"], password=False),
-    "BRAVE_SEARCH_API_KEY": _tool(
-        "Brave Search API subscription token (free tier: 2,000 queries/mo)",
-        "Brave Search subscription token", "https://brave.com/search/api/", tools=["web_search"]),
-    "BROWSERBASE_API_KEY": _tool(
-        "Browserbase API key for cloud browser (optional — local browser works without this)",
-        "Browserbase API key", "https://browserbase.com/",
-        tools=["browser_exec"]),
-    "BROWSERBASE_PROJECT_ID": _tool(
-        "Browserbase project ID (optional — only needed for cloud browser)",
-        "Browserbase project ID", "https://browserbase.com/",
-        tools=["browser_exec"], password=False),
-    "BROWSER_USE_API_KEY": _tool(
-        "Browser Use API key for cloud browser (optional — local browser works without this)",
-        "Browser Use API key", "https://browser-use.com/",
-        tools=["browser_exec"]),
-    "FIRECRAWL_BROWSER_TTL": _tool(
-        "Firecrawl browser session TTL in seconds (optional, default 300)",
-        "Browser session TTL (seconds)", tools=["browser_exec"],
-        password=False),
-    "FAL_KEY": _tool("FAL API key for image and video generation", "FAL API key", "https://fal.ai/",
-        tools=["image_generate", "video_generate"]),
-    "KREA_API_KEY": _tool("Krea API key for Krea 3 and Krea 2 image generation",
-        "Krea API key", "https://www.krea.ai/settings/api-tokens", tools=["image_generate"]),
     "VOICE_TOOLS_OPENAI_KEY": _tool(
         "OpenAI API key for voice transcription (Whisper) and OpenAI TTS",
         "OpenAI API Key (for Whisper STT + TTS)", "https://platform.openai.com/api-keys",
         tools=["voice_transcription", "openai_tts"]),
-    "ELEVENLABS_API_KEY": _tool(
-        "ElevenLabs API key for premium text-to-speech voices and Scribe transcription",
-        "ElevenLabs API key", "https://elevenlabs.io/",
-        tools=["elevenlabs_tts", "voice_transcription"]),
-    "MISTRAL_API_KEY": _tool("Mistral API key for Voxtral TTS and transcription (STT)",
-        "Mistral API key", "https://console.mistral.ai/"),
     "PORCUPINE_ACCESS_KEY": _tool(
         "Picovoice access key for the Porcupine 'Hey Hermes' wake word engine (optional; "
         "openWakeWord is the free default)", "Picovoice access key",
         "https://console.picovoice.ai/"),
+    "SEARXNG_URL": _tool("URL of your SearXNG instance for free self-hosted web search",
+        "SearXNG URL (e.g. http://localhost:8080)", "https://searxng.github.io/searxng/",
+        tools=["web_search"], password=False),
     "GITHUB_TOKEN": _tool("GitHub token for Skills Hub (higher API rate limits, skill publish)",
         "GitHub Token", "https://github.com/settings/tokens"),
     # ── Bundled skills (opt-in) ── category="skill" (not "tool") so the sandbox env blocklist in
@@ -2915,15 +2671,6 @@ OPTIONAL_ENV_VARS = OptionalEnvVars({
     # ── Mem0 ──
     "MEM0_API_KEY": _tool("Mem0 Platform API key for semantic persistent memory", "Mem0 API key",
         "https://app.mem0.ai", tools=["mem0_search"]),
-    # ── RetainDB ──
-    "RETAINDB_API_KEY": _tool("RetainDB API key for persistent memory", "RetainDB API key",
-        "https://retaindb.com", tools=["retaindb_search"]),
-    "RETAINDB_BASE_URL": _tool(
-        "Base URL for self-hosted RetainDB instances (default: https://api.retaindb.com)",
-        "RetainDB base URL", password=None, advanced=True),
-    # ── ByteRover ──
-    "BRV_API_KEY": _tool("ByteRover API key (optional, for cloud sync — local-first by default)",
-        "ByteRover API key", "https://app.byterover.dev", tools=["brv_query"]),
     # ── OpenViking ──
     "OPENVIKING_API_KEY": _tool("OpenViking API key (leave blank for local dev mode)",
         "OpenViking API key", tools=["viking_search"]),

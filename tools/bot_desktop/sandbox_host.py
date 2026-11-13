@@ -236,7 +236,7 @@ def start(env: Any, profile: str, *, geometry: str, wait_seconds: float = 20.0,
     if missing:
         advice = plugin_image_advice(getattr(env, "_hermes_backend_name", None)) or (
             f"use {SANDBOX_IMAGE_HINT} (the default sandbox base plus the desktop stack) as "
-            f"terminal.docker_image / modal_image")
+            f"terminal.docker_image")
         raise RuntimeError(
             f"Bot Desktop needs {', '.join(missing)} inside the terminal backend's sandbox. The configured image "
             f"does not have them; {advice}, or set bot_desktop.placement: gateway.")

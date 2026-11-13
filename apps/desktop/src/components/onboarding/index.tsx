@@ -45,7 +45,6 @@ import { FreeTierSetupNotice } from './free-tier-setup-notice'
 import { DecodedLabel } from './glyph'
 import {
   FeaturedProviderRow,
-  FireworksProviderRow,
   LocalModelsProviderRow,
   OpenRouterProviderRow,
   ProviderRow,
@@ -54,7 +53,6 @@ import {
 
 export {
   FeaturedProviderRow,
-  FireworksProviderRow,
   KeyProviderRow,
   LocalModelsProviderRow,
   OpenRouterProviderRow,
@@ -83,15 +81,9 @@ export interface ApiKeyOption {
   short?: string
 }
 
-// Curated order mirrors CANONICAL_PROVIDERS: Fireworks sits #2 overall (after
-// Nous Portal OAuth), ahead of OpenRouter and the rest of the key catalog.
+// Curated order mirrors CANONICAL_PROVIDERS: OpenRouter after Nous Portal OAuth, ahead of the
+// rest of the key catalog.
 const API_KEY_OPTIONS: ApiKeyOption[] = [
-  {
-    id: 'fireworks',
-    name: 'Fireworks AI',
-    envKey: 'FIREWORKS_API_KEY',
-    docsUrl: 'https://app.fireworks.ai/settings/users/api-keys'
-  },
   {
     id: 'openrouter',
     name: 'OpenRouter',
@@ -103,18 +95,6 @@ const API_KEY_OPTIONS: ApiKeyOption[] = [
     name: 'OpenAI',
     envKey: 'OPENAI_API_KEY',
     docsUrl: 'https://platform.openai.com/api-keys'
-  },
-  {
-    id: 'gemini',
-    name: 'Google Gemini',
-    envKey: 'GEMINI_API_KEY',
-    docsUrl: 'https://aistudio.google.com/app/apikey'
-  },
-  {
-    id: 'xai',
-    name: 'xAI Grok',
-    envKey: 'XAI_API_KEY',
-    docsUrl: 'https://console.x.ai/'
   },
   {
     id: 'local',
@@ -665,8 +645,8 @@ export function Picker({ ctx }: { ctx: OnboardingContext }) {
   const rest = featured ? ordered.filter(p => p.id !== FEATURED_ID) : ordered
   // Collapse the secondary providers behind a disclosure whenever Nous Portal
   // is present to anchor the choice — otherwise show the full list. The
-  // Fireworks/OpenRouter key rows always live behind the disclosure, so the
-  // toggle is warranted even when there are no other OAuth providers.
+  // OpenRouter key row always lives behind the disclosure, so the toggle is
+  // warranted even when there are no other OAuth providers.
   const collapsible = Boolean(featured)
   const showRest = !collapsible || showAll
 
@@ -690,14 +670,10 @@ export function Picker({ ctx }: { ctx: OnboardingContext }) {
       <div className="grid max-h-[60dvh] gap-2 overflow-y-auto p-1">
         {featured ? <FeaturedProviderRow onSelect={select} provider={featured} /> : null}
         {/* The no-account path: everything runs on this machine. Shipped
-            behind the --local launch flag. (Fireworks moved into the
-            expanded list on main.) */}
+            behind the --local launch flag. */}
         {$localModelsEnabled.get() ? <LocalModelsProviderRow onClick={openLocalModels} /> : null}
         {showRest ? (
           <>
-            {/* Fireworks leads the expanded list, matching CANONICAL_PROVIDERS
-                (Nous → Fireworks), but stays hidden until the user opens it. */}
-            <FireworksProviderRow onClick={() => openKeyForm('FIREWORKS_API_KEY')} />
             {rest.map(p => (
               <ProviderRow key={p.id} onSelect={select} provider={p} />
             ))}

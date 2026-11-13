@@ -144,7 +144,7 @@ def test_desktop_backend_never_crosses_tenants(fleet, request: pytest.FixtureReq
     alpha = tenants["alpha"]
     alpha.extra["saved_key"] = f"sk-savekey-alpha-{alpha.tag}"
     before = _files(tenants)
-    b.ok("model.save_key", {"session_id": sids["alpha"], "slug": "deepseek", "api_key": alpha.extra["saved_key"]})
+    b.ok("model.save_key", {"session_id": sids["alpha"], "slug": "openai-api", "api_key": alpha.extra["saved_key"]})
     _expect_only(before, _files(tenants), {"alpha/.env"}, "session-bound model.save_key write")
     for name in ("default", "beta", "alpha"):
         b.turn(sids[name], f"after settings for {name}")

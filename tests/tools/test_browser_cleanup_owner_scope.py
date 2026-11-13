@@ -11,7 +11,7 @@ import pytest
 from hermes_constants import get_hermes_home
 from tools import browser_launcher as launcher
 from tools import browser_session as bs
-from tools import browser_session_cloud
+from tools import browser_config
 from tools import browser_session_lifecycle as lifecycle
 
 
@@ -42,7 +42,7 @@ def test_shutdown_closes_each_cloud_session_under_its_owning_profile(tmp_path, m
         home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(launch))
     monkeypatch.setattr(_ProfileProvider, "closed", [])
-    monkeypatch.setattr(browser_session_cloud, "get_cloud_provider", _ProfileProvider)
+    monkeypatch.setattr(browser_config, "get_cloud_provider", _ProfileProvider)
     isolated_sessions["task@routed"] = {"session_name": "bb_1", "bb_session_id": "bb-routed", "features": {},
                                         "cdp_url": "wss://cloud.example/x"}
     bs._session_owner_homes["task@routed"] = str(routed)

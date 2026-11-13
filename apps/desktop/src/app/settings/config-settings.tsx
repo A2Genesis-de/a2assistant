@@ -7,7 +7,7 @@ import { useSearchParams } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SegmentedControl } from '@/components/ui/segmented-control'
-import { getElevenLabsVoices, getHermesConfigSchema, saveHermesConfig } from '@/hermes'
+import { getHermesConfigSchema, saveHermesConfig } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { triggerHaptic } from '@/lib/haptics'
 import { isSubmitEnter } from '@/lib/ime'
@@ -152,8 +152,6 @@ function ConfigSettingsInner({
   })
 
   const schema = schemaResponse?.fields ?? null
-  const [elevenLabsVoiceOptions, setElevenLabsVoiceOptions] = useState<string[] | null>(null)
-  const [elevenLabsVoiceLabels, setElevenLabsVoiceLabels] = useState<Record<string, string>>({})
   const saveVersionRef = useRef(0)
   const savedDiscoverySignatureRef = useRef<string | undefined>(undefined)
   const [saveVersion, setSaveVersion] = useState(0)
@@ -195,28 +193,6 @@ function ConfigSettingsInner({
     saveQueueRef.current = Promise.resolve()
   })
 
-  useEffect(() => {
-    let cancelled = false
-
-    getElevenLabsVoices(scopeProfile)
-      .then(result => {
-        if (cancelled || !result.available) {
-          return
-        }
-
-        setElevenLabsVoiceOptions(result.voices.map(voice => voice.voice_id))
-        setElevenLabsVoiceLabels(Object.fromEntries(result.voices.map(voice => [voice.voice_id, voice.label])))
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setElevenLabsVoiceOptions(null)
-          setElevenLabsVoiceLabels({})
-        }
-      })
-
-    return () => void (cancelled = true)
-    // scopeProfile is constant per mount (the inner component is keyed on it).
-  }, [scopeProfile])
 
   // eslint-disable-next-line no-restricted-syntax -- autosave bookkeeping refs, not an atom mirror
   useEffect(() => {
@@ -550,13 +526,8 @@ function ConfigSettingsInner({
                       <MemoryConnect profile={scopeProfile} provider={String(getNested(config, key))} />
                     ) : undefined
                   }
-                  enumOptions={
-                    key === 'tts.elevenlabs.voice_id'
-                      ? enumOptionsFor(key, getNested(config, key), config, elevenLabsVoiceOptions ?? undefined)
-                      : enumOptionsFor(key, getNested(config, key), config)
-                  }
+                  enumOptions={enumOptionsFor(key, getNested(config, key), config)}
                   onChange={value => updateConfig(setConfigField(config, key, value))}
-                  optionLabels={key === 'tts.elevenlabs.voice_id' ? elevenLabsVoiceLabels : undefined}
                   schema={field}
                   schemaKey={key}
                   value={configFieldValue(config, key)}

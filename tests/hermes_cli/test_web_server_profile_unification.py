@@ -756,7 +756,7 @@ class TestProfileScopedChatPty:
 class TestProfileScopedAudio:
     """Audio endpoints must honor ``profile`` like the rest of the dashboard.
 
-    Historically /api/audio/transcribe|speak|elevenlabs/voices took no profile
+    Historically /api/audio/transcribe|speak took no profile
     and always resolved the dashboard's own config/.env, so a non-default
     profile's TTS/STT settings were silently ignored (#53441 #45506 #66012
     #64057).
@@ -788,7 +788,5 @@ class TestProfileScopedAudio:
         assert seen["home"] == str(isolated_profiles["worker_beta"])
 
     def test_audio_endpoints_unknown_profile_404(self, client, isolated_profiles):
-        resp = client.get("/api/audio/elevenlabs/voices?profile=ghost")
-        assert resp.status_code == 404
         resp = client.post("/api/audio/speak?profile=ghost", json={"text": "x"})
         assert resp.status_code == 404

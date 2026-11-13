@@ -53,9 +53,9 @@ class TestVendorPrefixRouting:
 
     def test_provider_alias_prefix_canonicalized_when_configured(self, monkeypatch):
         monkeypatch.setattr(models, "_find_openrouter_slug", lambda _name: None)
-        monkeypatch.setattr(models, "_configured_provider_ids", lambda: {"zai"})
-        detected = models.detect_provider_for_model("glm/glm-4.7", "anthropic")
-        assert detected == ("zai", "glm-4.7")
+        monkeypatch.setattr(models, "_configured_provider_ids", lambda: {"anthropic"})
+        detected = models.detect_provider_for_model("claude/claude-sonnet-5", "openai-api")
+        assert detected == ("anthropic", "claude-sonnet-5")
 
     def test_unknown_vendor_prefix_still_unmatched(self, monkeypatch):
         monkeypatch.setattr(models, "_find_openrouter_slug", lambda _name: None)
@@ -76,10 +76,10 @@ class TestVendorPrefixRouting:
 
     def test_bare_model_detection_unchanged(self, monkeypatch):
         from hermes_cli import models_detect
-        monkeypatch.setattr(models_detect, "provider_has_credentials", lambda p: p == "deepseek")
+        monkeypatch.setattr(models_detect, "provider_has_credentials", lambda p: p == "anthropic")
         monkeypatch.setattr(models, "_find_openrouter_slug", lambda _name: None)
-        detected = models.detect_provider_for_model("deepseek-chat", "anthropic")
-        assert detected == ("deepseek", "deepseek-chat")
+        detected = models.detect_provider_for_model("claude-sonnet-5", "openai-api")
+        assert detected == ("anthropic", "claude-sonnet-5")
 
 
 class TestDictModelAliases:

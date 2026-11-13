@@ -147,8 +147,6 @@ export const jaOverrides = {
       disableFailed: name => `${name} MCP を無効にできませんでした。`
     },
     errors: {
-      elevenLabsNeedsKey: 'ElevenLabs STT には ELEVENLABS_API_KEY が必要です。',
-      elevenLabsRejectedKey: 'ElevenLabs が API キーを拒否しました (401)。',
       diskFull: 'ディスク容量不足です — 空きを作ってからもう一度お試しください。',
       gatewayAuthFailed: 'ゲートウェイ認証に失敗しました — API_SERVER_KEY を確認してください。',
       methodNotAllowed:
@@ -689,9 +687,7 @@ export const jaOverrides = {
         persistentShell: '永続シェル',
         envPassthrough: '環境変数の引き継ぎ',
         dockerImage: 'Docker イメージ',
-        singularityImage: 'Singularity イメージ',
-        modalImage: 'Modal イメージ',
-        daytonaImage: 'Daytona イメージ'
+        singularityImage: 'Singularity イメージ'
       },
       fileReadMaxChars: 'ファイル読み取り上限',
       toolOutput: {
@@ -733,57 +729,13 @@ export const jaOverrides = {
         },
         openai: {
           model: 'OpenAI STT モデル'
-        },
-        groq: {
-          model: 'Groq STT モデル'
-        },
-        mistral: {
-          model: 'Mistral STT モデル'
-        },
-        elevenlabs: {
-          modelId: 'ElevenLabs STT モデル',
-          languageCode: 'ElevenLabs 言語',
-          tagAudioEvents: '音声イベントをタグ付け',
-          diarize: '話者分離'
         }
       },
       tts: {
         provider: '音声合成プロバイダー',
-        edge: {
-          voice: 'Edge 音声'
-        },
         openai: {
           model: 'OpenAI TTS モデル',
           voice: 'OpenAI 音声'
-        },
-        elevenlabs: {
-          voiceId: 'ElevenLabs 音声',
-          modelId: 'ElevenLabs モデル'
-        },
-        xai: {
-          voiceId: 'xAI (Grok) 音声',
-          language: 'xAI 言語',
-          speed: '再生速度',
-          autoSpeechTags: '自動音声タグ',
-          optimizeStreamingLatency: 'ストリーミング遅延最適化',
-          sampleRate: 'サンプルレート',
-          bitRate: 'ビットレート'
-        },
-        minimax: {
-          model: 'MiniMax TTS モデル',
-          voiceId: 'MiniMax 音声'
-        },
-        mistral: {
-          model: 'Mistral TTS モデル',
-          voiceId: 'Mistral 音声'
-        },
-        gemini: {
-          model: 'Gemini TTS モデル',
-          voice: 'Gemini 音声'
-        },
-        neutts: {
-          model: 'NeuTTS モデル',
-          device: 'NeuTTS デバイス'
         },
         kittentts: {
           model: 'KittenTTS モデル',
@@ -885,10 +837,7 @@ export const jaOverrides = {
         autoTts: 'アシスタントの応答を自動で読み上げます。'
       },
       stt: {
-        enabled: 'ローカルまたはプロバイダーによる音声文字起こしを有効にします。',
-        elevenlabs: {
-          languageCode: '任意の ISO-639-3 言語コードです。空欄なら ElevenLabs が自動検出します。'
-        }
+        enabled: 'ローカルまたはプロバイダーによる音声文字起こしを有効にします。'
       },
       updates: {
         nonInteractiveLocalChanges:

@@ -6,7 +6,6 @@ import { runInTerminal } from '@/app/right-sidebar/store'
 import {
   FEATURED_ID,
   FeaturedProviderRow,
-  FireworksProviderRow,
   LocalModelsProviderRow,
   OpenRouterProviderRow,
   ProviderRow,
@@ -146,8 +145,8 @@ function buildProviderKeyGroups(vars: Record<string, EnvVarInfo>): ProviderKeyGr
 // Deliberately a near-1:1 replica of the first-run onboarding picker
 // (`Picker` in desktop-onboarding-overlay): same recommended card, same
 // always-visible Local models row, same provider rows, same "Other
-// providers" disclosure (Fireworks and OpenRouter quick-key rows live
-// inside it on both surfaces), and the same bottom-right "I have an API
+// providers" disclosure (the OpenRouter quick-key row lives inside it on
+// both surfaces), and the same bottom-right "I have an API
 // key" affordance. The leaf cards are the exact shared components, so
 // the two surfaces stay visually identical. Selecting a provider hands
 // off to the shared onboarding overlay, which runs that provider's real
@@ -235,7 +234,6 @@ function OAuthPicker({
           {others.map(p => (
             <ProviderRow key={p.id} onSelect={select} provider={p} />
           ))}
-          <FireworksProviderRow onClick={onWantApiKey} />
           <OpenRouterProviderRow onClick={onWantApiKey} />
         </>
       )}

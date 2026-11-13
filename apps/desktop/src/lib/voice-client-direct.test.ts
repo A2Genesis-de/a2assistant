@@ -15,10 +15,10 @@ import {
 const directStt = {
   mode: 'direct',
   wire: 'openai-multipart',
-  provider: 'groq',
-  base_url: 'https://api.groq.com/openai/v1',
-  api_key: 'gsk_test',
-  model: 'whisper-large-v3-turbo',
+  provider: 'openai',
+  base_url: 'https://stt.example/v1',
+  api_key: 'sk_stt_test',
+  model: 'whisper-1',
   language: 'en'
 } as const
 
@@ -109,24 +109,22 @@ describe('transcribeAudioClientDirect', () => {
     expect(transcript).toBe('hello world')
 
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
-    expect(url).toBe('https://api.groq.com/openai/v1/audio/transcriptions')
-    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer gsk_test')
+    expect(url).toBe('https://stt.example/v1/audio/transcriptions')
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer sk_stt_test')
     // A hung provider must not stall dictation forever: every STT upload carries a timeout signal.
     expect(init.signal).toBeInstanceOf(AbortSignal)
 
     const form = init.body as FormData
-    expect(form.get('model')).toBe('whisper-large-v3-turbo')
+    expect(form.get('model')).toBe('whisper-1')
     expect(form.get('language')).toBe('en')
     expect(form.get('response_format')).toBe('text')
   })
 
-  it('unwraps Mistral Voxtral JSON instead of dumping it into the composer', async () => {
+  it('unwraps an OpenAI-compatible JSON body instead of dumping it into the composer', async () => {
     mockDesktopApi({
       ok: true,
       stt: {
         ...directStt,
-        provider: 'mistral',
-        base_url: 'https://api.mistral.ai/v1',
         model: 'voxtral-mini-latest',
         language: null
       },
@@ -242,79 +240,7 @@ describe('transcribeAudioClientDirect', () => {
       vi.fn(async () => new Response(JSON.stringify({ error: { message: 'invalid api key' } }), { status: 401 }))
     )
 
-    await expect(transcribeAudioClientDirect(new Blob(['x']))).rejects.toThrow(/groq STT error.*invalid api key/)
-  })
-
-  it('speaks the xai wire shape', async () => {
-    mockDesktopApi({
-      ok: true,
-      stt: {
-        ...directStt,
-        wire: 'xai-stt',
-        provider: 'xai',
-        base_url: 'https://api.x.ai/v1',
-        model: 'grok-voice-transcribe-2.0'
-      },
-      tts: relay
-    })
-
-    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ text: 'grok heard this' }), { status: 200 }))
-    vi.stubGlobal('fetch', fetchMock)
-
-    expect(await transcribeAudioClientDirect(new Blob(['x']))).toBe('grok heard this')
-
-    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
-    expect(url).toBe('https://api.x.ai/v1/stt')
-    expect((init.body as FormData).get('format')).toBe('true')
-    expect((init.body as FormData).get('model')).toBe('grok-voice-transcribe-2.0')
-  })
-
-  it('drops format=true on the xai wire when no language is set (xAI answers HTTP 400 otherwise)', async () => {
-    mockDesktopApi({
-      ok: true,
-      stt: {
-        ...directStt,
-        wire: 'xai-stt',
-        provider: 'xai',
-        base_url: 'https://api.x.ai/v1',
-        model: 'grok-voice-transcribe-2.0',
-        language: ''
-      },
-      tts: relay
-    })
-
-    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ text: 'auto detected' }), { status: 200 }))
-    vi.stubGlobal('fetch', fetchMock)
-
-    expect(await transcribeAudioClientDirect(new Blob(['x']))).toBe('auto detected')
-
-    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
-    expect((init.body as FormData).has('format')).toBe(false)
-    expect((init.body as FormData).has('language')).toBe(false)
-  })
-
-  it('speaks the elevenlabs wire shape with xi-api-key auth', async () => {
-    mockDesktopApi({
-      ok: true,
-      stt: {
-        ...directStt,
-        wire: 'elevenlabs-stt',
-        provider: 'elevenlabs',
-        base_url: 'https://api.elevenlabs.io/v1',
-        model: 'scribe_v2'
-      },
-      tts: relay
-    })
-
-    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ text: 'scribe text' }), { status: 200 }))
-    vi.stubGlobal('fetch', fetchMock)
-
-    expect(await transcribeAudioClientDirect(new Blob(['x']))).toBe('scribe text')
-
-    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
-    expect(url).toBe('https://api.elevenlabs.io/v1/speech-to-text')
-    expect((init.headers as Record<string, string>)['xi-api-key']).toBe('gsk_test')
-    expect((init.body as FormData).get('model_id')).toBe('scribe_v2')
+    await expect(transcribeAudioClientDirect(new Blob(['x']))).rejects.toThrow(/openai STT error.*invalid api key/)
   })
 
   /** A fetch that only settles when its AbortSignal fires — a wedged STT endpoint. */
@@ -418,27 +344,6 @@ describe('synthesizeSpeechClientDirect', () => {
     expect(body.consent_attestation).toBe('I own this voice')
   })
 
-  it('speaks the elevenlabs tts shape with the voice in the path', async () => {
-    const fetchMock = vi.fn(async () => new Response(new ArrayBuffer(4), { status: 200 }))
-    vi.stubGlobal('fetch', fetchMock)
-
-    await synthesizeSpeechClientDirect(
-      {
-        ...openaiTts,
-        wire: 'elevenlabs-tts',
-        provider: 'elevenlabs',
-        base_url: 'https://api.elevenlabs.io/v1',
-        model: 'eleven_turbo_v2',
-        voice: 'voice123'
-      },
-      'Hi.'
-    )
-
-    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
-    expect(url).toBe('https://api.elevenlabs.io/v1/text-to-speech/voice123')
-    expect((init.headers as Record<string, string>)['xi-api-key']).toBe('sk_tts')
-  })
-
   it('throws on provider rejection', async () => {
     vi.stubGlobal(
       'fetch',
@@ -450,11 +355,11 @@ describe('synthesizeSpeechClientDirect', () => {
 })
 
 describe('transcriptFromOpenAiMultipartBody', () => {
-  it('keeps Groq/OpenAI plain-text bodies', () => {
+  it('keeps OpenAI plain-text bodies', () => {
     expect(transcriptFromOpenAiMultipartBody('  hello world  ')).toBe('hello world')
   })
 
-  it('extracts .text from a Voxtral JSON envelope', () => {
+  it('extracts .text from an OpenAI-compatible JSON envelope', () => {
     expect(
       transcriptFromOpenAiMultipartBody(
         JSON.stringify({

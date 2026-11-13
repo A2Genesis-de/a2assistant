@@ -6,8 +6,8 @@ import { voiceFieldVisible } from './helpers'
 
 const cfg = (over: Record<string, unknown> = {}): HermesConfigRecord =>
   ({
-    tts: { provider: 'edge', edge: {}, openai: {} },
-    stt: { enabled: true, provider: 'local', local: {}, groq: {} },
+    tts: { provider: 'piper', piper: {}, openai: {} },
+    stt: { enabled: true, provider: 'local', local: {}, openai: {} },
     ...over
   }) as unknown as HermesConfigRecord
 
@@ -22,21 +22,21 @@ describe('voiceFieldVisible', () => {
 
   it('shows only the selected TTS provider sub-fields', () => {
     const config = cfg()
-    expect(voiceFieldVisible('tts.edge.voice', config)).toBe(true)
+    expect(voiceFieldVisible('tts.piper.voice', config)).toBe(true)
     expect(voiceFieldVisible('tts.openai.voice', config)).toBe(false)
-    expect(voiceFieldVisible('tts.elevenlabs.voice_id', config)).toBe(false)
+    expect(voiceFieldVisible('tts.kittentts.voice', config)).toBe(false)
   })
 
   it('shows only the selected STT provider sub-fields', () => {
     const config = cfg()
     expect(voiceFieldVisible('stt.local.model', config)).toBe(true)
-    expect(voiceFieldVisible('stt.groq.model', config)).toBe(false)
+    expect(voiceFieldVisible('stt.openai.model', config)).toBe(false)
   })
 
   it('falls back to backend defaults when provider is unset so model fields stay visible', () => {
     const unset = { tts: {}, stt: { enabled: true } } as unknown as HermesConfigRecord
-    expect(voiceFieldVisible('tts.edge.voice', unset)).toBe(true)
-    expect(voiceFieldVisible('tts.openai.voice', unset)).toBe(false)
+    expect(voiceFieldVisible('tts.openai.voice', unset)).toBe(true)
+    expect(voiceFieldVisible('tts.piper.voice', unset)).toBe(false)
     expect(voiceFieldVisible('stt.local.model', unset)).toBe(true)
     expect(voiceFieldVisible('stt.openai.model', unset)).toBe(false)
   })

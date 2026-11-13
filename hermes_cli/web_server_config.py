@@ -82,22 +82,13 @@ _SCHEMA_OVERRIDES: dict[str, dict[str, Any]] = {
     },
     "terminal.backend": _select(
         "Terminal execution backend",
-        "local", "docker", "ssh", "modal", "daytona", "vercel_sandbox",
+        "local", "docker", "ssh",
     ),
-    # sync with _SUPPORTED_VERCEL_RUNTIMES in terminal_tool.py
-    "terminal.vercel_image": {
-        "type": "string",
-        "description": "Vercel Sandbox image: a Vercel managed image (vercel/sandbox/universal:latest) or a VCR repository[:tag]",
-    },
-    "terminal.vercel_runtime": _select(
-        "Legacy Vercel Sandbox runtime (deprecated by Vercel; a pinned runtime overrides the image; clear to use the image)",
-        "node24", "node22", "python3.13", clearable=True),
-    "terminal.modal_mode": _select("Modal sandbox mode", "sandbox", "function"),
     "proxy.enabled": {
         "type": "boolean",
         "description": (
             "Docker-only egress credential firewall. Requires `hermes egress setup` "
-            "and `hermes egress start`; Modal/SSH/Daytona are not wired yet."
+            "and `hermes egress start`; SSH is not wired yet."
         ),
         "category": "security",
     },
@@ -121,20 +112,12 @@ _SCHEMA_OVERRIDES: dict[str, dict[str, Any]] = {
         "Wake engine. Auto selects a platform-supported engine; Porcupine requires PORCUPINE_ACCESS_KEY.",
         "auto", *_PROVIDER_PREFERENCE,
     ),
-    "tts.provider": _select(
-        "Text-to-speech provider",
-        "edge", "elevenlabs", "openai", "xai", "minimax", "mistral", "gemini", "neutts", "kittentts", "piper",
-    ),
-    "stt.provider": _select(
-        "Speech-to-text provider", "local", "groq", "openai", "mistral", "xai", "elevenlabs", "deepinfra"),
+    "tts.provider": _select("Text-to-speech provider", "openai", "kittentts", "piper"),
+    "stt.provider": _select("Speech-to-text provider", "local", "openai"),
     "stt.local.model": _select("Local faster-whisper model size", *STT_MODEL_CATALOG["local"]),
-    "stt.groq.model": _select("Groq Whisper model", *STT_MODEL_CATALOG["groq"]),
     "stt.openai.model": _select("OpenAI transcription model", *STT_MODEL_CATALOG["openai"]),
     "stt.openai.streaming_model": _select("OpenAI live transcription model (stt.streaming)", "gpt-live-transcribe",
                                           "gpt-transcribe", "gpt-4o-transcribe", "gpt-4o-mini-transcribe"),
-    "stt.mistral.model": _select("Mistral Voxtral transcription model", *STT_MODEL_CATALOG["mistral"]),
-    "stt.xai.model": _select("xAI transcription model", *STT_MODEL_CATALOG["xai"]),
-    "stt.elevenlabs.model_id": _select("ElevenLabs Scribe model", *STT_MODEL_CATALOG["elevenlabs"]),
     "display.skin": _select("CLI visual theme", "default", "ares", "mono", "slate"),
     "dashboard.theme": _select(
         "Web dashboard visual theme", "default", "midnight", "ember", "mono", "cyberpunk", "rose"

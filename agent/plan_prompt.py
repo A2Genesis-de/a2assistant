@@ -20,7 +20,7 @@ For this turn, you are in PLAN MODE — planning only.
 - Your deliverable is a markdown plan saved inside the active workspace under
   `.hermes/plans/YYYY-MM-DD_HHMMSS-<slug>.md` (create the directory if
   needed; A2Assistant file tools are backend-aware, so this relative path keeps
-  the plan with the workspace on local, docker, ssh, modal, and daytona
+  the plan with the workspace on local, docker, and ssh
   backends). If the runtime provides a specific target path, use that exact
   path instead.
 """

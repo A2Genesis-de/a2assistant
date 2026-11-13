@@ -1,6 +1,6 @@
 """Long-form chunking, ffmpeg encoding, container repair and delivery packing (``tools.tts_tool``).
 
-Provider-agnostic post-processing: split text under a per-request cap, wrap raw PCM as WAV,
+Provider-agnostic post-processing: split text under a per-request cap,
 convert WAV/MP3 to the target container, sniff/repair mislabelled ``.ogg`` files, and combine
 final-encoded chunks under a destination platform's upload limit. Also home of the sibling
 helpers ``_origin`` / ``_section`` / ``_remove_quietly``.
@@ -13,9 +13,7 @@ import os
 import re
 import shlex
 import shutil
-import struct
 import subprocess
-import tempfile
 import uuid
 from dataclasses import dataclass
 from pathlib import Path
@@ -45,24 +43,10 @@ FALLBACK_MAX_TEXT_LENGTH = 4000  # provider not recognised at all
 
 # Per-provider input-character caps (official docs); override: ``tts.<provider>.max_text_length``.
 PROVIDER_MAX_TEXT_LENGTH: dict[str, int] = {
-    "edge": 5000,         # edge-tts practical sync limit
     "openai": 4096,       # https://platform.openai.com/docs/guides/text-to-speech
-    "xai": 15000,         # https://docs.x.ai/developers/model-capabilities/audio/text-to-speech
-    "minimax": 10000,     # https://platform.minimax.io/docs/api-reference/speech-t2a-http (sync)
-    "mistral": 4000,      # conservative; no published per-request cap
-    "gemini": 32000,      # 32k-token context window; char cap is conservative
-    "elevenlabs": 10000,  # fallback when model-aware lookup can't resolve (multilingual_v2)
-    "neutts": 2000,       # local model, quality falls off on long text
     "kittentts": 2000,    # local 25MB model
     "piper": 5000,        # local VITS model, phoneme-based; practical cap
 }
-
-# ElevenLabs caps vary by model_id. https://elevenlabs.io/docs/overview/models
-ELEVENLABS_MODEL_MAX_TEXT_LENGTH: dict[str, int] = {
-    "eleven_v3": 5000, "eleven_ttv_v3": 5000,
-    "eleven_multilingual_v2": 10000, "eleven_multilingual_v1": 10000,
-    "eleven_english_sts_v2": 10000, "eleven_english_sts_v1": 10000,
-    "eleven_flash_v2": 30000, "eleven_flash_v2_5": 40000}
 
 
 def _positive_int(value: Any) -> Optional[int]:
@@ -71,8 +55,8 @@ def _positive_int(value: Any) -> Optional[int]:
 
 
 def _resolve_max_text_length(provider: Optional[str], tts_config: Optional[dict[str, Any]] = None) -> int:
-    """Input-character cap for *provider*: ``tts.<provider>.max_text_length`` > ElevenLabs model
-    table > ``PROVIDER_MAX_TEXT_LENGTH`` > command provider's own ``max_text_length`` (else
+    """Input-character cap for *provider*: ``tts.<provider>.max_text_length`` >
+    ``PROVIDER_MAX_TEXT_LENGTH`` > command provider's own ``max_text_length`` (else
     ``DEFAULT_COMMAND_TTS_MAX_TEXT_LENGTH``) > ``FALLBACK_MAX_TEXT_LENGTH``. Non-positive /
     non-int overrides fall through so a broken config can't disable truncation."""
     if not provider:
@@ -83,12 +67,6 @@ def _resolve_max_text_length(provider: Optional[str], tts_config: Optional[dict[
     override = _positive_int(prov_cfg.get("max_text_length"))
     if override:
         return override
-    if key == "elevenlabs":
-        from tools.tts_tool_providers import DEFAULT_ELEVENLABS_MODEL_ID  # providers imports this module
-        model_id = prov_cfg.get("model_id") or DEFAULT_ELEVENLABS_MODEL_ID
-        mapped = ELEVENLABS_MODEL_MAX_TEXT_LENGTH.get(str(model_id).strip())
-        if mapped:
-            return mapped
     if key in PROVIDER_MAX_TEXT_LENGTH:
         return PROVIDER_MAX_TEXT_LENGTH[key]
     if key not in BUILTIN_TTS_PROVIDERS:
@@ -96,15 +74,6 @@ def _resolve_max_text_length(provider: Optional[str], tts_config: Optional[dict[
         if _is_command_provider_config(named):
             return _positive_int(named.get("max_text_length")) or DEFAULT_COMMAND_TTS_MAX_TEXT_LENGTH
     return FALLBACK_MAX_TEXT_LENGTH
-
-
-# PCM output specs for Gemini TTS (fixed by the API): 24kHz mono 16-bit (L16).
-GEMINI_TTS_SAMPLE_RATE, GEMINI_TTS_CHANNELS, GEMINI_TTS_SAMPLE_WIDTH = 24000, 1, 2
-
-# ffmpeg args producing the Ogg/Opus voice-bubble encoding Telegram & co expect.
-_OPUS_VOICE_ARGS = [
-    "-acodec", "libopus", "-ac", "1", "-b:a", "48k", "-vbr", "on",
-    "-application", "voip", "-compression_level", "10"]
 
 
 # --- Text chunking and delivery profiles ---
@@ -244,48 +213,6 @@ def _finalize_wav_output(wav_path: str, output_path: str) -> str:
     return output_path
 
 
-def _wrap_pcm_as_wav(
-    pcm_bytes: bytes, sample_rate: int = GEMINI_TTS_SAMPLE_RATE,
-    channels: int = GEMINI_TTS_CHANNELS, sample_width: int = GEMINI_TTS_SAMPLE_WIDTH) -> bytes:
-    """Wrap raw signed-little-endian PCM (e.g. Gemini's L16) with a minimal WAV RIFF header."""
-    block_align = channels * sample_width
-    fmt_chunk = struct.pack("<4sIHHIIHH", b"fmt ", 16, 1, channels, sample_rate,
-                            sample_rate * block_align, block_align, sample_width * 8)
-    data_chunk_header = struct.pack("<4sI", b"data", len(pcm_bytes))
-    riff_size = 4 + len(fmt_chunk) + len(data_chunk_header) + len(pcm_bytes)
-    riff_header = struct.pack("<4sI4s", b"RIFF", riff_size, b"WAVE")
-    return riff_header + fmt_chunk + data_chunk_header + pcm_bytes
-
-
-def _write_wav_bytes_as(wav_bytes: bytes, output_path: str) -> str:
-    """Write in-memory WAV to *output_path*, ffmpeg-converting to its container. ``.ogg`` is forced
-    to Opus (ffmpeg's .ogg default is Vorbis, which voice bubbles reject). A failed conversion
-    raises RuntimeError; without ffmpeg the raw WAV is written under the requested name
-    (misleading extension, but the audio still plays)."""
-    if output_path.lower().endswith(".wav"):
-        with open(output_path, "wb") as f:
-            f.write(wav_bytes)
-        return output_path
-    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
-        tmp.write(wav_bytes)
-        wav_path = tmp.name
-    try:
-        ffmpeg = shutil.which("ffmpeg")
-        if ffmpeg:
-            opus = _OPUS_VOICE_ARGS if output_path.lower().endswith(".ogg") else []
-            result = _ffmpeg_run(
-                ffmpeg, ["-i", wav_path, *opus, "-y", "-loglevel", "error", output_path])
-            if result.returncode != 0:
-                stderr = result.stderr.decode("utf-8", errors="ignore")[:300]
-                raise RuntimeError(f"ffmpeg conversion failed: {stderr}")
-        else:
-            logger.warning("ffmpeg not found; writing raw WAV to %s (extension may be misleading)", output_path)
-            shutil.copyfile(wav_path, output_path)
-    finally:
-        _remove_quietly(wav_path)
-    return output_path
-
-
 def _convert_to_opus(mp3_path: str) -> Optional[str]:
     """Convert any ffmpeg-readable audio file to OGG Opus next to it; None on failure."""
     from gateway.platforms.base import transcode_to_ogg_opus
@@ -293,7 +220,7 @@ def _convert_to_opus(mp3_path: str) -> Optional[str]:
 
 
 # --- Container sniffing / repair ---
-# Several backends ignore the requested opus format (Edge/xAI emit MP3, Piper WAV, some
+# Several backends ignore the requested opus format (Piper emits WAV, some
 # OpenAI-compatible servers ignore response_format="opus"), which breaks native voice bubbles:
 # sniff the magic bytes once after synthesis and repair when they don't match the extension.
 

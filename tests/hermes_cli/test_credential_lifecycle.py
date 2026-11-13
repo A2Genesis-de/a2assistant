@@ -152,10 +152,9 @@ def test_update_rotates_config_yaml_model_mirror(hermes_home):
 # ---------------------------------------------------------------------------
 
 
-# OpenCode Go is a registered api_key provider with api_key_env_vars containing
-# the single env var OPENCODE_GO_API_KEY — exercising the exact reproducer
-# from issue #96058 (Ubuntu 24.04, openai_sdk 2.24.0, provider=opencode-go).
-OPENCODE_KEY_NEW = "ocg-" + "e" * 28
+# OpenAI API is a registered api_key provider with api_key_env_vars containing
+# the single env var OPENAI_API_KEY — the shape of the reproducer from issue #96058.
+OPENAI_KEY_NEW = "sk-proj-" + "e" * 28
 
 
 def test_put_api_env_materializes_credential_pool_entry(hermes_home):
@@ -163,7 +162,7 @@ def test_put_api_env_materializes_credential_pool_entry(hermes_home):
 
     Pre-fix: save_provider_env_credential only mutated .env. The live pool
     kept authenticating with a stale higher-precedence config.yaml mirror or
-    the old cached credential until a separate ``hermes auth add opencode-go``
+    the old cached credential until a separate ``hermes auth add openai-api``
     ran. auth.json mtime was unchanged before/after Save (#96058).
 
     Post-fix: the same PUT /api/env call must also materialize an entry under
@@ -177,51 +176,51 @@ def test_put_api_env_materializes_credential_pool_entry(hermes_home):
 
     resp = client.put(
         "/api/env",
-        json={"key": "OPENCODE_GO_API_KEY", "value": OPENCODE_KEY_NEW},
+        json={"key": "OPENAI_API_KEY", "value": OPENAI_KEY_NEW},
         headers=HEADERS,
     )
     assert resp.status_code == 200, resp.text
     body = resp.json()
     assert body.get("ok") is True
-    assert body.get("key") == "OPENCODE_GO_API_KEY"
+    assert body.get("key") == "OPENAI_API_KEY"
 
-    # auth.json must now have a credential_pool entry for opencode-go. The
-    # exact source string lives in source="env:OPENCODE_GO_API_KEY" — env
+    # auth.json must now have a credential_pool entry for openai-api. The
+    # exact source string lives in source="env:OPENAI_API_KEY" — env
     # sources are sanitized on disk (the raw token is replaced with a
     # fingerprint; the canonical secret lives in .env and gets re-hydrated by
     # load_pool() on each read). The critical observable is: load_pool() on
     # the next call returns an in-memory entry carrying the just-saved token.
     auth = _read_auth(hermes_home)
     pool = auth.get("credential_pool", {})
-    assert "opencode-go" in pool, (
+    assert "openai-api" in pool, (
         "PUT /api/env did not materialize a credential_pool entry for "
-        "opencode-go (#96058)"
+        "openai-api (#96058)"
     )
-    entries = pool["opencode-go"]
+    entries = pool["openai-api"]
     assert isinstance(entries, list) and entries, pool
     matched_disk = [
         e for e in entries
         if isinstance(e.get("source"), str)
-        and e["source"] == "env:OPENCODE_GO_API_KEY"
+        and e["source"] == "env:OPENAI_API_KEY"
     ]
     assert matched_disk, (
-        f"credential_pool.opencode-go env-seeded reference missing on disk; "
+        f"credential_pool.openai-api env-seeded reference missing on disk; "
         f"got {entries!r}"
     )
     # And: a fresh load_pool() must surface the just-saved token to the
     # runtime. This is the actual end-to-end contract — anything weaker
     # means the OpenAI client will 401 because it never receives the new key.
     from agent.credential_pool import load_pool
-    pool_obj = load_pool("opencode-go")
+    pool_obj = load_pool("openai-api")
     runtime_entries = pool_obj.entries()
     matched_runtime = [
         e for e in runtime_entries
-        if e.access_token == OPENCODE_KEY_NEW
+        if e.access_token == OPENAI_KEY_NEW
         and isinstance(e.source, str)
-        and e.source == "env:OPENCODE_GO_API_KEY"
+        and e.source == "env:OPENAI_API_KEY"
     ]
     assert matched_runtime, (
-        "load_pool('opencode-go') did not surface the just-saved token; "
+        "load_pool('openai-api') did not surface the just-saved token; "
         "the live runtime will keep 401'ing (#96058). "
         f"Got sources: {[e.source for e in runtime_entries]!r}"
     )
@@ -323,22 +322,3 @@ def test_scrub_never_touches_providers_base_url_alias(hermes_home):
 # credential contributed by peer providers (DASHSCOPE_API_KEY is index >= 1
 # of alibaba-coding-plan-cn), could be a FOREIGN tier's key.
 
-
-def test_get_api_env_passes_provider_primary_through(hermes_home):
-    """Every provider card's own index-0 credential must stay its main field."""
-    resp = client.get("/api/env", headers=HEADERS)
-    assert resp.status_code == 200, resp.text
-    env = resp.json()
-
-    # The CN Coding Plan card: its own key is its primary; the shared
-    # DASHSCOPE_API_KEY alias joins the card marked primary=False.
-    assert env["ALIBABA_CODING_PLAN_CN_API_KEY"]["provider_primary"] is True
-    dashscope = env["DASHSCOPE_API_KEY"]["provider_profiles"]
-    cn_profile = next(
-        p for p in dashscope if p["provider"] == "alibaba-coding-plan-cn"
-    )
-    assert cn_profile["primary"] is False, (
-        "DASHSCOPE_API_KEY is a fallback alias for alibaba-coding-plan-cn; "
-        "marking it primary would re-point the card's main field away from "
-        "ALIBABA_CODING_PLAN_CN_API_KEY"
-    )

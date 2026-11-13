@@ -268,7 +268,7 @@ def _popen_bash(cmd: list[str], stdin_data: str | None = None, **kwargs) -> subp
 # --- ProcessHandle protocol ---
 class ProcessHandle(Protocol):
     """Duck type every backend's _run_bash() must return. subprocess.Popen satisfies this
-    natively; SDK backends (Modal, Daytona) return _ThreadedProcessHandle."""
+    natively; SDK backends return _ThreadedProcessHandle."""
 
     def poll(self) -> int | None: ...
     def kill(self) -> None: ...
@@ -282,7 +282,7 @@ class ProcessHandle(Protocol):
 
 
 class _ThreadedProcessHandle:
-    """Adapter for SDK backends (Modal, Daytona) that have no real subprocess: runs a blocking
+    """Adapter for SDK backends that have no real subprocess: runs a blocking
     ``exec_fn() -> (output_str, exit_code)`` on a background thread behind a ProcessHandle
     interface. ``cancel_fn`` is invoked on ``kill()`` for backend-specific cancellation."""
 

@@ -115,37 +115,15 @@ def _clear_web_result_cache():
 
 
 def register_all_web_providers():
-    """Register all bundled web-search providers into the global registry.
-
-    This is the single source of truth for the provider list used by
-    test classes that need the registry populated for dispatch checks.
-    """
+    """Register the bundled web-search providers into the global registry (single source of truth
+    for test classes that need the registry populated for dispatch checks)."""
     from agent.web_search_registry import register_provider, _reset_for_tests
-    from plugins.web.brave_free.provider import BraveFreeWebSearchProvider
     from plugins.web.ddgs.provider import DDGSWebSearchProvider
-    from plugins.web.exa.provider import ExaWebSearchProvider
-    from plugins.web.firecrawl.provider import FirecrawlWebSearchProvider
-    from plugins.web.parallel.provider import ParallelWebSearchProvider
-    from plugins.web.keenable.provider import KeenableWebSearchProvider
-    from plugins.web.tavily.provider import TavilyWebSearchProvider
-    from plugins.web.perplexity.provider import PerplexityWebSearchProvider
     from plugins.web.searxng.provider import SearXNGWebSearchProvider
-    from plugins.web.xai.provider import XAIWebSearchProvider
 
     _reset_for_tests()
-    for cls in (
-        BraveFreeWebSearchProvider,
-        DDGSWebSearchProvider,
-        ExaWebSearchProvider,
-        FirecrawlWebSearchProvider,
-        ParallelWebSearchProvider,
-        KeenableWebSearchProvider,
-        TavilyWebSearchProvider,
-        PerplexityWebSearchProvider,
-        SearXNGWebSearchProvider,
-        XAIWebSearchProvider,
-    ):
-        register_provider(cls())
+    register_provider(DDGSWebSearchProvider())
+    register_provider(SearXNGWebSearchProvider())
 
 
 @pytest.fixture

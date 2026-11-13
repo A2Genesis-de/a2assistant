@@ -1,16 +1,13 @@
-"""Provider-specific runtime builders for :mod:`hermes_cli.runtime_provider`: Azure Foundry, the
-OpenRouter / bare-custom fallback resolver, Bedrock, and external-process providers. Origin-internal
-collaborators are resolved on the origin module at call time via :func:`_rp` so test patches on
+"""Provider-specific runtime builders for :mod:`hermes_cli.runtime_provider`: the OpenRouter /
+bare-custom fallback resolver and external-process providers. Origin-internal collaborators are
+resolved on the origin module at call time via :func:`_rp` so test patches on
 ``hermes_cli.runtime_provider.*`` (``_get_model_config``, ``load_config``, ``has_usable_secret``,
 ``_try_resolve_from_custom_pool``, …) still apply."""
 
 from __future__ import annotations
 
-import os
-import re
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
-from agent.azure_identity_adapter import is_token_provider
 from agent.secret_scope import get_secret_str
 from hermes_constants import OPENROUTER_BASE_URL
 from utils import base_url_host_matches, base_url_hostname, base_url_origin
@@ -19,95 +16,6 @@ from utils import base_url_host_matches, base_url_hostname, base_url_origin
 def _rp():
     import hermes_cli.runtime_provider as origin
     return origin
-
-
-# ── Azure Foundry ──────────────────────────────────────────────────────────────────────────
-
-
-def _azure_entra_credentials(cfg_entra: dict[str, Any]) -> Any:
-    """Callable api_key minting a fresh Entra JWT per request (OpenAI SDK accepts it natively;
-    ``build_anthropic_client`` injects the bearer via an httpx hook)."""
-    AuthError = _rp().AuthError
-    try:
-        from agent.azure_identity_adapter import SCOPE_AI_AZURE_DEFAULT, EntraIdentityConfig, build_token_provider
-    except Exception as exc:
-        raise AuthError(
-            "Could not load the Azure Foundry Entra ID adapter. "
-            "Run hermes pm repair, then restart A2Assistant. "
-            f"(import failed: {exc})"
-        ) from exc
-    scope = str(cfg_entra.get("scope") or "").strip() or SCOPE_AI_AZURE_DEFAULT
-    try:
-        return build_token_provider(config=EntraIdentityConfig(scope=scope))
-    except ImportError as exc:
-        raise AuthError(str(exc)) from exc
-
-
-def _azure_foundry_api_key(rp, explicit_api_key: str) -> str:
-    if explicit_api_key:
-        return explicit_api_key
-    try:
-        from hermes_cli.config import get_env_value
-        api_key = get_env_value("AZURE_FOUNDRY_API_KEY") or ""
-    except Exception:
-        api_key = ""
-    api_key = api_key or get_secret_str("AZURE_FOUNDRY_API_KEY", "").strip()
-    if not api_key:
-        raise rp.AuthError(
-            "Azure Foundry requires an API key. Set AZURE_FOUNDRY_API_KEY in "
-            "~/.hermes/.env or run 'hermes model' to configure. To use "
-            "keyless Microsoft Entra ID auth instead, set "
-            "model.auth_mode: entra_id in config.yaml (or pick "
-            "'Microsoft Entra ID' in 'hermes model')."
-        )
-    return api_key
-
-
-def _resolve_azure_foundry_runtime(*, requested_provider: str, model_cfg: dict[str, Any],
-                                   explicit_api_key: Optional[str] = None, explicit_base_url: Optional[str] = None,
-                                   target_model: Optional[str] = None) -> dict[str, Any]:
-    """Azure Foundry: ``model.base_url`` + ``model.api_mode`` (or explicit overrides), API key from
-    ``.env``/env or a per-request Entra ID token, trailing ``/v1`` stripped for Anthropic-style
-    endpoints (the Anthropic SDK appends /v1/messages itself)."""
-    rp = _rp()
-    # Aux ``provider: auto`` forwards the main runtime's api_key — under entra_id that is the token
-    # provider callable; str() would turn it into a function repr sent as a static key (401, #72421).
-    forwarded_token_provider = explicit_api_key if is_token_provider(explicit_api_key) else None
-    explicit_api_key = "" if forwarded_token_provider else str(explicit_api_key or "").strip()
-    explicit_base_url_clean = str(explicit_base_url or "").strip().rstrip("/")
-    cfg_base_url, cfg_api_mode, cfg_auth_mode, cfg_entra = "", "chat_completions", "api_key", {}
-    if rp._cfg_provider(model_cfg) == "azure-foundry":
-        cfg_base_url = rp._config_base_url_for_provider(model_cfg, "azure-foundry")
-        cfg_api_mode = rp._parse_api_mode(model_cfg.get("api_mode")) or "chat_completions"
-        cfg_auth_mode = str(model_cfg.get("auth_mode") or "api_key").strip().lower() or "api_key"
-        if isinstance(model_cfg.get("entra"), dict):
-            cfg_entra = model_cfg["entra"]
-    # GPT-5.x / codex / o1-o4 deployments are Responses-API-only on Foundry.
-    effective_model = str(target_model or model_cfg.get("default") or "").strip()
-    cfg_api_mode = rp._azure_inferred_api_mode(effective_model, cfg_api_mode)
-    env_base_url = get_secret_str("AZURE_FOUNDRY_BASE_URL", "").strip().rstrip("/")
-    base_url = explicit_base_url_clean or cfg_base_url or env_base_url
-    if not base_url:
-        raise rp.AuthError(
-            "Azure Foundry requires a base URL. Set it via 'hermes model' or "
-            "the AZURE_FOUNDRY_BASE_URL environment variable."
-        )
-    if cfg_api_mode == "anthropic_messages":
-        base_url = re.sub(r"/v1/?$", "", base_url)
-    if cfg_auth_mode == "entra_id":
-        # --api-key on the CLI while config says entra_id: honour the explicit string (escape hatch
-        # for one-off testing).
-        if explicit_api_key:
-            api_key, source, auth_mode, entra = explicit_api_key, "explicit", "api_key", {}
-        else:
-            scope = str(cfg_entra.get("scope") or "").strip()
-            api_key = forwarded_token_provider or _azure_entra_credentials(cfg_entra)
-            source, auth_mode, entra = "entra_id", "entra_id", ({"scope": scope} if scope else {})
-        return rp._runtime("azure-foundry", cfg_api_mode, base_url, api_key, auth_mode=auth_mode, entra=entra, source=source,
-                           requested_provider=requested_provider)
-    return rp._runtime("azure-foundry", cfg_api_mode, base_url, _azure_foundry_api_key(rp, explicit_api_key),
-                       auth_mode="api_key", source="explicit" if (explicit_api_key or explicit_base_url) else "config",
-                       requested_provider=requested_provider)
 
 
 # ── OpenRouter / bare custom fallback ──────────────────────────────────────────────────────
@@ -202,52 +110,6 @@ def _resolve_openrouter_runtime(
     if not api_key and not is_openrouter_url:
         api_key = "no-key-required"
     return rp._runtime("custom", rp._resolve_plain_custom_api_mode(model_cfg, base_url), base_url, api_key, source=source)
-
-
-# ── AWS Bedrock ────────────────────────────────────────────────────────────────────────────
-
-
-def _resolve_bedrock_runtime(requested_provider: str, model_cfg: dict[str, Any], target_model: Optional[str]) -> dict[str, Any]:
-    """AWS Bedrock with triple-path routing: bare in-Region OpenAI IDs → Bedrock Mantle's Responses
-    endpoint (their ``us.``/``global.`` profile IDs are bedrock-runtime IDs and take Converse);
-    Claude → AnthropicBedrock SDK (prompt caching, thinking budgets); others → Converse API.
-    AWS_BEARER_TOKEN_BEDROCK auth is unsupported by AnthropicBedrock (SigV4 only), so bearer users
-    go through Converse regardless of model."""
-    from agent.bedrock_adapter import (bedrock_openai_base_url, bedrock_openai_uses_mantle, has_aws_credentials,
-                                       is_anthropic_bedrock_model, resolve_aws_auth_env_var, resolve_bedrock_bearer_token,
-                                       resolve_bedrock_runtime_region, bedrock_guardrail_config)
-    from hermes_cli.config import load_config  # direct (not the origin delegate), as before
-    rp = _rp()
-    # Explicitly selected bedrock trusts boto3's credential chain (IMDS, ECS/Lambda roles, SSO)
-    # which the env-var check can't detect.
-    is_explicit = requested_provider in {"bedrock", "aws", "aws-bedrock", "amazon-bedrock", "amazon"}
-    if not is_explicit and not has_aws_credentials():
-        raise rp.AuthError(
-            "No AWS credentials found for Bedrock. Configure one of:\n"
-            "  - AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY\n"
-            "  - AWS_PROFILE (for SSO / named profiles)\n"
-            "  - IAM instance role (EC2, ECS, Lambda)\n"
-            "Or run 'aws configure' to set up credentials.",
-            code="no_aws_credentials",
-        )
-    bedrock_cfg = load_config().get("bedrock", {})
-    # Region priority (config.yaml bedrock.region → env → us-east-1) lives in the adapter.
-    region = resolve_bedrock_runtime_region({"bedrock": bedrock_cfg})
-    auth_source = resolve_aws_auth_env_var() or "aws-sdk-default-chain"
-    guardrail_config = bedrock_guardrail_config({"bedrock": bedrock_cfg})
-    current_model = str(target_model or model_cfg.get("default") or "").strip()
-    has_bearer_token = bool(os.environ.get("AWS_BEARER_TOKEN_BEDROCK", "").strip())
-    runtime = rp._runtime("bedrock", "bedrock_converse", f"https://bedrock-runtime.{region}.amazonaws.com", "aws-sdk",
-                          source=auth_source, region=region, requested_provider=requested_provider)
-    if bedrock_openai_uses_mantle(current_model):
-        bearer = resolve_bedrock_bearer_token()
-        runtime.update(api_mode="codex_responses", base_url=bedrock_openai_base_url(region), api_key=bearer or "aws-sdk",
-                       source="AWS_BEARER_TOKEN_BEDROCK" if bearer else auth_source, model=current_model, bedrock_openai=True)
-    elif is_anthropic_bedrock_model(current_model) and not has_bearer_token:
-        runtime.update(api_mode="anthropic_messages", bedrock_anthropic=True)
-    if guardrail_config:
-        runtime["guardrail_config"] = guardrail_config
-    return runtime
 
 
 # ── External-process (agent CLI over stdio, e.g. ACP) ──────────────────────────────────────

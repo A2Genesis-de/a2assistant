@@ -134,7 +134,7 @@ class TestRegisterTTSProvider:
                 "from agent.tts_provider import TTSProvider\n"
                 "    class P(TTSProvider):\n"
                 "        @property\n"
-                "        def name(self): return 'edge'\n"
+                "        def name(self): return 'piper'\n"
                 "        def synthesize(self, text, output_path, **kw):\n"
                 "            return output_path\n"
                 "    ctx.register_tts_provider(P())"
@@ -149,6 +149,6 @@ class TestRegisterTTSProvider:
         # Plugin still loaded normally — built-in shadowing is a warning,
         # not an exception. The registry rejects the entry though.
         assert mgr._plugins["shadow-tts-plugin"].enabled is True
-        assert tts_registry.get_provider("edge") is None
+        assert tts_registry.get_provider("piper") is None
 
         tts_registry._reset_for_tests()

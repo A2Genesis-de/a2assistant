@@ -25,16 +25,11 @@ from tools.transcription_common import MAX_FILE_SIZE, _error_result, _ok_result
 logger = logging.getLogger("tools.transcription_tools")
 
 _MB = 1024 * 1024
-# Vendor-documented per-request upload caps. Providers not listed here (DeepInfra's
-# OpenAI-compatible endpoint, command and plugin providers) get the OpenAI-shaped default.
+# Vendor-documented per-request upload caps. Providers not listed here (command and plugin
+# providers) get the OpenAI-shaped default.
 _PROVIDER_MAX_BYTES = {
     "openai": 25 * _MB,  # developers.openai.com/api/docs/guides/speech-to-text: "Files can be up to 25 MB"
-    "groq": 25 * _MB,  # console.groq.com/docs/speech-to-text: 25 MB free tier (100 MB dev tier)
-    "mistral": 500 * _MB,  # docs.mistral.ai/resources/known-limitations: 500 MB, 60 minutes
-    "xai": 500 * _MB,  # docs.x.ai speech-to-text: "Max 500 MB" (413 above it)
-    "elevenlabs": 5 * 1024 * _MB - 1,  # elevenlabs.io speech-to-text convert: "must be less than 5.0GB"
 }
-_PROVIDER_MAX_SECONDS = {"mistral": 3600.0}
 # OpenAI per-model duration caps, all measured live (the vendor docs give none in seconds):
 # - gpt-4o-transcribe / gpt-4o-mini-transcribe have a documented 2,000 max output tokens. 1322 s of
 #   dense speech came back cut off at output_tokens=2048, and the API refuses more than 1400 s
@@ -51,9 +46,7 @@ _MAX_SILENCE_LOOKBACK_SECONDS = 60.0
 
 def upload_limit(provider: str, model: Optional[str]) -> tuple[int, Optional[float]]:
     """``(max_bytes, max_seconds or None)`` for one request to *provider* with *model*."""
-    max_seconds = _PROVIDER_MAX_SECONDS.get(provider)
-    if provider == "openai":
-        max_seconds = _OPENAI_MODEL_MAX_SECONDS.get(model or "")
+    max_seconds = _OPENAI_MODEL_MAX_SECONDS.get(model or "") if provider == "openai" else None
     return _PROVIDER_MAX_BYTES.get(provider, MAX_FILE_SIZE), max_seconds
 
 

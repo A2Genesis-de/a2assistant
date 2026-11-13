@@ -142,7 +142,7 @@ class TestInactivityJanitorMultiplex:
 
         with (
             patch("tools.browser_session_lifecycle.cleanup_single_session", side_effect=RuntimeError("boom")),
-            patch("tools.browser_session_cloud.get_cloud_provider", return_value=provider),
+            patch("tools.browser_config.get_cloud_provider", return_value=provider),
         ):
             for _ in range(bs.MAX_INACTIVITY_CLEANUP_FAILURES - 1):
                 lifecycle.cleanup_inactive_sessions()

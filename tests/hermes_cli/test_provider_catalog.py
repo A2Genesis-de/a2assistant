@@ -14,12 +14,12 @@ from hermes_cli.provider_catalog import (
 def test_profileless_providers_still_present():
     """Providers without a ProviderProfile must still resolve via fallbacks.
 
-    openai-api / tencent-tokenplan / xai-oauth have no profile; they exist
+    openai-api / xai-oauth have no profile; they exist
     only as registry + canonical entries. The catalog must not require a
     profile to include a provider.
     """
     by = provider_catalog_by_slug()
-    for slug in ("openai-api", "tencent-tokenplan", "xai-oauth"):
+    for slug in ("openai-api", "xai-oauth"):
         assert slug in by, f"{slug} dropped from catalog (profile-less provider)"
         assert by[slug].label, f"{slug} has empty label despite canonical fallback"
         assert by[slug].description, f"{slug} has empty description despite fallback"

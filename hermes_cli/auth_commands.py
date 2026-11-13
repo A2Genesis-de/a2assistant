@@ -1,7 +1,6 @@
 """Credential-pool auth subcommands."""
 
 from __future__ import annotations
-from pm import install_hint
 from hermes_cli.cli_output import line_input
 
 import math
@@ -28,7 +27,7 @@ from hermes_cli.secret_prompt import masked_secret_prompt
 
 
 # Providers that support OAuth login in addition to API keys.
-_OAUTH_CAPABLE_PROVIDERS = {"anthropic", "nous", "openai-codex", "xai-oauth", "qwen-oauth", "minimax-oauth", "openrouter"}
+_OAUTH_CAPABLE_PROVIDERS = {"anthropic", "nous", "openai-codex", "xai-oauth", "openrouter"}
 # ...and default to it when ``--type`` is omitted. OpenRouter stays API-key-first: the documented
 # ``hermes auth add openrouter --api-key sk-or-...`` must keep working with no ``--type``.
 _OAUTH_DEFAULT_PROVIDERS = _OAUTH_CAPABLE_PROVIDERS - {"openrouter"}
@@ -211,14 +210,6 @@ def _anthropic_oauth_login(args) -> dict:
     return creds
 
 
-def _qwen_oauth_login(args) -> dict:
-    from hermes_cli.auth_qwen import _mark_qwen_oauth_active
-
-    creds = auth_mod.resolve_qwen_runtime_credentials(refresh_if_expiring=False)
-    _mark_qwen_oauth_active(creds)
-    return creds
-
-
 @dataclass(frozen=True)
 class _OAuthAddSpec:
     """Per-provider parameters for the generic ``hermes auth add <provider> --type oauth`` path."""
@@ -275,19 +266,6 @@ _OAUTH_ADD_SPECS: dict[str, _OAuthAddSpec] = {
             "base_url": creds.get("base_url") or auth_mod.DEFAULT_XAI_OAUTH_BASE_URL,
             "last_refresh": creds.get("last_refresh")},
         activate_first=True),
-    "qwen-oauth": _OAuthAddSpec(
-        login=_qwen_oauth_login,
-        token=lambda creds: creds["api_key"],
-        source=f"{SOURCE_MANUAL}:qwen_cli",
-        fields=lambda creds, provider: {"base_url": creds.get("base_url")}),
-    "minimax-oauth": _OAuthAddSpec(
-        login=lambda args: auth_mod._minimax_oauth_login(
-            open_browser=not getattr(args, "no_browser", False),
-            timeout_seconds=getattr(args, "timeout", None) or 15.0),
-        token=lambda creds: creds["access_token"],
-        source=f"{SOURCE_MANUAL}:minimax_oauth",
-        fields=lambda creds, provider: {
-            "refresh_token": creds.get("refresh_token"), "base_url": creds.get("inference_base_url")}),
     "openrouter": _OAuthAddSpec(
         login=lambda args: auth_mod._openrouter_pkce_login(
             open_browser=not getattr(args, "no_browser", False),
@@ -729,72 +707,11 @@ def auth_logout_command(args) -> None:
     auth_mod.logout_command(SimpleNamespace(provider=raw_provider))
 
 
-def _print_bedrock_status() -> None:
-    """Show AWS Bedrock credential status (not in the pool — uses boto3 chain)."""
-    try:
-        from agent.bedrock_adapter import has_aws_credentials, resolve_aws_auth_env_var, resolve_bedrock_region
-        if not has_aws_credentials():
-            return
-        region = resolve_bedrock_region()
-        print("bedrock (AWS SDK credential chain):")
-        print(f"  Auth: {resolve_aws_auth_env_var() or 'unknown'}")
-        print(f"  Region: {region}")
-        try:
-            import boto3
-            arn = boto3.client("sts", region_name=region).get_caller_identity().get("Arn", "unknown")
-            print(f"  Identity: {arn}")
-        except Exception:
-            print("  Identity: (could not resolve — boto3 STS call failed)")
-        print()
-    except ImportError:
-        pass  # boto3 or bedrock_adapter not available
-
-
-def _print_azure_entra_status() -> None:
-    """Show Azure Foundry Entra ID status when model.provider is azure-foundry with entra_id auth."""
-    try:
-        from hermes_cli.config import load_config
-        cfg = load_config()
-        model_cfg = cfg.get("model") if isinstance(cfg, dict) else None
-        if not isinstance(model_cfg, dict) or (
-            str(model_cfg.get("provider") or "").strip().lower() != "azure-foundry"
-            or str(model_cfg.get("auth_mode") or "").strip().lower() != "entra_id"):
-            return
-        from agent.azure_identity_adapter import (
-            EntraIdentityConfig, SCOPE_AI_AZURE_DEFAULT, describe_active_credential, has_azure_identity_installed,
-        )
-        base_url = str(model_cfg.get("base_url") or "").strip()
-        entra = model_cfg.get("entra") or {}
-        scope = (str(entra.get("scope") or "").strip() if isinstance(entra, dict) else "") or SCOPE_AI_AZURE_DEFAULT
-        print("azure-foundry (Microsoft Entra ID):")
-        print(f"  Endpoint: {base_url or '(not configured)'}")
-        print(f"  Scope: {scope}")
-        if not has_azure_identity_installed():
-            print("  Status: ⚠ azure-identity not installed")
-            print("  From the A2Assistant environment, run: "
-                  f"{install_hint('azure-identity')}")
-            print("  Then restart A2Assistant.")
-        else:
-            info = describe_active_credential(config=EntraIdentityConfig(scope=scope), timeout_seconds=10.0)
-            env_sources = info.get("env_sources") or []
-            if info.get("ok"):
-                print(f"  Status: ✓ token acquired ({', '.join(env_sources) if env_sources else 'default chain'})")
-            else:
-                print(f"  Status: ⚠ {info.get('error') or 'credential chain exhausted'}")
-                if info.get("hint"):
-                    print(f"  Hint: {info['hint']}")
-        print()
-    except Exception:
-        pass
-
-
 def _interactive_auth() -> None:
     """Interactive credential pool management when `hermes auth` is called bare."""
     print("Credential Pool Status")
     print("=" * 50)
     auth_list_command(SimpleNamespace(provider=None))
-    _print_bedrock_status()
-    _print_azure_entra_status()
     print()
 
     choices = [

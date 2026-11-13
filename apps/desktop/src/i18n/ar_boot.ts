@@ -285,7 +285,6 @@ export const arBoot = {
     recommended: 'موصى به',
     connected: 'متصل',
     featuredPitch: 'اشتراك واحد، أكثر من 300 نموذج متقدم — الطريقة الموصى بها لتشغيل A2Assistant',
-    fireworksPitch: 'نماذج مفتوحة سريعة مع استضافة Fireworks.',
     openRouterPitch: 'مفتاح واحد لمئات النماذج — خيار افتراضي جيد',
     apiKeyOptions: {
       openrouter: {
@@ -295,14 +294,6 @@ export const arBoot = {
       openai: {
         short: 'نماذج من فئة GPT',
         description: 'وصول مباشر إلى نماذج OpenAI.'
-      },
-      gemini: {
-        short: 'نماذج Gemini',
-        description: 'وصول مباشر إلى نماذج Google Gemini.'
-      },
-      xai: {
-        short: 'نماذج Grok',
-        description: 'وصول مباشر إلى نماذج xAI Grok.'
       },
       local: {
         short: 'مستضاف ذاتيا',

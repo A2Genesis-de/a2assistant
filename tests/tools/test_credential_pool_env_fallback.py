@@ -66,20 +66,20 @@ class TestCredentialPoolSeedsFromDotEnv:
     load_hermes_dotenv, the credential pool must still discover it.
     """
 
-    def test_deepseek_key_from_dotenv_only(self, isolated_hermes_home):
+    def test_openai_key_from_dotenv_only(self, isolated_hermes_home):
         """Key in .env but not os.environ → _seed_from_env adds a pool entry."""
-        _write_env_file(isolated_hermes_home, DEEPSEEK_API_KEY="sk-dotenv-only-12345")
-        assert "DEEPSEEK_API_KEY" not in os.environ
+        _write_env_file(isolated_hermes_home, OPENAI_API_KEY="sk-dotenv-only-12345")
+        assert "OPENAI_API_KEY" not in os.environ
 
         from agent.credential_pool import _seed_from_env
         entries = []
-        changed, active_sources = _seed_from_env("deepseek", entries)
+        changed, active_sources = _seed_from_env("openai-api", entries)
 
         assert changed is True
-        assert "env:DEEPSEEK_API_KEY" in active_sources
+        assert "env:OPENAI_API_KEY" in active_sources
         assert any(
             e.access_token == "sk-dotenv-only-12345"
-            and e.source == "env:DEEPSEEK_API_KEY"
+            and e.source == "env:OPENAI_API_KEY"
             for e in entries
         ), f"Expected seeded entry with dotenv key, got: {[(e.source, e.access_token) for e in entries]}"
 
@@ -88,7 +88,7 @@ class TestCredentialPoolSeedsFromDotEnv:
         """No .env file, no env vars → no entries seeded (and no crash)."""
         from agent.credential_pool import _seed_from_env
         entries = []
-        changed, active_sources = _seed_from_env("deepseek", entries)
+        changed, active_sources = _seed_from_env("openai-api", entries)
         assert changed is False
         assert active_sources == set()
         assert entries == []
@@ -99,15 +99,15 @@ class TestCredentialPoolSeedsFromDotEnv:
         from Codex CLI, test runner, login profile, etc.). Without this, key
         rotation produces persistent 401s.
         """
-        _write_env_file(isolated_hermes_home, DEEPSEEK_API_KEY="sk-dotenv-fresh")
-        monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-env-stale-xyz")
+        _write_env_file(isolated_hermes_home, OPENAI_API_KEY="sk-dotenv-fresh")
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-env-stale-xyz")
 
         from agent.credential_pool import _seed_from_env
         entries = []
-        changed, _ = _seed_from_env("deepseek", entries)
+        changed, _ = _seed_from_env("openai-api", entries)
 
         assert changed is True
-        seeded = [e for e in entries if e.source == "env:DEEPSEEK_API_KEY"]
+        seeded = [e for e in entries if e.source == "env:OPENAI_API_KEY"]
         assert len(seeded) == 1
         assert seeded[0].access_token == "sk-dotenv-fresh"
 

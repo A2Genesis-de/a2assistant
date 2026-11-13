@@ -1,115 +1,15 @@
-"""Terminal-backend setup wizard (local/docker/modal/daytona/vercel/ssh/plugin).
+"""Terminal-backend setup wizard (local/docker/ssh/plugin).
 setup.py names are resolved through the module object so test patches on ``hermes_cli.setup.<name>``
 take effect; setup.py re-exports the public entry points."""
 
-import json
 import logging
 import os
 from pathlib import Path
-from tools import tool_backend_helpers
 
 logger = logging.getLogger("hermes_cli.setup")
 
-from hermes_cli.config_defaults import DEFAULT_SANDBOX_IMAGE as _SANDBOX_IMAGE, DEFAULT_VERCEL_IMAGE
+from hermes_cli.config_defaults import DEFAULT_SANDBOX_IMAGE as _SANDBOX_IMAGE
 _RUN_KW = dict(capture_output=True, text=True, encoding="utf-8", errors="replace")
-
-
-def _prompt_vercel_sandbox_settings(config: dict):
-    """Prompt for Vercel Sandbox settings without exposing unsupported disk sizing."""
-    terminal = config.setdefault("terminal", {})
-    _setup._info(None, "Vercel Sandbox settings:", "  Filesystem persistence uses Vercel snapshots.",
-                 "  Snapshots restore files only; live processes do not continue after sandbox recreation.")
-    current_image = terminal.get("vercel_image") or DEFAULT_VERCEL_IMAGE
-    image = _setup.prompt("  Image (Vercel managed image or VCR repository[:tag])", current_image).strip() or current_image
-    terminal["vercel_image"] = image
-    _setup.save_env_value("TERMINAL_VERCEL_IMAGE", image)
-    if terminal.get("vercel_runtime"):
-        # Vercel deprecated runtimes; a pinned one still wins over the image until the user clears it.
-        _setup.print_warning(f"terminal.vercel_runtime={terminal['vercel_runtime']!r} is deprecated by Vercel and "
-                             "overrides the image; unset it to use the image above.")
-    persist_label = "yes" if terminal.get("container_persistent", True) else "no"
-    persist = _setup.prompt("  Persist filesystem with snapshots? (yes/no)", persist_label).lower()
-    terminal["container_persistent"] = persist in {"yes", "true", "y", "1"}
-    # (key, prompt label, default, parser) — unparseable input leaves the value untouched.
-    for key, label, default, parse in (
-        ("container_cpu", "  CPU cores", 1, float),
-        ("container_memory", "  Memory in MB (5120 = 5GB)", 5120, int)):
-        try:
-            terminal[key] = parse(_setup.prompt(label, str(terminal.get(key, default))))
-        except ValueError:
-            pass
-    if terminal.get("container_disk", 51200) not in {0, 51200}:
-        _setup.print_warning(
-            "Vercel Sandbox does not support custom disk sizing; resetting container_disk to 51200.")
-    terminal["container_disk"] = 51200
-    _setup._info(None, "Vercel authentication:", "  Use a long-lived Vercel access token plus project/team IDs.")
-    linked = _read_nearest_vercel_project()
-    if linked:
-        _setup.print_info("  Found defaults in nearest .vercel/project.json.")
-    _setup.remove_env_value("VERCEL_OIDC_TOKEN")
-    # (label, env var, linked-project fallback key, secret) — prompted in order, saved when non-empty.
-    for label, env_var, linked_key, secret in (
-        ("    Vercel access token", "VERCEL_TOKEN", None, True),
-        ("    Vercel project ID", "VERCEL_PROJECT_ID", "projectId", False),
-        ("    Vercel team ID", "VERCEL_TEAM_ID", "orgId", False)):
-        default = _setup.get_env_value(env_var) or (linked.get(linked_key, "") if linked_key else "")
-        value = _setup.prompt(label, default, password=secret)
-        if value:
-            _setup.save_env_value(env_var, value)
-
-
-def _read_nearest_vercel_project(start: Path | None = None) -> dict[str, str]:
-    """Read project/team defaults from the nearest Vercel link file."""
-    current = (start or Path.cwd()).resolve()
-    if current.is_file():
-        current = current.parent
-    for directory in (current, *current.parents):
-        project_file = directory / ".vercel" / "project.json"
-        if not project_file.exists():
-            continue
-        try:
-            data = json.loads(project_file.read_text(encoding="utf-8-sig"))
-        except (OSError, json.JSONDecodeError):
-            return {}
-        if not isinstance(data, dict):
-            return {}
-        return {key: data[key] for key in ("projectId", "orgId")
-                if isinstance(data.get(key), str) and data[key].strip()}
-    return {}
-
-
-def _prompt_secret_env(label: str, env_var: str, *, confirm_msg: str = "") -> None:
-    """Prompt for a secret and persist it to .env when non-empty."""
-    value = _setup.prompt(label, password=True)
-    if value:
-        _setup.save_env_value(env_var, value)
-        if confirm_msg:
-            _setup.print_success(confirm_msg)
-
-
-def _existing_secret_keeps(env_var: str, label: str, question: str) -> bool:
-    """True when ``env_var`` is already set and the user declines to update it."""
-    if not _setup.get_env_value(env_var):
-        return False
-    _setup.print_info(f"  {label}: already configured")
-    return not _setup.prompt_yes_no(question, False)
-
-
-def _ensure_sdk(extra: str) -> None:
-    """Enable a declared SDK extra without mutating the running interpreter."""
-    import pm
-
-    try:
-        __import__(extra)
-    except ImportError:
-        _setup.print_info(f"Installing {extra} SDK...")
-        try:
-            pm.sync_venv([extra], explicit=True)
-        except (pm.InstallError, OSError, ValueError) as exc:
-            _setup.print_warning(f"Install failed: {exc}")
-            _setup.print_info("Retry with: hermes setup terminal")
-        else:
-            _setup.print_success(f"{extra} SDK installed. Restart A2Assistant to use it.")
 
 
 def _report_binary(found: str | None, missing: str, install_hint: str, found_prefix: str = "Found: ") -> None:
@@ -146,7 +46,7 @@ def _setup_backend_docker(config: dict) -> None:
     _setup._info(None, "Docker sandboxes can be protected with the egress credential firewall.",
                  "It routes sandbox traffic through iron-proxy so containers receive "
                  "proxy tokens instead of real API keys.",
-                 "   Docker only for now; Modal, SSH, Daytona and plugin backends are not wired yet.")
+                 "   Docker only for now; SSH and plugin backends are not wired yet.")
     if _setup.prompt_yes_no("  Enable egress firewall for Docker sandboxes?", False):
         proxy_cfg = config.setdefault("proxy", {})
         proxy_cfg["enabled"] = True
@@ -156,63 +56,6 @@ def _setup_backend_docker(config: dict) -> None:
             "Run `hermes egress setup` then `hermes egress start` to mint tokens and launch the proxy.")
     else:
         _setup.print_info("Skipping egress firewall. You can enable it later with `hermes egress setup`.")
-
-
-def _setup_backend_modal(config: dict) -> None:
-    _setup.print_success("Terminal backend: Modal")
-    _setup.print_info("Serverless cloud sandboxes. Each session gets its own container.")
-    from tools.managed_tool_gateway import is_managed_tool_gateway_ready
-    from tools.tool_backend_helpers import normalize_modal_mode
-    from hermes_cli import nous_subscription
-    managed_modal_available = bool(
-        tool_backend_helpers.managed_nous_tools_enabled()
-        and nous_subscription.get_nous_subscription_features(config).nous_auth_present
-        and is_managed_tool_gateway_ready("modal"))
-    modal_mode = normalize_modal_mode(_setup.cfg_get(config, "terminal", "modal_mode"))
-    use_managed_modal = False
-    if managed_modal_available:
-        # Default to the configured mode; when unset, to "direct" only if Modal creds exist.
-        default_idx = {"managed": 0, "direct": 1}.get(modal_mode, 1 if _setup.get_env_value("MODAL_TOKEN_ID") else 0)
-        use_managed_modal = _setup.prompt_choice(
-            "Select how Modal execution should be billed:",
-            ["Use my Nous subscription", "Use my own Modal account"], default_idx) == 0
-    if use_managed_modal:
-        config["terminal"]["modal_mode"] = "managed"
-        _setup.print_info("Modal execution will use the managed Nous gateway and bill to your subscription.")
-        if _setup.get_env_value("MODAL_TOKEN_ID") or _setup.get_env_value("MODAL_TOKEN_SECRET"):
-            _setup.print_info(
-                "Direct Modal credentials are still configured, but this backend is pinned to managed mode.")
-        return
-    config["terminal"]["modal_mode"] = "direct"
-    _setup.print_info("Requires a Modal account: https://modal.com")
-    _ensure_sdk("modal")
-    _setup._info(None, "Modal authentication:", "  Get your token at: https://modal.com/settings")
-    if _existing_secret_keeps("MODAL_TOKEN_ID", "Modal token", "  Update Modal credentials?"):
-        return
-    _prompt_secret_env("    Modal Token ID", "MODAL_TOKEN_ID")
-    _prompt_secret_env("    Modal Token Secret", "MODAL_TOKEN_SECRET")
-
-
-def _setup_backend_daytona(config: dict) -> None:
-    _setup.print_success("Terminal backend: Daytona")
-    _setup._info("Persistent cloud development environments.",
-                 "Each session gets a dedicated sandbox with filesystem persistence.",
-                 "Sign up at: https://daytona.io")
-    _ensure_sdk("daytona")
-    print()
-    had_key = bool(_setup.get_env_value("DAYTONA_API_KEY"))
-    if not _existing_secret_keeps("DAYTONA_API_KEY", "Daytona API key", "  Update API key?"):
-        _prompt_secret_env("    Daytona API key", "DAYTONA_API_KEY",
-                           confirm_msg="    Updated" if had_key else "    Configured")
-    config["terminal"].setdefault("daytona_image", _SANDBOX_IMAGE)
-
-
-def _setup_backend_vercel(config: dict) -> None:
-    _setup.print_success("Terminal backend: Vercel Sandbox")
-    _setup._info("Cloud microVM sandboxes with snapshot-backed filesystem persistence.",
-                 "Requires the optional Vercel SDK (installed through A2Assistant PM).")
-    _ensure_sdk("vercel")
-    _prompt_vercel_sandbox_settings(config)
 
 
 def _setup_backend_ssh(config: dict) -> None:
@@ -263,16 +106,9 @@ def _setup_backend_plugin(config: dict, backend: str) -> None:
 _BUILTIN_TERMINAL_BACKENDS = [
     ("local", "Local - run directly on this machine (default)"),
     ("docker", "Docker/Podman - isolated container with configurable resources"),
-    ("modal", "Modal - serverless cloud sandbox"), ("ssh", "SSH - run on a remote machine"),
-    ("daytona", "Daytona - persistent cloud development environment"),
-    ("vercel_sandbox", "Vercel Sandbox - cloud microVM with snapshot filesystem persistence")]
+    ("ssh", "SSH - run on a remote machine")]
 _TERMINAL_BACKEND_SETUP = {
-    "local": _setup_backend_local, "docker": _setup_backend_docker, "modal": _setup_backend_modal,
-    "daytona": _setup_backend_daytona, "vercel_sandbox": _setup_backend_vercel, "ssh": _setup_backend_ssh}
-# Backend -> env var mirrored from config after setup (config.yaml is the source of truth, but
-# terminal_tool reads these from .env).
-_BACKEND_ENV_MIRROR = {"modal": ("TERMINAL_MODAL_MODE", "modal_mode", "auto"),
-                       "vercel_sandbox": ("TERMINAL_VERCEL_IMAGE", "vercel_image", DEFAULT_VERCEL_IMAGE)}
+    "local": _setup_backend_local, "docker": _setup_backend_docker, "ssh": _setup_backend_ssh}
 
 
 def setup_terminal_backend(config: dict):
@@ -310,9 +146,6 @@ def setup_terminal_backend(config: dict):
     elif selected_backend in plugin_backend_names:
         _setup_backend_plugin(config, selected_backend)
     _setup.save_env_value("TERMINAL_ENV", selected_backend)
-    if selected_backend in _BACKEND_ENV_MIRROR:
-        env_var, key, default = _BACKEND_ENV_MIRROR[selected_backend]
-        _setup.save_env_value(env_var, config["terminal"].get(key, default))
     _setup.save_config(config)
     print()
     _setup.print_success(f"Terminal backend set to: {selected_backend}")

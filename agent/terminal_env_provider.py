@@ -82,7 +82,7 @@ class TerminalEnvironmentProvider(ProviderBase):
 
     @property
     def env_description(self) -> str:
-        """Prompt-builder fallback for where commands run when the live probe fails (e.g. ``"a Daytona workspace (Linux)"``)."""
+        """Prompt-builder fallback for where commands run when the live probe fails (e.g. ``"a Singularity container (Linux)"``)."""
         return f"a {self.display_name} environment (likely Linux)"
 
     @abc.abstractmethod

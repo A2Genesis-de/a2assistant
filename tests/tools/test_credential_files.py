@@ -448,7 +448,7 @@ class TestCacheDirectoryMounts:
         """``composer-pastes/`` joins the staging dirs (#110174).
 
         Desktop stages a large paste there and attaches it as ``@file:``; on a
-        remote execution backend (ssh/daytona/vercel_sandbox) the bytes only
+        remote execution backend (ssh) the bytes only
         reach the agent through the file-sync enumeration, and the agent-visible
         path translation only covers mounted dirs — so the dir must appear in
         BOTH the mounts and the sync list, or a fresh paste dangles on the

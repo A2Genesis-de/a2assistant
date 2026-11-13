@@ -22,11 +22,8 @@ logger = logging.getLogger(__name__)
 
 
 #: Names owned by in-tree backends in tools/environments/ — never
-#: registrable by plugins. Includes internal-mode aliases (managed_modal).
-BUILTIN_BACKEND_NAMES = frozenset({
-    "local", "docker", "modal", "managed_modal",
-    "daytona", "vercel_sandbox", "ssh",
-})
+#: registrable by plugins.
+BUILTIN_BACKEND_NAMES = frozenset({"local", "docker", "ssh"})
 
 
 def _reject_builtin_collision(name: str) -> None:

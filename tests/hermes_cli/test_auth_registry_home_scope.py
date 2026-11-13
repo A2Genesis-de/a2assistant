@@ -37,7 +37,7 @@ def homes(tmp_path, monkeypatch):
 
     a, b, c = (tmp_path / n for n in "abc")
     _plugin(a, "acme-scope", "https://a.invalid/v1", ("ACME_SCOPE_A_KEY",), ("acs",))
-    _plugin(a, "deepseek", "https://deepseek-a.invalid/v1", ("DEEPSEEK_API_KEY",), ())
+    _plugin(a, "openai-api", "https://openai-a.invalid/v1", ("OPENAI_API_KEY",), ())
     _plugin(b, "acme-scope", "https://b.invalid/v1", ("ACME_SCOPE_B_KEY",), ())
     _plugin(b, "zeta-scope", "https://z.invalid/v1", ("ZETA_SCOPE_KEY",), ("acs",))
     c.mkdir()
@@ -66,18 +66,18 @@ def _view(home: Path):
         alias = PROVIDER_REGISTRY.get("acs")
         return ((acme.inference_base_url, tuple(acme.api_key_env_vars)) if acme else None,
                 alias.id if alias else None, normalize_provider("acs"),
-                PROVIDER_REGISTRY["deepseek"].inference_base_url)
+                PROVIDER_REGISTRY["openai-api"].inference_base_url)
     finally:
         reset_hermes_home_override(token)
 
 
 def test_each_home_reads_its_own_provider_rows_and_aliases(homes):
     a, b, c = homes
-    builtin_deepseek = _view(c)[3]
+    builtin_openai = _view(c)[3]
     home_a = (("https://a.invalid/v1", ("ACME_SCOPE_A_KEY",)), "acme-scope", "acme-scope",
-              "https://deepseek-a.invalid/v1")
+              "https://openai-a.invalid/v1")
     assert _view(a) == home_a
     assert _view(b) == (("https://b.invalid/v1", ("ACME_SCOPE_B_KEY",)), "zeta-scope", "zeta-scope",
-                        builtin_deepseek)
+                        builtin_openai)
     assert _view(a) == home_a
-    assert _view(c) == (None, None, "acs", builtin_deepseek)
+    assert _view(c) == (None, None, "acs", builtin_openai)

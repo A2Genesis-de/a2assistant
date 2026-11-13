@@ -14,11 +14,11 @@ import { envVar } from './test-utils'
 const searchCopy = {
   fieldDescriptions: {
     'display.personality': 'Choose how A2Assistant sounds in conversation.',
-    'tts.edge.voice': 'Voice used by Edge TTS.'
+    'tts.piper.voice': 'Voice used by Piper.'
   },
   fieldLabels: {
     'display.personality': 'Personality',
-    'tts.edge.voice': 'Edge voice',
+    'tts.piper.voice': 'Piper voice',
     'tts.openai.voice': 'OpenAI voice'
   },
   sections: {
@@ -31,13 +31,13 @@ describe('settings search index', () => {
   it('builds config results from renderable schema fields with exact deep links', () => {
     const schema: Record<string, ConfigFieldSchema> = {
       'display.personality': { type: 'select' },
-      'tts.edge.voice': { type: 'string' },
+      'tts.piper.voice': { type: 'string' },
       'tts.openai.voice': { type: 'string' }
     }
 
     const config = {
       display: { personality: 'default' },
-      tts: { provider: 'edge', edge: { voice: '' }, openai: { voice: '' } }
+      tts: { provider: 'piper', piper: { voice: '' }, openai: { voice: '' } }
     } as unknown as HermesConfigRecord
 
     const entries = buildConfigSearchEntries(schema, config, searchCopy)
@@ -45,7 +45,7 @@ describe('settings search index', () => {
     expect(entries.map(entry => entry.id)).toEqual([
       'config-field:display.personality',
       'config-field:tts.provider',
-      'config-field:tts.edge.voice'
+      'config-field:tts.piper.voice'
     ])
     expect(entries[0]).toMatchObject({
       context: 'Chat',

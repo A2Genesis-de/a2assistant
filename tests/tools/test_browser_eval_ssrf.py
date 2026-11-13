@@ -13,7 +13,7 @@ import json
 
 import pytest
 
-from tools import browser_session_cloud, browser_url_policy, browser_use_cli
+from tools import browser_config, browser_url_policy, browser_use_cli
 
 PRIVATE_URL = "http://127.0.0.1:8080/secret"
 PUBLIC_URL = "https://example.com/page"
@@ -28,8 +28,8 @@ def _no_policy_or_hybrid(monkeypatch):
 
 class TestExpressionPreScan:
     def _guard_on(self, monkeypatch):
-        monkeypatch.setattr(browser_session_cloud, "is_local_backend", lambda: False)
-        monkeypatch.setattr(browser_session_cloud, "allow_private_urls", lambda: False)
+        monkeypatch.setattr(browser_config, "is_local_backend", lambda: False)
+        monkeypatch.setattr(browser_config, "allow_private_urls", lambda: False)
 
     def test_blocks_private_fetch_literal(self, monkeypatch):
         self._guard_on(monkeypatch)
@@ -63,8 +63,8 @@ class TestExpressionPreScan:
         assert verdict.blocked is None
 
     def test_skips_prescan_when_allow_private(self, monkeypatch):
-        monkeypatch.setattr(browser_session_cloud, "is_local_backend", lambda: False)
-        monkeypatch.setattr(browser_session_cloud, "allow_private_urls", lambda: True)
+        monkeypatch.setattr(browser_config, "is_local_backend", lambda: False)
+        monkeypatch.setattr(browser_config, "allow_private_urls", lambda: True)
         monkeypatch.setattr(browser_url_policy, "is_safe_url", lambda url: False)
         monkeypatch.setattr(browser_url_policy, "is_always_blocked_url", lambda url: False)
 
@@ -90,9 +90,9 @@ class TestExpressionScanHelper:
 
 @pytest.mark.parametrize("local_backend,allow_private", [(True, False), (False, True)])
 def test_raw_cdp_keeps_the_metadata_floor_when_the_private_guard_is_off(monkeypatch, local_backend, allow_private):
-    from tools import browser_cdp_tool, browser_session_cloud
-    monkeypatch.setattr(browser_session_cloud, "is_local_backend", lambda: local_backend)
-    monkeypatch.setattr(browser_session_cloud, "allow_private_urls", lambda: allow_private)
+    from tools import browser_cdp_tool, browser_config
+    monkeypatch.setattr(browser_config, "is_local_backend", lambda: local_backend)
+    monkeypatch.setattr(browser_config, "allow_private_urls", lambda: allow_private)
     guard = browser_cdp_tool._browser_cdp_private_guard
     for method in ("Page.navigate", "Target.createTarget", "Network.loadNetworkResource", "Fetch.continueRequest"):
         assert "cloud metadata" in guard(method=method, params={"url": "http://169.254.169.254/latest/meta-data/"})
@@ -108,8 +108,8 @@ def test_raw_cdp_keeps_the_metadata_floor_when_the_private_guard_is_off(monkeypa
 def cdp_guard(monkeypatch, local_backend):
     """The raw CDP guard with a public page open: private guard on for a remote backend, off for a local one."""
     from tools import browser_cdp_tool
-    monkeypatch.setattr(browser_session_cloud, "is_local_backend", lambda: local_backend)
-    monkeypatch.setattr(browser_session_cloud, "allow_private_urls", lambda: False)
+    monkeypatch.setattr(browser_config, "is_local_backend", lambda: local_backend)
+    monkeypatch.setattr(browser_config, "allow_private_urls", lambda: False)
     monkeypatch.setattr(browser_cdp_tool, "_current_page_private_url", lambda endpoint, target_id: None)
     return functools.partial(browser_cdp_tool._browser_cdp_private_guard, endpoint="ws://x", target_id="T")
 

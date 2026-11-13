@@ -127,7 +127,7 @@ def test_every_selection_category_key_set_is_what_read_selection_returns(hermes_
         section, key = dotted.split(".")
         name_keys.setdefault(section, set()).add(key)
     # Every `hermes tools` / Tool Gateway category read_selection serves.
-    assert {"web", "image_gen", "video_gen", "tts", "stt", "browser"} <= set(name_keys)
+    assert {"web", "image_gen", "tts", "stt", "browser"} <= set(name_keys)
     for section, keys in name_keys.items():
         key = next(k for k in ("cloud_provider", "backend", "provider") if k in keys)
         _write_config(hermes_home, {})

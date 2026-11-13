@@ -46,8 +46,8 @@ class _OpenaiBackendStub:
         self.mock_client.audio.speech.create.return_value = response
 
         mock_cls = MagicMock(return_value=self.mock_client)
-        self.xai_patch = patch("tools.tts_tool._generate_xai_tts")
-        self.xai_generator = self.xai_patch.start()
+        self.piper_patch = patch("tools.tts_tool._generate_piper_tts")
+        self.piper_generator = self.piper_patch.start()
         self._patches = [
             patch("tools.tts_tool._import_openai_client", return_value=mock_cls),
             patch(
@@ -69,7 +69,7 @@ class _OpenaiBackendStub:
     def stop(self):
         for p in self._patches:
             p.stop()
-        self.xai_patch.stop()
+        self.piper_patch.stop()
 
 
 @pytest.fixture
@@ -110,13 +110,13 @@ class TestToolLevelProviderAuthority:
             text_to_speech_tool(
                 "Hello world",
                 output_path=str(tmp_path / "out.mp3"),
-                provider="xai",
+                provider="piper",
             )
         )
         assert result.get("success") is True
         assert result.get("provider") == "openai"
         openai_backend.create.assert_called_once()
-        openai_backend.xai_generator.assert_not_called()
+        openai_backend.piper_generator.assert_not_called()
 
     def test_disagreeing_override_logs_warning(
         self, tmp_path, monkeypatch, openai_backend, caplog
@@ -127,7 +127,7 @@ class TestToolLevelProviderAuthority:
             text_to_speech_tool(
                 "Hello world",
                 output_path=str(tmp_path / "out.mp3"),
-                provider="xai",
+                provider="piper",
             )
         assert any(
             "Ignoring per-call TTS provider override" in rec.message
@@ -175,13 +175,13 @@ class TestRegisteredHandler:
                 {
                     "text": "Hello world",
                     "output_path": str(tmp_path / "out.mp3"),
-                    "provider": "xai",
+                    "provider": "piper",
                 }
             )
         )
         assert result.get("success") is True
         assert result.get("provider") == "openai"
-        openai_backend.xai_generator.assert_not_called()
+        openai_backend.piper_generator.assert_not_called()
 
 
 # ---------------------------------------------------------------------------
@@ -192,7 +192,7 @@ class TestResolverAuthority:
     def test_resolver_returns_configured_provider_despite_override(self, openai_backend):
         from tools.tts_tool import _apply_call_overrides
 
-        _tts_config, provider = _apply_call_overrides({"provider": "openai"}, None, "xai")
+        _tts_config, provider = _apply_call_overrides({"provider": "openai"}, None, "piper")
         assert provider == "openai"
 
     def test_resolver_returns_configured_provider_when_unset(self, openai_backend):
@@ -206,9 +206,9 @@ class TestResolverAuthority:
         from tools.tts_tool import _apply_call_overrides
 
         with caplog.at_level(logging.WARNING, logger="tools.tts_tool"):
-            _apply_call_overrides({"provider": "openai"}, None, "xai")
-            _apply_call_overrides({"provider": "openai"}, None, "xai")
-            _apply_call_overrides({"provider": "openai"}, None, "mistral")
+            _apply_call_overrides({"provider": "openai"}, None, "piper")
+            _apply_call_overrides({"provider": "openai"}, None, "piper")
+            _apply_call_overrides({"provider": "openai"}, None, "kittentts")
         warnings = [rec for rec in caplog.records
                     if "Ignoring per-call TTS provider override" in rec.message]
         assert len(warnings) == 2, (

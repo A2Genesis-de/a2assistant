@@ -25,8 +25,8 @@ def test_default_output_paths_differ_within_the_same_second(tmp_path, monkeypatc
     monkeypatch.setattr(tts_tool, "datetime", SimpleNamespace(datetime=_FrozenDateTime))
     monkeypatch.setattr(tts_tool, "_default_output_dir", lambda: str(tmp_path))
 
-    first, err1 = tts_tool._resolve_output_base(None, "edge", None, False)
-    second, err2 = tts_tool._resolve_output_base(None, "edge", None, False)
+    first, err1 = tts_tool._resolve_output_base(None, "piper", None, False)
+    second, err2 = tts_tool._resolve_output_base(None, "piper", None, False)
 
     assert err1 is None and err2 is None
     assert first.parent == tmp_path and second.parent == tmp_path

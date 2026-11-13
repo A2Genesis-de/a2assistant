@@ -32,7 +32,6 @@ class SearXNGWebSearchProvider(BaseWebSearchProvider):
         if failure is not None:
             return failure
         raw_results = data.get("results", [])
-        # SearXNG may return a score field; sort descending and cap to limit.
         sorted_results = sorted(raw_results, key=lambda r: float(r.get("score", 0)), reverse=True)[:limit]
         web_results = titled_rows(sorted_results, "content")
         logger.info("SearXNG search '%s': %d results (from %d raw, limit %d)", query, len(web_results), len(raw_results), limit)

@@ -17,7 +17,7 @@ from tools.bot_desktop import placement
 from tools import browser_launcher as launcher
 from tools import browser_lightpanda
 from tools import browser_session as bs
-from tools import browser_session_cloud as bs_cloud
+from tools import browser_config as bs_cloud
 from tools import browser_session_real_profile as rp
 
 
@@ -273,7 +273,7 @@ class TestRealProfileCdpLaunch:
         records.mkdir()
         monkeypatch.setattr(launcher, "_records_dir", lambda _home: records)
         monkeypatch.setattr(launcher, "_start_time", lambda pid: None)
-        monkeypatch.setattr("tools.browser_session_cloud.chromium_args", list)
+        monkeypatch.setattr("tools.browser_config.chromium_args", list)
         monkeypatch.setattr(launcher, "needs_chromium_sandbox_bypass", lambda: True)
         captured = {}
 
@@ -454,7 +454,7 @@ class TestBrowserExecLocalArg:
         env = self._env()
         with patch.object(bu, "_real_profile_consented", return_value=True), \
              patch("tools.browser_session_cdp.get_cdp_override_raw", return_value=""), \
-             patch("tools.browser_session_cloud.get_cloud_provider", return_value=Mock()), \
+             patch("tools.browser_config.get_cloud_provider", return_value=Mock()), \
              patch("tools.browser_session_real_profile.real_profile_cdp",
                    return_value=("http://127.0.0.1:9251", None)):
             err = bu._resolve_real_profile_cdp(env, force_local=True)
@@ -466,7 +466,7 @@ class TestBrowserExecLocalArg:
         env = self._env()
         with patch.object(bu, "_real_profile_consented", return_value=True), \
              patch("tools.browser_session_cdp.get_cdp_override_raw", return_value=""), \
-             patch("tools.browser_session_cloud.get_cloud_provider", return_value=Mock()):
+             patch("tools.browser_config.get_cloud_provider", return_value=Mock()):
             err = bu._resolve_real_profile_cdp(env, force_local=False)
         assert err is None
         assert "BU_CDP_URL" not in env and "BU_CDP_WS" not in env
@@ -475,9 +475,8 @@ class TestBrowserExecLocalArg:
         import tools.browser_use_cli as bu
         env = self._env()
         with patch.object(bu, "_real_profile_consented", return_value=True), \
-             patch.object(bu, "_read_browser_cfg", return_value={}), \
              patch("tools.browser_session_cdp.get_cdp_override_raw", return_value=""), \
-             patch("tools.browser_session_cloud.get_cloud_provider", return_value=None), \
+             patch("tools.browser_config.get_cloud_provider", return_value=None), \
              patch("tools.browser_session_real_profile.real_profile_cdp",
                    return_value=("http://127.0.0.1:9251", None)):
             err = bu._resolve_real_profile_cdp(env, force_local=False)
@@ -510,7 +509,7 @@ class TestBrowserExecLocalArg:
         rp = Mock(return_value=(None, "chrome holds the Cookies"))
         with patch.object(bu, "_real_profile_consented", return_value=True), \
              patch("tools.browser_session_cdp.get_cdp_override_raw", return_value=""), \
-             patch("tools.browser_session_cloud.get_cloud_provider", return_value=Mock()), \
+             patch("tools.browser_config.get_cloud_provider", return_value=Mock()), \
              patch("tools.browser_session_real_profile.real_profile_cdp", rp), \
              patch.object(bu, "_resolve_backend_cdp", return_value=None) as backend:
             assert bu._route_backend(env, "", "t1", True) is None

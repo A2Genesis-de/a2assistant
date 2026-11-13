@@ -26,7 +26,7 @@ def profile_dir() -> Path:
     """User-data-dir the bot's browser uses on this profile's screen. ``browser.user_data_dir`` pins your own:
     ``~`` expands, and a relative path is anchored at this profile's HERMES_HOME (where the rest of the screen's
     state lives), so ``pin`` means ``<HERMES_HOME>/pin`` and two profiles never share one jar by accident."""
-    from tools.browser_session_cloud import user_data_dir
+    from tools.browser_config import user_data_dir
     override = user_data_dir()
     return Path(override) if override else runtime.state_dir() / "browser-profile"
 
@@ -40,7 +40,7 @@ def executable() -> Optional[str]:
     a distro chromium ships the helper. The bundle stays the answer when it is the only browser — a dock
     icon that fails loudly beats a non-root ``--no-sandbox``.
     """
-    from tools.browser_session_cloud import executable_path
+    from tools.browser_config import executable_path
     explicit = executable_path()
     if explicit and os.access(explicit, os.X_OK) and not _is_headless_shell(explicit):
         return explicit

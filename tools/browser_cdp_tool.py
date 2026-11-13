@@ -320,7 +320,7 @@ def _browser_cdp_via_supervisor(task_id: str, frame_id: str, method: str, params
         from tools.browser_supervisor import SUPERVISOR_REGISTRY  # type: ignore[import-not-found]
     except Exception as exc:  # pragma: no cover — defensive
         return tool_error(f"CDP supervisor is not available: {exc}. frame_id routing requires a running "
-                          "supervisor attached via /browser connect or an active Browserbase session.")
+                          "supervisor attached via /browser connect or an active cloud browser session.")
 
     supervisor = SUPERVISOR_REGISTRY.get(task_id)
     if supervisor is None:
@@ -368,7 +368,7 @@ def browser_cdp(method: str, params: Optional[dict[str, Any]] = None, target_id:
     """Send a raw CDP command (see ``CDP_DOCS_URL``). ``target_id`` attaches a fresh stateless connection
     to a tab; ``frame_id`` (an OOPIF from ``Page.getFrameTree``) routes through the supervisor's live
     WebSocket instead — the only reliable way to evaluate inside an iframe where fresh per-call connections
-    hit signed-URL expiry (Browserbase). Both paths share the same private-page/SSRF guard. Returns JSON
+    hit signed-URL expiry (cloud browsers). Both paths share the same private-page/SSRF guard. Returns JSON
     ``{"success": True, "method", "result"}`` or ``{"error": ...}``."""
     effective_task_id = task_id or "default"
 
@@ -435,7 +435,7 @@ BROWSER_CDP_SCHEMA: dict[str, Any] = {
         "browser tools don't cover.\n\n"
         "**Requires a reachable CDP endpoint.** Available when the user has run '/browser connect' to attach "
         "to a running Chrome, Brave, Chromium, or Edge browser, or when 'browser.cdp_url' is set in "
-        "config.yaml. Not currently wired up for cloud backends (Browserbase, Browser Use, Firecrawl) — "
+        "config.yaml. Not currently wired up for cloud browser plugins — "
         "those expose CDP per session but live-session routing is a follow-up. If the tool is in your toolset "
         "at all, a CDP endpoint is already reachable.\n\n"
         f"**CDP method reference:** {CDP_DOCS_URL} — use an available documentation lookup or extraction "
@@ -456,7 +456,7 @@ BROWSER_CDP_SCHEMA: dict[str, Any] = {
         "target_id from Target.getTargets.\n"
         "- **Cross-origin iframe scope** (Runtime.evaluate inside an OOPIF, Page.* targeting a frame target, "
         "etc.): pass a frame_id from Page.getFrameTree. This routes through the CDP "
-        "supervisor's live connection — the only reliable way on Browserbase where stateless CDP calls hit "
+        "supervisor's live connection — the only reliable way on cloud browsers where stateless CDP calls hit "
         "signed-URL expiry.\n"
         "- Each stateless call (without frame_id) is independent — sessions and event subscriptions do not "
         "persist between calls. For stateful workflows, prefer the dedicated browser tools or use frame_id "
@@ -476,7 +476,7 @@ BROWSER_CDP_SCHEMA: dict[str, Any] = {
                 "Optional. Out-of-process iframe (OOPIF) frame id from Page.getFrameTree. "
                 "When set, routes the call through the CDP supervisor's live session for "
                 "that iframe. Essential for Runtime.evaluate inside cross-origin iframes, especially on "
-                "Browserbase where fresh per-call CDP connections can't keep up with signed URL rotation. For "
+                "cloud browsers where fresh per-call CDP connections can't keep up with signed URL rotation. For "
                 "same-origin iframes, use parent contentWindow/contentDocument from Runtime.evaluate at the "
                 "top-level page instead.")},
             "timeout": {"type": "number", "default": 30, "description": "Timeout in seconds (default 30, max 300)."},

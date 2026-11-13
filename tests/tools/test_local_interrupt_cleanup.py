@@ -297,7 +297,7 @@ def test_hard_exit_leaves_no_foreground_survivor_around_the_spawn(scenario, tmp_
 
 
 def test_hard_exit_kill_never_blocks_on_a_slow_remote_cancel(monkeypatch):
-    """Modal/Daytona/Vercel cancel through a blocking SDK call; the hard-exit kill runs just before
+    """SDK backends cancel through a blocking SDK call; the hard-exit kill runs just before
     os._exit, so it must give those one short deadline instead of waiting them out."""
     from tools.environments import base
     from tools.environments.base_output import _ThreadedProcessHandle

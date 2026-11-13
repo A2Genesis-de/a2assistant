@@ -110,10 +110,6 @@
   "sessions.auto_archive_days",
   "sessions.fts_optimize_notice",
   "sessions.show_subagents",
-  "stt.elevenlabs.diarize",
-  "stt.elevenlabs.language_code",
-  "stt.elevenlabs.model_id",
-  "stt.elevenlabs.tag_audio_events",
   "telegram.extra.allow_cjk_rich_messages",
   "telegram.extra.rich_drafts",
   "telegram.extra.rich_messages",
@@ -121,16 +117,12 @@
   "terminal.daemon_term_grace_seconds",
   "terminal.degraded_mode",
   "terminal.docker_shm_size",
-  "terminal.modal_mode",
-  "tts.deepinfra.model",
-  "tts.deepinfra.voice",
   "updates.refresh_cua_driver",
   "vault.bitwarden.binary_path",
   "vault.onepassword.binary_path",
   "voice.gpt_live.model",
   "voice.thinking_sound",
-  "wake_word.sherpa.model_dir",
-  "x_search.reasoning_effort"
+  "wake_word.sherpa.model_dir"
  ],
  "slash_commands": []
 }

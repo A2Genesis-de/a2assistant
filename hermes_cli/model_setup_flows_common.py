@@ -231,20 +231,16 @@ def _oauth_gate(logged_in: bool, name: str, login_fn, *login_args, fresh_name: s
 def _models_dev_merged(provider_id: str, curated) -> list:
     """Curated ids first (our agentic picks lead, and models.dev lag can't hide new ones), then
     models.dev agentic models not yet listed (case-insensitive; models.dev's spelling wins since
-    it comes from the provider). Live-first providers keep
-    models.dev order ahead of curated, matching ``_profile_live_catalog``. Empty list when
-    models.dev has nothing / is unavailable."""
-    from hermes_cli.models_catalog_static import _LIVE_FIRST_PICKER_PROVIDERS
+    it comes from the provider). Empty list when models.dev has nothing / is unavailable."""
     mdev_models: list = []
     with contextlib.suppress(Exception):
         from agent.models_dev import list_agentic_models
         mdev_models = list_agentic_models(provider_id)
     if not mdev_models:
         return []
-    primary, secondary = (mdev_models, curated) if provider_id in _LIVE_FIRST_PICKER_PROVIDERS else (curated, mdev_models)
     canonical = {m.lower(): m for m in mdev_models}
     merged: dict = {}
-    for m in [*primary, *secondary]:
+    for m in [*curated, *mdev_models]:
         merged.setdefault(m.lower(), canonical.get(m.lower(), m))
     return list(merged.values())
 

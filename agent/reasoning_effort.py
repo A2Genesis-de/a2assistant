@@ -48,9 +48,6 @@ DAYBREAK_MODEL_IDS: frozenset[str] = frozenset(
 XAI_GROK46_EFFORTS: tuple[str, ...] = ("low", "medium", "high", "xhigh")
 XAI_LEGACY_EFFORTS: tuple[str, ...] = ("low", "medium", "high")
 
-#: Actual Computer relays (SGLang/vLLM).
-ACTUAL_RELAY_EFFORTS: tuple[str, ...] = ("none", "low", "medium", "high", "max")
-
 #: Moonshot/Kimi K3 (server default high) vs K2-era models. K3 quirks: ``high`` is K3's
 #: positional middle AND server default, so ``medium`` rounds to it rather than down to
 #: ``low``; ``xhigh`` rounds up to ``max`` (K3's top tier).
@@ -58,15 +55,8 @@ KIMI_K3_EFFORTS: tuple[str, ...] = ("low", "high", "max")
 KIMI_K2_EFFORTS: tuple[str, ...] = ("low", "medium", "high")
 KIMI_K3_OVERRIDES: dict[str, str] = {"medium": "high", "xhigh": "max"}
 
-#: OpenCode "Ox Alpha" (x-preview-f-free): thinking cannot be disabled and the wire accepts
-#: exactly low/high/max (medium/none/xhigh 400); xhigh rounds up.
-OX_ALPHA_EFFORTS: tuple[str, ...] = ("low", "high", "max")
-OX_ALPHA_OVERRIDES: dict[str, str] = {"xhigh": "max"}
-
-#: Tencent TokenHub / Nebius Token Factory / Upstage Solar: plain three-level knobs.
+#: Tencent TokenHub: plain three-level knob.
 TOKENHUB_EFFORTS: tuple[str, ...] = ("low", "medium", "high")
-NEBIUS_EFFORTS: tuple[str, ...] = ("low", "medium", "high")
-SOLAR_EFFORTS: tuple[str, ...] = ("low", "medium", "high")
 
 #: GLM-5.2 native knob: exactly ``high`` (its minimum thinking level) and ``max``; GLM-5.3
 #: widens it to a graded scale (live-verified, monotonic). ``xhigh`` requests the top tier.
@@ -77,17 +67,6 @@ GLM52_OVERRIDES: dict[str, str] = {"xhigh": "max"}
 # reasoning-token scaling (low=4, medium=11, : high=98, max=125 on the probe prompt).
 GLM53_EFFORTS: tuple[str, ...] = ("low", "medium", "high", "max")
 GLM53_OVERRIDES: dict[str, str] = {"xhigh": "max"}
-
-#: DeepSeek V4 OpenAI-compat endpoint; ``xhigh`` requests the top tier.
-DEEPSEEK_V4_EFFORTS: tuple[str, ...] = ("low", "medium", "high", "max")
-DEEPSEEK_V4_OVERRIDES: dict[str, str] = {"xhigh": "max"}
-
-#: Ollama Cloud /v1/chat/completions: rejects ``minimal`` with HTTP 400.
-OLLAMA_CLOUD_EFFORTS: tuple[str, ...] = ("none", "low", "medium", "high", "max")
-OLLAMA_CLOUD_OVERRIDES: dict[str, str] = {"xhigh": "max"}
-
-#: Meta Model API (Muse): rejects ``none``.
-META_AI_EFFORTS: tuple[str, ...] = ("minimal", "low", "medium", "high", "xhigh")
 
 #: Gemini 4 (``gemini-4-argon``) ``thinkingLevel``: thinking cannot be disabled, ``minimal`` and
 #: ``thinkingBudget`` 400 (live on Vertex global, 2026-10-13).
@@ -224,55 +203,3 @@ def clamp_reasoning_config(reasoning_config: Optional[dict], supported: Sequence
     effort = str(reasoning_config.get("effort") or "").strip().lower()
     clamped = clamp_effort(effort, supported) if effort else effort
     return {**reasoning_config, "effort": clamped} if clamped != effort else reasoning_config
-
-
-def thinking_toggle_extras(
-    reasoning_config: Optional[dict],
-    efforts: Sequence[str],
-    overrides: Optional[dict[str, str]] = None,
-    *,
-    always_emit_toggle: bool = False,
-) -> tuple[dict, dict]:
-    """Translate a reasoning config onto the Moonshot/DeepSeek chat_completions wire:
-    ``extra_body.thinking`` toggle and top-level ``reasoning_effort``.
-
-    Moonshot 400s when both are sent, so by default the effort (when it lands in
-    ``efforts``) replaces the toggle. DeepSeek instead requires the toggle on every
-    request (an omitted toggle defaults thinking on and then demands
-    ``reasoning_content`` echoes), hence ``always_emit_toggle``. A requested effort of
-    ``none`` is not a level on these wires; it falls back to the plain toggle.
-    """
-    if isinstance(reasoning_config, dict) and reasoning_config.get("enabled") is False:
-        return {"thinking": {"type": "disabled"}}, {}
-    effort = requested_effort(reasoning_config)
-    clamped = clamp_effort(None if effort == "none" else effort, efforts, overrides)
-    if clamped in efforts:
-        return ({"thinking": {"type": "enabled"}} if always_emit_toggle else {}), {"reasoning_effort": clamped}
-    return {"thinking": {"type": "enabled"}}, {}
-
-
-# DashScope documents ``preserve_thinking`` (Qwen3.6+ and the Kimi K2.6/K2.7 it hosts) and a
-# top-level ``clear_thinking`` (its GLM-5.x) as the switches that make the server KEEP replayed
-# prior-turn ``reasoning_content``; without them the replay is accepted and dropped.
-# https://www.alibabacloud.com/help/en/model-studio/deep-thinking
-_DASHSCOPE_PRESERVE_MODELS = ("qwen3.6", "qwen3.7", "qwen3.8", "kimi-k2.6", "kimi-k2.7")
-
-
-def dashscope_preserve_thinking_extras(model: Optional[str]) -> dict:
-    """``extra_body`` keys that keep replayed reasoning on a DashScope-hosted model, else ``{}``."""
-    m = (model or "").strip().lower()
-    if any(token in m for token in _DASHSCOPE_PRESERVE_MODELS):
-        return {"preserve_thinking": True}
-    if m.startswith("glm-5"):
-        return {"clear_thinking": False}
-    return {}
-
-
-def ox_alpha_reasoning_extras(reasoning_config: Optional[dict], model: Optional[str]) -> tuple[dict, dict]:
-    """Ox Alpha (``x-preview-f-free``) ``reasoning_effort`` translation for the
-    opencode-zen profile (low/high/max only; anything else 400s)."""
-    if (model or "").strip().rsplit("/", 1)[-1].lower() != "x-preview-f-free":
-        return {}, {}
-    effort = requested_effort(reasoning_config)
-    clamped = clamp_effort(None if effort == "none" else effort, OX_ALPHA_EFFORTS, OX_ALPHA_OVERRIDES)
-    return ({}, {"reasoning_effort": clamped}) if clamped in OX_ALPHA_EFFORTS else ({}, {})

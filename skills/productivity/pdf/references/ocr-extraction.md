@@ -19,7 +19,7 @@ web_extract(urls=["https://arxiv.org/pdf/2402.03300"])
 web_extract(urls=["https://example.com/report.pdf"])
 ```
 
-This handles PDF-to-markdown conversion via Firecrawl with no local dependencies.
+This handles PDF-to-markdown conversion through the configured extract backend with no local dependencies.
 
 Only use local extraction when: the file is local, web_extract fails, or you need batch processing.
 

@@ -71,7 +71,4 @@ def test_describe_reports_each_profiles_own_enabled_toolsets_under_multiplex(hos
         assert expected, "the platform default must enable something for the comparison to mean anything"
         assert {ts for ts, on in described.items() if on} == expected & set(described)
 
-    # The secondary's own key resolves (x_search auto-enables on xAI creds); the launch profile's does not.
-    assert _described("bot").get("x_search") is True
-    assert _described("default").get("x_search") is not True
     assert dict(os.environ) == environ_before

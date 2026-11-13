@@ -8,10 +8,6 @@ packages get reinstalled, 3.11 venvs need a rebuild) or keep (pin the image the 
 which also ends the notice). Surfaces: the interactive CLI startup offer here, the Screen pane's
 switch action (``display.switchSandboxImage``) and the plain ``hermes config set``. Headless
 surfaces (gateway, cron) never decide; they keep the sandbox and log.
-
-Modal restores its snapshot and Daytona reuses its labeled sandbox regardless of the configured
-image, so existing sandboxes there are untouched without any gate; only fresh ones get the new
-image.
 """
 
 from __future__ import annotations

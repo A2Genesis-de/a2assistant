@@ -285,27 +285,3 @@ def test_nous_inference_401_refreshes_rotates_and_retries(tmp_path, sentinel) ->
 
 # --- MiniMax OAuth refresh -------------------------------------------------------------------
 
-
-def test_minimax_oauth_expired_token_refreshes_and_persists(tmp_path, sentinel) -> None:
-    with OAuthFake(valid_refresh={"rt-mm-seed"}, revoked={"mm-stale-access"}) as fake:
-        home = Home(tmp_path, sentinel, "minimax-oauth", "MiniMax-M2")
-        seed = {"version": 1, "active_provider": "minimax-oauth", "providers": {"minimax-oauth": {
-            "portal_base_url": fake.origin, "inference_base_url": f"{fake.origin}/anthropic",
-            "client_id": "oauth-e2e-client", "access_token": "mm-stale-access", "refresh_token": "rt-mm-seed",
-            "expires_at": _iso(-60), "region": "global", "token_type": "Bearer", "scope": "group_id profile"}},
-            "credential_pool": {"openrouter": [OPENROUTER_ROW]}}
-        home.seed_auth(seed)
-        proc = home.run(["-z", "Say hi", "--provider", "minimax-oauth", "-m", "MiniMax-M2"])
-        info = _describe(proc, fake, sentinel)
-        assert proc.returncode == 0 and fake.reply in proc.stdout, f"MiniMax turn failed\n{info}"
-        assert fake.refreshes() and fake.refreshes()[0].form.get("refresh_token") == "rt-mm-seed", (
-            f"MiniMax refresh did not redeem the stored refresh token\n{info}")
-        rotated = fake.issued[-1]
-        bearers = {r.bearer for r in fake.inference()}
-        assert bearers == {rotated["access_token"]}, f"inference used {bearers}, not the refreshed token\n{info}"
-        state = home.auth()["providers"]["minimax-oauth"]
-        assert state.get("refresh_token") == rotated["refresh_token"], (
-            f"providers.minimax-oauth kept spent refresh token {state.get('refresh_token')!r}\n{info}")
-        assert state.get("access_token") == rotated["access_token"], f"MiniMax access token not persisted\n{info}"
-        assert _row(home.auth(), "openrouter", "or-1")["access_token"] == OPENROUTER_ROW["access_token"]
-        assert not _vendor_egress(sentinel), f"turn leaked egress: {_vendor_egress(sentinel)}"

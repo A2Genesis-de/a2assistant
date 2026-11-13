@@ -57,8 +57,8 @@ def fake_chromium(tmp_path, monkeypatch):
     script.chmod(0o755)
     monkeypatch.setattr(launcher, "_resolve_executable", lambda: str(script))
     monkeypatch.setattr(launcher, "needs_chromium_sandbox_bypass", lambda: False)
-    monkeypatch.setattr("tools.browser_session_cloud.chromium_args", list)
-    monkeypatch.setattr("tools.browser_session_cloud.is_headed_mode", lambda: False)
+    monkeypatch.setattr("tools.browser_config.chromium_args", list)
+    monkeypatch.setattr("tools.browser_config.is_headed_mode", lambda: False)
     yield script
     launcher.stop_all_browsers()
 
@@ -513,7 +513,7 @@ def test_headed_only_when_configured_and_a_display_exists(headed, display, expec
 @pytest.mark.platforms("posix")
 def test_packaged_only_flags_never_reach_an_explicit_binary(monkeypatch):
     monkeypatch.setattr(launcher, "needs_chromium_sandbox_bypass", lambda: True)
-    monkeypatch.setattr("tools.browser_session_cloud.chromium_args", lambda: ["--lang=de"])
+    monkeypatch.setattr("tools.browser_config.chromium_args", lambda: ["--lang=de"])
     packaged = launcher.build_chromium_argv("/c", "/p", packaged=True, headed=False, sandbox_bypass=True)
     dock = launcher.build_chromium_argv("/c", "/p", packaged=False, headed=True, sandbox_bypass=True)
     real = launcher.build_chromium_argv("/c", "/p", packaged=False, headed=True, sandbox_bypass=False)

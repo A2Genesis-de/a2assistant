@@ -4,27 +4,15 @@ from hermes_cli.status import show_status
 import subprocess
 
 
-def test_show_status_all_does_not_print_keenable_key_value(monkeypatch, capsys, tmp_path):
+def test_show_status_all_does_not_print_firecrawl_key_value(monkeypatch, capsys, tmp_path):
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))
     sentinel = "NONSECRET_SENTINEL_VALUE_DO_NOT_PRINT_123456"
-    monkeypatch.setenv("KEENABLE_API_KEY", sentinel)
+    monkeypatch.setenv("FIRECRAWL_API_KEY", sentinel)
 
     show_status(SimpleNamespace(full=True, deep=False))
 
     output = capsys.readouterr().out
-    assert "Keenable" in output
-    assert sentinel not in output
-
-
-def test_show_status_all_does_not_print_tavily_key_value(monkeypatch, capsys, tmp_path):
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-    sentinel = "NONSECRET_SENTINEL_VALUE_DO_NOT_PRINT_TAVILY_123456"
-    monkeypatch.setenv("TAVILY_API_KEY", sentinel)
-
-    show_status(SimpleNamespace(full=True, deep=False))
-
-    output = capsys.readouterr().out
-    assert "Tavily" in output
+    assert "Firecrawl" in output
     assert sentinel not in output
 
 
@@ -57,33 +45,6 @@ def test_show_status_termux_gateway_section_skips_systemctl(monkeypatch, capsys,
     assert "systemd (user)" not in output
 
 
-def test_show_status_reports_vercel_backend_contract(monkeypatch, capsys, tmp_path):
-    from hermes_cli import status as status_mod
-    import hermes_cli.auth as auth_mod
-    import hermes_cli.gateway as gateway_mod
-
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-    monkeypatch.setenv("TERMINAL_ENV", "vercel_sandbox")
-    monkeypatch.setenv("TERMINAL_VERCEL_RUNTIME", "python3.13")
-    monkeypatch.setenv("TERMINAL_CONTAINER_PERSISTENT", "true")
-    monkeypatch.setenv("VERCEL_OIDC_TOKEN", "oidc-token")
-    monkeypatch.setattr(status_mod.importlib.util, "find_spec", lambda name: object() if name == "vercel" else None)
-    monkeypatch.setattr(status_mod, "load_config", lambda: {"terminal": {"backend": "vercel_sandbox"}}, raising=False)
-    monkeypatch.setattr(auth_mod, "get_nous_auth_status", dict, raising=False)
-    monkeypatch.setattr(auth_mod, "get_codex_auth_status", dict, raising=False)
-    monkeypatch.setattr(auth_mod, "get_qwen_auth_status", dict, raising=False)
-    monkeypatch.setattr(auth_mod, "get_xai_oauth_auth_status", dict, raising=False)
-    monkeypatch.setattr(gateway_mod, "find_gateway_pids", lambda exclude_pids=None: [], raising=False)
-
-    status_mod.show_status(SimpleNamespace(full=True, deep=False))
-
-    output = capsys.readouterr().out
-    assert "vercel_sandbox" in output
-    assert "python3.13" in output
-    assert "VERCEL_OIDC_TOKEN" in output
-    assert "oidc-token" not in output
-
-
 # ---------------------------------------------------------------------------
 # Helpers shared by xAI OAuth status tests
 # ---------------------------------------------------------------------------
@@ -102,8 +63,6 @@ def _base_xai_mocks(monkeypatch, tmp_path):
     monkeypatch.setattr(status_mod, "provider_label", lambda provider: "OpenAI Codex", raising=False)
     monkeypatch.setattr(auth_mod, "get_nous_auth_status_local", dict, raising=False)
     monkeypatch.setattr(auth_mod, "get_codex_auth_status", dict, raising=False)
-    monkeypatch.setattr(auth_mod, "get_qwen_auth_status", dict, raising=False)
-    monkeypatch.setattr(auth_mod, "get_minimax_oauth_auth_status", dict, raising=False)
     monkeypatch.setattr(gateway_mod, "find_gateway_pids", lambda exclude_pids=None: [], raising=False)
     return status_mod
 
@@ -143,7 +102,7 @@ class TestShowStatusXaiOAuth:
 
 
     def test_import_failure_does_not_break_other_oauth_providers(self, monkeypatch, capsys, tmp_path):
-        """Nous/Codex/MiniMax rows must still appear when xAI import fails."""
+        """Nous/Codex rows must still appear when xAI import fails."""
         import hermes_cli.auth as auth_mod
         status_mod = _base_xai_mocks(monkeypatch, tmp_path)
         monkeypatch.setattr(auth_mod, "get_nous_auth_status_local",
@@ -154,7 +113,7 @@ class TestShowStatusXaiOAuth:
         out = capsys.readouterr().out
 
         assert "Nous Portal" in out
-        assert "MiniMax OAuth" in out
+        assert "OpenAI Codex" in out
 
     def test_status_function_exception_does_not_crash(self, monkeypatch, capsys, tmp_path):
         """show_status must not propagate an exception raised by get_xai_oauth_auth_status."""
@@ -201,7 +160,6 @@ def test_show_status_reports_gateway_session_last_activity(monkeypatch, capsys, 
     monkeypatch.setattr(status_mod, "provider_label", lambda provider: "OpenAI Codex", raising=False)
     monkeypatch.setattr(auth_mod, "get_nous_auth_status", dict, raising=False)
     monkeypatch.setattr(auth_mod, "get_codex_auth_status", dict, raising=False)
-    monkeypatch.setattr(auth_mod, "get_qwen_auth_status", dict, raising=False)
     monkeypatch.setattr(auth_mod, "get_xai_oauth_auth_status", dict, raising=False)
     monkeypatch.setattr(gateway_mod, "find_gateway_pids", lambda exclude_pids=None: [], raising=False)
 

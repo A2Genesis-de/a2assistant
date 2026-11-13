@@ -52,7 +52,7 @@ This is the most common question for new contributors. The answer is almost alwa
 - It requires end-to-end integration with API keys, auth flows, or multi-component configuration managed by the agent harness
 - It needs custom processing logic that must execute precisely every time (not "best effort" from LLM interpretation)
 - It handles binary data, streaming, or real-time events that can't go through the terminal
-- Examples: browser automation (Browserbase session management), TTS (audio encoding + platform delivery), vision analysis (base64 image handling)
+- Examples: browser automation (CDP session management), TTS (audio encoding + platform delivery), vision analysis (base64 image handling)
 
 ### Should the Skill be bundled?
 
@@ -335,7 +335,7 @@ hermes-agent/
 │   ├── approval.py               # Dangerous command detection + per-session approval
 │   ├── terminal_tool.py          # Terminal orchestration (sudo, env lifecycle, backends)
 │   ├── file_operations.py        # read_file, write_file, search, patch, etc.
-│   ├── web_tools.py              # web_search, web_extract (Parallel/Firecrawl + Gemini summarization)
+│   ├── web_tools.py              # web_search, web_extract over web provider plugins (bundled: ddgs)
 │   ├── vision_tools.py           # Image analysis via multimodal models
 │   ├── delegate_tool.py          # Subagent spawning and parallel task execution
 │   ├── code_execution_tool.py    # Sandboxed Python with RPC tool access (env allowlists in code_execution_env.py)
@@ -346,7 +346,7 @@ hermes-agent/
 │   ├── skill_tools.py            # Skill search, load, manage
 │   └── environments/             # Terminal execution backends
 │       ├── base.py                   # BaseEnvironment ABC
-│       ├── local.py, docker.py, ssh.py, modal.py, daytona.py
+│       ├── local.py, docker.py, ssh.py
 │
 ├── gateway/                  # Messaging gateway
 │   ├── run.py                    # GatewayRunner facade (~5.5k LOC); phases in run_*.py (startup, inbound, turn, busy, ...)
@@ -605,7 +605,7 @@ metadata:
 **Examples:**
 
 ```yaml
-# DuckDuckGo search — shown when Firecrawl (web toolset) is unavailable
+# Fallback search skill — shown when the web toolset is unavailable
 metadata:
   hermes:
     fallback_for_toolsets: [web]
@@ -615,7 +615,7 @@ metadata:
   hermes:
     requires_toolsets: [terminal]
 
-# Local browser fallback — shown when Browserbase is unavailable
+# Local browser fallback — shown when the browser toolset is unavailable
 metadata:
   hermes:
     fallback_for_toolsets: [browser]

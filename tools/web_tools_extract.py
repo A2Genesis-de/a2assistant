@@ -2,9 +2,9 @@
 
 Order of controls (each is a gate, never skipped by a cache hit): secret-URL
 refusal -> SSRF filter (in web_tools.web_extract_tool) -> provider resolution
-(strict selection) -> per-URL website policy -> disk cache -> vendor call with
-one-shot keyless rescue -> website policy + SSRF on every page reported under a
-URL that was not requested (redirect targets). Logs under the origin
+(strict selection) -> per-URL website policy -> disk cache -> vendor call ->
+website policy + SSRF on every page reported under a URL that was not requested
+(redirect targets). Logs under the origin
 (tools.web_tools) logger.
 """
 
@@ -15,13 +15,12 @@ from typing import Any, Dict, List, Optional
 
 from tools.tool_backend_helpers import selection_error, selection_exists
 from tools.url_safety import normalize_url_for_request
-from tools.web_tools_rescue import _rescue_eligible, _rescue_extract
 
 logger = logging.getLogger("tools.web_tools")
 
 _NO_RESULT_ERROR = "Extract backend returned no result for this URL"
 _DEFAULT_EXTRACT_TIMEOUT_S = 120.0
-_EXTRACT_BACKENDS_HINT = "firecrawl, tavily, keenable, exa, or parallel."
+_EXTRACT_BACKENDS_HINT = "an extract-capable provider (bundled ddgs is search-only; install a web extract plugin)."
 _INVALID_ITEM_ERROR = (
     "Invalid URL item at index {}: expected a URL string or an object with a string 'url' or 'href' field"
 )
@@ -114,19 +113,21 @@ def _validate_extract_urls(urls: list[Any]):
 def _resolve_extract_provider(backend: str):
     """Resolve the extract provider for *backend*; returns ``(provider, error_json)``.
 
-    A registered search-only backend is a typed error (never a silent switch). An unregistered name with
-    a stored web selection is a strict-selection error; with no selection, fall through to the walk.
+    A search-only backend pinned as ``web.extract_backend`` is a typed error (never a silent switch); a
+    search-only shared or autodetected backend falls through to the registry walk. An unregistered name
+    with a stored web selection is a strict-selection error; with no selection, fall through to the walk.
     """
     from agent.web_search_registry import get_active_extract_provider, get_provider as _wsp_get_provider
+    from tools.web_tools import _configured_backend
     provider = _wsp_get_provider(backend) if backend else None
     if provider is not None and provider.supports_extract():
         return provider, None
-    if provider is not None:
+    if provider is not None and _configured_backend("extract_backend") == backend:
         return None, _extract_error_json(
             f"{provider.display_name} is a search-only backend and cannot extract URL content. "
             "Set web.extract_backend to " + _EXTRACT_BACKENDS_HINT
         )
-    if backend and selection_exists("web"):
+    if provider is None and backend and selection_exists("web"):
         return None, _extract_error_json(_strict_selection_error("extract", backend))
     provider = get_active_extract_provider()
     if provider is None:
@@ -148,51 +149,26 @@ def _extract_timeout_seconds() -> float:
         return _DEFAULT_EXTRACT_TIMEOUT_S
 
 
-def _backend_failed_whole_batch(results: list[dict]) -> bool:
-    from plugins.web._common import is_origin_http_error
-    errors = [r.get("error") for r in results]
-    return bool(errors) and all(errors) and not any(is_origin_http_error(e) for e in errors)
-
-
-async def _fetch_with_rescue(provider, fetch_urls: list[str], format: Optional[str]) -> tuple[list[dict], bool]:
-    """Call ``provider.extract`` (async or sync-in-thread), with one-shot keyless rescue.
-
-    Rescue fires on a raised exception — including a dispatch timeout — or when the WHOLE batch
-    failed (backend outage, not per-page problems): an origin HTTP 4xx/5xx is the page's own answer,
-    so a batch with one never triggers it. Returns ``(results, rescued)``.
-    """
+async def _fetch(provider, fetch_urls: list[str], format: Optional[str]) -> list[dict]:
+    """Call ``provider.extract`` (async, or sync in a thread so network I/O never blocks the loop) under
+    the ``web.extract_timeout`` cap; a timeout yields per-URL error entries instead of a stalled call."""
     import inspect
     timeout = _extract_timeout_seconds()
+    if inspect.iscoroutinefunction(provider.extract):
+        coro = provider.extract(fetch_urls, format=format)
+    else:
+        coro = asyncio.to_thread(provider.extract, fetch_urls, format=format)
     try:
-        if inspect.iscoroutinefunction(provider.extract):
-            coro = provider.extract(fetch_urls, format=format)
-        else:  # sync extract() runs in a thread so network I/O never blocks the loop
-            coro = asyncio.to_thread(provider.extract, fetch_urls, format=format)
-        if timeout > 0:
-            results = await asyncio.wait_for(coro, timeout=timeout)
-        else:
-            results = await coro
-    except TimeoutError:  # hanging backend — bounded, never a stalled tool call
+        return await asyncio.wait_for(coro, timeout=timeout) if timeout > 0 else await coro
+    except TimeoutError:
         logger.warning("web_extract provider '%s' timed out after %.0fs for %d URL(s)",
                        provider.name, timeout, len(fetch_urls))
-        failed = [_result_entry(u, f"Extract timed out after {timeout:.0f}s via {provider.name}")
-                  for u in fetch_urls]
-        if not _rescue_eligible(provider):
-            return failed, False
-        return await asyncio.to_thread(_rescue_extract, provider.name, fetch_urls, failed), True
-    except Exception as exc:
-        if not _rescue_eligible(provider):
-            raise
-        failed = [_result_entry(u, str(exc)) for u in fetch_urls]
-        return await asyncio.to_thread(_rescue_extract, provider.name, fetch_urls, failed), True
-    if _backend_failed_whole_batch(results) and _rescue_eligible(provider):
-        return await asyncio.to_thread(_rescue_extract, provider.name, fetch_urls, results), True
-    return results, False
+        return [_result_entry(u, f"Extract timed out after {timeout:.0f}s via {provider.name}") for u in fetch_urls]
 
 
 async def _final_url_refusal(fetched: dict) -> Optional[dict]:
     """Refusal entry when a page's reported (post-redirect) URL fails the website policy or SSRF gate,
-    in the shape Firecrawl's own redirect re-check returns; None when it passes. A policy check that
+    as an extract entry; None when it passes. A policy check that
     raises refuses (fail closed): the requested URL passed, but nothing vouches for this one."""
     from tools.url_safety import async_is_safe_url
     from tools.website_policy import check_website_access
@@ -216,8 +192,8 @@ async def _final_url_refusal(fetched: dict) -> Optional[dict]:
 async def _gate_final_urls(results: list[dict], requested: set[str]) -> list[dict]:
     """Re-gate every page a provider reports under a URL other than one we asked for (a redirect
     target, a canonicalised host): the SSRF and website-policy checks only ever saw the requested URL.
-    Covers every provider shape — Keenable reports the target in ``url`` with ``sourceURL`` = requested,
-    Exa/Parallel/Tavily report the vendor's URL in both — and rescued batches alike."""
+    Covers providers that report the target in ``url`` with ``sourceURL`` = requested as well as those
+    that report the final URL in both."""
     gated = []
     for fetched in results:
         url = fetched.get("url")
@@ -228,20 +204,14 @@ async def _gate_final_urls(results: list[dict], requested: set[str]) -> list[dic
 
 
 async def _dispatch_extract(provider, fetch_urls: list[str], format: Optional[str]) -> list[dict]:
-    """Fetch *fetch_urls* (with keyless rescue), re-gate redirect targets, then cache the passes.
-    Rescued batches are never cached."""
-    from tools.web_result_cache import extract_cache_put, extract_cache_record_final_url
-    results, rescued = await _fetch_with_rescue(provider, fetch_urls, format)
-    requested = set(fetch_urls)
-    results = await _gate_final_urls(results, requested)
-    if rescued:
-        return results
+    """Fetch *fetch_urls*, re-gate redirect targets, then cache the passes.
 
-    # Cache each successful fetch under the REQUESTED url it reports as its own — never by list
-    # position: providers omit failed URLs or return successes out of request order, and a positional
-    # write filed one page's text under another URL's key for the whole TTL. ``metadata.sourceURL``
-    # counts because Keenable/Firecrawl put the requested URL there when ``url`` is the redirect target.
-    # An entry naming no requested URL is served but not cached (a miss re-fetches; a mis-key poisons).
+    Each successful fetch is cached under the REQUESTED url it reports as its own (``url`` or
+    ``metadata.sourceURL``), never by list position: providers omit failed URLs or reorder successes.
+    An entry naming no requested URL is served but not cached."""
+    from tools.web_result_cache import extract_cache_put, extract_cache_record_final_url
+    requested = set(fetch_urls)
+    results = await _gate_final_urls(await _fetch(provider, fetch_urls, format), requested)
     for fetched in results:
         meta = fetched.get("metadata")
         source = meta.get("sourceURL") if isinstance(meta, dict) else None
@@ -258,14 +228,14 @@ async def _cached_final_url_allowed(hit: dict, requested: str) -> bool:
     """Gate a cache hit on the URL its content came from: a redirector cached before its target was
     blocklisted (or turned private) must not keep serving that target. Consumes ``final_url``."""
     final_url = hit.pop("final_url", requested)
-    if final_url == requested:  # the requested URL already passed both gates
+    if final_url == requested:
         return True
     from tools.url_safety import async_is_safe_url
     from tools.website_policy import check_website_access
     try:
         if check_website_access(final_url) is not None:
             return False
-    except Exception:  # fail closed: a miss, and the live fetch re-gates the redirect
+    except Exception:
         logger.warning("Website policy check failed for cached final URL %s", final_url, exc_info=True)
         return False
     return await async_is_safe_url(final_url)
@@ -288,7 +258,7 @@ async def _extract_safe_urls(provider, safe_urls: list[str], format: Optional[st
             _policy_block = None
         hit = extract_cache_get(url, format=format, provider=provider.name) if _policy_block is None else None
         if hit is not None and not await _cached_final_url_allowed(hit, url):
-            hit = None  # a miss: the live fetch re-checks the redirect and refuses with blocked_by_policy
+            hit = None
         if hit is not None:
             cached_results[position] = hit
         else:

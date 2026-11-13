@@ -38,11 +38,11 @@ def _binary_payload(ext: str) -> bytes:
     return b"SQLite format 3\x00\x01\x02\x03\xff\xfe\n" + _KEEP.encode() + b"\nend\n\x00\x07tail\n"
 
 
-class VercelSandboxEnvironment:
+class AcmeboxEnvironment:
     """Non-local backend double whose CLASS NAME no name-hint table classifies
-    (the real ``VercelSandboxEnvironment`` is missing from
-    ``_ENV_CLASS_NAME_HINTS``), so any locality decision taken from env_type
-    tags, scoped config or class-name hints misclassifies it as local.
+    (it is missing from ``_ENV_CLASS_NAME_HINTS``), so any locality decision
+    taken from env_type tags, scoped config or class-name hints misclassifies
+    it as local.
 
     Its transport is a real ``LocalEnvironment`` bash whose commands have every
     form of the host-visible view dir rewritten to the execution-target dir —
@@ -51,7 +51,7 @@ class VercelSandboxEnvironment:
     dir: the execution target's home is its own namespace's, never the host's.
     """
 
-    env_type = "vercel_sandbox"
+    env_type = "acmebox"
 
     def __init__(self, view_dir: Path, target_dir: Path, inner: LocalEnvironment):
         self.cwd = str(view_dir)
@@ -93,10 +93,10 @@ def remote_target(tmp_path: Path, monkeypatch):
         terminal_tool, "_get_env_config",
         lambda *a, **k: {"env_type": "local", "cwd": None})
     inner = LocalEnvironment(cwd=str(target))
-    env = VercelSandboxEnvironment(view, target, inner)
+    env = AcmeboxEnvironment(view, target, inner)
     task_id = f"guard-{uuid.uuid4().hex}"
     # Own env key (RL/benchmark isolation override), never the shared "default".
-    terminal_tool.register_task_env_overrides(task_id, {"env_type": "vercel_sandbox"})
+    terminal_tool.register_task_env_overrides(task_id, {"env_type": "acmebox"})
     with terminal_tool._env_lock:
         terminal_tool._active_environments[task_id] = env
     try:

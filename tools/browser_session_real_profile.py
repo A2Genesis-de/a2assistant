@@ -126,7 +126,7 @@ def real_profile_cdp() -> tuple[Optional[str], Optional[str]]:
     Snapshot → launch the real binary on the copy (or attach to the one already running) → its CDP URL.
     ``(None, message)`` when it can't (callers fall back to a fresh browser and report the message);
     ``(None, None)`` when consent is off."""
-    from tools.browser_session_cloud import use_real_profile
+    from tools.browser_config import use_real_profile
     if not use_real_profile():
         return _consent_revoked()
     # Lightpanda cannot load a Chromium profile; checked before default-browser detection so a host with no

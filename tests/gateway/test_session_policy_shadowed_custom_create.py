@@ -55,7 +55,7 @@ async def test_session_create_with_the_entrys_bare_pick_freezes_its_custom_route
 @pytest.mark.parametrize('key, name, pick, frozen', [
     # A display name that is a built-in's slug is not the entry's key: the pick is that built-in.
     ('work', 'OpenRouter', 'openrouter', ('openrouter', None, None)),
-    ('mydeep', 'DeepSeek', 'deepseek', ('deepseek', None, None)),
+    ('myclaude', 'Anthropic', 'anthropic', ('anthropic', None, None)),
     # The held entry's own bare key is that entry, whatever its display name.
     ('mydeep', 'DeepSeek', 'mydeep', ('custom:mydeep', 'https://private.example/v1', 'PRIVATE_ENTRY_KEY')),
 ])

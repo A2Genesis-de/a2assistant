@@ -16,8 +16,8 @@ command. A hook with no concrete consumer is speculative infrastructure and is r
 
 ## What may live in this tree (policy)
 
-- **No new in-tree memory providers (May 2026).** `plugins/memory/` is closed (byterover,
-  retaindb stay until their Oct 15 2026 removal). hindsight (Sep 2026), honcho, supermemory,
+- **No new in-tree memory providers (May 2026).** `plugins/memory/` is closed and ships no
+  provider; it only holds the discovery seam. hindsight (Sep 2026), honcho, supermemory,
   mem0, openviking and holographic (Oct 2026) moved to the plugin catalog — `plugin-catalog/<name>.yaml`, auto-installed by
   `hermes_cli/memory_provider_migration.py` for homes still configured for them. Core keeps no
   provider-specific code for them: a provider owns its profile setup through
@@ -55,7 +55,7 @@ command. A hook with no concrete consumer is speculative infrastructure and is r
   connectors, analytics dashboards, paid-service tie-ins ship as standalone plugin repos
   (`~/.hermes/plugins/` or pip entry point) promoted in Discord `#plugins-skills-and-skins`. Reason:
   every absorbed product is our maintenance burden against a fast-moving core for a backend we don't
-  own. `kanban/`, `disk-cleanup/` are precedent, not an invitation (Langfuse already moved out to the
+  own. `kanban/` is precedent, not an invitation (Langfuse already moved out to the
   official catalog plugin). Closing such a
   PR is a coupling decision, not a quality judgment.
 - Reference/docs-companion plugins (`example-dashboard`, `strike-freedom-cockpit`,

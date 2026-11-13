@@ -1,7 +1,7 @@
 """Web Search Provider ABC.
 
-The single plugin-facing surface every web provider (brave-free, ddgs, searxng,
-exa, parallel, tavily, keenable, firecrawl) implements; registered via
+The single plugin-facing surface every web provider (the bundled ``ddgs`` and any
+plugin-contributed backend) implements; registered via
 ``PluginContext.register_web_search_provider()`` and selected by
 ``web.search_backend`` / ``web.extract_backend`` / ``web.backend``.
 
@@ -29,7 +29,7 @@ def get_provider_env(name: str) -> str:
     Falls back to a bare ``os.getenv`` when the config module is unavailable (stripped installs, early
     import contexts). See #40190. Never when a profile secret scope is bound: a scoped miss means the
     served profile has no key, and ``os.environ`` holds the LAUNCH profile's — a routed profile without
-    an Exa/Parallel key must be refused, not search on another profile's key.
+    a provider key must be refused, not search on another profile's key.
     """
     try:
         from hermes_cli.config import get_env_value
@@ -73,13 +73,6 @@ class WebSearchProvider(ProviderBase):
     def supports_search(self) -> bool:
         """True if this provider implements :meth:`search`."""
         return True
-
-    def is_keyless_available(self) -> bool:
-        """True when this provider can serve calls WITHOUT credentials (public anonymous
-        free tiers such as Exa / Parallel MCP); used only when NO provider is configured or
-        keyed. Must never make :meth:`is_available` True, or the legacy preference walk would
-        route keyed users onto a higher-priority backend's free tier. Cheap, no network."""
-        return False
 
     def supports_extract(self) -> bool:
         """True if this provider implements :meth:`extract` (sync or ``async def`` —

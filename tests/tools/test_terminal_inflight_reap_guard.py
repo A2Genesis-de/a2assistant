@@ -2,7 +2,7 @@
 
 ``_cleanup_inactive_envs`` reaps any key whose ``_last_activity`` is older than ``lifetime_seconds``
 (default 300 s). Only background processes refresh that stamp mid-run, while a foreground command may
-run for up to 600 s: Docker workspace containers were stopped (exit 137), Modal sandboxes terminated
+run for up to 600 s: Docker workspace containers were stopped (exit 137)
 and SSH lost its control master mid-command.
 """
 

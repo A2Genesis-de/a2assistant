@@ -16,20 +16,13 @@ export const ruOnboarding: TranslationOverrides['onboarding'] = {
   recommended: 'Рекомендуется',
   connected: 'Подключено',
   featuredPitch: 'Одна подписка, 300+ передовых моделей — рекомендуемый способ запускать A2Assistant',
-  fireworksPitch: 'Прямой API моделей — передовые модели на хостинге Fireworks',
   openRouterPitch: 'Один ключ, сотни моделей — надёжный вариант по умолчанию',
   apiKeyOptions: {
-    fireworks: {
-      short: 'прямой API моделей',
-      description: 'Прямой доступ к моделям на хостинге Fireworks AI.'
-    },
     openrouter: {
       short: 'один ключ, много моделей',
       description: 'Сотни моделей за одним ключом. Хороший вариант по умолчанию для новых установок.'
     },
     openai: { short: 'модели класса GPT', description: 'Прямой доступ к моделям OpenAI.' },
-    gemini: { short: 'модели Gemini', description: 'Прямой доступ к моделям Google Gemini.' },
-    xai: { short: 'модели Grok', description: 'Прямой доступ к моделям xAI Grok.' },
     local: {
       short: 'self-hosted',
       description:

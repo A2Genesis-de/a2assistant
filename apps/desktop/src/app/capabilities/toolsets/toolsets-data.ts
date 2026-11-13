@@ -41,7 +41,7 @@ export const TOOLSET_THEMES: ReadonlyArray<{ id: Exclude<ToolsetThemeId, 'more'>
   },
   {
     id: 'create',
-    names: ['vision', 'video', 'stt', 'tts', 'image_gen', 'video_gen']
+    names: ['vision', 'video', 'stt', 'tts', 'image_gen']
   },
   {
     id: 'recall',
@@ -49,7 +49,7 @@ export const TOOLSET_THEMES: ReadonlyArray<{ id: Exclude<ToolsetThemeId, 'more'>
   },
   {
     id: 'connect',
-    names: ['connections', 'a2a', 'homeassistant', 'x_search', 'messaging', 'spotify']
+    names: ['connections', 'a2a', 'homeassistant', 'messaging', 'spotify']
   }
 ]
 

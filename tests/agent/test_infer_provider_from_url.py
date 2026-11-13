@@ -16,8 +16,6 @@ from agent.model_metadata import _infer_provider_from_url
     ("https://api.minimax.io/v1", "minimax"),
     ("https://api.minimaxi.com/v1", "minimax"),
     ("https://api.minimax.chat/v1", "minimax"),
-    ("https://us-central1-aiplatform.googleapis.com/v1beta1/projects/p/locations/us-central1", "vertex"),
-    ("https://aiplatform.googleapis.com/v1", "vertex"),
     ("https://eu.openrouter.ai/api/v1", "openrouter"),
     ("https://token-plan-cn.xiaomimimo.com/v1", "xiaomi"),
     ("https://api.openai.com:443/v1", "openai"),

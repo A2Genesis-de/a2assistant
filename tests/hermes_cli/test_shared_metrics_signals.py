@@ -197,13 +197,13 @@ def test_dead_or_stale_marker_is_abandoned_at_the_next_start_and_live_waits(mark
                                 "surface": "tui", "provider": "nous"}))
     (directory / f"dashboard-{parent}-3.json").write_text(json.dumps(
         {"pid": parent, "start_time": get_process_start_time(parent), "started_at": now - 2 * setup_metrics.STALE_AFTER_S,
-         "surface": "dashboard", "provider": "xai"}))
+         "surface": "dashboard", "provider": "openai-api"}))
 
     flow = setup_metrics.begin_provider_setup("cli_setup", "openrouter")
     setup_metrics.report_abandoned_setups(marks.home)
     rows = _setup_rows(marks.rows)
     assert sorted(r for r in rows if r[2] == "abandoned") == [
-        ("cli_setup", "anthropic", "abandoned", "none"), ("dashboard", "xai", "abandoned", "none")]
+        ("cli_setup", "anthropic", "abandoned", "none"), ("dashboard", "openai-api", "abandoned", "none")]
     assert live.exists() and flow.marker.exists()
 
 
@@ -222,21 +222,21 @@ def test_cli_flow_classifies_landed_backed_out_failed_and_raised(marks, monkeypa
             pass  # returned without saving: backed out
         with setup_metrics.cli_provider_setup("nous"):
             setup_metrics.note_provider_setup_failure("no_models")
-        with setup_metrics.cli_provider_setup("gemini"):
-            route["v"] = ("gemini", "g", None)  # route changed without the save helper
+        with setup_metrics.cli_provider_setup("lmstudio"):
+            route["v"] = ("lmstudio", "g", None)  # route changed without the save helper
         with pytest.raises(KeyboardInterrupt):
-            with setup_metrics.cli_provider_setup("xai"):
+            with setup_metrics.cli_provider_setup("openai-api"):
                 raise KeyboardInterrupt
         with pytest.raises(ConnectionError):
-            with setup_metrics.cli_provider_setup("xai"):
+            with setup_metrics.cli_provider_setup("openai-api"):
                 raise ConnectionError("down")
         with setup_metrics.cli_provider_setup("remove-custom"):
             pass
     ends = [r for r in _setup_rows(marks.rows) if r[2] != "started"]
     assert ends == [
         ("cli_setup", "anthropic", "completed", "none"), ("cli_setup", "anthropic", "abandoned", "none"),
-        ("cli_setup", "nous", "failed", "no_models"), ("cli_setup", "gemini", "completed", "none"),
-        ("cli_setup", "xai", "abandoned", "none"), ("cli_setup", "xai", "failed", "network"),
+        ("cli_setup", "nous", "failed", "no_models"), ("cli_setup", "lmstudio", "completed", "none"),
+        ("cli_setup", "openai-api", "abandoned", "none"), ("cli_setup", "openai-api", "failed", "network"),
     ]
     setup_metrics.note_provider_setup_saved()  # outside a flow: inert
 
@@ -254,24 +254,24 @@ def test_cli_setup_navigation_esc_cancels_and_back_resumes_one_flow(marks, monke
 
     with setup_metrics.provider_setup_surface("cli_model"):
         with pytest.raises(_SetupCancelled):
-            attempt("xai", _SetupCancelled())  # Esc
+            attempt("openai-api", _SetupCancelled())  # Esc
         with pytest.raises(_SetupGoBack):
             attempt("anthropic", _SetupGoBack(1))  # Back to the provider menu, then the same provider
         attempt("anthropic")
         with pytest.raises(_SetupGoBack):
             attempt("nous", _SetupGoBack(1))  # Back, then another provider
-        attempt("gemini")
+        attempt("lmstudio")
     with pytest.raises(_SetupGoBack):  # a wizard section replay keeps the flow open across the surface
         with setup_metrics.provider_setup_surface("cli_setup"):
-            attempt("xai", _SetupGoBack(0))
+            attempt("openai-api", _SetupGoBack(0))
     with setup_metrics.provider_setup_surface("cli_setup"):
         pass  # ...and leaving the entry point without resuming it ends it
     assert _setup_rows(marks.rows) == [
-        ("cli_model", "xai", "started", "none"), ("cli_model", "xai", "abandoned", "none"),
+        ("cli_model", "openai-api", "started", "none"), ("cli_model", "openai-api", "abandoned", "none"),
         ("cli_model", "anthropic", "started", "none"), ("cli_model", "anthropic", "completed", "none"),
         ("cli_model", "nous", "started", "none"), ("cli_model", "nous", "abandoned", "none"),
-        ("cli_model", "gemini", "started", "none"), ("cli_model", "gemini", "completed", "none"),
-        ("cli_setup", "xai", "started", "none"), ("cli_setup", "xai", "abandoned", "none"),
+        ("cli_model", "lmstudio", "started", "none"), ("cli_model", "lmstudio", "completed", "none"),
+        ("cli_setup", "openai-api", "started", "none"), ("cli_setup", "openai-api", "abandoned", "none"),
     ]
 
 
@@ -476,12 +476,10 @@ def test_web_forms_count_only_a_new_provider_key_or_endpoint(marks, monkeypatch)
                        ("OPENROUTER_API_KEY", ""), ("OPENROUTER_API_KEY", "sk-or-b"),  # clear, then a new key
                        ("GITHUB_TOKEN", "ghp_" + "b" * 36)):
         config_env._save_env_credential(key, value)
-    config_env._save_env_credential("GEMINI_API_KEY", "gm-a")  # Keys page: could be the TTS tool's key
-    config_env._save_env_credential("GEMINI_API_KEY", "gm-b", provider_setup=True)  # a provider-connection form
     body = {"name": "Acme LLM", "base_url": "http://10.0.0.5:8080/v1", "model": "acme-70b"}
     endpoint = config_env.upsert_custom_endpoint(CustomEndpointUpdate(**body))["id"]
     config_env.upsert_custom_endpoint(CustomEndpointUpdate(id=endpoint, **{**body, "model": "acme-70b-v2"}))
-    assert done == ["openrouter", "openrouter", "gemini", "custom"]
+    assert done == ["openrouter", "openrouter", "custom"]
 
 
 # ---- feature disabled ----
@@ -504,14 +502,14 @@ def test_settings_skills_plugins_transitions_only_count_moves_from_and_back_to_d
         "memory": {"memory_enabled": False}, "compression": {"enabled": "false"}, "curator": {"enabled": True},
         "display": {"show_reasoning": False, "skin": "mono"},  # a value change on a non-bool: never a row
         "skills": {"disabled": ["my-private-skill", "arxiv"], "platform_disabled": {"telegram": ["totally-custom"]}},
-        "plugins": {"disabled": ["disk-cleanup", "telegram", "some-private-plugin"]},
+        "plugins": {"disabled": ["a2-elevation", "telegram", "some-private-plugin"]},
     }
     got = set(disabled_metrics.config_transitions(old, new))
     assert got == {
         ("memory", "memory.memory_enabled", "disabled"), ("compression", "compression.enabled", "disabled"),
         ("setting", "display.show_reasoning", "disabled"),
         ("skill", "arxiv", "disabled"), ("skill", "custom", "disabled"),
-        ("plugin", "disk-cleanup", "disabled"), ("platform", "telegram", "disabled"),
+        ("plugin", "a2-elevation", "disabled"), ("platform", "telegram", "disabled"),
         ("plugin", "custom", "disabled"),
     }
     back = set(disabled_metrics.config_transitions(new, old))

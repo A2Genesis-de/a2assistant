@@ -6,7 +6,6 @@ print and issue strings to append. No printing inside workers — the caller pri
 
 from __future__ import annotations
 
-from pm import install_hint
 import concurrent.futures
 import errno
 import functools
@@ -18,7 +17,7 @@ from urllib.parse import urlsplit
 from hermes_cli.colors import Colors, color
 from hermes_cli.version_info import hermes_user_agent
 from hermes_constants import OPENROUTER_MODELS_URL
-from utils import base_url_host_matches, normalize_proxy_env_vars
+from utils import normalize_proxy_env_vars
 
 _APIKEY_PROVIDERS_CACHE: list | None = None
 
@@ -42,56 +41,17 @@ def _skip(name: str) -> ProbeResult:
     return ProbeResult(name, [], [])
 
 
-def _has_healthy_oauth_fallback_for_apikey_provider(provider_label: str) -> bool:
-    """True when a failed direct API-key probe is non-blocking because the same provider family's OAuth
-    runtime path is already healthy: the failed row is still shown, but not promoted into the summary."""
-    getter = {"minimax": "get_minimax_oauth_auth_status", "xai": "get_xai_oauth_auth_status"}.get((provider_label or "").strip().lower())
-    if not getter:
-        return False
-    try:
-        from hermes_cli import auth
-        return bool((getattr(auth, getter)() or {}).get("logged_in"))
-    except Exception:
-        return False
-
-
 def _build_apikey_providers_list() -> list:
     """Build the API-key provider health-check list once and cache it.
 
-    Tuple format: (name, env_vars, default_url, base_env, supports_models_endpoint). Base list augmented
-    with any ProviderProfile with auth_type="api_key" not already present — adding
-    plugins/model-providers/<name>/ is sufficient to get into doctor.
+    Tuple format: (name, env_vars, default_url, base_env, supports_models_endpoint), one row per
+    ProviderProfile with auth_type="api_key" — adding plugins/model-providers/<name>/ is sufficient to
+    get into doctor.
     """
-    _static = [
-        ("Z.AI / GLM",      ("GLM_API_KEY", "ZAI_API_KEY", "Z_AI_API_KEY"), "https://api.z.ai/api/paas/v4/models", "GLM_BASE_URL", True),
-        ("Kimi / Moonshot",  ("KIMI_API_KEY",),                              "https://api.moonshot.ai/v1/models",   "KIMI_BASE_URL", True),
-        ("StepFun Step Plan", ("STEPFUN_API_KEY",),                          "https://api.stepfun.ai/step_plan/v1/models", "STEPFUN_BASE_URL", True),
-        ("Kimi / Moonshot (China)", ("KIMI_CN_API_KEY",),                    "https://api.moonshot.cn/v1/models",   None, True),
-        ("Arcee AI",         ("ARCEEAI_API_KEY",),                           "https://api.arcee.ai/api/v1/models",  "ARCEE_BASE_URL", True),
-        ("GMI Cloud",        ("GMI_API_KEY",),                               "https://api.gmi-serving.com/v1/models", "GMI_BASE_URL", True),
-        ("DeepSeek",         ("DEEPSEEK_API_KEY",),                          "https://api.deepseek.com/v1/models",  "DEEPSEEK_BASE_URL", True),
-        ("Hugging Face",     ("HF_TOKEN",),                                  "https://router.huggingface.co/v1/models", "HF_BASE_URL", True),
-        ("NVIDIA NIM",       ("NVIDIA_API_KEY",),                            "https://integrate.api.nvidia.com/v1/models", "NVIDIA_BASE_URL", True),
-        ("Alibaba/DashScope", ("DASHSCOPE_API_KEY",),                        "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/models", "DASHSCOPE_BASE_URL", True),
-        # MiniMax global: /v1 endpoint supports /models.
-        ("MiniMax",          ("MINIMAX_API_KEY",),                           "https://api.minimax.io/v1/models",    "MINIMAX_BASE_URL", True),
-        # MiniMax CN: /v1 endpoint does NOT support /models (returns 404).
-        ("MiniMax (China)",  ("MINIMAX_CN_API_KEY",),                        "https://api.minimaxi.com/v1/models",  "MINIMAX_CN_BASE_URL", False),
-        ("Vercel AI Gateway", ("AI_GATEWAY_API_KEY",),                       "https://ai-gateway.vercel.sh/v1/models", "AI_GATEWAY_BASE_URL", True),
-        ("Kilo Code",        ("KILOCODE_API_KEY",),                          "https://api.kilo.ai/api/gateway/models", "KILOCODE_BASE_URL", True),
-        ("OpenCode Zen",     ("OPENCODE_ZEN_API_KEY",),                      "https://opencode.ai/zen/v1/models",  "OPENCODE_ZEN_BASE_URL", True),
-        # OpenCode Go has no shared /models endpoint; skip the health check.
-        ("OpenCode Go",      ("OPENCODE_GO_API_KEY",),                       None,                                  "OPENCODE_GO_BASE_URL", False),
-    ]
-    _known_names = {t[0] for t in _static}
+    _static: list = []
     # Providers with a dedicated health check (custom headers/auth): skip their pluggable profiles so
     # the generic Bearer loop doesn't run a duplicate, broken check (Anthropic needs x-api-key).
-    _dedicated_canonical = {"anthropic", "openrouter", "bedrock"}
-    # Canonical profile names of the static rows, so profiles without a display_name don't duplicate.
-    _known_canonical = {
-        "zai", "kimi-coding", "stepfun", "kimi-coding-cn", "arcee", "gmi", "deepseek", "huggingface", "nvidia",
-        "alibaba", "minimax", "minimax-cn", "ai-gateway", "kilocode", "opencode-zen", "opencode-go",
-    } | _dedicated_canonical
+    _dedicated_canonical = {"anthropic", "openrouter"}
     try:
         from providers import list_providers
         from providers.base import ProviderProfile as _PP
@@ -104,9 +64,7 @@ def _build_apikey_providers_list() -> list:
             if not isinstance(_pp, _PP) or _pp.auth_type != "api_key" or not _pp.env_vars:
                 continue
             _label = _pp.display_name or _pp.name
-            if _label in _known_names or _pp.name in _known_canonical:
-                continue
-            if {_normalize_provider(a) for a in (_pp.name, *(_pp.aliases or ()))} & _dedicated_canonical:
+            if _pp.name in _dedicated_canonical or {_normalize_provider(a) for a in (_pp.name, *(_pp.aliases or ()))} & _dedicated_canonical:
                 continue
             # Key vars vs base-URL vars: the first found value goes out as Authorization: Bearer, never a URL.
             _is_url = lambda v: v.endswith("_BASE_URL") or v.endswith("_URL")
@@ -193,8 +151,6 @@ def _probe_apikey_provider(pname, env_vars, default_url, base_env, supports_heal
                 return _row(pname, "fail", "(access denied)", [f"Check {env_vars[0]} in .env"], label=label)
         else:
             r = httpx.get(url, headers=headers, timeout=10)
-        if pname == "Alibaba/DashScope" and not base and r.status_code == 401:
-            r = httpx.get("https://dashscope.aliyuncs.com/compatible-mode/v1/models", headers=headers, timeout=10)
     except Exception as e:
         return _row(pname, "warn", f"({e})", label=label)
     if r.status_code == 401:
@@ -229,102 +185,13 @@ def _model_cfg() -> dict:
 def _apikey_request(key: str, base_env, default_url) -> tuple:
     """(effective base, models URL, headers) for a generic Bearer-auth probe, with the per-vendor rewrites."""
     base = os.getenv(base_env, "") if base_env else ""
-    # Azure Foundry's base URL is per-resource and normally lives in config (model.base_url), not the env var.
-    if not base and base_env == "AZURE_FOUNDRY_BASE_URL" and str(_model_cfg().get("provider") or "").strip().lower() == "azure-foundry":
-        base = str(_model_cfg().get("base_url") or "").strip()
-    # Kimi Code keys (sk-kimi-) → api.kimi.com/coding/v1 (OpenAI-compat surface exposing /models).
-    if not base and key.startswith("sk-kimi-"):
-        base = "https://api.kimi.com/coding/v1"
-    # Anthropic-compat endpoints (/anthropic, api.kimi.com/coding sans /v1) lack /models — use the OpenAI-compat /v1 surface.
+    # Anthropic-compat endpoints (/anthropic) lack /models — use the OpenAI-compat /v1 surface.
     if base and base.rstrip("/").endswith("/anthropic"):
         from agent.auxiliary_client import _to_openai_base_url
         base = _to_openai_base_url(base)
-    if base_url_host_matches(base, "api.kimi.com") and base.rstrip("/").endswith("/coding"):
-        base = base.rstrip("/") + "/v1"
     url = (base.rstrip("/") + "/models") if base else default_url
     headers = {"Authorization": f"Bearer {key}", "User-Agent": hermes_user_agent()}
-    if base_url_host_matches(base, "api.kimi.com"):
-        headers["User-Agent"] = "claude-code/0.1.0"
-    # Google's Generative Language API rejects ``Authorization: Bearer <api-key>`` with 401
-    # ACCESS_TOKEN_TYPE_UNSUPPORTED (reserved for OAuth 2 tokens); plain keys use ``x-goog-api-key``.
-    if url and (base_url_host_matches(url, "generativelanguage.googleapis.com")
-                or base_url_host_matches(url, "aiplatform.googleapis.com")):
-        from agent.gemini_native_adapter import is_vertex_express_base_url, normalize_gemini_base_url
-        root = url.rsplit("/models", 1)[0]
-        if base_url_host_matches(url, "generativelanguage.googleapis.com") or is_vertex_express_base_url(root):
-            # Normalize guarantees the version segment and completes an explicitly configured express
-            # aiplatform base to the publishers form; the key itself never decides the surface — AQ.
-            # keys exist for both AI Studio and Vertex express mode (#115306). The OAuth Vertex
-            # ``…/endpoints/openapi`` base is OpenAI-compatible and stays exactly as configured.
-            url = normalize_gemini_base_url(root) + "/models"
-            headers.pop("Authorization", None)
-            headers["x-goog-api-key"] = key
     return base, url, headers
-
-
-def _probe_bedrock() -> ProbeResult:
-    name = "AWS Bedrock"
-    try:
-        from agent.bedrock_adapter import has_aws_credentials, resolve_aws_auth_env_var, resolve_bedrock_region
-    except ImportError:
-        return _skip(name)
-    if not has_aws_credentials():
-        return _skip(name)
-    auth_var, region, label = resolve_aws_auth_env_var(), resolve_bedrock_region(), name.ljust(20)
-    try:
-        import boto3
-        from botocore.config import Config as _BotoConfig
-        # Trim retries so a transient failure doesn't pad the doctor run by 30+ seconds.
-        client = boto3.client("bedrock", region_name=region, config=_BotoConfig(connect_timeout=5, read_timeout=10, retries={"max_attempts": 1}))
-        n = len(client.list_foundation_models().get("modelSummaries", []))
-        return _row(name, "ok", f"({auth_var}, {region}, {n} models)", label=label)
-    except ImportError:
-        hint = ("From the A2Assistant environment, run: "
-                f"{install_hint('bedrock')}. "
-                "Then restart A2Assistant.")
-        return _row(name, "warn", "(boto3 not installed)", [hint], label=label)
-    except Exception as e:
-        err_name = type(e).__name__
-        return _row(name, "warn", f"({err_name}: {e})", [f"AWS Bedrock: {err_name} — check IAM permissions for bedrock:ListFoundationModels"], label=label)
-
-
-def _probe_azure_entra() -> ProbeResult:
-    """Probe Azure Foundry Entra ID auth, parallel to ``_probe_bedrock``.
-
-    Skipped unless the active config has ``model.provider: azure-foundry`` AND ``model.auth_mode: entra_id``
-    — we don't probe the token-service / CLI chain for plain API-key Azure. Bounded by a 10s timeout.
-    """
-    name = "Azure Foundry (Entra ID)"
-    label = name.ljust(28)
-    try:
-        from hermes_cli.config import load_config
-        cfg = load_config()
-        model_cfg = cfg.get("model") if isinstance(cfg, dict) else {}
-        if not isinstance(model_cfg, dict):
-            return _skip(name)
-        if [str(model_cfg.get(k) or "").strip().lower() for k in ("provider", "auth_mode")] != ["azure-foundry", "entra_id"]:
-            return _skip(name)
-    except Exception:
-        return _skip(name)
-    try:
-        from agent.azure_identity_adapter import (
-            EntraIdentityConfig, SCOPE_AI_AZURE_DEFAULT, describe_active_credential, has_azure_identity_installed,
-        )
-    except Exception as exc:
-        return _row(name, "warn", f"(adapter import failed: {exc})", [f"Azure Foundry adapter import failed: {exc}"], label=label)
-    if not has_azure_identity_installed():
-        return _row(name, "warn", "(azure-identity not installed)", ["From the A2Assistant environment, run: "
-                     f"{install_hint('azure-identity')}. "
-                     "Then restart A2Assistant."], label=label)
-    entra_cfg = model_cfg.get("entra") or {}
-    scope = (str(entra_cfg.get("scope") or "").strip() if isinstance(entra_cfg, dict) else "") or SCOPE_AI_AZURE_DEFAULT
-    info = describe_active_credential(config=EntraIdentityConfig(scope=scope), timeout_seconds=10.0)
-    if info.get("ok"):
-        tag = ", ".join(info.get("env_sources") or []) or "default credential chain"
-        return _row(name, "ok", f"({tag}, scope={scope})", label=label)
-    err = info.get("error") or "credential chain exhausted"
-    hint = info.get("hint") or "Run `az login`, set AZURE_TENANT_ID/AZURE_CLIENT_ID/AZURE_CLIENT_SECRET, or attach a managed identity to this VM."
-    return _row(name, "warn", f"({err})", [f"Azure Foundry Entra: {err}. {hint}"], label=label)
 
 
 def _load_network_config() -> dict:
@@ -417,7 +284,6 @@ def build_probes() -> list:
         ("OpenRouter API", _probe_openrouter), ("Anthropic API", _probe_anthropic),
         # functools.partial binds each row's args so every callable keeps its own provider.
         *((row[0], functools.partial(_probe_apikey_provider, *row)) for row in _APIKEY_PROVIDERS_CACHE),
-        ("AWS Bedrock", _probe_bedrock), ("Azure Foundry (Entra ID)", _probe_azure_entra),
         ("GitHub token", _probe_github_token),
     ]
 
@@ -425,22 +291,12 @@ def build_probes() -> list:
 def run_probes(probes: list) -> list:
     """Run every probe in a thread pool; results in submission order.
 
-    Probes are independent HTTP calls (series cost ~5s wall, 2s of it boto3's IMDS lookup);
-    parallel collapses the section to roughly the slowest single probe without changing the output.
+    Probes are independent HTTP calls; parallel collapses the section to roughly the slowest single
+    probe without changing the output.
     """
-    # Disable boto3's EC2 instance-metadata probe (169.254.169.254, multi-second timeout off-EC2). Set on the
-    # parent thread before submitting so it never races a worker; has_aws_credentials() already gates on real creds.
     normalize_proxy_env_vars()  # a bracketed-IPv6 NO_PROXY entry ([::1], Clash Verge/mihomo) makes every bare
     # trust_env client a probe builds raise InvalidURL at construction (#118159) — sanitize once, before any
     # worker runs, so no probe ever reports "(Invalid port: :1])" as provider downtime.
-    _imds_prev = os.environ.get("AWS_EC2_METADATA_DISABLED")
-    os.environ["AWS_EC2_METADATA_DISABLED"] = "true"
-    try:
-        # 8 workers is plenty — each probe is one HTTP call plus a TLS handshake.
-        with concurrent.futures.ThreadPoolExecutor(max_workers=8, thread_name_prefix="doctor-probe") as ex:
-            return [f.result() for f in [ex.submit(fn) for _, fn in probes]]
-    finally:
-        if _imds_prev is None:
-            os.environ.pop("AWS_EC2_METADATA_DISABLED", None)
-        else:
-            os.environ["AWS_EC2_METADATA_DISABLED"] = _imds_prev
+    # 8 workers is plenty — each probe is one HTTP call plus a TLS handshake.
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8, thread_name_prefix="doctor-probe") as ex:
+        return [f.result() for f in [ex.submit(fn) for _, fn in probes]]

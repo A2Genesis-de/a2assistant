@@ -109,13 +109,9 @@ def test_bound_launch_key_wins_over_the_route_key(tmp_path, monkeypatch):
 
 
 @pytest.mark.parametrize('model, block, env, expected', [
-    # opencode-go serves this model only on its Responses API (#141861).
-    ('muse-spark-1.3-contributor', {'provider': 'opencode-go', 'base_url': 'https://opencode.ai/zen/go/v1'},
-     {'OPENCODE_GO_API_KEY': 'fake-opencode-go-key'},
-     {'api_mode': 'codex_responses', 'base_url': 'https://opencode.ai/zen/go/v1'}),
-    # Bedrock stores no base_url: the runtime builds the regional endpoint (#143073).
-    ('eu.amazon.nova-pro-v1:0', {'provider': 'bedrock'}, {'AWS_REGION': 'eu-west-1'},
-     {'api_mode': 'bedrock_converse', 'base_url': 'https://bedrock-runtime.eu-west-1.amazonaws.com'}),
+    # The OpenAI API stores no api_mode: the runtime resolves its Responses wire (#141861).
+    ('gpt-5.4', {'provider': 'openai-api'}, {'OPENAI_API_KEY': 'fake-openai-key'},
+     {'api_mode': 'codex_responses', 'base_url': 'https://api.openai.com/v1'}),
 ])
 @pytest.mark.parametrize('api_key', [None, 'fake-launch-key'])
 def test_worker_builds_on_the_routes_resolved_api_mode_and_endpoint(tmp_path, monkeypatch, model, block, env, expected,
@@ -144,10 +140,10 @@ def _routed_frame(tmp_path, monkeypatch, model, block, launch_url=None, api_key=
 
 
 def test_bound_launch_key_builds_without_the_providers_login(tmp_path, monkeypatch):
-    """A supplied Qwen OAuth token is the credential: no Qwen CLI login file is needed."""
+    """A supplied Codex OAuth token is the credential: no Codex login state is needed."""
     monkeypatch.setenv('HOME', str(tmp_path))
-    url, launch = 'https://portal.qwen.ai/v1', 'fake-qwen-' + secrets.token_hex(8)
-    frame = _routed_frame(tmp_path, monkeypatch, 'qwen3-coder-plus', {'provider': 'qwen-oauth', 'base_url': url},
+    url, launch = 'https://chatgpt.com/backend-api/codex', 'fake-codex-' + secrets.token_hex(8)
+    frame = _routed_frame(tmp_path, monkeypatch, 'gpt-5.4', {'provider': 'openai-codex', 'base_url': url},
                           launch_url=url, api_key=launch)
     built = _execute(frame, monkeypatch)
     assert built['api_key'] == launch

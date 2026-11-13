@@ -276,12 +276,9 @@ _EXPLICIT_API_MODES = {
 
 def _resolve_api_mode(agent, api_mode, provider_name, base_url):
     """Set ``agent.api_mode`` (and provider rewrites) — ordered ladder, first match wins."""
-    from hermes_cli.providers import is_actual_route
     from agent.transports import registered_api_modes
     host, url = agent._base_url_hostname, agent._base_url_lower
-    if is_actual_route(agent.provider, base_url):
-        agent.api_mode = "chat_completions"
-    elif api_mode in _EXPLICIT_API_MODES or (api_mode and api_mode in registered_api_modes()):
+    if api_mode in _EXPLICIT_API_MODES or (api_mode and api_mode in registered_api_modes()):
         # A provider plugin's own dialect (``register_transport(api_mode, cls)``) is as explicit
         # as the in-tree modes; rewriting it to chat_completions silently dropped its transport.
         agent.api_mode = api_mode
@@ -326,7 +323,6 @@ def _resolve_api_mode(agent, api_mode, provider_name, base_url):
 
 
 def _finalize_routing(agent, api_mode, credential_pool):
-    from hermes_cli.providers import is_actual_route
     # Credential-pool validation runs AFTER provider auto-detection so a pool scoped to
     # "anthropic" isn't rejected for provider=None + anthropic.com URL.
     # Regression from #63048 which placed this check before the URL-based auto-detection block above (fixed
@@ -386,7 +382,6 @@ def _finalize_routing(agent, api_mode, credential_pool):
         # upgrade for Azure (openai.azure.com), even though it looks OpenAI-compatible.
         api_mode is None
         and agent.api_mode == "chat_completions"
-        and not is_actual_route(agent.provider, agent.base_url)
         and not _base_lower.startswith(("acp://", "acp+tcp://"))
         and not _is_external_process_provider(agent.provider)
         and not agent._is_azure_openai_url()
@@ -658,20 +653,6 @@ def _init_anthropic_client(agent, api_key, base_url, _provider_timeout):
     _is_native_anthropic = agent.provider == "anthropic"
     effective_key = api_key or (resolve_anthropic_token(model=getattr(agent, "model", None)) if _is_native_anthropic else None) or ""
 
-    # MiniMax OAuth tokens live ~15 min and the SDK freezes api_key at construction, so use a
-    # callable provider: build_anthropic_client mints a fresh bearer per request (re-reading
-    # auth.json, so other processes' refreshes are seen).
-    if agent.provider == "minimax-oauth" and isinstance(effective_key, str) and effective_key:
-        try:
-            from hermes_cli.auth import build_minimax_oauth_token_provider
-            effective_key = build_minimax_oauth_token_provider()
-        except Exception as _mm_exc:
-            logging.getLogger(__name__).warning(
-                "MiniMax OAuth: failed to install per-request token provider "
-                "(%s); falling back to static bearer that will expire ~15min in.",
-                _mm_exc,
-            )
-
     agent.api_key = effective_key
     agent._anthropic_api_key = effective_key
     # OAuth only for native Anthropic routes (the anthropic provider, or a custom provider whose host
@@ -757,10 +738,6 @@ def _routed_client_kwargs(agent, fallback_model, _provider_timeout) -> Optional[
     _routed_client, _ = resolve_provider_client(
         agent.provider or "auto", model=agent.model, raw_codex=True)
     if _routed_client is not None:
-        from hermes_cli.providers import is_actual_route, normalize_provider
-        effective_provider = getattr(_routed_client, "_hermes_aux_effective_provider", "")
-        if is_actual_route(effective_provider):
-            agent.provider = normalize_provider(effective_provider)
         return _client_kwargs_from_routed(_routed_client, _provider_timeout)
     # No credentials: try the fallback chain BEFORE failing (an exhausted single-entry pool
     # must not die with a misleading "No LLM provider configured"); only explicitly named
@@ -897,11 +874,6 @@ def _init_openai_client(agent, api_key, base_url, fallback_model, _provider_time
             if not agent.quiet_mode:
                 print(f"🤖 AI Agent initialized with MoA preset: {agent.model}")
             return
-    from hermes_cli.providers import is_actual_route
-    if is_actual_route(agent.provider, client_kwargs.get("base_url", "")):
-        agent.api_mode = "chat_completions"
-        if hasattr(agent, "_transport_cache"):
-            agent._transport_cache.clear()
     try:
         from agent.bedrock_adapter import configure_bedrock_openai_client_kwargs
         configure_bedrock_openai_client_kwargs(client_kwargs, timeout=_provider_timeout)
@@ -962,7 +934,6 @@ _HOST_DEFAULT_HEADERS: list[tuple[str, Callable[[Any, str], dict[str, str]]]] = 
      _lazy_headers("agent.auxiliary_client", "build_nvidia_nim_headers", pass_base=True)),
     ("api.routermint.com", _lazy_headers("agent.client_lifecycle", "_routermint_headers")),
     ("api.kimi.com", lambda _k, _b: {"User-Agent": "claude-code/0.1.0"}),
-    ("portal.qwen.ai", _lazy_headers("agent.client_lifecycle", "_qwen_portal_headers")),
     ("chatgpt.com", _lazy_headers("agent.codex_headers", "codex_cloudflare_headers", pass_key=True)),
     ("x.ai", _lazy_headers("tools.xai_http", "hermes_xai_default_headers")),
 ]
@@ -1513,9 +1484,7 @@ def _custom_provider_configured_base_url(
 
 
 # Provider ids whose runtime is resolved first-hand (never a named custom provider).
-_RUNTIME_FIRST_PROVIDER_IDS = {
-    "auto", "moa", "vertex", "google-vertex", "vertex-ai", "gcp-vertex", "vertexai",
-}
+_RUNTIME_FIRST_PROVIDER_IDS = {"auto", "moa"}
 
 
 def _configured_default_base_url(_agent_cfg, _model_cfg, _custom_providers) -> str:
@@ -2118,11 +2087,6 @@ def init_agent(
     # Skips the end-of-turn review fork (~30K tokens/event); one switch for both review paths.
     agent.skip_background_review = bool(skip_background_review)
     agent.log_prefix = f"{log_prefix} " if log_prefix else ""
-    # Effective base URL for feature detection (prompt caching, reasoning, etc.)
-    from hermes_cli.providers import is_actual_route
-    if is_actual_route(provider, base_url):
-        from hermes_cli.auth import normalize_actual_base_url
-        base_url = normalize_actual_base_url(base_url)
     agent.base_url = base_url or ""
     provider_name = provider.strip().lower() if isinstance(provider, str) and provider.strip() else None
     agent.provider = provider_name or ""

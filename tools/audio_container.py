@@ -1,7 +1,7 @@
 """Shared magic-byte audio/AV container detection — the ONE sniffer for the codebase.
 
 Outbound (``tools/tts_tool.py``): TTS backends silently ignore the requested
-format (Edge emits MP3, Piper WAV), so the file is sniffed and its ``.ogg``
+format (Piper emits WAV), so the file is sniffed and its ``.ogg``
 extension repaired. Inbound (``gateway/platforms/base.py`` cache_audio_*,
 ``plugins/platforms/signal/adapter.py``): adapters pass wrong/guessed voice-note
 extensions (Telegram ``.oga``, iOS M4A-branded MP4), so the cache sniffs the

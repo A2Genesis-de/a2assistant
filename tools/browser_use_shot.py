@@ -1,6 +1,6 @@
 """Screenshot and tab helpers that browser_exec installs over browser-harness's own.
 
-Chrome draws no compositor frame for a hidden tab, and some remotes (Browser Use cloud) never answer
+Chrome draws no compositor frame for a hidden tab, and some remote browsers never answer
 ``Page.captureScreenshot`` with ``format: "png"`` for one, so the harness's ``capture_screenshot()`` hangs
 for its full 60 s IPC timeout. Its ``new_tab()`` and its daemon both create tabs with ``background=True``,
 so the tab the agent drives is often hidden. browser_harness is a pinned third-party dependency; this
@@ -18,7 +18,7 @@ import tempfile
 from typing import Any, Callable
 
 # A png that has not arrived by then will not: a visible tab answers in well under a second, a hidden
-# one on Browser Use cloud never does. jpeg on the same hidden tab answers in a few seconds.
+# one on some remote browsers never does. jpeg on the same hidden tab answers in a few seconds.
 PNG_DEADLINE_S = 10.0
 JPEG_DEADLINE_S = 60.0
 _HARNESS_MODULE = "browser_harness.helpers"
@@ -116,20 +116,9 @@ def _is_harness_helper(fn: Any) -> bool:
 # Which browser the tabs may be activated on, decided by browser_exec from the route it resolved.
 ACTIVATE_NEVER = "never"        # local, connected or real-profile Chrome: a human may be looking at it
 ACTIVATE_ALWAYS = "always"      # a cloud provider's session whose CDP endpoint Hermes itself resolved
-ACTIVATE_IF_CLOUD = "if-cloud"  # BU_AUTOSPAWN: the harness picks the browser (a listening local Chrome wins)
-
-
-def _harness_daemon_is_cloud() -> bool:
-    """True only when the live harness daemon says it drives a Browser Use cloud browser (it was started
-    with that browser's id). Asked per call, after the harness has chosen or replaced its daemon; an
-    unreachable or older daemon counts as not cloud."""
-    from browser_harness import admin
-    return admin.daemon_browser_kind() == "cloud"
 
 
 def _activation_check(mode: str) -> Callable[[], bool]:
-    if mode == ACTIVATE_IF_CLOUD:
-        return _harness_daemon_is_cloud
     return (lambda: True) if mode == ACTIVATE_ALWAYS else (lambda: False)
 
 

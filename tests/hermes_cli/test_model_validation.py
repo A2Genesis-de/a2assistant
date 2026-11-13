@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import MagicMock, patch
 
-from hermes_cli.models import azure_foundry_model_api_mode, curated_models_for_provider, fetch_api_models, normalize_provider, opencode_model_api_mode, parse_model_input, probe_api_models, provider_model_ids
+from hermes_cli.models import curated_models_for_provider, fetch_api_models, normalize_provider, opencode_model_api_mode, parse_model_input, probe_api_models, provider_model_ids
 from hermes_cli.models_local import fetch_lmstudio_models
 from hermes_cli.models_validate import validate_requested_model
 
@@ -57,33 +57,14 @@ class TestCuratedModelsForProvider:
         ):
             assert curated_models_for_provider("nous") == [("m-static", "")]
 
-    def test_stepfun_merges_live_and_static(self):
-        """StepFun Step Plan API returns a subset; curated list merges with static."""
-        with patch(
-            "hermes_cli.auth.resolve_api_key_provider_credentials",
-            return_value={"api_key": "***", "base_url": "https://api.stepfun.ai/step_plan/v1"},
-        ), patch(
-            "hermes_cli.models.fetch_api_models",
-            return_value=["step-3.5-flash", "step-3.5-flash-2603"],
-        ):
-            models = curated_models_for_provider("stepfun")
-        model_ids = [m[0] for m in models]
-        # Live models appear first, static-only models appended
-        assert model_ids[0] == "step-3.5-flash"
-        assert "step-3.7-flash" in model_ids
-        # No duplicates
-        assert len(model_ids) == len(set(model_ids))
-
-
 # -- normalize_provider ------------------------------------------------------
 
 class TestNormalizeProvider:
 
     def test_known_aliases(self):
-        assert normalize_provider("glm") == "zai"
-        assert normalize_provider("kimi") == "kimi-coding"
-        assert normalize_provider("moonshot") == "kimi-coding"
-        assert normalize_provider("step") == "stepfun"
+        assert normalize_provider("claude") == "anthropic"
+        assert normalize_provider("lm-studio") == "lmstudio"
+        assert normalize_provider("chatgpt") == "openai-codex"
 
 
 # -- provider_model_ids ------------------------------------------------------
@@ -318,41 +299,6 @@ class TestNormalizeOpencodeBaseUrlFamilyPath:
     def test_family_path_follows_the_resolved_provider(self, provider, api_mode, url, expected):
         from hermes_cli.models import normalize_opencode_base_url
         assert normalize_opencode_base_url(provider, api_mode, url) == expected
-
-
-class TestAzureFoundryModelApiMode:
-    """Azure Foundry deploys GPT-5.x / codex / o-series as Responses-API-only.
-
-    Azure returns ``400 "The requested operation is unsupported."`` when
-    /chat/completions is called against these deployments.  Verified in the
-    wild by a user debug bundle on 2026-04-26: gpt-5.3-codex failed with
-    that exact payload while gpt-4o-pure worked on the same endpoint.
-    """
-
-    def test_gpt5_family_uses_responses(self):
-        assert azure_foundry_model_api_mode("gpt-5") == "codex_responses"
-        assert azure_foundry_model_api_mode("gpt-5.3") == "codex_responses"
-        assert azure_foundry_model_api_mode("gpt-5.4") == "codex_responses"
-        assert azure_foundry_model_api_mode("gpt-5-codex") == "codex_responses"
-        assert azure_foundry_model_api_mode("gpt-5.3-codex") == "codex_responses"
-        # gpt-5-mini exceptions are Copilot-specific; Azure deploys the whole
-        # gpt-5 family on Responses API uniformly.
-        assert azure_foundry_model_api_mode("gpt-5-mini") == "codex_responses"
-
-    def test_codex_family_uses_responses(self):
-        assert azure_foundry_model_api_mode("codex") == "codex_responses"
-        assert azure_foundry_model_api_mode("codex-mini") == "codex_responses"
-
-
-    def test_gpt4_family_returns_none(self):
-        """GPT-4, GPT-4o, etc. speak chat completions on Azure."""
-        assert azure_foundry_model_api_mode("gpt-4") is None
-        assert azure_foundry_model_api_mode("gpt-4o") is None
-        assert azure_foundry_model_api_mode("gpt-4o-pure") is None
-        assert azure_foundry_model_api_mode("gpt-4o-mini") is None
-        assert azure_foundry_model_api_mode("gpt-4-turbo") is None
-        assert azure_foundry_model_api_mode("gpt-4.1") is None
-        assert azure_foundry_model_api_mode("gpt-3.5-turbo") is None
 
 
 # -- validate — format checks -----------------------------------------------

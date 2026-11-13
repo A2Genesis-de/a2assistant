@@ -53,15 +53,6 @@ export const PROVIDER_GROUPS: ProviderPrefix[] = [
     priority: 0
   },
   {
-    prefix: 'FIREWORKS_',
-    name: 'Fireworks AI',
-    description: 'OpenAI-compatible direct model API',
-    docsUrl: 'https://app.fireworks.ai/settings/users/api-keys',
-    // Slot #2 — mirrors CANONICAL_PROVIDERS (after Nous, ahead of OpenRouter).
-    // Same numeric priority as OpenRouter; name sort puts Fireworks first.
-    priority: 1
-  },
-  {
     prefix: 'OPENROUTER_',
     name: 'OpenRouter',
     description: 'Aggregator for hundreds of frontier models',
@@ -91,44 +82,6 @@ export const PROVIDER_GROUPS: ProviderPrefix[] = [
   },
   { prefix: 'GEMINI_', name: 'Gemini', priority: 4 },
   {
-    prefix: 'DEEPSEEK_',
-    name: 'DeepSeek',
-    description: 'Direct DeepSeek API (V3.x, R1)',
-    docsUrl: 'https://platform.deepseek.com/api_keys',
-    priority: 5
-  },
-  {
-    prefix: 'DASHSCOPE_',
-    name: 'DashScope (Qwen)',
-    description: 'Alibaba Cloud DashScope — Qwen and multi-vendor models',
-    docsUrl: 'https://modelstudio.console.alibabacloud.com/',
-    priority: 6
-  },
-  { prefix: 'HERMES_QWEN_', name: 'DashScope (Qwen)', priority: 6 },
-  {
-    prefix: 'GLM_',
-    name: 'GLM / Z.AI',
-    description: 'Zhipu GLM-4.6 and Z.AI hosted endpoints',
-    docsUrl: 'https://z.ai/',
-    priority: 7
-  },
-  { prefix: 'ZAI_', name: 'GLM / Z.AI', priority: 7 },
-  { prefix: 'Z_AI_', name: 'GLM / Z.AI', priority: 7 },
-  {
-    prefix: 'KIMI_',
-    name: 'Kimi / Moonshot',
-    description: 'Moonshot Kimi K2 / coding endpoints',
-    docsUrl: 'https://platform.moonshot.cn/',
-    priority: 8
-  },
-  {
-    prefix: 'KIMI_CN_',
-    name: 'Kimi (China)',
-    description: 'Moonshot China endpoint',
-    docsUrl: 'https://platform.moonshot.cn/',
-    priority: 9
-  },
-  {
     prefix: 'MINIMAX_',
     name: 'MiniMax',
     description: 'MiniMax-M2 and Hailuo international endpoints',
@@ -143,89 +96,11 @@ export const PROVIDER_GROUPS: ProviderPrefix[] = [
     priority: 11
   },
   {
-    prefix: 'HF_',
-    name: 'Hugging Face',
-    description: 'Inference Providers — 20+ open models via router.huggingface.co',
-    docsUrl: 'https://huggingface.co/settings/tokens',
-    priority: 12
-  },
-  {
-    prefix: 'OPENCODE_ZEN_',
-    name: 'OpenCode Zen',
-    description: 'Pay-as-you-go access to curated coding models',
-    docsUrl: 'https://opencode.ai/auth',
-    priority: 13
-  },
-  {
-    prefix: 'OPENCODE_GO_',
-    name: 'OpenCode Go',
-    description: '$10/month subscription for open coding models',
-    docsUrl: 'https://opencode.ai/auth',
-    priority: 14
-  },
-  {
-    prefix: 'NVIDIA_',
-    name: 'NVIDIA NIM',
-    description: 'build.nvidia.com or your own local NIM endpoint',
-    docsUrl: 'https://build.nvidia.com/',
-    priority: 15
-  },
-  {
-    prefix: 'OLLAMA_',
-    name: 'Ollama Cloud',
-    description: 'Cloud-hosted open models from ollama.com',
-    docsUrl: 'https://ollama.com/settings',
-    priority: 16
-  },
-  {
     prefix: 'LM_',
     name: 'LM Studio',
     description: 'Local LM Studio server (OpenAI-compatible)',
     docsUrl: 'https://lmstudio.ai/docs/local-server',
     priority: 17
-  },
-  {
-    prefix: 'STEPFUN_',
-    name: 'StepFun',
-    description: 'StepFun Step Plan coding models',
-    docsUrl: 'https://platform.stepfun.com/',
-    priority: 18
-  },
-  {
-    prefix: 'XIAOMI_',
-    name: 'Xiaomi MiMo',
-    description: 'MiMo-V2.5 and Xiaomi proprietary models',
-    docsUrl: 'https://platform.xiaomimimo.com',
-    priority: 19
-  },
-  {
-    prefix: 'ARCEEAI_',
-    name: 'Arcee AI',
-    description: 'Arcee-hosted small + medium models',
-    docsUrl: 'https://chat.arcee.ai/',
-    priority: 20
-  },
-  { prefix: 'ARCEE_', name: 'Arcee AI', priority: 20 },
-  {
-    prefix: 'GMI_',
-    name: 'GMI Cloud',
-    description: 'GMI Cloud GPU + model serving',
-    docsUrl: 'https://www.gmicloud.ai/',
-    priority: 21
-  },
-  {
-    prefix: 'AZURE_FOUNDRY_',
-    name: 'Azure Foundry',
-    description: 'Azure AI Foundry custom endpoints (OpenAI / Anthropic-compatible)',
-    docsUrl: 'https://ai.azure.com/',
-    priority: 22
-  },
-  {
-    prefix: 'AWS_',
-    name: 'AWS Bedrock',
-    description: 'Authenticate via AWS profile + region',
-    docsUrl: 'https://docs.aws.amazon.com/bedrock/latest/userguide/bedrock-regions.html',
-    priority: 23
   }
 ]
 
@@ -245,13 +120,12 @@ export const ENUM_OPTIONS: Record<string, string[]> = {
   // shadow that and hide user-installed/pip providers (#49513).
   // Terminal execution backends — kept in sync with the dispatch ladder in
   // tools/terminal_tool.py::_create_environment (local/docker/singularity/
-  // modal/daytona/ssh). Remote backends need extra env (image, tokens, host).
-  'terminal.backend': ['local', 'docker', 'singularity', 'modal', 'daytona', 'ssh'],
-  'stt.elevenlabs.model_id': ['scribe_v2', 'scribe_v1'],
+  // ssh). Remote backends need extra env (image, host).
+  'terminal.backend': ['local', 'docker', 'singularity', 'ssh'],
   'stt.local.model': ['tiny', 'base', 'small', 'medium', 'large-v3', 'turbo'],
   // Speech-to-text backends — kept in sync with BUILTIN_STT_PROVIDERS in
   // tools/transcription_common.py (local_command is auto-detected, not picked).
-  'stt.provider': ['local', 'groq', 'openai', 'mistral', 'xai', 'elevenlabs', 'deepinfra'],
+  'stt.provider': ['local', 'openai'],
   // How the desktop voice conversation is wired — tools/voice_live.py owns the
   // gpt-live branch (one full-duplex voice model delegating to Hermes).
   'voice.voice_chat_mode': ['chained', 'gpt-live'],
@@ -290,52 +164,6 @@ export const ENUM_OPTIONS: Record<string, string[]> = {
     'shimmer',
     'verse'
   ],
-  // Popular Edge neural voices (the full catalog is 400+ — free input).
-  'tts.edge.voice': [
-    'en-US-AriaNeural',
-    'en-US-JennyNeural',
-    'en-US-AndrewNeural',
-    'en-US-BrianNeural',
-    'en-US-GuyNeural',
-    'en-GB-SoniaNeural'
-  ],
-  'tts.gemini.model': ['gemini-2.5-flash-preview-tts', 'gemini-2.5-pro-preview-tts'],
-  // Gemini TTS prebuilt voice set.
-  'tts.gemini.voice': [
-    'Zephyr',
-    'Puck',
-    'Charon',
-    'Kore',
-    'Fenrir',
-    'Leda',
-    'Orus',
-    'Aoede',
-    'Callirrhoe',
-    'Autonoe',
-    'Enceladus',
-    'Iapetus',
-    'Umbriel',
-    'Algieba',
-    'Despina',
-    'Erinome',
-    'Algenib',
-    'Rasalgethi',
-    'Laomedeia',
-    'Achernar',
-    'Alnilam',
-    'Schedar',
-    'Gacrux',
-    'Pulcherrima',
-    'Achird',
-    'Zubenelgenubi',
-    'Vindemiatrix',
-    'Sadachbia',
-    'Sadaltager',
-    'Sulafat'
-  ],
-  'tts.xai.voice_id': ['eve'],
-  'tts.minimax.model': ['speech-02-hd', 'speech-02-turbo'],
-  'tts.mistral.model': ['voxtral-mini-tts-2603'],
   'tts.kittentts.model': [
     'KittenML/kitten-tts-nano-0.8-int8',
     'KittenML/kitten-tts-micro-0.8-int8',
@@ -343,22 +171,10 @@ export const ENUM_OPTIONS: Record<string, string[]> = {
   ],
   'tts.kittentts.voice': ['Jasper'],
   'tts.piper.voice': ['en_US-lessac-medium', 'en_US-amy-medium', 'en_US-ryan-high', 'en_GB-alan-medium'],
-  'tts.neutts.model': ['neuphonic/neutts-air-q4-gguf', 'neuphonic/neutts-air-q8-gguf', 'neuphonic/neutts-air'],
   // Text-to-speech backends — kept in sync with the built-in source of truth
   // (agent/tts_registry.py::_BUILTIN_NAMES / tools/tts_tool.py::
-  // BUILTIN_TTS_PROVIDERS). 'xai' is Grok TTS.
-  'tts.provider': [
-    'edge',
-    'elevenlabs',
-    'openai',
-    'xai',
-    'minimax',
-    'mistral',
-    'gemini',
-    'neutts',
-    'kittentts',
-    'piper'
-  ],
+  // BUILTIN_TTS_PROVIDERS).
+  'tts.provider': ['openai', 'kittentts', 'piper'],
   // STT model lists mirror STT_MODEL_CATALOG in tools/transcription_common.py.
   'stt.openai.model': ['whisper-1', 'gpt-4o-mini-transcribe', 'gpt-4o-transcribe', 'gpt-transcribe'],
   'stt.openai.streaming_model': [
@@ -367,54 +183,23 @@ export const ENUM_OPTIONS: Record<string, string[]> = {
     'gpt-4o-transcribe',
     'gpt-4o-mini-transcribe'
   ],
-  'stt.groq.model': ['whisper-large-v3-turbo', 'whisper-large-v3'],
-  'stt.mistral.model': ['voxtral-mini-latest', 'voxtral-mini-2602'],
-  'stt.xai.model': ['grok-voice-transcribe-2.0', 'grok-voice-transcribe-1.0'],
   'tts.openai.model': ['gpt-4o-mini-tts', 'tts-1', 'tts-1-hd'],
-  'tts.elevenlabs.model_id': [
-    'eleven_v3',
-    'eleven_ttv_v3',
-    'eleven_multilingual_v2',
-    'eleven_turbo_v2',
-    'eleven_turbo_v2_5',
-    'eleven_flash_v2',
-    'eleven_flash_v2_5'
-  ],
-  // NeuTTS local inference device.
-  'tts.neutts.device': ['cpu', 'cuda', 'mps'],
   'updates.non_interactive_local_changes': ['stash', 'discard']
 }
 
 // Voice/model name fields render as a free-input combobox (Input + datalist)
-// instead of a closed Select: providers accept custom voice IDs (ElevenLabs
-// cloned voices, xAI custom voices, Edge's 400+ catalog) and ship new model
+// instead of a closed Select: providers accept custom voice IDs (OpenAI-compatible
+// servers with cloned voices, Piper's voice catalog) and ship new model
 // names faster than this list updates. The ENUM_OPTIONS above become
 // suggestions rather than a gate for these keys.
 export const FREE_INPUT_KEYS = new Set([
-  'tts.edge.voice',
   'voice.gpt_live.voice',
   'tts.openai.model',
   'tts.openai.voice',
-  'tts.elevenlabs.voice_id',
-  'tts.elevenlabs.model_id',
   'stt.openai.model',
-  'stt.groq.model',
-  'stt.mistral.model',
-  'stt.xai.model',
-  'stt.deepinfra.model',
-  'tts.gemini.model',
-  'tts.gemini.voice',
-  'tts.xai.voice_id',
-  'tts.minimax.model',
-  'tts.minimax.voice_id',
-  'tts.mistral.model',
-  'tts.mistral.voice_id',
-  'tts.neutts.model',
   'tts.kittentts.model',
   'tts.kittentts.voice',
-  'tts.piper.voice',
-  'tts.deepinfra.model',
-  'tts.deepinfra.voice'
+  'tts.piper.voice'
 ])
 
 export const FIELD_LABELS: Record<string, string> = defineFieldCopy({
@@ -446,9 +231,7 @@ export const FIELD_LABELS: Record<string, string> = defineFieldCopy({
     persistentShell: 'Persistent Shell',
     envPassthrough: 'Environment Passthrough',
     dockerImage: 'Docker Image',
-    singularityImage: 'Singularity Image',
-    modalImage: 'Modal Image',
-    daytonaImage: 'Daytona Image'
+    singularityImage: 'Singularity Image'
   },
   fileReadMaxChars: 'File Read Limit',
   toolOutput: {
@@ -499,63 +282,13 @@ export const FIELD_LABELS: Record<string, string> = defineFieldCopy({
     openai: {
       model: 'OpenAI STT Model',
       streamingModel: 'OpenAI Live Transcription Model'
-    },
-    groq: {
-      model: 'Groq STT Model'
-    },
-    mistral: {
-      model: 'Mistral STT Model'
-    },
-    xai: {
-      model: 'xAI STT Model'
-    },
-    deepinfra: {
-      model: 'DeepInfra STT Model'
-    },
-    elevenlabs: {
-      modelId: 'ElevenLabs STT Model',
-      languageCode: 'ElevenLabs Language',
-      tagAudioEvents: 'Tag Audio Events',
-      diarize: 'Speaker Diarization'
     }
   },
   tts: {
     provider: 'Text-To-Speech Provider',
-    edge: {
-      voice: 'Edge Voice'
-    },
     openai: {
       model: 'OpenAI TTS Model',
       voice: 'OpenAI Voice'
-    },
-    elevenlabs: {
-      voiceId: 'ElevenLabs Voice',
-      modelId: 'ElevenLabs Model'
-    },
-    xai: {
-      voiceId: 'xAI (Grok) Voice',
-      language: 'xAI Language',
-      speed: 'xAI Playback Speed',
-      autoSpeechTags: 'xAI Auto Speech Tags',
-      optimizeStreamingLatency: 'xAI Streaming Latency Optimization',
-      sampleRate: 'xAI Sample Rate',
-      bitRate: 'xAI Bit Rate'
-    },
-    minimax: {
-      model: 'MiniMax TTS Model',
-      voiceId: 'MiniMax Voice'
-    },
-    mistral: {
-      model: 'Mistral TTS Model',
-      voiceId: 'Mistral Voice'
-    },
-    gemini: {
-      model: 'Gemini TTS Model',
-      voice: 'Gemini Voice'
-    },
-    neutts: {
-      model: 'NeuTTS Model',
-      device: 'NeuTTS Device'
     },
     kittentts: {
       model: 'KittenTTS Model',
@@ -563,10 +296,6 @@ export const FIELD_LABELS: Record<string, string> = defineFieldCopy({
     },
     piper: {
       voice: 'Piper Voice'
-    },
-    deepinfra: {
-      model: 'DeepInfra TTS Model',
-      voice: 'DeepInfra Voice'
     }
   },
   memory: {
@@ -633,9 +362,7 @@ export const FIELD_DESCRIPTIONS: Record<string, string> = defineFieldCopy({
       'SSH backend: keep exported variables between commands. Off starts each command from the login environment; the working directory always carries over.',
     envPassthrough: 'Environment variables to pass into tool execution.',
     dockerImage: 'Container image used when the execution backend is Docker.',
-    singularityImage: 'Image used when the execution backend is Singularity.',
-    modalImage: 'Image used when the execution backend is Modal.',
-    daytonaImage: 'Image used when the execution backend is Daytona.'
+    singularityImage: 'Image used when the execution backend is Singularity.'
   },
   codeExecution: {
     mode: 'How strictly code execution is scoped to the current project.'
@@ -678,27 +405,10 @@ export const FIELD_DESCRIPTIONS: Record<string, string> = defineFieldCopy({
         'Extra sentences for the live voice persona (tone, pace, language). A2Assistant keeps its own system prompt.'
     }
   },
-  tts: {
-    xai: {
-      voiceId: 'xAI voice ID (e.g. eve) or a custom voice ID.',
-      language: 'Spoken language code (e.g. en, pt-BR) or "auto" for auto-detection.',
-      speed: 'Playback speed. 0.7 = slower, 1.0 = normal, 1.5 = faster.',
-      autoSpeechTags: 'Let an LLM insert expressive audio tags ([laughing], [sighs]) into the script before synthesis.',
-      optimizeStreamingLatency: 'Latency vs. quality trade-off. 0 = best quality, 2 = lowest latency.',
-      sampleRate: 'Audio sample rate in Hz. Higher = better quality, larger files.',
-      bitRate: 'MP3 bitrate in bps. Only applies when codec is mp3.'
-    },
-    neutts: {
-      device: 'Local inference device for NeuTTS.'
-    }
-  },
   stt: {
     enabled: 'Enable local or provider-backed speech transcription.',
     echoTranscripts: 'Post the raw 🎙️ transcript of voice messages back to the chat.',
-    streaming: 'Show text while you speak (OpenAI, xAI, ElevenLabs). Falls back to the recording on any failure.',
-    elevenlabs: {
-      languageCode: 'Optional ISO-639-3 language code. Blank lets ElevenLabs auto-detect.'
-    }
+    streaming: 'Show text while you speak (OpenAI). Falls back to the recording on any failure.'
   },
   updates: {
     nonInteractiveLocalChanges:
@@ -803,43 +513,15 @@ export const SECTIONS: DesktopConfigSection[] = [
       'stt.provider',
       'stt.streaming',
       'voice.auto_tts',
-      'tts.edge.voice',
       'tts.openai.model',
       'tts.openai.voice',
-      'tts.elevenlabs.voice_id',
-      'tts.elevenlabs.model_id',
-      'tts.xai.voice_id',
-      'tts.xai.language',
-      'tts.xai.speed',
-      'tts.xai.auto_speech_tags',
-      'tts.xai.optimize_streaming_latency',
-      'tts.xai.sample_rate',
-      'tts.xai.bit_rate',
-      'tts.minimax.model',
-      'tts.minimax.voice_id',
-      'tts.mistral.model',
-      'tts.mistral.voice_id',
-      'tts.gemini.model',
-      'tts.gemini.voice',
-      'tts.neutts.model',
-      'tts.neutts.device',
       'tts.kittentts.model',
       'tts.kittentts.voice',
       'tts.piper.voice',
-      'tts.deepinfra.model',
-      'tts.deepinfra.voice',
       'stt.local.model',
       'stt.local.language',
       'stt.openai.model',
       'stt.openai.streaming_model',
-      'stt.groq.model',
-      'stt.mistral.model',
-      'stt.xai.model',
-      'stt.deepinfra.model',
-      'stt.elevenlabs.model_id',
-      'stt.elevenlabs.language_code',
-      'stt.elevenlabs.tag_audio_events',
-      'stt.elevenlabs.diarize',
       'voice.max_recording_seconds',
       'voice.client_direct'
     ]
@@ -854,8 +536,6 @@ export const SECTIONS: DesktopConfigSection[] = [
       'terminal.timeout',
       'terminal.docker_image',
       'terminal.singularity_image',
-      'terminal.modal_image',
-      'terminal.daytona_image',
       'tool_output.max_bytes',
       'tool_output.max_lines',
       'tool_output.max_line_length',

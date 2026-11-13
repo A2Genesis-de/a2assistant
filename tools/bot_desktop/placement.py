@@ -4,7 +4,7 @@
   ``auto``      (default) follow the terminal backend when it is a sandbox that can host a stream
                 (docker / ssh, or a plugin backend declaring ``supports_streams``); the
                 gateway host when ``terminal.backend`` is local. A
-                sandbox backend that CANNOT host one (modal, daytona, vercel) resolves to ``refused``:
+                sandbox backend that CANNOT host one resolves to ``refused``:
                 the user chose a sandbox for the agent's actions, so quietly running the screen, cua-driver
                 and the browser on the host beside it would hand the agent a desktop outside that sandbox.
   ``terminal``  always the terminal backend; error when it cannot host one.

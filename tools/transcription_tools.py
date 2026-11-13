@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Speech-to-text transcription used by the gateway for voice messages.
 
-Built-in providers: local (faster-whisper, default/free), local_command, groq, openai
-(also serves the managed ``nous`` selection), mistral, xai, elevenlabs, deepinfra; plus
+Built-in providers: local (faster-whisper, default/free), local_command and openai
+(any OpenAI-compatible endpoint; also serves the managed ``nous`` selection); plus
 user-declared command providers and plugin providers. ``transcribe_audio(path)`` returns
 ``{"success", "transcript", "error"?, "provider"?}``. This module owns provider resolution,
 the dispatcher and the cached local model + idle-unload state; backends live in
@@ -23,10 +23,9 @@ from typing import Optional, Dict, Any
 
 from utils import is_truthy_value
 from tools.transcription_common import (
-    BUILTIN_STT_PROVIDERS, CLOUD_STT_PROVIDERS, DEFAULT_ELEVENLABS_STT_MODEL,
-    DEFAULT_GROQ_STT_MODEL, DEFAULT_LOCAL_MODEL, DEFAULT_MISTRAL_STT_MODEL, DEFAULT_PROVIDER,
+    BUILTIN_STT_PROVIDERS, CLOUD_STT_PROVIDERS, DEFAULT_LOCAL_MODEL, DEFAULT_PROVIDER,
     DEFAULT_STT_MODEL, LOCAL_STT_COMMAND_ENV, LOCAL_STT_LANGUAGE_ENV,
-    normalize_xai_stt_model, _error_result, _get_stt_section, _ok_result)
+    _error_result, _get_stt_section, _ok_result)
 from tools.transcription_audio import (
     _convert_caf_to_wav, _prepare_audio_for_transcription, _trim_silence_for_cloud_stt,
     _validate_audio_file, _validate_audio_source_file)
@@ -37,21 +36,12 @@ from tools.transcription_local import (
     _normalize_local_stt_language, _transcribe_local_command, _try_lazy_install_stt,
     build_local_transcribe_kwargs)
 # The ``_transcribe_<provider>`` handlers are looked up in this module's globals by _dispatch_stt_provider.
-from tools.transcription_cloud import (
-    _has_xai_stt_credentials, _resolve_openai_audio_client_config, _transcribe_deepinfra,
-    _transcribe_elevenlabs, _transcribe_groq, _transcribe_mistral, _transcribe_openai,
-    _transcribe_xai)
+from tools.transcription_cloud import _resolve_openai_audio_client_config, _transcribe_openai
 from tools.transcription_command import (
     _apply_pre_transcription_hook, _dispatch_to_plugin_provider, _enforce_prompt_length_limit,
     _resolve_command_stt_provider_config, _transcribe_command_stt, _unregistered_stt_provider_error)
 
 logger = logging.getLogger(__name__)
-
-
-def _resolve_provider_key(env_var: str, provider_id: str) -> str:
-    """STT API key via the shared voice-key resolver (config > env/.env > credential pool); resolved per call."""
-    from tools.tool_backend_helpers import resolve_provider_secret
-    return resolve_provider_secret(env_var, provider_id)
 
 
 def _safe_find_spec(module_name: str) -> bool:
@@ -61,8 +51,8 @@ def _safe_find_spec(module_name: str) -> bool:
         return module_name in globals() or module_name in os.sys.modules
 
 
-_HAS_FASTER_WHISPER, _HAS_OPENAI, _HAS_MISTRAL, _HAS_PILK = map(
-    _safe_find_spec, ("faster_whisper", "openai", "mistralai", "pilk"))
+_HAS_FASTER_WHISPER, _HAS_OPENAI, _HAS_PILK = map(
+    _safe_find_spec, ("faster_whisper", "openai", "pilk"))
 
 # Local model singleton; the lock guards check-then-load against concurrent voice messages.
 _local_model: Optional[object] = None
@@ -136,21 +126,6 @@ def _is_local_stt_provider(provider: str, stt_config: dict[str, Any]) -> bool:
 
 
 # ---- Provider resolution ------------------------------------------------
-def _has_key(env_var: str, provider: str, *, needs_openai: bool = False, needs_mistral: bool = False):
-    """Availability probe factory: optional SDK flag AND a resolvable API key."""
-    def probe() -> bool:
-        sdk_ok = (not needs_openai or _HAS_OPENAI) and (not needs_mistral or _HAS_MISTRAL)
-        return sdk_ok and bool(_resolve_provider_key(env_var, provider))
-    return probe
-
-
-def _has_xai_stt_credentials_quietly() -> bool:
-    try:
-        return _has_xai_stt_credentials()
-    except Exception:
-        return False
-
-
 def _resolve_explicit_openai() -> str:
     if not _HAS_OPENAI:
         logger.warning("STT provider 'openai' configured but no API key available")
@@ -194,37 +169,9 @@ def _resolve_explicit_local_command() -> str:
     return "none"
 
 
-_has_groq_key = _has_key("GROQ_API_KEY", "groq", needs_openai=True)
-_has_mistral_key = _has_key("MISTRAL_API_KEY", "mistral", needs_mistral=True)
-_has_elevenlabs_key = _has_key("ELEVENLABS_API_KEY", "elevenlabs")
-_has_deepinfra_key = _has_key("DEEPINFRA_API_KEY", "deepinfra", needs_openai=True)
+def _openai_auto_detected() -> bool:
+    return _HAS_OPENAI and _has_openai_audio_backend()
 
-# Cloud providers in AUTO-DETECT priority order:
-#   name -> (explicit-selection probe, auto-detect probe, explicit warning, auto-detect log)
-# The probes differ only for openai (explicit has its own resolver in _EXPLICIT_RESOLVERS;
-# auto-detect also requires the SDK) and xai (auto-detect must never raise). DeepInfra is
-# LAST so a DEEPINFRA_API_KEY set for chat never displaces an xAI/ElevenLabs auto-selection.
-# Mistral only auto-selects when the SDK is present — no lazy-install during passive
-# auto-detection (explicit ``provider: mistral`` installs on first use).
-_CLOUD_PROVIDER_SPECS = {
-    "groq": (_has_groq_key, _has_groq_key,
-             "STT provider 'groq' configured but GROQ_API_KEY not set",
-             "No local STT available, using Groq Whisper API"),
-    "openai": (None, lambda: _HAS_OPENAI and _has_openai_audio_backend(),
-               None,
-               "No local STT available, using OpenAI Whisper API"),
-    "mistral": (_has_mistral_key, _has_mistral_key,
-                "STT provider 'mistral' configured but mistralai package not installed or MISTRAL_API_KEY not set",
-                "No local STT available, using Mistral Voxtral Transcribe API"),
-    "xai": (_has_xai_stt_credentials, _has_xai_stt_credentials_quietly,
-            "STT provider 'xai' configured but no xAI credentials are available",
-            "No local STT available, using xAI Grok STT API"),
-    "elevenlabs": (_has_elevenlabs_key, _has_elevenlabs_key,
-                   "STT provider 'elevenlabs' configured but ELEVENLABS_API_KEY not set",
-                   "No local STT available, using ElevenLabs Scribe STT API"),
-    "deepinfra": (_has_deepinfra_key, _has_deepinfra_key,
-                  "STT provider 'deepinfra' configured but DEEPINFRA_API_KEY not set (or openai package missing)",
-                  "No local STT available, using DeepInfra Whisper API")}
 
 # Explicit selections whose resolution is more than a probe + warning.
 _EXPLICIT_RESOLVERS = {
@@ -237,18 +184,12 @@ def _resolve_explicit_provider(provider: str) -> str:
     """Explicit ``stt.provider`` -> usable name or ``"none"``; unknown names pass through untouched
     so the dispatcher fails with the provider-not-registered message."""
     resolver = _EXPLICIT_RESOLVERS.get(provider)
-    if resolver is not None:
-        return resolver()
-    spec = _CLOUD_PROVIDER_SPECS.get(provider)
-    if spec is None or spec[0]():
-        return provider
-    logger.warning(spec[2])
-    return "none"
+    return resolver() if resolver is not None else provider
 
 
 def _get_provider(stt_config: dict) -> str:
     """Which STT provider to use: an explicit ``stt.provider`` is honoured (no silent cloud
-    fallback); otherwise auto-detect local > groq > openai > mistral > xai > elevenlabs > deepinfra."""
+    fallback); otherwise auto-detect local > openai."""
     if not is_stt_enabled(stt_config):
         return "none"
     explicit = "provider" in stt_config
@@ -270,10 +211,9 @@ def _get_provider(stt_config: dict) -> str:
     backend = _detect_local_backend()
     if backend:
         return backend
-    for name, (_probe, available, _warning, message) in _CLOUD_PROVIDER_SPECS.items():
-        if available():
-            logger.info(message)
-            return name
+    if _openai_auto_detected():
+        logger.info("No local STT available, using OpenAI Whisper API")
+        return "openai"
     return "none"
 
 
@@ -424,7 +364,7 @@ def _transcribe_local(
 # ---- Public API ---------------------------------------------------------
 def _read_block_error(file_path: str) -> Optional[dict[str, Any]]:
     """Refuse to ship a credential store (auth.json, .env, OAuth tokens) to an STT provider.
-    Mirrors the image-gen / video-gen read guards."""
+    Mirrors the image-gen read guard."""
     from agent.file_safety import get_read_block_error
     blocked = get_read_block_error(file_path)
     return _error_result(blocked) if blocked else None
@@ -473,27 +413,19 @@ def _limit_model_name(provider: str, stt_config: dict[str, Any], model: Optional
     return _builtin_model_name(provider, stt_config, model) if provider in _BUILTIN_MODEL_KEYS else model
 
 
-# Built-in provider -> (stt section, config key, default, treat-empty-as-missing). "local_command"
-# shares ``stt.local``; deepinfra uses the live catalog when empty.
+# Built-in provider -> (stt section, config key, default). "local_command" shares ``stt.local``.
 _BUILTIN_MODEL_KEYS = {
-    "local": ("local", "model", DEFAULT_LOCAL_MODEL, False),
-    "local_command": ("local", "model", DEFAULT_LOCAL_MODEL, False),
-    "groq": ("groq", "model", DEFAULT_GROQ_STT_MODEL, True),
-    "openai": ("openai", "model", DEFAULT_STT_MODEL, False),
-    "mistral": ("mistral", "model", DEFAULT_MISTRAL_STT_MODEL, False),
-    "xai": ("xai", "model", "", True),  # blank -> normalize_xai_stt_model resolves env/default
-    "elevenlabs": ("elevenlabs", "model_id", DEFAULT_ELEVENLABS_STT_MODEL, False),
-    "deepinfra": ("deepinfra", "model", "", True)}
+    "local": ("local", "model", DEFAULT_LOCAL_MODEL),
+    "local_command": ("local", "model", DEFAULT_LOCAL_MODEL),
+    "openai": ("openai", "model", DEFAULT_STT_MODEL)}
 
 
 def _builtin_model_name(provider: str, stt_config: dict[str, Any], model: Optional[str]) -> str:
     """Resolve the model for a built-in provider: caller override > ``stt.<provider>`` config > default."""
     if model:
         return model
-    section, key, default, empty_is_missing = _BUILTIN_MODEL_KEYS[provider]
-    cfg = _get_stt_section(stt_config, section)
-    resolved = (cfg.get(key) or default) if empty_is_missing else cfg.get(key, default)
-    return normalize_xai_stt_model(resolved) if provider == "xai" else resolved
+    section, key, default = _BUILTIN_MODEL_KEYS[provider]
+    return _get_stt_section(stt_config, section).get(key, default)
 
 
 def _resolve_dispatch_hints(
@@ -557,10 +489,8 @@ def _no_provider_error(provider: str, stt_config: dict[str, Any]) -> dict[str, A
     return _error_result(
         "No STT provider available. Install faster-whisper for free local "
         f"transcription, configure {LOCAL_STT_COMMAND_ENV} or install a local whisper CLI, "
-        "set GROQ_API_KEY for free Groq Whisper, set MISTRAL_API_KEY for Mistral "
-        "Voxtral Transcribe, configure xAI OAuth or set XAI_API_KEY for xAI Grok STT, "
-        "set ELEVENLABS_API_KEY for ElevenLabs Scribe, or set VOICE_TOOLS_OPENAI_KEY "
-        "or OPENAI_API_KEY for the OpenAI Whisper API.")
+        "or set VOICE_TOOLS_OPENAI_KEY or OPENAI_API_KEY (plus STT_OPENAI_BASE_URL for an "
+        "OpenAI-compatible server) for the OpenAI Whisper API.")
 
 
 def transcribe_audio(

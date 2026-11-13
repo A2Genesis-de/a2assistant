@@ -106,16 +106,16 @@ class TestProviderGating:
         trimmed = _write_wav(trimmed_dir / "a-trimmed.wav", [("tone", 1)])
         seen = {}
 
-        def fake_groq(file_path, model_name, *, language=None, prompt=None):
+        def fake_openai(file_path, model_name, *, language=None, prompt=None):
             seen["path"] = file_path
-            return {"success": True, "transcript": "hi", "provider": "groq"}
+            return {"success": True, "transcript": "hi", "provider": "openai"}
 
         with patch("tools.transcription_tools._load_stt_config",
-                   return_value={"provider": "groq", "enabled": True}), \
-             patch("tools.transcription_tools._get_provider", return_value="groq"), \
+                   return_value={"provider": "openai", "enabled": True}), \
+             patch("tools.transcription_tools._get_provider", return_value="openai"), \
              patch("tools.transcription_tools._trim_silence_for_cloud_stt",
                    return_value=trimmed), \
-             patch("tools.transcription_tools._transcribe_groq", side_effect=fake_groq):
+             patch("tools.transcription_tools._transcribe_openai", side_effect=fake_openai):
             from tools.transcription_tools import _transcribe_prepared_audio
             result = _transcribe_prepared_audio(wav)
 
@@ -128,16 +128,16 @@ class TestProviderGating:
         wav = _write_wav(tmp_path / "a.wav", [("tone", 1)])
         seen = {}
 
-        def fake_groq(file_path, model_name, *, language=None, prompt=None):
+        def fake_openai(file_path, model_name, *, language=None, prompt=None):
             seen["path"] = file_path
-            return {"success": True, "transcript": "hi", "provider": "groq"}
+            return {"success": True, "transcript": "hi", "provider": "openai"}
 
         with patch("tools.transcription_tools._load_stt_config",
-                   return_value={"provider": "groq", "enabled": True}), \
-             patch("tools.transcription_tools._get_provider", return_value="groq"), \
+                   return_value={"provider": "openai", "enabled": True}), \
+             patch("tools.transcription_tools._get_provider", return_value="openai"), \
              patch("tools.transcription_tools._trim_silence_for_cloud_stt",
                    return_value=None), \
-             patch("tools.transcription_tools._transcribe_groq", side_effect=fake_groq):
+             patch("tools.transcription_tools._transcribe_openai", side_effect=fake_openai):
             from tools.transcription_tools import _transcribe_prepared_audio
             result = _transcribe_prepared_audio(wav)
 

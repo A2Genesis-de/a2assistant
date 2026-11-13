@@ -152,29 +152,22 @@ def test_user_provider_plugin_name_and_model_never_leave(direct_runtime, tmp_pat
                 assert dims[key] == "custom", (name, dims)
         if "model" in dims:
             assert dims["model"] == "custom", (name, dims)
-    assert catalog.provider_metric_name("deepinfra") == "deepinfra"
+    assert catalog.provider_metric_name("anthropic") == "anthropic"
 
 
 def test_network_address_model_ids_and_raw_injected_marks_never_reach_counters(direct_runtime, tmp_path):
-    """A ``host:port``/IP/localhost model id on a public provider reads ``custom`` (Bedrock's
-    ``-v1:0`` and OpenRouter's ``:free`` stay), and the subscriber re-runs the catalog on a mark's
+    """A ``host:port``/IP/localhost model id on a public provider reads ``custom`` (OpenRouter's
+    ``:free`` stays), and the subscriber re-runs the catalog on a mark's
     provider/model so a raw mark that skipped the producer's pass stores nothing."""
     from hermes_cli.observability import shared_metrics_contract as contract
     from hermes_cli.observability.shared_metrics_model import model_route
 
     for model in ("127.0.0.1:8080/x", "localhost/qwen", "10.0.0.5/x", "gpu-box.lan:8000/qwen", "gpu-box.lan:8000"):
         assert model_route("openrouter", model)["model"] == "custom", model
-    # An AWS ARN carries the account id; an alias spelling of a loopback provider names the user's model.
-    for provider, model in (("bedrock", "arn:aws:bedrock:us-east-1:123456789012:inference-profile/x"),
-                            ("lm-studio", "my-model-x"), ("lm_studio", "my-model-x")):
+    # An alias spelling of a loopback provider names the user's model.
+    for provider, model in (("lm-studio", "my-model-x"), ("lm_studio", "my-model-x")):
         assert model_route(provider, model)["model"] == "custom", (provider, model)
-    # Azure deployment names are chosen by their owner: only a public model id passes.
-    for provider in ("azure-foundry", "azure"):
-        assert model_route(provider, "acme-legal-prod-eastus")["model"] == "custom"
-        assert model_route(provider, "GPT-4o")["model"] == "gpt-4o"
-    for provider, model in (("bedrock", "anthropic.claude-3-5-sonnet-20241022-v2:0"),
-                            ("openrouter", "openai/gpt-4o:free"), ("ollama-cloud", "gpt-oss:120b")):
-        assert model_route(provider, model)["model"] == model
+    assert model_route("openrouter", "openai/gpt-4o:free")["model"] == "openai/gpt-4o:free"
 
     runtime = relay_shared_metrics._get_runtime(retry_failed=True)
     for provider, model in (("openrouter", "127.0.0.1:8080/x"), ("openrouter", "http://127.0.0.1:8080/v1"),

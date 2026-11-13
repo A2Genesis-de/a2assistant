@@ -556,15 +556,15 @@ class TestRoomPlumbingRuntimeOverrides:
         row = {
             "title": "Analyze business idea gaps",
             "hidden": 0,
-            "model": "glm-5.1",
-            "billing_provider": "ollama-cloud",
+            "model": "claude-sonnet-5",
+            "billing_provider": "anthropic",
             "model_config": json.dumps(
-                {"model": "glm-5.1", "provider": "ollama-cloud", "service_tier": "normal"}
+                {"model": "claude-sonnet-5", "provider": "anthropic", "service_tier": "normal"}
             ),
         }
         overrides = _stored_session_runtime_overrides(row)
-        assert overrides["model_override"]["model"] == "glm-5.1"
-        assert overrides["model_override"]["provider"] == "ollama-cloud"
+        assert overrides["model_override"]["model"] == "claude-sonnet-5"
+        assert overrides["model_override"]["provider"] == "anthropic"
 
     def test_hidden_normal_chat_untouched_by_legacy_shape(self):
         """A hidden NON-room chat (hidden without a "Group:" title) keeps the
@@ -688,7 +688,7 @@ class TestFollowProfileConfigRuntimeOverrides:
         known = set(server._sessions)
         try:
             resp = server.handle_request({"id": "1", "method": "session.create", "params": {
-                "cols": 80, "source": "desktop", "profile": "b", "model": "zai/glm-5.1", "provider": "zai",
+                "cols": 80, "source": "desktop", "profile": "b", "model": "anthropic/claude-sonnet-5", "provider": "anthropic",
                 "follow_profile_config": True}})
             assert "error" not in resp, resp
             session = server._sessions[resp["result"]["session_id"]]
@@ -701,7 +701,7 @@ class TestFollowProfileConfigRuntimeOverrides:
                 db.close()
             with server._profile_build_scope(secondary):
                 restored = server._stored_session_runtime_overrides(row)["model_override"]
-            assert (restored["model"], restored["provider"]) == ("zai/glm-5.1", "zai")
+            assert (restored["model"], restored["provider"]) == ("anthropic/claude-sonnet-5", "anthropic")
         finally:
             with server._sessions_lock:
                 for sid in [s for s in server._sessions if s not in known]:

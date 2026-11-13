@@ -116,7 +116,7 @@ def _close_cloud_session(session_info: dict[str, Any]) -> None:
     bb_session_id = session_info.get("bb_session_id")
     if not bb_session_id:
         return
-    from tools.browser_session_cloud import get_cloud_provider
+    from tools.browser_config import get_cloud_provider
     provider = get_cloud_provider()
     if provider is None:
         return
@@ -192,7 +192,7 @@ def cleanup_profile_browsers(home_key: str) -> None:
         from tools.browser_use_cli import stop_harness_daemons
         stop_harness_daemons(home_key)
     _best_effort("Browser Use harness daemon stop", _stop_harness)
-    from tools.browser_session_cloud import reset_caches
+    from tools.browser_config import reset_caches
     reset_caches(home_key)
 
 
@@ -230,7 +230,7 @@ def cleanup_all_browsers() -> None:
         from tools.browser_lightpanda import stop_all_lightpanda
         stop_all_lightpanda()
     _best_effort("Lightpanda stop", _stop_lightpanda)
-    from tools.browser_session_cloud import reset_caches
+    from tools.browser_config import reset_caches
     reset_caches()
 
 

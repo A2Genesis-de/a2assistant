@@ -44,7 +44,6 @@ def guest_home(monkeypatch, tmp_path):
     from hermes_cli import model_switch_providers as msp
     monkeypatch.setattr(models_dev, "fetch_models_dev", lambda *a, **k: {})
     monkeypatch.setattr(models_mod, "get_curated_nous_model_ids", lambda *a, **k: ["anthropic/claude-x", "openai/gpt-y"])
-    monkeypatch.setattr(models_mod, "fetch_ollama_cloud_models", lambda *a, **k: [])
     monkeypatch.setattr(msp, "_nous_picker_model_ids", lambda *a, **k: pytest.fail("guest must not fetch the Portal catalog"))
     return Path(os.environ["HERMES_HOME"])
 

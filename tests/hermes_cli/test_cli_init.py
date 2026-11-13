@@ -601,29 +601,34 @@ class TestRootLevelProviderOverride:
 
         assert cfg["model"]["base_url"] == "https://example.com/v1"
 
-    def test_terminal_vercel_runtime_bridged_to_env(self, tmp_path, monkeypatch):
-        """Classic CLI must expose terminal.vercel_runtime to terminal_tool.py."""
+    def test_leftover_cloud_backend_keys_keep_local_backend(self, tmp_path, monkeypatch):
+        """Keys of the removed cloud terminal backends are ignored; the local backend still loads."""
         import hermes_yaml as yaml
 
         hermes_home = tmp_path / ".hermes"
         hermes_home.mkdir()
         monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+        monkeypatch.delenv("TERMINAL_ENV", raising=False)
         monkeypatch.delenv("TERMINAL_VERCEL_RUNTIME", raising=False)
 
         config_path = hermes_home / "config.yaml"
         config_path.write_text(yaml.safe_dump({
             "terminal": {
-                "backend": "vercel_sandbox",
-                "vercel_runtime": "python3.13",
+                "backend": "local",
+                "modal_mode": "auto",
+                "modal_image": "nikolaik/python-nodejs:python3.11-nodejs20",
+                "vercel_runtime": "node24",
+                "container_cpu": 1,
+                "container_memory": 5120,
             },
         }))
 
         import cli
         monkeypatch.setattr(cli, "_hermes_home", hermes_home)
-        cfg = cli.load_cli_config()
+        cli.load_cli_config()
 
-        assert cfg["terminal"]["vercel_runtime"] == "python3.13"
-        assert os.environ["TERMINAL_VERCEL_RUNTIME"] == "python3.13"
+        assert os.environ["TERMINAL_ENV"] == "local"
+        assert "TERMINAL_VERCEL_RUNTIME" not in os.environ
 
     def test_normalize_root_model_keys_moves_to_model(self):
         """_normalize_root_model_keys migrates root keys into model section."""

@@ -16,11 +16,9 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 # Providers that can ground generation on a reference image, in preference order.
-# OpenRouter/Nous run a quality-first model chain and may fall back depending on
-# account access, so fidelity can vary by configured backend.
-_REF_CAPABLE = ("nous", "openai", "openai-codex", "openrouter", "krea")
+_REF_CAPABLE = ("openai",)
 # Friendly display label per reference-capable provider (desktop pet-gen picker).
-_PROVIDER_LABELS = {"nous": "Nous Portal", "openrouter": "OpenRouter", "openai": "OpenAI", "openai-codex": "OpenAI (Codex)", "krea": "Krea"}
+_PROVIDER_LABELS = {"openai": "OpenAI"}
 
 
 class GenerationError(RuntimeError):
@@ -82,8 +80,8 @@ def resolve_provider(*, require_references: bool = True, prefer: str | None = No
         return SpriteProvider(name=getattr(active, "name", "unknown"), provider=active, supports_references=False)
     raise GenerationError(
         "Pet generation needs an image backend that supports reference images. "
-        "Open `hermes tools` → Image Generation and configure Nous Portal, "
-        "OpenRouter, or OpenAI (gpt-image-2) with an API key."
+        "Open `hermes tools` → Image Generation and configure the OpenAI (gpt-image-2 "
+        "or OpenAI-compatible) backend."
     )
 
 
@@ -137,15 +135,12 @@ def generate(
     if reference_images and not sprite.supports_references:
         raise GenerationError(
             f"image backend '{sprite.name}' cannot use reference images; "
-            "configure OpenAI gpt-image-2 or Krea for pet generation"
+            "configure the OpenAI image backend for pet generation"
         )
 
     refs = [str(p) for p in (reference_images or [])]
 
-    # Providers disagree on the ref kwarg name: our OpenRouter/Nous backends read
-    # ``reference_images``, OpenAI's gpt-image-2 reads ``reference_image_urls``.
-    # Send both; each ignores the other.
-    ref_kwargs = {"reference_images": refs, "reference_image_urls": refs} if refs else {}
+    ref_kwargs = {"reference_image_urls": refs} if refs else {}
 
     def _run(extra: dict) -> tuple[Path | None, str]:
         try:

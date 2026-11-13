@@ -28,7 +28,7 @@ def test_new_bot_config_keeps_launch_env_refs_not_their_values(tmp_path, monkeyp
     for name, value in _SECRETS.items():
         monkeypatch.setenv(name, value)
     (home / "config.yaml").write_text(
-        "tts:\n  provider: elevenlabs\n  elevenlabs:\n    api_key: ${FAKE_TTS_KEY}\n"
+        "tts:\n  provider: openai\n  openai:\n    api_key: ${FAKE_TTS_KEY}\n"
         "stt:\n  provider: openai\n  openai:\n    api_key: ${FAKE_STT_KEY}\n"
         "mcp_servers:\n  tracker:\n    command: tracker-mcp\n    env:\n      TRACKER_TOKEN: ${FAKE_MCP_TOKEN}\n",
         encoding="utf-8")

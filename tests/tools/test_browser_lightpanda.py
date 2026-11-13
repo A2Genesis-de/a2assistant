@@ -10,7 +10,7 @@ from tools import browser_launcher as launcher
 from tools import browser_lightpanda as lp
 from tools import browser_session as bs
 from tools import browser_session_cdp as bs_cdp
-from tools import browser_session_cloud as bs_cloud
+from tools import browser_config as bs_cloud
 from tools import browser_session_lifecycle as lifecycle
 
 
@@ -125,9 +125,6 @@ class TestLightpandaEngineStatus:
         }
         for name, fn in gates.items():
             monkeypatch.setattr(homes[name], name, fn)
-        monkeypatch.setattr(
-            "tools.browser_use_cli.is_legacy_browser_use_cloud_config", lambda cfg: False
-        )
 
     def test_not_lightpanda(self, monkeypatch):
         self._gates(monkeypatch, using_lightpanda_engine=lambda: False)
@@ -146,18 +143,10 @@ class TestLightpandaEngineStatus:
 
     def test_shadowed_by_cloud_provider(self, monkeypatch):
         provider = MagicMock()
-        provider.display_name = "Browserbase"
+        provider.display_name = "Browserless"
         self._gates(monkeypatch, get_cloud_provider=lambda: provider)
         used, reason = lp.lightpanda_engine_status()
-        assert used is False and "Browserbase" in reason
-
-    def test_shadowed_by_legacy_browser_use_cloud(self, monkeypatch):
-        self._gates(monkeypatch)
-        monkeypatch.setattr(
-            "tools.browser_use_cli.is_legacy_browser_use_cloud_config", lambda cfg: True
-        )
-        used, reason = lp.lightpanda_engine_status()
-        assert used is False and "Browser Use cloud" in reason
+        assert used is False and "Browserless" in reason
 
     def test_shadowed_by_real_profile(self, monkeypatch):
         self._gates(monkeypatch, use_real_profile=lambda: True)
@@ -168,7 +157,7 @@ class TestLightpandaEngineStatus:
         """browser_exec resolves real-profile before the backend, so with
         both set the real-profile toggle is the actual shadow."""
         provider = MagicMock()
-        provider.display_name = "Browserbase"
+        provider.display_name = "Browserless"
         self._gates(
             monkeypatch,
             use_real_profile=lambda: True,

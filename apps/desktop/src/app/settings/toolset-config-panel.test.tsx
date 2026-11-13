@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router'
 import type * as ReactRouterDom from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { ToolsetConfig, WebCapability } from '@/types/hermes'
+import type { ToolsetConfig } from '@/types/hermes'
 
 // Collect the component graph before the behavioral test deadline starts.
 import { ToolsetConfigPanel } from './toolset-config-panel'
@@ -46,7 +46,6 @@ const getHermesConfigRecord = vi.fn()
 const getHermesConfigSchema = vi.fn()
 const saveHermesConfig = vi.fn()
 const saveHermesConfigRecord = vi.fn()
-const getElevenLabsVoices = vi.fn()
 
 vi.mock('@/hermes', () => ({
   // useHermesConfigRecord (via VoiceProviderFields) reads these from the barrel.
@@ -70,7 +69,6 @@ vi.mock('@/hermes', () => ({
   getHermesConfigSchema: () => getHermesConfigSchema(),
   saveHermesConfig: (config: unknown) => saveHermesConfig(config),
   saveHermesConfigRecord: (config: unknown, profile?: unknown) => saveHermesConfigRecord(config, profile),
-  getElevenLabsVoices: () => getElevenLabsVoices(),
   // use-config-record keys its query cache by scope via profileScopeKey; a
   // scoped panel reaches it, so the full-replacement mock must provide it.
   profileScopeKey: (scope?: { profile?: string; connectionId?: string } | string) =>
@@ -100,7 +98,7 @@ function config(overrides: Partial<ToolsetConfig> = {}): ToolsetConfig {
     active_provider: null,
     providers: [
       {
-        name: 'Microsoft Edge TTS',
+        name: 'Piper',
         badge: 'free',
         tag: 'No API key needed',
         env_vars: [],
@@ -109,11 +107,11 @@ function config(overrides: Partial<ToolsetConfig> = {}): ToolsetConfig {
         is_active: false
       },
       {
-        name: 'ElevenLabs',
+        name: 'OpenAI TTS',
         badge: 'paid',
-        tag: 'Most natural voices',
+        tag: 'High quality voices',
         env_vars: [
-          { key: 'ELEVENLABS_API_KEY', prompt: 'ElevenLabs API key', url: 'https://x', default: null, is_set: false }
+          { key: 'VOICE_TOOLS_OPENAI_KEY', prompt: 'OpenAI API key', url: 'https://x', default: null, is_set: false }
         ],
         post_setup: null,
         requires_nous_auth: false,
@@ -149,22 +147,20 @@ beforeEach(() => {
     current: null,
     default: null
   })
-  selectToolsetModel.mockResolvedValue({ ok: true, name: 'image_gen', model: 'z-image-turbo' })
-  selectToolsetProvider.mockResolvedValue({ ok: true, name: 'tts', provider: 'ElevenLabs' })
+  selectToolsetModel.mockResolvedValue({ ok: true, name: 'image_gen', model: 'gpt-image-2-low' })
+  selectToolsetProvider.mockResolvedValue({ ok: true, name: 'tts', provider: 'OpenAI TTS' })
   setEnvVar.mockResolvedValue({ ok: true })
   deleteEnvVar.mockResolvedValue({ ok: true })
   getHermesConfigRecord.mockResolvedValue({
     tts: {
-      provider: 'edge',
-      edge: { voice: 'en-US-AriaNeural' },
-      openai: { model: 'gpt-4o-mini-tts', voice: 'alloy' },
-      elevenlabs: { voice_id: 'pNInz6obpgDQGcFmaJgB', model_id: 'eleven_multilingual_v2' }
+      provider: 'piper',
+      piper: { voice: 'en_US-lessac-medium' },
+      openai: { model: 'gpt-4o-mini-tts', voice: 'alloy' }
     }
   })
   getHermesConfigSchema.mockResolvedValue({ fields: {}, category_order: [] })
   saveHermesConfig.mockResolvedValue({ ok: true })
   saveHermesConfigRecord.mockResolvedValue({ ok: true })
-  getElevenLabsVoices.mockResolvedValue({ available: false, voices: [] })
 })
 
 afterEach(() => {
@@ -260,14 +256,14 @@ describe('ToolsetConfigPanel', () => {
     render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
     // Row click only expands — browsing details must not rewrite config.
-    const elevenlabs = await screen.findByRole('button', { name: /ElevenLabs/ })
-    fireEvent.click(elevenlabs)
+    const openaiTts = await screen.findByRole('button', { name: /OpenAI TTS/ })
+    fireEvent.click(openaiTts)
     expect(selectToolsetProvider).not.toHaveBeenCalled()
 
     // The explicit activation button is what persists the backend choice.
     fireEvent.click(await screen.findByRole('button', { name: /Use this backend/ }))
 
-    await waitFor(() => expect(selectToolsetProvider).toHaveBeenCalledWith('tts', 'ElevenLabs'))
+    await waitFor(() => expect(selectToolsetProvider).toHaveBeenCalledWith('tts', 'OpenAI TTS'))
   })
 
   it('serializes provider selection while a previous choice is pending', async () => {
@@ -281,20 +277,20 @@ describe('ToolsetConfigPanel', () => {
 
     render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
-    // Edge auto-expands (first configured provider); activate it explicitly.
-    await screen.findByRole('button', { name: /Microsoft Edge TTS/ })
+    // Piper auto-expands (first configured provider); activate it explicitly.
+    await screen.findByRole('button', { name: /Piper/ })
     const useBackend = await screen.findByRole('button', { name: /Use this backend/ })
     fireEvent.click(useBackend)
 
-    await waitFor(() => expect(selectToolsetProvider).toHaveBeenCalledWith('tts', 'Microsoft Edge TTS'))
+    await waitFor(() => expect(selectToolsetProvider).toHaveBeenCalledWith('tts', 'Piper'))
     // While the first selection is pending, the activation CTA is disabled —
     // a second click must not fire another PUT.
     expect(useBackend.hasAttribute('disabled')).toBe(true)
     fireEvent.click(useBackend)
     expect(selectToolsetProvider).toHaveBeenCalledTimes(1)
 
-    resolveSelection({ name: 'tts', ok: true, provider: 'Microsoft Edge TTS' })
-    // Edge is now the active backend — its expanded panel shows the active
+    resolveSelection({ name: 'tts', ok: true, provider: 'Piper' })
+    // Piper is now the active backend — its expanded panel shows the active
     // hint instead of the activation button.
     await waitFor(() => expect(screen.getByText('This is your active backend')).toBeTruthy())
   })
@@ -303,12 +299,12 @@ describe('ToolsetConfigPanel', () => {
     getToolsetConfig.mockResolvedValue(
       config({
         name: 'image_gen',
-        active_provider: 'FAL.ai',
+        active_provider: 'OpenAI',
         providers: [
           {
-            name: 'FAL.ai',
+            name: 'OpenAI',
             badge: 'paid',
-            tag: 'Multi-model image generation',
+            tag: 'GPT Image text-to-image & editing',
             env_vars: [],
             post_setup: null,
             requires_nous_auth: false,
@@ -320,59 +316,59 @@ describe('ToolsetConfigPanel', () => {
     getToolsetModels.mockResolvedValue({
       name: 'image_gen',
       has_models: true,
-      provider: 'FAL.ai',
-      plugin: 'fal',
+      provider: 'OpenAI',
+      plugin: 'openai',
       models: [
-        { id: 'z-image-turbo', display: 'Z-Image Turbo', speed: 'fast', strengths: 'cheap drafts', price: '$0.005' },
-        { id: 'flux-2-pro', display: 'FLUX 2 Pro', speed: 'slow', strengths: 'quality', price: '$0.05' }
+        { id: 'gpt-image-2-low', display: 'GPT Image 2 (Low)', speed: 'fast', strengths: 'cheap drafts', price: '$0.005' },
+        { id: 'gpt-image-2-high', display: 'GPT Image 2 (High)', speed: 'slow', strengths: 'quality', price: '$0.05' }
       ],
-      current: 'z-image-turbo',
-      default: 'z-image-turbo'
+      current: 'gpt-image-2-low',
+      default: 'gpt-image-2-low'
     })
 
     render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="image_gen" />)
 
     // Both catalog rows render with their picker metadata.
-    expect(await screen.findByText('Z-Image Turbo')).toBeTruthy()
-    expect(screen.getByText('FLUX 2 Pro')).toBeTruthy()
-    expect(getToolsetModels).toHaveBeenCalledWith('image_gen', 'FAL.ai')
+    expect(await screen.findByText('GPT Image 2 (Low)')).toBeTruthy()
+    expect(screen.getByText('GPT Image 2 (High)')).toBeTruthy()
+    expect(getToolsetModels).toHaveBeenCalledWith('image_gen', 'OpenAI')
 
     // Picking a different model persists via the model endpoint.
-    fireEvent.click(screen.getByRole('button', { name: /FLUX 2 Pro/ }))
-    await waitFor(() => expect(selectToolsetModel).toHaveBeenCalledWith('image_gen', 'flux-2-pro', 'FAL.ai'))
+    fireEvent.click(screen.getByRole('button', { name: /GPT Image 2 \(High\)/ }))
+    await waitFor(() => expect(selectToolsetModel).toHaveBeenCalledWith('image_gen', 'gpt-image-2-high', 'OpenAI'))
   })
 
   it('saves an API key for a provider env var', async () => {
     render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
     // Select the keyed provider so its env vars render.
-    const elevenlabs = await screen.findByRole('button', { name: /ElevenLabs/ })
-    fireEvent.click(elevenlabs)
+    const openaiTts = await screen.findByRole('button', { name: /OpenAI TTS/ })
+    fireEvent.click(openaiTts)
 
     // Open the credential actions menu (Radix opens on pointerdown), then "Set".
     const trigger = await screen.findByRole('button', { name: /^Actions$/ })
     fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false, pointerType: 'mouse' })
     fireEvent.click(await screen.findByRole('menuitem', { name: 'Set' }))
 
-    const input = await screen.findByPlaceholderText('ElevenLabs API key')
+    const input = await screen.findByPlaceholderText('OpenAI API key')
     fireEvent.change(input, { target: { value: 'sk-test-123' } })
     fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
-    await waitFor(() => expect(setEnvVar).toHaveBeenCalledWith('ELEVENLABS_API_KEY', 'sk-test-123'))
+    await waitFor(() => expect(setEnvVar).toHaveBeenCalledWith('VOICE_TOOLS_OPENAI_KEY', 'sk-test-123'))
   })
 
   it('expands the active provider on load, not just the first configured one', async () => {
-    // ElevenLabs is the active provider per config, even though the keyless
-    // Edge TTS provider sorts first and is also "configured". The panel must
-    // honor is_active and expand ElevenLabs (so its API-key field renders)
+    // OpenAI TTS is the active provider per config, even though the keyless
+    // Piper provider sorts first and is also "configured". The panel must
+    // honor is_active and expand OpenAI TTS (so its API-key field renders)
     // rather than defaulting to the first keyless provider. Regression test
     // for the GUI showing the wrong provider selected after relaunch.
     getToolsetConfig.mockResolvedValue(
       config({
-        active_provider: 'ElevenLabs',
+        active_provider: 'OpenAI TTS',
         providers: [
           {
-            name: 'Microsoft Edge TTS',
+            name: 'Piper',
             badge: 'free',
             tag: 'No API key needed',
             env_vars: [],
@@ -381,13 +377,13 @@ describe('ToolsetConfigPanel', () => {
             is_active: false
           },
           {
-            name: 'ElevenLabs',
+            name: 'OpenAI TTS',
             badge: 'paid',
-            tag: 'Most natural voices',
+            tag: 'High quality voices',
             env_vars: [
               {
-                key: 'ELEVENLABS_API_KEY',
-                prompt: 'ElevenLabs API key',
+                key: 'VOICE_TOOLS_OPENAI_KEY',
+                prompt: 'OpenAI API key',
                 url: 'https://x',
                 default: null,
                 is_set: true
@@ -404,8 +400,8 @@ describe('ToolsetConfigPanel', () => {
     render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
     // The active provider's env-var field only renders when it's the expanded
-    // one — so finding it proves ElevenLabs (not Edge TTS) was auto-expanded.
-    expect(await screen.findByText('ELEVENLABS_API_KEY')).toBeTruthy()
+    // one — so finding it proves OpenAI TTS (not Piper) was auto-expanded.
+    expect(await screen.findByText('VOICE_TOOLS_OPENAI_KEY')).toBeTruthy()
     // No provider selection was triggered — this is purely reflecting state.
     expect(selectToolsetProvider).not.toHaveBeenCalled()
   })
@@ -512,7 +508,7 @@ describe('ToolsetConfigPanel', () => {
         config({
           providers: [
             {
-              name: 'Microsoft Edge TTS',
+              name: 'Piper',
               badge: 'free',
               tag: 'No API key needed',
               env_vars: [],
@@ -547,8 +543,8 @@ describe('ToolsetConfigPanel', () => {
 
       render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
-      await screen.findByText('Microsoft Edge TTS')
-      // Edge is the active backend — its row pill reads Active (which
+      await screen.findByText('Piper')
+      // Piper is the active backend — its row pill reads Active (which
       // subsumes Ready); the other rows keep their warn pills.
       expect(screen.getAllByText('Active')).toHaveLength(1)
       expect(screen.queryByText('Ready')).toBeNull()
@@ -562,8 +558,8 @@ describe('ToolsetConfigPanel', () => {
       // desktop and backend update on separate clocks.
       render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
-      await screen.findByText('Microsoft Edge TTS')
-      // Default config(): keyless Edge TTS (ready) + unset ElevenLabs (not).
+      await screen.findByText('Piper')
+      // Default config(): keyless Piper (ready) + unset OpenAI TTS (not).
       expect(screen.getAllByText('Ready')).toHaveLength(1)
       expect(screen.queryByText('Needs sign-in')).toBeNull()
       expect(screen.queryByText('Setup required')).toBeNull()
@@ -575,13 +571,13 @@ describe('ToolsetConfigPanel', () => {
           active_provider: null,
           providers: [
             {
-              name: 'ElevenLabs',
+              name: 'OpenAI TTS',
               badge: 'paid',
-              tag: 'Most natural voices',
+              tag: 'High quality voices',
               env_vars: [
                 {
-                  key: 'ELEVENLABS_API_KEY',
-                  prompt: 'ElevenLabs API key',
+                  key: 'VOICE_TOOLS_OPENAI_KEY',
+                  prompt: 'OpenAI API key',
                   url: 'https://x',
                   default: null,
                   is_set: false
@@ -598,7 +594,7 @@ describe('ToolsetConfigPanel', () => {
 
       render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
-      expect(await screen.findByText('ELEVENLABS_API_KEY')).toBeTruthy()
+      expect(await screen.findByText('VOICE_TOOLS_OPENAI_KEY')).toBeTruthy()
       expect(screen.queryByText('Ready')).toBeNull()
 
       // Save a key: the pill must go Ready from the local envState patch even
@@ -606,7 +602,7 @@ describe('ToolsetConfigPanel', () => {
       const trigger = await screen.findByRole('button', { name: /^Actions$/ })
       fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false, pointerType: 'mouse' })
       fireEvent.click(await screen.findByRole('menuitem', { name: 'Set' }))
-      fireEvent.change(await screen.findByPlaceholderText('ElevenLabs API key'), { target: { value: 'sk-live' } })
+      fireEvent.change(await screen.findByPlaceholderText('OpenAI API key'), { target: { value: 'sk-live' } })
       fireEvent.click(screen.getByRole('button', { name: 'Save' }))
 
       await waitFor(() => expect(screen.getByText('Ready')).toBeTruthy())
@@ -818,16 +814,16 @@ describe('ToolsetConfigPanel', () => {
     it('offers "Manage in API Keys" on a set key and navigates to Settings → Keys', async () => {
       getToolsetConfig.mockResolvedValue(
         config({
-          active_provider: 'ElevenLabs',
+          active_provider: 'OpenAI TTS',
           providers: [
             {
-              name: 'ElevenLabs',
+              name: 'OpenAI TTS',
               badge: 'paid',
-              tag: 'Most natural voices',
+              tag: 'High quality voices',
               env_vars: [
                 {
-                  key: 'ELEVENLABS_API_KEY',
-                  prompt: 'ElevenLabs API key',
+                  key: 'VOICE_TOOLS_OPENAI_KEY',
+                  prompt: 'OpenAI API key',
                   url: 'https://x',
                   default: null,
                   is_set: true
@@ -848,20 +844,20 @@ describe('ToolsetConfigPanel', () => {
       fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false, pointerType: 'mouse' })
       fireEvent.click(await screen.findByRole('menuitem', { name: 'Manage in API Keys' }))
 
-      await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith('/settings?tab=keys&key=ELEVENLABS_API_KEY'))
+      await waitFor(() => expect(navigateSpy).toHaveBeenCalledWith('/settings?tab=keys&key=VOICE_TOOLS_OPENAI_KEY'))
     })
 
     it('hides "Manage in API Keys" while the key is unset', async () => {
-      // Default config(): ElevenLabs key is not set. An unset key is managed
+      // Default config(): OpenAI TTS key is not set. An unset key is managed
       // right here via Set — no point bouncing the user to another page.
       render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="tts" />)
 
       // Expand the keyed provider so its env row renders. Wait for the
       // selection to commit: on a freshly loaded panel this races the default
       // provider initializer, and user intent must win that race.
-      const elevenLabs = await screen.findByRole('button', { name: /ElevenLabs/ })
-      fireEvent.click(elevenLabs)
-      await waitFor(() => expect(elevenLabs.getAttribute('aria-expanded')).toBe('true'))
+      const openaiTts = await screen.findByRole('button', { name: /OpenAI TTS/ })
+      fireEvent.click(openaiTts)
+      await waitFor(() => expect(openaiTts.getAttribute('aria-expanded')).toBe('true'))
 
       const trigger = await screen.findByRole('button', { name: /^Actions$/ })
       fireEvent.pointerDown(trigger, { button: 0, ctrlKey: false, pointerType: 'mouse' })
@@ -876,32 +872,32 @@ describe('ToolsetConfigPanel', () => {
       return {
         name: 'web',
         has_category: true,
-        active_provider: 'SearXNG',
-        active_search_backend: 'searxng',
-        active_extract_backend: 'firecrawl',
+        active_provider: 'DuckDuckGo (ddgs)',
+        active_search_backend: 'ddgs',
+        active_extract_backend: 'example',
         providers: [
           {
-            name: 'SearXNG',
-            badge: 'free · self-hosted',
-            tag: 'Free metasearch',
+            name: 'DuckDuckGo (ddgs)',
+            badge: 'free · no key · search only',
+            tag: 'Search via the ddgs Python package',
             env_vars: [],
             post_setup: null,
             requires_nous_auth: false,
             is_active: true,
             status: 'ready',
-            web_backend: 'searxng',
+            web_backend: 'ddgs',
             capabilities: ['search']
           },
           {
-            name: 'Firecrawl',
-            badge: 'paid',
+            name: 'Example',
+            badge: 'plugin',
             tag: 'Full search + extract',
             env_vars: [],
             post_setup: null,
             requires_nous_auth: false,
             is_active: true,
             status: 'ready',
-            web_backend: 'firecrawl',
+            web_backend: 'example',
             capabilities: ['search', 'extract']
           }
         ],
@@ -913,83 +909,41 @@ describe('ToolsetConfigPanel', () => {
       // The panel refetches after a capability pick: second load is the server's truth.
       getToolsetConfig
         .mockResolvedValueOnce(webConfig())
-        .mockResolvedValue(webConfig({ active_search_backend: 'firecrawl' }))
-      selectToolsetProvider.mockResolvedValue({ ok: true, name: 'web', provider: 'SearXNG', capability: 'search' })
+        .mockResolvedValue(webConfig({ active_search_backend: 'example' }))
+      selectToolsetProvider.mockResolvedValue({ ok: true, name: 'web', provider: 'Example', capability: 'search' })
 
       render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="web" />)
 
-      // Active/expanded provider is search-only SearXNG.
-      await screen.findByText('Search: searxng')
+      await screen.findByText('Search: ddgs')
       expect(await screen.findByRole('button', { name: 'Use for Search' })).toBeTruthy()
       expect(screen.queryByRole('button', { name: 'Use for Extract' })).toBeNull()
 
-      // Expand Firecrawl (search + extract) and assign it as the search backend.
-      fireEvent.click(screen.getByRole('button', { name: /Firecrawl/ }))
+      fireEvent.click(screen.getByRole('button', { name: /^Example/ }))
       const useForSearch = await screen.findByRole('button', { name: 'Use for Search' })
       fireEvent.click(useForSearch)
 
-      await waitFor(() => expect(selectToolsetProvider).toHaveBeenCalledWith('web', 'Firecrawl', 'search'))
-      await waitFor(() => expect(screen.getByText('Search: firecrawl')).toBeTruthy())
-    })
-
-    it('lights the Nous row for a gateway-served capability and the BYOK row for the own-key one', async () => {
-      const nous = {
-        name: 'Nous Subscription',
-        badge: 'subscription',
-        tag: 'Managed web search and extract billed to your subscription',
-        env_vars: [],
-        post_setup: null,
-        requires_nous_auth: true,
-        managed_nous_feature: 'web',
-        is_active: false,
-        status: 'ready' as const,
-        web_backend: 'firecrawl',
-        capabilities: ['search', 'extract'] as WebCapability[]
-      }
-
-      // Search through the gateway, extract on the user's own Firecrawl key:
-      // both rows share web_backend 'firecrawl', only the *_via_nous flags tell them apart.
-      getToolsetConfig.mockResolvedValue(
-        webConfig({
-          active_search_backend: 'perplexity',
-          active_extract_backend: 'firecrawl',
-          search_via_nous: true,
-          extract_via_nous: false,
-          providers: [...webConfig().providers, nous]
-        })
-      )
-
-      render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="web" />)
-
-      expect(await screen.findByText('Search: Nous Subscription')).toBeTruthy()
-      expect(screen.getByText('Extract: firecrawl')).toBeTruthy()
-      const nousRow = screen.getByRole('button', { name: /Nous Subscription/ })
-      const byokRow = screen.getByRole('button', { name: /^Firecrawl/ })
-      expect(within(nousRow).getByText('Search backend')).toBeTruthy()
-      expect(within(nousRow).queryByText('Extract backend')).toBeNull()
-      expect(within(byokRow).getByText('Extract backend')).toBeTruthy()
-      expect(within(byokRow).queryByText('Search backend')).toBeNull()
+      await waitFor(() => expect(selectToolsetProvider).toHaveBeenCalledWith('web', 'Example', 'search'))
+      await waitFor(() => expect(screen.getByText('Search: example')).toBeTruthy())
     })
 
     it('marks only the configured row of two sharing one backend name', async () => {
-      // Cloud and self-hosted Firecrawl share web_backend 'firecrawl'; the server's is_active says which
-      // one's credential is set, and only that row carries the capability pills.
+      // The server's is_active says which row's credential is set, and only that row carries the pills.
       const selfHosted = {
         ...webConfig().providers[1],
-        name: 'Firecrawl Self-Hosted',
+        name: 'Example Self-Hosted',
         badge: 'free · self-hosted',
         is_active: false,
         status: 'needs_keys' as const
       }
 
       getToolsetConfig.mockResolvedValue(
-        webConfig({ active_search_backend: 'firecrawl', providers: [selfHosted, webConfig().providers[1]] })
+        webConfig({ active_search_backend: 'example', providers: [selfHosted, webConfig().providers[1]] })
       )
 
       render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="web" />)
 
-      const cloudRow = await screen.findByRole('button', { name: /^Firecrawl(?! Self)/ })
-      const selfRow = screen.getByRole('button', { name: /^Firecrawl Self-Hosted/ })
+      const cloudRow = await screen.findByRole('button', { name: /^Example(?! Self)/ })
+      const selfRow = screen.getByRole('button', { name: /^Example Self-Hosted/ })
       expect(within(cloudRow).getByText('Search backend')).toBeTruthy()
       expect(within(cloudRow).getByText('Extract backend')).toBeTruthy()
       expect(within(selfRow).queryByText('Search backend')).toBeNull()

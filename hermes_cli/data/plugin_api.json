@@ -30,7 +30,6 @@
         "agent.terminal_env_provider",
         "agent.transports",
         "agent.transports.chat_completions",
-        "agent.video_gen_provider",
         "agent.web_search_provider",
         "cli",
         "gateway.config",

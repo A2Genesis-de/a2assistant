@@ -21,7 +21,7 @@ def _fresh(monkeypatch):
 
 def _wire_browser_exec(monkeypatch, run_cli):
     """Route browser_exec through the local session layer without starting a real browser."""
-    from tools import browser_lightpanda, browser_session, browser_session_cdp, browser_session_cloud
+    from tools import browser_lightpanda, browser_session, browser_session_cdp, browser_config
     from tools import browser_use_cli as browser_use
 
     monkeypatch.setattr(browser_use, "_find_cli", lambda: ["browser-use"])
@@ -30,7 +30,7 @@ def _wire_browser_exec(monkeypatch, run_cli):
     monkeypatch.setattr(browser_lightpanda, "using_lightpanda_engine", lambda: False)
     monkeypatch.setattr(browser_session_cdp, "get_cdp_override", lambda: "")
     monkeypatch.setattr(browser_session_cdp, "get_cdp_override_raw", lambda: "")
-    monkeypatch.setattr(browser_session_cloud, "get_cloud_provider", lambda: None)
+    monkeypatch.setattr(browser_config, "get_cloud_provider", lambda: None)
     monkeypatch.setattr(browser_session, "get_session_info", lambda *_a, **_kw: {
         "session_name": "review", "cdp_url": "http://127.0.0.1:9222", "features": {"local": True}})
     monkeypatch.setattr(browser_use, "_attach_vault_supervisor", lambda *a: None)

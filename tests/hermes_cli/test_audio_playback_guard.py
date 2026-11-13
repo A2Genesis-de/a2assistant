@@ -86,7 +86,7 @@ def test_voice_toggle_still_leaks_the_env_var_but_speech_is_stubbed(monkeypatch)
     assert speak_text("partial answer complete") is None
     assert calls == [], (
         "audio guard breached: speak_text reached the TTS backend — on an "
-        "unguarded run this is real synthesis through the keyless 'edge' "
+        "unguarded run this is real synthesis through the configured TTS "
         "provider, played through the speakers"
     )
 

@@ -34,7 +34,7 @@ Esta es la pregunta más común para los nuevos colaboradores. La respuesta casi
 - Requiere integración de extremo a extremo con claves API, flujos de autenticación o configuración de múltiples componentes gestionada por el harness del agente
 - Necesita lógica de procesamiento personalizada que debe ejecutarse con precisión en cada ocasión (no "mejor esfuerzo" de la interpretación del LLM)
 - Maneja datos binarios, streaming o eventos en tiempo real que no pueden pasar por el terminal
-- Ejemplos: automatización de navegador (gestión de sesiones Browserbase), TTS (codificación de audio + entrega en plataforma), análisis de visión (manejo de imágenes base64)
+- Ejemplos: automatización de navegador (gestión de sesiones CDP), TTS (codificación de audio + entrega en plataforma), análisis de visión (manejo de imágenes base64)
 
 ### ¿Debería la Habilidad estar incluida?
 
@@ -153,7 +153,7 @@ hermes-agent/
 │   ├── approval.py               # Detección de comandos peligrosos + aprobación por sesión
 │   ├── terminal_tool.py          # Orquestación del terminal (sudo, ciclo de vida del entorno, backends)
 │   ├── file_operations.py        # read_file, write_file, búsqueda, patch, etc.
-│   ├── web_tools.py              # web_search, web_extract (Paralelo/Firecrawl + resumición Gemini)
+│   ├── web_tools.py              # web_search, web_extract sobre plugins de proveedores web (incluido: ddgs)
 │   ├── vision_tools.py           # Análisis de imágenes a través de modelos multimodales
 │   ├── delegate_tool.py          # Lanzamiento de subagentes y ejecución paralela de tareas
 │   ├── code_execution_tool.py    # Python sandboxado con acceso a herramientas vía RPC
@@ -162,7 +162,7 @@ hermes-agent/
 │   ├── skill_tools.py            # Búsqueda, carga y gestión de habilidades
 │   └── environments/             # Backends de ejecución del terminal
 │       ├── base.py                   # ABC BaseEnvironment
-│       ├── local.py, docker.py, ssh.py, singularity.py, modal.py, daytona.py
+│       ├── local.py, docker.py, ssh.py
 │
 ├── gateway/                  # Gateway de mensajería
 │   ├── run.py                    # GatewayRunner — ciclo de vida de plataformas, enrutamiento de mensajes, cron

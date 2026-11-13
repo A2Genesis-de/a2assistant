@@ -427,8 +427,6 @@ export const en: Translations = {
       disableFailed: name => `Could not disable ${name} MCP.`
     },
     errors: {
-      elevenLabsNeedsKey: 'Voice input needs an ElevenLabs key. Add one in Settings → Keys.',
-      elevenLabsRejectedKey: "ElevenLabs didn't accept your API key. Update it in Settings → Keys, then try again.",
       diskFull: 'Disk full — free some space, then try again.',
       storageFailure: "A2Assistant couldn't save to its data folder. Open Maintenance to check and repair it.",
       gatewayAuthFailed:

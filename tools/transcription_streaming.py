@@ -6,14 +6,9 @@ size, receives non-final text through ``on_partial`` as the provider recognizes 
 (``success`` / ``transcript`` / ``provider`` / ``error``). One worker thread owns the provider
 socket, so callers never block on network I/O while audio is captured.
 
-Built-in wires (live-verified against each vendor except where noted):
-
-- ``openai``: Realtime ``type: transcription`` session (``stt.openai.streaming_model``, default
-  ``gpt-live-transcribe``, the one model that emits deltas before the turn is committed). The
-  endpoint requires >= 24 kHz input, so PCM is resampled 16 k -> 24 k here.
-- ``xai``: ``wss://api.x.ai/v1/stt`` with ``interim_results=true``.
-- ``elevenlabs``: ``wss://api.elevenlabs.io/v1/speech-to-text/realtime`` (``scribe_v2_realtime``),
-  built from the vendor AsyncAPI schema.
+Built-in wire: ``openai``, a Realtime ``type: transcription`` session (``stt.openai.streaming_model``,
+default ``gpt-live-transcribe``, the one model that emits deltas before the turn is committed). The
+endpoint requires >= 24 kHz input, so PCM is resampled 16 k -> 24 k here.
 
 Plugin providers opt in through ``TranscriptionProvider.streaming_capable`` /
 ``open_stream_session``. Streaming is opt-in (``stt.streaming: true``); every surface falls back
@@ -30,8 +25,8 @@ import queue
 import threading
 import time
 from array import array
-from typing import Any, Callable, Dict, Optional
-from urllib.parse import urlencode, urlsplit, urlunsplit
+from typing import Any, Callable, Optional
+from urllib.parse import urlsplit, urlunsplit
 
 from agent.memory_provider import spawn_context_thread
 from utils import is_truthy_value
@@ -40,8 +35,7 @@ logger = logging.getLogger(__name__)
 
 INPUT_RATE = 16000  # the contract every caller feeds
 DEFAULT_OPENAI_STREAMING_MODEL = "gpt-live-transcribe"
-ELEVENLABS_REALTIME_MODEL = "scribe_v2_realtime"
-STREAMING_PROVIDERS = ("openai", "xai", "elevenlabs")
+STREAMING_PROVIDERS = ("openai",)
 _FINALIZE_TIMEOUT_S = 20.0
 _CONNECT_TIMEOUT_S = 10.0
 
@@ -215,8 +209,6 @@ class _WebSocketSession(StreamingSession):
             if result is not None:
                 self._finish(result)
                 return result
-            if self._backlog and self._ready():
-                self._flush_backlog(ws)
 
     def _drain_audio(self, ws: Any) -> Optional[float]:
         """Send queued audio; on end-of-audio send the provider's flush and return its time."""
@@ -229,23 +221,10 @@ class _WebSocketSession(StreamingSession):
                 if self._audio.empty():
                     return None
                 continue
-            if self._ready():
-                self._send_audio(ws, chunk)
-            else:
-                self._backlog.append(chunk)
-
-    _backlog: list[bytes]
-
-    def _ready(self) -> bool:
-        return True
-
-    def _flush_backlog(self, ws: Any) -> None:
-        backlog, self._backlog = self._backlog, []
-        for chunk in backlog:
             self._send_audio(ws, chunk)
 
-    def _open(self, ws: Any) -> None:
-        self._backlog = []
+    def _open(self, ws: Any) -> None:  # pragma: no cover - overridden
+        raise NotImplementedError
 
     def _send_audio(self, ws: Any, chunk: bytes) -> None:  # pragma: no cover - overridden
         raise NotImplementedError
@@ -273,7 +252,6 @@ class OpenAIRealtimeSession(_WebSocketSession):
         self._sent_audio = False
 
     def _open(self, ws: Any) -> None:
-        super()._open(ws)
         transcription: dict[str, Any] = {"model": self.model}
         if self.language:
             # gpt-live-transcribe takes a ``languages`` list and rejects the singular field.
@@ -314,115 +292,6 @@ class OpenAIRealtimeSession(_WebSocketSession):
             if "buffer too small" in message.lower():
                 return {"success": True, "transcript": "", "provider": self.provider}
             return self._error(message)
-        return None
-
-
-class XAIStreamingSession(_WebSocketSession):
-    provider = "xai"
-
-    def __init__(self, api_key: str, base_url: str, model: str, language: Optional[str],
-                 on_partial: Optional[PartialCallback] = None) -> None:
-        super().__init__(on_partial)
-        parts = urlsplit(base_url.rstrip("/"))
-        scheme = "wss" if parts.scheme == "https" else "ws"
-        query = {"sample_rate": INPUT_RATE, "encoding": "pcm", "interim_results": "true", "model": model}
-        if language:
-            query["language"] = language
-        self.url = urlunsplit((scheme, parts.netloc, f"{parts.path}/stt", urlencode(query), ""))
-        self.headers = {"Authorization": f"Bearer {api_key}"}
-        self._created = False
-        self._utterances: list[str] = []  # speech_final stitched utterances
-        self._chunks: list[str] = []  # is_final chunks of the current utterance
-        self._interim = ""
-
-    def _ready(self) -> bool:
-        return self._created  # the server drops audio sent before transcript.created
-
-    def _send_audio(self, ws: Any, chunk: bytes) -> None:
-        ws.send(chunk)
-
-    def _end(self, ws: Any) -> None:
-        if not self._created:
-            self._backlog.clear()
-        ws.send(json.dumps({"type": "audio.done"}))
-
-    def _text(self) -> str:
-        return " ".join(p for p in (*self._utterances, *self._chunks, self._interim) if p).strip()
-
-    def _event(self, event: dict[str, Any]) -> Optional[dict[str, Any]]:
-        kind = event.get("type")
-        if kind == "transcript.created":
-            self._created = True
-            return None
-        if kind == "transcript.partial":
-            text = str(event.get("text") or "").strip()
-            if event.get("speech_final"):
-                self._utterances.append(text)
-                self._chunks, self._interim = [], ""
-            elif event.get("is_final"):
-                self._chunks.append(text)
-                self._interim = ""
-            else:
-                self._interim = text
-            self._set_partial(self._text())
-            return None
-        if kind == "transcript.done":
-            return {"success": True, "transcript": self._text(), "provider": self.provider}
-        if kind == "error":
-            return self._error(str(event.get("message") or "provider error"))
-        return None
-
-
-class ElevenLabsRealtimeSession(_WebSocketSession):
-    provider = "elevenlabs"
-
-    def __init__(self, api_key: str, base_url: str, language: Optional[str],
-                 on_partial: Optional[PartialCallback] = None) -> None:
-        super().__init__(on_partial)
-        parts = urlsplit(base_url.rstrip("/"))
-        scheme = "wss" if parts.scheme == "https" else "ws"
-        query = {"model_id": ELEVENLABS_REALTIME_MODEL, "audio_format": f"pcm_{INPUT_RATE}",
-                 "commit_strategy": "vad"}
-        if language:
-            query["language_code"] = language
-        self.url = urlunsplit((scheme, parts.netloc, f"{parts.path}/speech-to-text/realtime", urlencode(query), ""))
-        self.headers = {"xi-api-key": api_key}
-        self._committed: list[str] = []
-        self._interim = ""
-        self._ending = False
-
-    def _chunk(self, pcm: bytes, commit: bool) -> str:
-        return json.dumps({"message_type": "input_audio_chunk", "audio_base_64": base64.b64encode(pcm).decode(),
-                           "commit": commit, "sample_rate": INPUT_RATE})
-
-    def _send_audio(self, ws: Any, chunk: bytes) -> None:
-        ws.send(self._chunk(chunk, False))
-
-    def _end(self, ws: Any) -> None:
-        self._ending = True
-        ws.send(self._chunk(b"", True))
-
-    def _text(self) -> str:
-        return " ".join(p for p in (*self._committed, self._interim) if p).strip()
-
-    def _event(self, event: dict[str, Any]) -> Optional[dict[str, Any]]:
-        kind = event.get("message_type")
-        if kind == "partial_transcript":
-            self._interim = str(event.get("text") or "").strip()
-            self._set_partial(self._text())
-        elif kind == "committed_transcript":
-            text = str(event.get("text") or "").strip()
-            if text:
-                self._committed.append(text)
-            self._interim = ""
-            self._set_partial(self._text())
-            if self._ending:
-                return {"success": True, "transcript": self._text(), "provider": self.provider}
-        elif kind in ("insufficient_audio_activity", "commit_throttled") and self._ending:
-            return {"success": True, "transcript": self._text(), "provider": self.provider}
-        elif kind and kind not in ("session_started", "committed_transcript_with_timestamps", "warning"):
-            if "error" in event:
-                return self._error(f"{kind}: {event.get('error')}")
         return None
 
 
@@ -467,8 +336,6 @@ def _openai_credentials() -> Optional[tuple[str, str]]:
 
 def _builtin_session(provider: str, stt_config: dict[str, Any], language: Optional[str],
                      prompt: Optional[str], on_partial: Optional[PartialCallback]) -> Optional[StreamingSession]:
-    from tools import transcription_common as tc
-    from tools import transcription_tools as tt
     raw_section = stt_config.get(provider)
     section: dict[str, Any] = raw_section if isinstance(raw_section, dict) else {}
     if provider == "openai":
@@ -477,20 +344,6 @@ def _builtin_session(provider: str, stt_config: dict[str, Any], language: Option
             return None
         model = str(section.get("streaming_model") or DEFAULT_OPENAI_STREAMING_MODEL)
         return OpenAIRealtimeSession(creds[0], creds[1], model, language, prompt, on_partial)
-    if provider == "xai":
-        from hermes_cli.config import get_env_value
-        api_key = str(get_env_value("XAI_API_KEY") or "").strip()  # API key only, like the Desktop wire
-        if not api_key:
-            return None
-        base = str(section.get("base_url") or get_env_value("XAI_STT_BASE_URL") or tc.XAI_STT_BASE_URL)
-        return XAIStreamingSession(api_key, base, tc.normalize_xai_stt_model(section.get("model")),
-                                   language, on_partial)
-    if provider == "elevenlabs":
-        api_key = tt._resolve_provider_key("ELEVENLABS_API_KEY", "elevenlabs")
-        if not api_key:
-            return None
-        base = str(section.get("base_url") or tc.ELEVENLABS_STT_BASE_URL)
-        return ElevenLabsRealtimeSession(api_key, base, language, on_partial)
     return None
 
 
@@ -530,7 +383,7 @@ def open_streaming_session(on_partial: Optional[PartialCallback] = None,
     provider = tt._get_provider(cfg)
     if provider in ("none", "local", "local_command"):
         return None
-    language = tt._resolve_stt_language(provider, cfg, extra_keys=("language_code",) if provider == "elevenlabs" else ())
+    language = tt._resolve_stt_language(provider, cfg)
     prompt = str(cfg.get("prompt") or "").strip() or None
     try:
         if provider in STREAMING_PROVIDERS:

@@ -470,9 +470,7 @@ export const zhHantSettings = {
         persistentShell: '持久化 Shell',
         envPassthrough: '環境變數傳遞',
         dockerImage: 'Docker 映像',
-        singularityImage: 'Singularity 映像',
-        modalImage: 'Modal 映像',
-        daytonaImage: 'Daytona 映像'
+        singularityImage: 'Singularity 映像'
       },
       fileReadMaxChars: '檔案讀取上限',
       toolOutput: {
@@ -521,61 +519,13 @@ export const zhHantSettings = {
         },
         openai: {
           model: 'OpenAI STT 模型'
-        },
-        groq: {
-          model: 'Groq STT 模型'
-        },
-        mistral: {
-          model: 'Mistral STT 模型'
-        },
-        elevenlabs: {
-          modelId: 'ElevenLabs STT 模型',
-          languageCode: 'ElevenLabs 語言',
-          tagAudioEvents: '標記音訊事件',
-          diarize: '說話者分離'
         }
       },
       tts: {
         provider: '文字轉語音提供方',
-        edge: {
-          voice: 'Edge 語音'
-        },
         openai: {
           model: 'OpenAI TTS 模型',
           voice: 'OpenAI 語音'
-        },
-        elevenlabs: {
-          voiceId: 'ElevenLabs 語音',
-          modelId: 'ElevenLabs 模型'
-        },
-        deepinfra: {
-          model: 'DeepInfra TTS 模型',
-          voice: 'DeepInfra 語音'
-        },
-        xai: {
-          voiceId: 'xAI (Grok) 語音',
-          language: 'xAI 語言',
-          speed: '播放速度',
-          autoSpeechTags: '自動語音標籤',
-          optimizeStreamingLatency: '串流延遲最佳化',
-          sampleRate: '取樣率',
-          bitRate: '位元率'
-        },
-        minimax: {
-          model: 'MiniMax TTS 模型',
-          voiceId: 'MiniMax 語音'
-        },
-        mistral: {
-          model: 'Mistral TTS 模型',
-          voiceId: 'Mistral 語音'
-        },
-        gemini: {
-          model: 'Gemini TTS 模型',
-          voice: 'Gemini 語音'
-        },
-        neutts: {
-          model: 'NeuTTS 模型',
-          device: 'NeuTTS 裝置'
         },
         kittentts: {
           model: 'KittenTTS 模型',
@@ -642,9 +592,7 @@ export const zhHantSettings = {
         persistentShell: '後端支援時，在指令之間保留 Shell 狀態。',
         envPassthrough: '傳入工具執行的環境變數。',
         dockerImage: '執行後端為 Docker 時使用的容器映像。',
-        singularityImage: '執行後端為 Singularity 時使用的映像。',
-        modalImage: '執行後端為 Modal 時使用的映像。',
-        daytonaImage: '執行後端為 Daytona 時使用的映像。'
+        singularityImage: '執行後端為 Singularity 時使用的映像。'
       },
       codeExecution: {
         mode: '程式碼執行被限制在目前專案中的嚴格程度。'
@@ -691,24 +639,7 @@ export const zhHantSettings = {
       },
       stt: {
         enabled: '啟用本機或提供方支援的語音轉寫。',
-        echoTranscripts: '將語音訊息的原始 🎙️ 轉寫文字傳回聊天。',
-        elevenlabs: {
-          languageCode: '可選的 ISO-639-3 語言代碼。留空讓 ElevenLabs 自動偵測。'
-        }
-      },
-      tts: {
-        xai: {
-          voiceId: 'xAI 音色 ID（例如 eve）或自訂音色 ID。',
-          language: '口語語言代碼（例如 en、pt-BR），或填入 "auto" 自動偵測。',
-          speed: '播放速度。0.7 = 較慢，1.0 = 正常，1.5 = 較快。',
-          autoSpeechTags: '合成前讓 LLM 在文稿中插入富有表現力的音訊標籤（例如 [laughing]、[sighs]）。',
-          optimizeStreamingLatency: '延遲與品質的權衡。0 = 最佳品質，2 = 最低延遲。',
-          sampleRate: '音訊取樣率（Hz）。越高音質越好、檔案越大。',
-          bitRate: 'MP3 位元率（bps）。僅在編碼為 mp3 時生效。'
-        },
-        neutts: {
-          device: 'NeuTTS 的本機推論裝置。'
-        }
+        echoTranscripts: '將語音訊息的原始 🎙️ 轉寫文字傳回聊天。'
       },
       updates: {
         nonInteractiveLocalChanges:

@@ -2,34 +2,25 @@
 resolved through the module object so test patches on ``hermes_cli.setup.<name>`` take effect."""
 
 import logging
-from tools import tool_backend_helpers
 
 logger = logging.getLogger("hermes_cli.setup")
 
 # provider -> (label, env vars: any one set means available; empty = always).
 # Local engines are (label, module, hint) and must be importable.
+_OPENAI_AUDIO_ROW = ("OpenAI", ("VOICE_TOOLS_OPENAI_KEY", "OPENAI_API_KEY"))
 _TTS_SUMMARY_ROWS = {
-    "elevenlabs": ("ElevenLabs", ("ELEVENLABS_API_KEY",)),
-    "openai": ("OpenAI", ("VOICE_TOOLS_OPENAI_KEY", "OPENAI_API_KEY")),
-    "minimax": ("MiniMax", ("MINIMAX_API_KEY",)), "mistral": ("Mistral Voxtral", ("MISTRAL_API_KEY",)),
-    "gemini": ("Google Gemini", ("GEMINI_API_KEY", "GOOGLE_API_KEY")),
-    "neutts": ("NeuTTS", "neutts", "run 'hermes setup tts'"),
-    "kittentts": ("KittenTTS", "kittentts", "run 'hermes setup tts'")}
-_TTS_SUMMARY_DEFAULT = ("Edge TTS", ())
-_STT_SUMMARY_ROWS = {
-    "openai": ("OpenAI", ("VOICE_TOOLS_OPENAI_KEY", "OPENAI_API_KEY")), "groq": ("Groq Whisper", ("GROQ_API_KEY",)),
-    "elevenlabs": ("ElevenLabs Scribe", ("ELEVENLABS_API_KEY",)), "xai": ("xAI", ()),
-    "deepinfra": ("DeepInfra", ("DEEPINFRA_API_KEY",))}
+    "openai": _OPENAI_AUDIO_ROW,
+    "kittentts": ("KittenTTS", "kittentts", "run 'hermes setup tts'"),
+    "piper": ("Piper", "piper", "run 'hermes tools' → Text-to-Speech")}
+_TTS_SUMMARY_DEFAULT = _OPENAI_AUDIO_ROW
+_STT_SUMMARY_ROWS = {"openai": _OPENAI_AUDIO_ROW}
 _STT_SUMMARY_DEFAULT = ("Local Whisper", "faster_whisper", "run 'hermes tools' → Speech-to-Text")
 
 # Browser "missing" hint keyed by the configured provider; anything else gets the generic hint.
 _BROWSER_MISSING_HINTS = {
-    "Browserbase": "BROWSERBASE_API_KEY/BROWSERBASE_PROJECT_ID",
-    "Browser Use": "BROWSER_USE_API_KEY",
     "Local browser": "Chromium: run 'hermes pm install chromium'"}
-_BROWSER_MISSING_DEFAULT = "Chromium (run 'hermes pm install chromium'), or configure Browser Use or Browserbase"
-_WEB_MISSING = ("EXA_API_KEY, PARALLEL_API_KEY, FIRECRAWL_API_KEY/FIRECRAWL_API_URL, TAVILY_API_KEY, "
-                "PERPLEXITY_API_KEY, KEENABLE_API_KEY, or SEARXNG_URL")
+_BROWSER_MISSING_DEFAULT = "Chromium (run 'hermes pm install chromium')"
+_WEB_MISSING = "the ddgs package (run 'hermes tools' → Web Search), SEARXNG_URL or a web provider plugin"
 
 _DONE_BANNER = (
     "┌─────────────────────────────────────────────────────────┐",
@@ -55,6 +46,8 @@ def _voice_provider_status(kind: str, provider: str, rows: dict, default: tuple)
     if isinstance(row[1], tuple) and row[1] and not any(_setup.get_env_value(v) for v in row[1]):
         row = default
     if isinstance(row[1], tuple):
+        if row[1] and not any(_setup.get_env_value(v) for v in row[1]):
+            return (f"{kind} ({row[0]})", False, row[1][0])
         return (f"{kind} ({row[0]})", True, None)
     label, module, hint = row
     if _setup._module_installed(module):
@@ -62,16 +55,14 @@ def _voice_provider_status(kind: str, provider: str, rows: dict, default: tuple)
     return (f"{kind} ({label} — not installed)", False, hint)
 
 
-def _first_available_plugin_provider(registry: str, skip: str | None = None):
+def _first_available_plugin_provider(registry: str):
     """display_name of the first plugin-registered provider in ``agent.<registry>`` that reports
-    available (fail-soft: any error means none), skipping ``skip``."""
+    available (fail-soft: any error means none)."""
     try:
         import importlib
         from hermes_cli.plugins import _ensure_plugins_discovered
         _ensure_plugins_discovered()
         for provider in importlib.import_module(f"agent.{registry}").list_providers():
-            if provider.name == skip:
-                continue
             try:
                 if provider.is_available():
                     return provider.display_name
@@ -105,43 +96,28 @@ def _managed_or_provider_row(feature, name: str, managed_label: str, missing_hin
 
 
 def _web_row(config, feats):
-    # Web tools (Exa, Parallel, Firecrawl, Tavily, or Keenable)
     return _managed_or_provider_row(feats.web, "Web Search & Extract", "Nous subscription", _WEB_MISSING)
 
 
 def _browser_row(config, feats):
-    # Browser tools (local Chromium, Lightpanda, Browserbase, Browser Use, or Firecrawl)
+    # Browser tools (local Chromium, Lightpanda, or a cloud browser plugin)
     hint = _BROWSER_MISSING_HINTS.get(feats.browser.current_provider, _BROWSER_MISSING_DEFAULT)
     return _managed_or_provider_row(feats.browser, "Browser Automation", "Nous Browser Use", hint)
 
 
 def _image_gen_row(config, feats):
-    # FAL (direct or via Nous), or any plugin-registered provider (OpenAI, etc.)
-    if feats.image_gen.managed_by_nous:
-        return ("Image Generation (Nous subscription)", True, None)
-    if feats.image_gen.available:
-        return ("Image Generation", True, None)
-    # Probe plugin-registered providers so OpenAI-only setups don't show as "missing FAL_KEY".
-    backend = _first_available_plugin_provider("image_gen_registry", skip="fal")
+    # Any plugin-registered provider (OpenAI or an OpenAI-compatible endpoint)
+    backend = _first_available_plugin_provider("image_gen_registry")
     if backend:
         return (f"Image Generation ({backend})", True, None)
-    return ("Image Generation", False, "FAL_KEY or OPENAI_API_KEY")
-
-
-def _video_gen_row(config, feats):
-    # Opt-in via `hermes tools` → Video Generation. Only show the row when a plugin reports
-    # available so we don't badger users who don't care about video gen with a "missing" line.
-    if feats.video_gen.managed_by_nous:
-        return ("Video Generation (FAL via Nous subscription)", True, None)
-    backend = _first_available_plugin_provider("video_gen_registry")
-    return (f"Video Generation ({backend})", True, None) if backend else None
+    return ("Image Generation", False, "image_gen.provider (e.g. openai)")
 
 
 def _tts_row(config, feats):
     # Configured provider, gated on its key (or local install)
     if feats.tts.managed_by_nous:
         return ("Text-to-Speech (OpenAI via Nous subscription)", True, None)
-    provider = _setup.cfg_get(config, "tts", "provider", default="edge")
+    provider = _setup.cfg_get(config, "tts", "provider", default="openai")
     return _voice_provider_status("Text-to-Speech", provider, _TTS_SUMMARY_ROWS, _TTS_SUMMARY_DEFAULT)
 
 
@@ -151,18 +127,6 @@ def _stt_row(config, feats):
         return ("Speech-to-Text (OpenAI via Nous subscription)", True, None)
     provider = _setup.cfg_get(config, "stt", "provider", default="local") or "local"
     return _voice_provider_status("Speech-to-Text", provider, _STT_SUMMARY_ROWS, _STT_SUMMARY_DEFAULT)
-
-
-def _modal_row(config, feats):
-    if feats.modal.managed_by_nous:
-        return ("Modal Execution (Nous subscription)", True, None)
-    if _setup.cfg_get(config, "terminal", "backend") == "modal":
-        if feats.modal.direct_override:
-            return ("Modal Execution (direct Modal)", True, None)
-        return ("Modal Execution", False, "run 'hermes setup terminal'")
-    if tool_backend_helpers.managed_nous_tools_enabled() and feats.nous_auth_present:
-        return ("Modal Execution (optional via Nous subscription)", True, None)
-    return None
 
 
 def _skills_hub_row(config, feats):
@@ -177,8 +141,8 @@ def _always_on_rows(config, feats):
 
 
 _TOOL_ROW_BUILDERS = (
-    _vision_row, _web_row, _browser_row, _image_gen_row, _video_gen_row, _tts_row, _stt_row,
-    _modal_row, _skills_hub_row, _always_on_rows)
+    _vision_row, _web_row, _browser_row, _image_gen_row, _tts_row, _stt_row,
+    _skills_hub_row, _always_on_rows)
 
 
 def _print_cmd_rows(rows):

@@ -93,34 +93,10 @@ def _probe_ssh_backend(terminal_cfg: dict) -> tuple:
     return ("ready", f"{user}@{host}")
 
 
-def _probe_modal_backend(_cfg) -> tuple:
-    try:
-        from tools.tool_backend_helpers import has_direct_modal_credentials
-
-        if has_direct_modal_credentials():
-            return ("ready", "")
-    except Exception:
-        pass
-    if _env_value("MODAL_TOKEN_ID") and _env_value("MODAL_TOKEN_SECRET"):
-        return ("ready", "")
-    return (
-        "needs_setup",
-        "Modal credentials not found — set MODAL_TOKEN_ID and MODAL_TOKEN_SECRET (or run `modal setup`).",
-    )
-
-
-def _probe_daytona_backend(_cfg) -> tuple:
-    if _env_value("DAYTONA_API_KEY"):
-        return ("ready", "")
-    return ("needs_setup", "Set DAYTONA_API_KEY to use the Daytona backend.")
-
-
 _BACKEND_PROBES = {
     "local": lambda _cfg: ("ready", ""),
     "docker": _probe_docker_backend,
     "ssh": _probe_ssh_backend,
-    "modal": _probe_modal_backend,
-    "daytona": _probe_daytona_backend,
 }
 
 
@@ -146,33 +122,24 @@ def _probe_terminal_backend(name: str, terminal_cfg: dict) -> tuple:
 # Toolsets whose backends carry a selectable model catalog, mapped to the
 # config.yaml section their `model` key lives in. Mirrors the CLI's
 # post-selection model pickers in tools_config.py.
-_MODEL_CATALOG_TOOLSETS = {"image_gen": "image_gen", "video_gen": "video_gen"}
+_MODEL_CATALOG_TOOLSETS = {"image_gen": "image_gen"}
 
 
 def _resolve_toolset_model_plugin(ts_key: str, provider_row: dict) -> Optional[str]:
     """Map a provider picker row to its model-catalog plugin name.
 
-    Plugin-backed rows carry ``image_gen_plugin_name`` / ``video_gen_plugin_name``;
-    a managed image row's ``imagegen_backend`` names its catalog plugin.
+    Plugin-backed rows carry ``image_gen_plugin_name``.
     """
     if ts_key == "image_gen":
-        return provider_row.get("image_gen_plugin_name") or provider_row.get("imagegen_backend")
-    if ts_key == "video_gen":
-        return provider_row.get("video_gen_plugin_name")
+        return provider_row.get("image_gen_plugin_name")
     return None
 
 
 def _toolset_model_catalog(ts_key: str, plugin_name: str, config: dict):
-    """Return ``(catalog_dict, default_model)`` for a toolset's plugin backend or, for an image row's
-    ``imagegen_backend`` (``fal``, the managed ``nous`` union), that backend's catalog."""
-    from hermes_cli.tools_config import IMAGEGEN_BACKENDS, _plugin_image_gen_catalog, _plugin_video_gen_catalog
+    """Return ``(catalog_dict, default_model)`` for a toolset's plugin backend."""
+    from hermes_cli.tools_config import _plugin_image_gen_catalog
 
-    if ts_key == "image_gen":
-        backend = IMAGEGEN_BACKENDS.get(plugin_name)
-        if backend:
-            return backend["catalog_fn"](config)
-        return _plugin_image_gen_catalog(plugin_name)
-    return _plugin_video_gen_catalog(plugin_name)
+    return _plugin_image_gen_catalog(plugin_name)
 
 
 def _category_providers(ts_key: str, config: dict) -> list:
@@ -374,8 +341,6 @@ async def get_toolset_config(name: str, profile: Optional[str] = None):
                         "env_vars": env_vars,
                         "post_setup": prov.get("post_setup"),
                         "requires_nous_auth": bool(prov.get("requires_nous_auth")),
-                        # Set on the "Nous Subscription" rows: the GUI tells the gateway row apart
-                        # from a BYOK row of the same vendor (both carry web_backend "firecrawl").
                         "managed_nous_feature": prov.get("managed_nous_feature"),
                         "is_active": is_active,
                         # Server-side readiness: zero-env-var rows are NOT
@@ -397,25 +362,15 @@ async def get_toolset_config(name: str, profile: Optional[str] = None):
                 "name": name, "has_category": cat is not None, "providers": providers,
                 "active_provider": active_provider}
             if name == "web":
-                # Resolve active backends exactly as the web_search/web_extract dispatchers do, so badges
-                # reflect what a call would hit now — plus whether that call rides the Nous Tool Gateway
-                # or the user's own key (the managed and BYOK Firecrawl rows share one backend name).
                 try:
-                    from plugins.web.firecrawl.provider import is_managed_route
-                    from tools.web_tools import _get_extract_backend, _get_search_backend, _managed_web_search
+                    from tools.web_tools import _get_extract_backend, _get_search_backend
 
                     search_backend = _get_search_backend()
                     extract_backend = _get_extract_backend()
-                    search_managed = _managed_web_search() or (
-                        search_backend == "firecrawl" and is_managed_route("search"))
-                    extract_managed = extract_backend == "firecrawl" and is_managed_route("extract")
                 except Exception:
                     search_backend = extract_backend = None
-                    search_managed = extract_managed = False
                 payload["active_search_backend"] = search_backend
                 payload["active_extract_backend"] = extract_backend
-                payload["search_via_nous"] = bool(search_managed)
-                payload["extract_via_nous"] = bool(extract_managed)
         return payload
 
     return await asyncio.to_thread(_read)
@@ -464,8 +419,8 @@ async def get_toolset_models(
 @router.put("/api/tools/toolsets/{name}/model")
 async def select_toolset_model(
     name: str, body: ToolsetModelSelect, profile: Optional[str] = None):
-    """Persist a backend model selection (``image_gen.model`` /
-    ``video_gen.model``), validated against the resolved backend's catalog."""
+    """Persist a backend model selection (``image_gen.model``), validated against the resolved backend's
+    catalog."""
     section = _MODEL_CATALOG_TOOLSETS.get(name)
     if section is None:
         raise _bad_request(f"Toolset has no model catalog: {name}")

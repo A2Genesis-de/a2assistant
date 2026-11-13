@@ -273,7 +273,7 @@ def _persisted_session_cwd(session: dict) -> str | None:
 
 def _is_remote_launch_cwd(session: dict | None) -> bool:
     """A cwd nobody picked for a session whose terminal does not run in host directories: an ssh session's, or a
-    sandbox backend's (modal, daytona, singularity, sprites, ...) when it is a directory on THIS host: the gateway's
+    sandbox backend's (singularity, sprites, ...) when it is a directory on THIS host: the gateway's
     launch directory (``/opt/data`` in the Docker image). Host-side context discovery reads it from memory, but it
     never becomes the terminal cwd and is never persisted: a resume adopts a stored cwd as the session's workspace.
     A sandbox path (``/workspace``) is not a host directory and stays."""
@@ -289,7 +289,7 @@ def _is_remote_launch_cwd(session: dict | None) -> bool:
 def _host_cwd_is_terminal_cwd(profile_home) -> bool:
     """Whether a host directory can be the terminal cwd of a session bound to ``profile_home``: the local backend runs
     in it, docker mounts it at ``/workspace`` (``docker_mount_cwd_to_workspace``) or creates it (``docker run -w``),
-    and a plugin backend declaring neither ``is_remote`` nor ``is_container`` runs on this host. ssh, modal, daytona,
+    and a plugin backend declaring neither ``is_remote`` nor ``is_container`` runs on this host. ssh,
     singularity, sprites and the other sandboxes run somewhere the host's directories do not exist."""
     backend = _bound_terminal_backend(profile_home)
     if backend in {"local", "docker"}:

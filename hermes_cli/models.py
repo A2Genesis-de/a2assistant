@@ -36,18 +36,14 @@ from hermes_cli.models_catalog_static import (
     CANONICAL_PROVIDERS,
     OPENROUTER_MODELS,
     PREFERRED_SILENT_DEFAULT_MODEL,
-    VERCEL_AI_GATEWAY_MODELS,
     _AGGREGATOR_PROVIDERS,
-    _AZURE_FOUNDRY_RESPONSES_PREFIXES,
     _BORROWED_MODEL_PROVIDERS,
-    _LIVE_FIRST_PICKER_PROVIDERS,
     _MODELS_DEV_PREFERRED,
     _OPENAI_FAST_MODE_PREFIXES,
     _OPENAI_ULTRAFAST_MODELS,
     _PROVIDER_ALIASES,
     _PROVIDER_LABELS,
     _PROVIDER_MODELS,
-    _PROVIDER_RETIRED_ALIASES,
     _SILENT_DEFAULT_PROVIDERS,
     _xai_finalize_catalog)
 from hermes_cli.models_reasoning_caps import (
@@ -62,8 +58,7 @@ from hermes_cli.models_local import (
     _get_ollama_native_headers,
     _ollama_local_catalog,
     _ollama_probe_cache_key,
-    _root_for_ollama_native_api,
-    fetch_ollama_cloud_models)
+    _root_for_ollama_native_api)
 
 logger = logging.getLogger(__name__)
 
@@ -183,7 +178,6 @@ def _write_openrouter_catalog_disk(curated: list[tuple[str, str]]) -> None:
             {"fetched_at": time.time(), "curated": [list(c) for c in curated]})
     except Exception as exc:
         logger.debug("openrouter curated catalog disk write failed: %s", exc)
-_ai_gateway_catalog_cache: list[tuple[str, str]] | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -715,50 +709,6 @@ def get_curated_nous_model_ids() -> list[str]:
     return list(_PROVIDER_MODELS.get("nous", []))
 
 
-def _ai_gateway_model_is_free(pricing: Any) -> bool:
-    return _zero_priced(pricing, ("input", "output"), "0")
-
-
-def fetch_ai_gateway_models(
-    timeout: float = 8.0, *, force_refresh: bool = False) -> list[tuple[str, str]]:
-    """Return the curated AI Gateway picker list, refreshed from the live catalog when possible."""
-    global _ai_gateway_catalog_cache
-
-    if _ai_gateway_catalog_cache is not None and not force_refresh:
-        return list(_ai_gateway_catalog_cache)
-
-    from hermes_constants import AI_GATEWAY_BASE_URL
-
-    fallback = list(VERCEL_AI_GATEWAY_MODELS)
-    live = _fetch_live_catalog_index(f"{AI_GATEWAY_BASE_URL.rstrip('/')}/models", timeout, _urlopen_model_catalog_request)
-    if live is None:
-        return list(_ai_gateway_catalog_cache or fallback)
-    _, live_by_id = live
-
-    curated = [
-        (pid, "free" if _ai_gateway_model_is_free(live_by_id[pid].get("pricing")) else "")
-        for pid, _ in fallback if pid in live_by_id]
-    if not curated:
-        return list(_ai_gateway_catalog_cache or fallback)
-
-    # A free Moonshot model in the live catalog is auto-promoted to #1 as "recommended".
-    free_moonshot = next(
-        (mid for mid, item in live_by_id.items()
-         if mid.startswith("moonshotai/") and _ai_gateway_model_is_free(item.get("pricing"))),
-        None)
-    if free_moonshot:
-        curated = [(free_moonshot, "recommended")] + [(mid, desc) for mid, desc in curated if mid != free_moonshot]
-    else:
-        curated[0] = (curated[0][0], "recommended")
-    _ai_gateway_catalog_cache = curated
-    return list(curated)
-
-
-def ai_gateway_model_ids(*, force_refresh: bool = False) -> list[str]:
-    """Return just the AI Gateway model-id strings."""
-    return [mid for mid, _ in fetch_ai_gateway_models(force_refresh=force_refresh)]
-
-
 # ---------------------------------------------------------------------------
 # Provider identity: ``provider:model`` parsing, auto-detection, labels
 # ---------------------------------------------------------------------------
@@ -954,8 +904,8 @@ def _provider_keys(provider: str) -> set[str]:
 
 
 def _provider_catalog_names(provider: str) -> tuple[str, ...]:
-    """Active picker models plus retired aliases recognized for detection."""
-    return tuple(static_catalog(provider)) + _PROVIDER_RETIRED_ALIASES.get(provider, ())
+    """Active picker models recognized for detection."""
+    return tuple(static_catalog(provider))
 
 
 def _model_in_provider_catalog(name_lower: str, providers: set[str]) -> bool:
@@ -1378,23 +1328,6 @@ def _api_key_provider_live(normalized: str, force_refresh: bool) -> Optional[lis
         return None
 
 
-def _stepfun_catalog(normalized: str, force_refresh: bool) -> Optional[list[str]]:
-    """Step Plan live list merged with the curated catalog (the ``_anthropic_catalog`` pattern).
-
-    The StepFun inference endpoint is the Step Plan API, whose ``/models`` returns a subset of
-    the full catalog: it omits models served by the Standard API (e.g. ``step-3.7-flash``),
-    so a healthy live response would shadow curated-only models from every picker surface
-    (#41147). Live rows first, then curated-only additions — and when the probe declines
-    (no credentials / failure) ``None`` falls through to the generic profile path, whose
-    ``merge_profile_catalog`` already serves the curated floor as a placeholder.
-    """
-    live = _api_key_provider_live(normalized, force_refresh)
-    if not live:
-        return live
-    curated = list(static_catalog(normalized))
-    return _merge_unique(live, curated, key=_model_dedup_key) if curated else live
-
-
 def _anthropic_catalog(normalized: str, force_refresh: bool) -> list[str]:
     model_cfg = _get_model_config_dict()
     cfg_base_url = cfg_api_key = ""
@@ -1462,41 +1395,6 @@ def _custom_catalog(normalized: str, force_refresh: bool) -> Optional[list[str]]
     return fetch_api_models(api_key, base_url, api_mode=api_mode) or None
 
 
-def _bedrock_catalog(normalized: str, force_refresh: bool) -> Optional[list[str]]:
-    # Live discovery keyed by the resolved AWS region so EU/AP users see eu.*/ap.* ids.
-    try:
-        from agent.bedrock_adapter import bedrock_model_ids_or_none
-
-        return bedrock_model_ids_or_none()
-    except Exception:
-        return None
-
-
-def _azure_foundry_catalog(normalized: str, force_refresh: bool) -> Optional[list[str]]:
-    """Live ``GET <base>/models`` of the configured Azure Foundry resource (#27989).
-
-    Deployments are per-resource, so the static catalog is intentionally empty and the plugin
-    profile ships ``base_url=""`` — which is why the generic profile fetch never fires. Resolve
-    through the runtime resolver so the picker targets the same resource inference hits
-    (``model.base_url`` / ``AZURE_FOUNDRY_BASE_URL``) with the same credential: an API key string,
-    or the Entra ID token-provider callable that ``azure_detect`` already accepts. Anthropic-style
-    ``/anthropic`` routes serve no ``/models``; the probe never raises, so any miss keeps ``[]``.
-    """
-    try:
-        from hermes_cli.azure_detect import _probe_openai_models
-        from hermes_cli.runtime_provider import _resolve_azure_foundry_runtime
-
-        runtime = _resolve_azure_foundry_runtime(requested_provider=normalized, model_cfg=_get_model_config_dict())
-        base_url = str(runtime.get("base_url") or "").strip().rstrip("/")
-        credential = runtime.get("api_key")
-        if not (base_url and credential):
-            return None
-        ok, ids = _probe_openai_models(base_url, credential)
-        return ids if ok and ids else None
-    except Exception:
-        return None
-
-
 # Per-provider catalog sources tried before the generic profile fetch (a profile's ``picker_catalog``
 # hook fills the same slot, see ``_catalog_fetcher``). A fetcher returning None falls through to the
 # profile/curated path; a list is returned as-is (even empty).
@@ -1504,28 +1402,10 @@ _PROVIDER_CATALOG_FETCHERS: dict[str, Any] = {
     "openrouter": lambda normalized, force_refresh: model_ids(force_refresh=force_refresh),
     "openai-codex": _codex_catalog,
     "nous": _nous_catalog,
-    "stepfun": _stepfun_catalog,
-    "gmi": _api_key_provider_live,
     "anthropic": _anthropic_catalog,
-    "ai-gateway": lambda normalized, force_refresh: _fetch_ai_gateway_models() or None,
-    # DeepInfra's generic /models mixes chat, image, video, speech and embedding models; the tagged
-    # catalog helper is the only safe source for the chat picker, including its empty/failure result.
-    "deepinfra": lambda normalized, force_refresh: _fetch_deepinfra_models(force_refresh=force_refresh) or [],
-    "ollama-cloud": lambda normalized, force_refresh: fetch_ollama_cloud_models(force_refresh=force_refresh) or None,
     "openai": _openai_catalog,
     "openai-api": _openai_catalog,
-    "custom": _custom_catalog,
-    "bedrock": _bedrock_catalog,
-    "azure-foundry": _azure_foundry_catalog}
-
-
-# ``-free`` slugs the relay still LISTS but no longer serves: the Go-only twin (``ox-alpha-free``)
-# and the promo it delisted without removing from ``/models`` (``deepseek-v4-flash-free``). The
-# live-first keyed Zen/Go pickers filter through this so a stale live listing can never route
-# into a 400/403 (#111749).
-_OPENCODE_FREE_EXCLUDED_MODELS = frozenset(
-    {"ox-alpha-free", "deepseek-v4-flash-free", "x-preview-f-free"}
-)
+    "custom": _custom_catalog}
 
 
 def _catalog_fetcher(normalized: str):
@@ -1545,9 +1425,7 @@ def _profile_live_catalog(normalized: str) -> Optional[list[str]]:
     """Generic live fetch for any provider registered in providers/ with ``auth_type="api_key"``.
 
     Live results are merged with the curated list so models the live endpoint omits still appear:
-    curated-first by default so the newest curated models lead when the live API lags;
-    ``_LIVE_FIRST_PICKER_PROVIDERS`` (OpenCode Zen/Go, authoritative live API) live-first so stale
-    curated entries stop polluting the top. Plugin providers without a static entry use the
+    curated-first so the newest curated models lead when the live API lags. Plugin providers without a static entry use the
     profile's ``fallback_models`` as the curated list (Fireworks lists an image model first).
     """
     from providers import get_provider_profile
@@ -1594,21 +1472,7 @@ def merge_profile_catalog(normalized: str, profile, live: Optional[list[str]]) -
         rows = CuratedFallbackModels(profile.fallback_models) if profile.fallback_models else None
     else:
         curated = list(static_catalog(normalized)) or list(profile.fallback_models or ())
-        if not curated:
-            rows = live
-        else:
-            primary, secondary = (live, curated) if normalized in _LIVE_FIRST_PICKER_PROVIDERS else (curated, live)
-            rows = _merge_unique(primary, secondary, key=_model_dedup_key)
-    return _drop_delisted_opencode_models(normalized, rows)
-
-
-def _drop_delisted_opencode_models(normalized: str, rows: Optional[list[str]]) -> Optional[list[str]]:
-    """The relay still LISTS delisted ids it no longer serves, and the curated floor (merged back in
-    as the secondary half, or served alone when there is no key) carries retired ids too. Filter the
-    FINAL rows for the live-first Zen/Go pickers so no path can offer a slug that 401s (#111749,
-    #115496)."""
-    if rows and normalized in _LIVE_FIRST_PICKER_PROVIDERS:
-        return type(rows)(m for m in rows if str(m).lower() not in _OPENCODE_FREE_EXCLUDED_MODELS)
+        rows = _merge_unique(curated, live, key=_model_dedup_key) if curated else live
     return rows
 
 
@@ -1684,7 +1548,7 @@ def _relay_model_catalog(normalized: str, relay: str) -> Optional[list[str]]:
 # "no vendor egress when a relay is configured" invariant, so intercepting them would only
 # override correct, better-merged behaviour. Everything else is vendor-pinned (#121387).
 _RELAY_AWARE_CATALOG_FETCHERS = frozenset(
-    {"anthropic", "custom", "openai", "openai-api", "stepfun", "gmi"}
+    {"anthropic", "custom", "openai", "openai-api"}
 )
 
 
@@ -1695,10 +1559,8 @@ def _static_catalog(normalized: str, fetcher: Any) -> list[str]:
     must never reach a live vendor fetcher (#121387).
     """
     # Merge static curated list with live API results so models that the live endpoint omits (stale cache,
-    # partial rollout) still appear in the picker. Single providers (kimi, zai) use curated-first (commit
-    # 658ac1d86) to surface newest models even when live API lags (#46309). OpenCode Zen / Go are different:
-    # their live API is the authoritative catalog, so they merge live-first — live entries lead and stale
-    # curated entries no longer pollute the top of the picker. (#49129) Plugin providers with no static
+    # partial rollout) still appear in the picker, curated-first to surface newest models even when the
+    # live API lags (#46309). Plugin providers with no static
     # _PROVIDER_MODELS entry fall back to the profile's curated fallback_models so their agentic picks lead
     # the picker instead of whatever the live catalog happens to return first (e.g. Fireworks lists an image
     # model, flux-*, ahead of its chat models).
@@ -1706,10 +1568,9 @@ def _static_catalog(normalized: str, fetcher: Any) -> list[str]:
     # source is serving its authoritative catalog.
     curated_static = (CuratedFallbackModels if fetcher is not None else list)(static_catalog(normalized))
     if normalized not in _MODELS_DEV_PREFERRED:
-        return _chat_catalog_rows(_drop_delisted_opencode_models(normalized, curated_static))
-    # models.dev keeps listing retired Zen ids too: filter after the merge, not before.
-    merged = _drop_delisted_opencode_models(normalized, _merge_with_models_dev(normalized, curated_static))
-    return _chat_catalog_rows(_xai_finalize_catalog(merged) if normalized in {"xai", "xai-oauth"} else merged)
+        return _chat_catalog_rows(curated_static)
+    merged = _merge_with_models_dev(normalized, curated_static)
+    return _chat_catalog_rows(_xai_finalize_catalog(merged) if normalized == "xai-oauth" else merged)
 
 
 def provider_model_ids(provider: Optional[str], *, force_refresh: bool = False) -> list[str]:
@@ -2158,13 +2019,6 @@ def _fetch_anthropic_models(
         return None
 
 
-def azure_foundry_model_api_mode(model_name: Optional[str]) -> Optional[str]:
-    """``"codex_responses"`` for families that only accept the Responses API on Azure Foundry (GPT-5.x
-    incl. gpt-5-mini, codex, o1/o3/o4), else None. Any ``vendor/`` prefix is stripped first."""
-    raw = str(model_name or "").strip().lower().rsplit("/", 1)[-1]
-    return "codex_responses" if raw and raw.startswith(tuple(_AZURE_FOUNDRY_RESPONSES_PREFIXES)) else None
-
-
 _OPENCODE_FAMILIES = ("opencode-go", "opencode-zen")
 
 
@@ -2461,14 +2315,6 @@ def _fetch_deepinfra_models_by_tag(
     return matched
 
 
-def _fetch_deepinfra_models(
-    timeout: float = 5.0, *, force_refresh: bool = False) -> Optional[list[str]]:
-    """DeepInfra chat-model ids (string-list contract for :func:`provider_model_ids`); ``None`` on
-    network failure or when no chat-tagged id exists."""
-    items = _fetch_deepinfra_models_by_tag("chat", timeout=timeout, force_refresh=force_refresh)
-    return ([item["id"] for item in items] or None) if items is not None else None
-
-
 def deepinfra_model_ids(tag: str, *, force_refresh: bool = False) -> list[str]:
     """Return DeepInfra model ids carrying surface *tag* (``[]`` on failure)."""
     items = _fetch_deepinfra_models_by_tag(tag, force_refresh=force_refresh)
@@ -2480,27 +2326,6 @@ def deepinfra_base_url(section: Optional[dict] = None) -> str:
     candidate = section.get("base_url") if isinstance(section, dict) else None
     value = candidate or _deepinfra_env("DEEPINFRA_BASE_URL") or _DEEPINFRA_DEFAULT_BASE_URL
     return str(value).strip().rstrip("/")
-
-
-def _fetch_ai_gateway_models(timeout: float = 5.0) -> Optional[list[str]]:
-    """Fetch available language models with tool-use from AI Gateway."""
-    api_key = os.getenv("AI_GATEWAY_API_KEY", "").strip()
-    if not api_key:
-        return None
-    base_url = os.getenv("AI_GATEWAY_BASE_URL", "").strip()
-    if not base_url:
-        from hermes_constants import AI_GATEWAY_BASE_URL
-        base_url = AI_GATEWAY_BASE_URL
-
-    headers = {"Authorization": f"Bearer {api_key}", "User-Agent": hermes_user_agent()}
-    try:
-        url = base_url.rstrip("/") + "/models"
-        data = _get_json(url, timeout=timeout, headers=headers)
-        return [
-            m["id"] for m in data.get("data", [])
-            if m.get("id") and m.get("type") == "language" and "tool-use" in (m.get("tags") or [])]
-    except Exception:
-        return None
 
 
 def fetch_api_models(

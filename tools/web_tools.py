@@ -3,24 +3,19 @@
 
 Backend is selected during ``hermes tools`` (``web.backend`` in config.yaml; per
 capability via ``web.search_backend`` / ``web.extract_backend``). Every vendor
-implementation lives in ``plugins/web/<vendor>/provider.py`` and registers with
-``agent.web_search_registry``; this module owns selection, safety gates,
-caching, keyless rescue, and the truncate-and-store result pipeline.
+implementation lives in a ``plugins/web/<vendor>/provider.py`` plugin and registers
+with ``agent.web_search_registry``; this module owns selection, safety gates,
+caching, and the truncate-and-store result pipeline.
 Debug: ``WEB_TOOLS_DEBUG=true`` writes ``logs/web_tools_debug_<UUID>.json``.
 """
 
 import json
 import logging
-import os
-from typing import List, Any, Optional
-# Per-vendor client cache slots; plugins read/write these via tools.web_tools (tests reset them to None).
-_firecrawl_client = _firecrawl_client_config = _parallel_client = _async_parallel_client = _exa_client = None
+from typing import Any, Optional
 
-from plugins.web.firecrawl.provider import _is_tool_gateway_ready, check_firecrawl_api_key
 from tools.debug_helpers import DebugSession
-from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER, read_selection, selection_exists
+from tools.tool_backend_helpers import selection_exists
 from tools.url_safety import async_is_safe_url
-from tools.web_tools_rescue import _managed_search_fallback, _rescue_eligible, _rescue_search
 from tools.web_tools_truncate import _effective_char_limit, _trim_results, _truncate_results, convert_base64_images_to_links
 from tools.web_tools_extract import (
     _extract_safe_urls, _merge_in_order, _no_provider_error, _resolve_extract_provider, _result_entry,
@@ -29,27 +24,7 @@ from tools.web_tools_extract import (
 
 logger = logging.getLogger(__name__)
 
-
-# ─── Backend Selection ────────────────────────────────────────────────────────
-
-def _env_value(name: str) -> str:
-    """Resolve ``name`` via the config-aware env layer (``hermes config set`` values), then process env.
-
-    Mirrors the SearXNG provider's ``_searxng_url()`` so that values set through Hermes' config/.env layer
-    (``hermes config set``, ``hermes tools``) are honored here too — not just raw process-env exports.
-    Without this, a config-only ``SEARXNG_URL`` (or any provider key) leaves the backend auto-detect cascade
-    and ``check_web_api_key()`` blind to it. See #34290.
-    """
-    try:
-        from hermes_cli.config import get_env_value
-        val = get_env_value(name)
-    except Exception:
-        val = None
-    return ((os.getenv(name, "") if val is None else val) or "").strip()
-
-
-def _has_env(name: str) -> bool:
-    return bool(_env_value(name))
+_DEFAULT_BACKEND = "ddgs"
 
 
 def _load_web_config() -> dict:
@@ -99,96 +74,30 @@ def _probe(provider, method: str, context: str = "") -> Optional[bool]:
 
 def _get_backend() -> str:
     """Shared web backend name. A stored ``web.backend`` is returned as-is — no availability probe, no
-    fallback — so a broken selection surfaces the vendor's honest error rather than silently rerouting.
-    The managed ``use_gateway`` selection also resolves to firecrawl with no ladder. Autodetect runs
-    whenever no SHARED web selection was ever stored: per-capability keys (``web.search_backend``,
-    ``web.extract_backend``) name only their own capability and never reroute the other (#113017)."""
-    configured = _configured_backend()
-    if configured:
-        # "nous" (managed subscription) is serviced by firecrawl, routed through the managed Tool Gateway.
-        return "firecrawl" if configured == NOUS_MANAGED_PROVIDER else configured
-    if read_selection("web") is not None:
-        # Shared selection exists (use_gateway) but no shared name: firecrawl, no ladder.
-        return "firecrawl"
-
-    # Never-configured install.
-    return _autodetect_backend() or _keyless_backend() or "firecrawl"  # default (backward compat)
+    fallback — so a broken selection surfaces an honest error rather than silently rerouting. Autodetect
+    runs only when no shared selection was stored; per-capability keys (``web.search_backend``,
+    ``web.extract_backend``) name only their own capability and never reroute the other."""
+    return _configured_backend() or _autodetect_backend() or _DEFAULT_BACKEND
 
 
 def _autodetect_backend() -> Optional[str]:
-    """Autodetect rungs above the keyless tier, or None. Explicit user credentials beat the managed-gateway
-    probe (a Nous OAuth token's tier may not grant web access; the gateway then fails at runtime with no
-    fallback). Free tiers trail paid."""
-    backend_candidates = (
-        ("tavily", _has_env("TAVILY_API_KEY")), ("perplexity", _has_env("PERPLEXITY_API_KEY")),
-        ("exa", _has_env("EXA_API_KEY")),
-        ("parallel", _has_env("PARALLEL_API_KEY")), ("keenable", _has_env("KEENABLE_API_KEY")),
-        ("firecrawl", _has_env("FIRECRAWL_API_KEY") or _has_env("FIRECRAWL_API_URL")),
-        ("firecrawl", _is_tool_gateway_ready()), ("searxng", _has_env("SEARXNG_URL")),
-        ("brave-free", _has_env("BRAVE_SEARCH_API_KEY")), ("ddgs", _ddgs_package_importable()),
-    )
-    for backend, available in backend_candidates:
-        if available:
-            return backend
-
-    # Plugin-contributed providers (built-ins are covered above); probe the held object directly.
+    """Bundled ddgs when importable, else the first available plugin-contributed provider, or None."""
+    if _ddgs_package_importable():
+        return _DEFAULT_BACKEND
     for provider in _list_registered_web_providers():
-        if provider.name not in _LEGACY_WEB_BACKENDS and _probe(provider, "is_available"):
+        if provider.name != _DEFAULT_BACKEND and _probe(provider, "is_available"):
             return provider.name
     return None
 
 
-def _keyless_backend() -> Optional[str]:
-    """Keyless free-tier backend name, or None. Strictly the last autodetect rung so it never
-    pre-empts a keyed backend. Discovery must run first: reachable from contexts that haven't
-    loaded plugins (subprocess runs, delegate children)."""
-    try:
-        _ensure_web_plugins_loaded()
-        from agent.web_search_registry import _keyless_preference, _keyless_tier_enabled
-        if _keyless_tier_enabled():
-            for name in _keyless_preference():
-                provider = _registered_web_provider(name)
-                if provider is not None and _probe(provider, "is_keyless_available"):
-                    return name
-    except Exception as exc:
-        logger.debug("keyless fallback walk failed: %s", exc)
-    return None
-
-
-def _managed_web_search() -> bool:
-    """True when web_search is on the managed Nous route: the stored ``nous`` selection (a
-    ``web.search_backend: nous`` pin, else the shared one), or a never-configured install whose
-    autodetect lands on the gateway — the entitled Firecrawl gateway, or free Perplexity fast search
-    for any Nous identity when nothing else is configured (search-only: the extract ladder is
-    untouched). A stored vendor selection never is."""
-    search_pin = _configured_backend("search_backend")
-    if search_pin:
-        return search_pin == NOUS_MANAGED_PROVIDER
-    selected = read_selection("web")
-    if selected is not None:
-        return selected == NOUS_MANAGED_PROVIDER
-    backend = _autodetect_backend()
-    if backend == "firecrawl":
-        return not (_has_env("FIRECRAWL_API_KEY") or _has_env("FIRECRAWL_API_URL")) and _is_tool_gateway_ready()
-    from tools.managed_tool_gateway import peek_nous_access_token, resolve_free_search_gateway
-    return backend is None and resolve_free_search_gateway(token_reader=peek_nous_access_token) is not None
-
-
 def _get_search_backend() -> str:
-    """Backend for web_search: ``web.search_backend`` (strict, no probe) > ``web.backend`` > autodetect.
-    The managed Nous route (a ``nous`` pin or shared selection) serves search from Perplexity (extract
-    stays on Firecrawl); managed Firecrawl is the per-call fallback, see ``_memoized_search``."""
-    pin = _configured_backend("search_backend")
-    if pin and pin != NOUS_MANAGED_PROVIDER:
-        return pin
-    return "perplexity" if _managed_web_search() else _get_backend()
+    """Backend for web_search: ``web.search_backend`` (strict, no probe) > ``web.backend`` > autodetect."""
+    return _configured_backend("search_backend") or _get_backend()
 
 
 def _get_extract_backend() -> str:
-    """Backend for web_extract: ``web.extract_backend`` (strict, no probe) > ``web.backend`` > autodetect.
-    A ``nous`` pin is managed Firecrawl; the client picks the gateway route for that capability."""
-    pin = _configured_backend("extract_backend")
-    return "firecrawl" if pin == NOUS_MANAGED_PROVIDER else pin or _get_backend()
+    """Backend for web_extract: ``web.extract_backend`` (strict, no probe) > ``web.backend`` > autodetect."""
+    return _configured_backend("extract_backend") or _get_backend()
 
 
 def _ddgs_package_importable() -> bool:
@@ -200,92 +109,27 @@ def _ddgs_package_importable() -> bool:
         return False
 
 
-def _xai_available() -> bool:
-    # Cheap probe only (env var OR auth.json OAuth): resolve_xai_http_credentials() may hit the network.
-    try:
-        from tools.xai_http import has_xai_credentials
-        return has_xai_credentials()
-    except Exception:
-        return False
-
-
-# Built-in backends -> cheap availability probes; any other name is a plugin provider resolved via the
-# registry's ``is_available()``. Lambdas so test patches of module-level helpers (_ddgs_package_importable,
-# check_firecrawl_api_key) are honored at call time. ``xai`` is probed via has_xai_credentials(), not a
-# registered provider, though the registry's _LEGACY_PREFERENCE omits it — drop it if xai ever registers.
-_BUILTIN_AVAILABILITY = {
-    "exa": lambda: _has_env("EXA_API_KEY"),
-    "parallel": lambda: _has_env("PARALLEL_API_KEY"),
-    "keenable": lambda: _has_env("KEENABLE_API_KEY"),
-    "firecrawl": lambda: check_firecrawl_api_key(),
-    "tavily": lambda: _has_env("TAVILY_API_KEY")
-    or any(_configured_backend(k) == "tavily" for k in ("backend", "search_backend", "extract_backend")),
-    "perplexity": lambda: _has_env("PERPLEXITY_API_KEY") or _managed_web_search(),
-    "searxng": lambda: _has_env("SEARXNG_URL"),
-    "brave-free": lambda: _has_env("BRAVE_SEARCH_API_KEY"),
-    "ddgs": lambda: _ddgs_package_importable(),
-    "xai": _xai_available,
-}
-_LEGACY_WEB_BACKENDS = frozenset(_BUILTIN_AVAILABILITY)
-
-
 def _is_backend_available(backend: str) -> bool:
-    """True when *backend* is usable — the single availability chokepoint. Non-legacy names delegate to the
-    registered provider's ``is_available()`` (unregistered names fall through); built-ins use cheap probes.
-
-    For plugin-registered backends (any name outside :data:`_LEGACY_WEB_BACKENDS`), availability is
-    delegated to the provider's ``is_available()`` via the web_search_registry. This is the single
-    chokepoint through which ``_get_backend``, ``_get_capability_backend``, and ``check_web_api_key`` all
-    resolve availability — fixing custom-provider discovery for every caller at once (issues #28651, #31873,
-    #32698). Built-in backends keep their cheap hardcoded probes below.
-    """
+    """True when *backend* is usable: bundled ddgs by a cheap import probe, any other name through the
+    registered provider's ``is_available()`` (unregistered names are unavailable)."""
     backend = (backend or "").lower().strip()
-    provider = None if backend in _LEGACY_WEB_BACKENDS else _registered_web_provider(backend)
-    if provider is not None:
-        return _probe(provider, "is_available") or False
-    probe = _BUILTIN_AVAILABILITY.get(backend)
-    return probe() if probe else False
+    if backend == _DEFAULT_BACKEND:
+        return _ddgs_package_importable()
+    provider = _registered_web_provider(backend)
+    return bool(provider is not None and _probe(provider, "is_available"))
 
-
-# ─── Firecrawl Client ──────────────────────────────────────────────────────── After PR #25182, the
-# firecrawl client, lazy SDK proxy, dual-auth config resolution, response normalizers, and
-# check_firecrawl_api_key() all live in plugins.web.firecrawl.provider.
-def _web_requires_env() -> list[str]:
-    """Tool-registry metadata env vars for the web backends. Gateway vars are always listed: gating them
-    on ``managed_nous_tools_enabled()`` cost a synchronous portal HTTP refresh at every CLI startup.
-    Contract: set var -> tool sees it; extras are harmless for the not-logged-in."""
-    return [
-        "EXA_API_KEY", "PARALLEL_API_KEY", "TAVILY_API_KEY", "PERPLEXITY_API_KEY", "KEENABLE_API_KEY", "FIRECRAWL_API_KEY",
-        "FIRECRAWL_API_URL", "FIRECRAWL_GATEWAY_URL", "PERPLEXITY_GATEWAY_URL", "TOOL_GATEWAY_DOMAIN", "TOOL_GATEWAY_SCHEME",
-        "TOOL_GATEWAY_USER_TOKEN",
-    ]
 
 _debug = DebugSession("web_tools", env_var="WEB_TOOLS_DEBUG")
 
 
-# ─── Dispatch ─────────────────────────────────────────────────────────────────
-
-# ─── Exa / Parallel inline helpers — moved into plugins ────────────────────── After PR #25182, the exa
-# client + search/extract and parallel client + search/extract helpers all live in their respective plugins:
-# - plugins/web/exa/provider.py - plugins/web/parallel/provider.py Both plugins register through
-# agent.web_search_registry and the dispatchers in this file resolve them via get_active_*_provider().
 def _ensure_web_plugins_loaded() -> None:
     """Idempotently run plugin discovery so the web registry is populated. Dispatch is reachable from contexts
     that never triggered discovery (subprocess agent runs, delegate children, scripts); without it a
-    configured backend yields a misleading "No web ... provider" error.
-
-    Every bundled web provider (brave-free, ddgs, searxng, exa, parallel, tavily, firecrawl, keenable)
-    registers itself via ``plugins/web/<vendor>/__init__.py`` during plugin discovery. Tool dispatch can be
-    reached from contexts that haven't already triggered discovery — subprocess agent runs, delegate
-    children, standalone scripts, certain test paths — and without it the registry is empty and
-    ``get_provider('firecrawl')`` returns ``None`` even when the user has ``web.extract_backend: firecrawl``
-    configured and ``FIRECRAWL_API_KEY`` set. See #27580.
-    """
+    configured backend yields a misleading "No web ... provider" error."""
     try:
         from hermes_cli.plugins import _ensure_plugins_discovered
         _ensure_plugins_discovered()
     except Exception as exc:
-        # Warning, not debug: a broken plugin import is otherwise invisible.
         logger.warning("Web plugin discovery failed (non-fatal): %s", exc)
 
 
@@ -318,7 +162,6 @@ def web_search_tool(query: str, limit: int = 5) -> str:
         from tools.interrupt import is_interrupted
         if is_interrupted():
             return tool_error("Interrupted", success=False)
-        # Sync only — every provider's search() is sync.
         _ensure_web_plugins_loaded()
         from agent.web_search_registry import get_active_search_provider, get_provider as _wsp_get_provider
         backend = _get_search_backend()
@@ -328,7 +171,6 @@ def web_search_tool(query: str, limit: int = 5) -> str:
                 error_text = debug_call_data["error"] = _strict_selection_error("search", backend)
                 _finish_debug("web_search_tool", debug_call_data)
                 return json.dumps({"success": False, "error": error_text}, indent=2, ensure_ascii=False)
-            # Never-configured install: legacy availability-walked autodetect.
             provider = get_active_search_provider()
 
         if provider is None:
@@ -348,44 +190,18 @@ def web_search_tool(query: str, limit: int = 5) -> str:
 
 
 def _memoized_search(provider, query: str, limit: int) -> dict:
-    """TTL memo + single-flight around the paid vendor call (tools/web_result_cache.py); sits after every
+    """TTL memo + single-flight around the vendor call (tools/web_result_cache.py); sits after every
     safety/config check. The provider is asked for the BUCKETED count so near-identical limits share an entry;
-    the caller's count is sliced out. Only successful, non-rescued responses are cached — caching a rescue
-    would make the one-shot ring fallback sticky for a whole TTL."""
+    the caller's count is sliced out. Only successful responses are cached."""
     from tools.web_result_cache import bucket_limit, search_memo, slice_search_response
-
-    def _paid_search() -> tuple[dict, bool]:
-        fetch_limit = bucket_limit(limit)
-        try:
-            resp = provider.search(query, fetch_limit)
-        except Exception as exc:
-            served = _served_after_failure(str(exc), fetch_limit)
-            if served is None:
-                raise
-            return served, True
-        if not resp.get("success"):
-            served = _served_after_failure(str(resp.get("error", "")), fetch_limit)
-            if served is not None:
-                return served, True
-        return resp, False
-
-    def _served_after_failure(error: str, fetch_limit: int) -> Optional[dict]:
-        """Managed Firecrawl for a failed managed Perplexity call, else the one-shot keyless rescue when
-        eligible; None means the vendor's own failure stands."""
-        fallback = _managed_search_fallback(provider, error, query, fetch_limit)
-        if fallback is not None:
-            return fallback
-        return _rescue_search(provider.name, error, query, fetch_limit) if _rescue_eligible(provider) else None
 
     response_data = search_memo.lookup(provider.name, query, limit)
     if response_data is None:
         with search_memo.flight_lock(provider.name, query, limit):
-            # Re-check inside the lock: a concurrent identical call may have stored.
             response_data = search_memo.lookup(provider.name, query, limit)
             if response_data is None:
-                response_data, was_rescued = _paid_search()
-                if not was_rescued:
-                    search_memo.store(provider.name, query, limit, response_data)
+                response_data = provider.search(query, bucket_limit(limit))
+                search_memo.store(provider.name, query, limit, response_data)
     return slice_search_response(response_data, limit)
 
 
@@ -407,7 +223,6 @@ async def web_extract_tool(urls: list[Any], format: str | None = None, char_limi
 
     try:
         logger.info("Extracting content from %d URL(s)", len(normalized_urls))
-        # SSRF protection — filter private/internal URLs before any backend.
         safe_urls, safe_indices, ssrf_blocked = [], [], {}
         for index, url in zip(normalized_indices, normalized_urls):
             if await async_is_safe_url(url):
@@ -426,8 +241,6 @@ async def web_extract_tool(urls: list[Any], format: str | None = None, char_limi
             if error_json is not None:
                 return error_json
             results = await _extract_safe_urls(provider, safe_urls, format)
-        # Reconstruct input order across invalid, blocked, and provider entries (providers preserve
-        # the order of the safe URL list they receive).
         if invalid_urls or ssrf_blocked:
             fixed = {**ssrf_blocked, **invalid_urls}
             results = _merge_in_order(len(urls), fixed, safe_indices, safe_urls, results)
@@ -442,7 +255,6 @@ async def web_extract_tool(urls: list[Any], format: str | None = None, char_limi
             json.dumps({"results": trimmed}, indent=2, ensure_ascii=False) if trimmed
             else tool_error("Content was inaccessible or not found")
         )
-        # Belt-and-suspenders sweep of the serialized JSON: a provider may tuck a base64 blob in metadata.
         cleaned_result = convert_base64_images_to_links(result_json)
         debug_call_data["final_response_size"] = len(cleaned_result)
         debug_call_data["processing_applied"].append("base64_image_conversion")
@@ -453,63 +265,48 @@ async def web_extract_tool(urls: list[Any], format: str | None = None, char_limi
 
 
 def _provider_is_ready(provider) -> bool:
-    """True when *provider* is keyed-available OR keyless-capable, without raising.
+    """True when *provider* reports ``is_available()``, without raising.
 
     ``get_active_*_provider()`` returns an explicitly configured backend even when ``is_available()`` is
     False (so dispatch can emit a precise error), so readiness gates (tool check_fn, ``hermes doctor``)
-    must probe for real. Keyless mode (Exa/Parallel free tier) is a working state, not a misconfig.
-
-    See #78412.
+    must probe for real.
     """
-    if provider is None:
-        return False
-    ready = _probe(provider, "is_available", " during readiness check")
-    if ready is None:  # broken provider == not ready; don't try the keyless probe
-        return False
-    return bool(ready or _probe(provider, "is_keyless_available", " during readiness check"))
-
-
-# Credential probes that back other tools but serve no registered web backend: ``xai`` is
-# probed via has_xai_credentials() for TTS/media only, so it must not light this gate. A
-# stored ``web.backend: xai`` still counts since _get_backend returns a configured
-# selection as-is and dispatch surfaces the honest "unknown provider" error.
-_WEB_CHECK_SKIP = frozenset({"xai"})
+    return provider is not None and bool(_probe(provider, "is_available", " during readiness check"))
 
 
 def check_web_api_key() -> bool:
-    """``check_fn`` gate for web_search / web_extract: is any web backend available?
+    """``check_fn`` gate for web_search: is any web search backend available?
 
-    A plugin-registered provider reporting ``is_available()`` must light the tools up even with no
-    built-in credentials; resolution funnels through :func:`_is_backend_available`.
-
-    See #28651, #31873.
+    A plugin-registered provider reporting ``is_available()`` lights the tool up even when bundled ddgs is
+    not importable; resolution funnels through :func:`_is_backend_available`.
     """
-    # Boolean OR over configured + built-ins — probe order is irrelevant here.
-    candidates = ([c for c in (_configured_backend(),) if c]
-                  + [b for b in _LEGACY_WEB_BACKENDS if b not in _WEB_CHECK_SKIP])
+    candidates = [c for c in (_configured_backend(), _DEFAULT_BACKEND) if c]
     if any(_is_backend_available(backend) for backend in candidates):
         return True
-    # Plugin path. Discovery must run first: check_fn fires at tool-registration time, before any dispatch.
     try:
         _ensure_web_plugins_loaded()
-        from agent.web_search_registry import get_active_search_provider, get_active_extract_provider
-        for provider in (get_active_search_provider(), get_active_extract_provider()):
-            if provider is not None and getattr(provider, "name", None) in _WEB_CHECK_SKIP:
-                # The registry's single-eligible / legacy walk picked a built-in that _get_backend
-                # never autodetects (the explicit-config case was handled above): the dispatcher
-                # would route to the keyless tier instead, so gate on exactly that.
-                if _keyless_backend() is not None:
-                    return True
-                continue
-            if _provider_is_ready(provider):
-                return True
-        return False
+        from agent.web_search_registry import get_active_search_provider
+        return _provider_is_ready(get_active_search_provider())
     except Exception as exc:
         logger.debug("web provider registry availability check failed: %s", exc)
         return False
 
 
-# ─── Registry ─────────────────────────────────────────────────────────────────
+def check_web_extract_available() -> bool:
+    """``check_fn`` gate for web_extract: True only when an extract-capable provider is ready.
+
+    No bundled provider extracts (ddgs is search-only), so web_extract stays hidden until a plugin
+    contributes a ready extract backend instead of failing on every call.
+    """
+    try:
+        _ensure_web_plugins_loaded()
+        from agent.web_search_registry import get_active_extract_provider
+        return _provider_is_ready(get_active_extract_provider())
+    except Exception as exc:
+        logger.debug("web extract provider availability check failed: %s", exc)
+        return False
+
+
 from tools.registry import registry, tool_error
 
 WEB_SEARCH_SCHEMA = {
@@ -559,8 +356,7 @@ WEB_EXTRACT_SCHEMA = {
 registry.register(
     name="web_search", toolset="web", schema=WEB_SEARCH_SCHEMA,
     handler=lambda args, **kw: web_search_tool(args.get("query", ""), limit=args.get("limit", 5)),
-    check_fn=check_web_api_key, requires_env=_web_requires_env(), emoji="🔍",
-    max_result_size_chars=100_000,
+    check_fn=check_web_api_key, emoji="🔍", max_result_size_chars=100_000,
 )
 registry.register(
     name="web_extract", toolset="web", schema=WEB_EXTRACT_SCHEMA,
@@ -568,6 +364,5 @@ registry.register(
         args.get("urls", [])[:5] if isinstance(args.get("urls"), list) else [], "markdown",
         char_limit=args.get("char_limit"),
     ),
-    check_fn=check_web_api_key, requires_env=_web_requires_env(), is_async=True, emoji="📄",
-    max_result_size_chars=100_000,
+    check_fn=check_web_extract_available, is_async=True, emoji="📄", max_result_size_chars=100_000,
 )

@@ -23,7 +23,7 @@ class TestTTSProviderNullGuard:
         """An explicit tts.provider always overrides the active-provider fallback."""
         from tools.tts_tool import _get_provider
 
-        assert _get_provider({"provider": "edge"}) == "edge"
+        assert _get_provider({"provider": "piper"}) == "piper"
 
 # ── Web tools ─────────────────────────────────────────────────────────────
 

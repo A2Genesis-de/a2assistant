@@ -1043,7 +1043,7 @@ class TestLifecycleGuardModule:
 
     def test_remote_read_fallback_binary_does_not_crash_guard(self):
         """#77703: in the gateway the referenced-script walk carries a
-        ``read_remote_script`` fallback (SSH/Modal/Daytona backends read the
+        ``read_remote_script`` fallback (SSH backends read the
         script over the wire). When the referenced path is an ELF binary, that
         fallback returned the binary's decoded bytes; the scanner then
         tokenized machine code into bogus NUL-bearing paths and crashed with

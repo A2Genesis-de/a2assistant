@@ -1,13 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import {
-  getElevenLabsVoices,
-  getHermesConfigSchema,
-  type ProfileScope,
-  profileScopeKey,
-  saveHermesConfigRecord
-} from '@/hermes'
+import { getHermesConfigSchema, type ProfileScope, profileScopeKey, saveHermesConfigRecord } from '@/hermes'
 import { useI18n } from '@/i18n'
 import { notifyError } from '@/store/notifications'
 import type { HermesConfigRecord } from '@/types/hermes'
@@ -109,38 +103,6 @@ export function VoiceProviderFields({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- copy is stable; `profile`/`baseline` are keyed by scopeKey; avoid re-scheduling autosave on locale change
   }, [config, scopeKey, saveVersion, writeConfigCache, writeScope])
 
-  // ElevenLabs cloned/library voices from the live account, when available —
-  // mirrors the Settings → Voice dynamic voice list.
-  const [elVoices, setElVoices] = useState<string[] | null>(null)
-  const [elVoiceLabels, setElVoiceLabels] = useState<Record<string, string>>({})
-  const wantsElevenLabs = keys.includes('tts.elevenlabs.voice_id')
-
-  useEffect(() => {
-    if (!wantsElevenLabs) {
-      return
-    }
-
-    let cancelled = false
-
-    getElevenLabsVoices()
-      .then(result => {
-        if (cancelled || !result.available) {
-          return
-        }
-
-        setElVoices(result.voices.map(voice => voice.voice_id))
-        setElVoiceLabels(Object.fromEntries(result.voices.map(voice => [voice.voice_id, voice.label])))
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setElVoices(null)
-          setElVoiceLabels({})
-        }
-      })
-
-    return () => void (cancelled = true)
-  }, [wantsElevenLabs])
-
   if (keys.length === 0 || !config) {
     return null
   }
@@ -158,14 +120,12 @@ export function VoiceProviderFields({
       {keys.map(key => {
         const value = getNested(config, key)
         const field = schema[key] ?? inferFieldSchema(value)
-        const isElVoice = key === 'tts.elevenlabs.voice_id'
 
         return (
           <ConfigField
-            enumOptions={enumOptionsFor(key, value, config, isElVoice ? (elVoices ?? undefined) : undefined)}
+            enumOptions={enumOptionsFor(key, value, config)}
             key={key}
             onChange={next => updateConfig(setNested(config, key, next))}
-            optionLabels={isElVoice ? elVoiceLabels : undefined}
             schema={field}
             schemaKey={key}
             value={value}

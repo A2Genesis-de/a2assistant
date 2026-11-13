@@ -22,17 +22,6 @@ def _max_tokens_fn(n):
     return {"max_completion_tokens": n}
 
 
-class TestNvidiaProfileParity:
-    def test_max_tokens_match(self, transport):
-        """The NVIDIA profile default max_tokens reaches the wire when the user sets none."""
-        profile = transport.build_kwargs(
-            model="nvidia/nemotron", messages=_msgs(), tools=None,
-            provider_profile=get_provider_profile("nvidia"),
-            max_tokens_param_fn=_max_tokens_fn,
-        )
-        assert profile["max_completion_tokens"] == get_provider_profile("nvidia").default_max_tokens
-
-
 class TestKimiProfileParity:
     def test_temperature_omitted(self, transport):
         """The kimi-coding profile (``kimi`` is an alias of it) leaves temperature to the server."""

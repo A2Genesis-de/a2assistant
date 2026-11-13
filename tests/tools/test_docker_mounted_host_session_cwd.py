@@ -72,7 +72,6 @@ def _config(host_cwd):
         "docker_mount_cwd_to_workspace": True,
         "docker_run_as_host_user": False,
         "docker_forward_env": [],
-        "modal_mode": "auto",
     }
 
 

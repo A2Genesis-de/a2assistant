@@ -1,11 +1,11 @@
 """Deliver ``MEDIA:<path>`` files that live inside a remote terminal sandbox (#466).
 
 ``validate_media_delivery_path`` only accepts files on the gateway host. When the terminal backend
-is ssh / daytona / vercel (any backend that reports its ``_remote_home``), the agent's artifact is
+is ssh (any backend that reports its ``_remote_home``), the agent's artifact is
 on another filesystem, so the tag was silently dropped. This module pulls the file through the
 active environment's ``fetch_file`` into the document cache (already an allowlisted delivery root)
 and hands back the host copy. Backends without a known remote home (docker outside its mounts,
-modal, plugin sandboxes) still get the conservative any-component denylist, so a ``/root/...`` artifact
+plugin sandboxes) still get the conservative any-component denylist, so a ``/root/...`` artifact
 there is not fetched — set ``_remote_home`` on the environment to opt in.
 
 The remote path is screened against the same denylist as local deliveries BEFORE any bytes move,

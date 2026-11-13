@@ -68,7 +68,7 @@ def test_inherit_launch_model_carries_a_custom_provider_gateway(
     atomic_config_write(
         profile / "config.yaml",
         {
-            "tts": {"provider": "edge"},
+            "tts": {"provider": "piper"},
             schema: retained_catalog,
             "_config_version": DEFAULT_CONFIG["_config_version"],
         },
@@ -119,7 +119,7 @@ def test_inherit_launch_model_pins_a_bare_custom_endpoint(monkeypatch, tmp_path,
     # Voice mirroring writes config.yaml before inheritance runs (#85755).
     atomic_config_write(
         profile / "config.yaml",
-        {"tts": {"provider": "edge"}, "_config_version": DEFAULT_CONFIG["_config_version"]},
+        {"tts": {"provider": "piper"}, "_config_version": DEFAULT_CONFIG["_config_version"]},
     )
 
     assert srv._inherit_launch_model(profile) is True

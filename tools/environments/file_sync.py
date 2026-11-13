@@ -1,7 +1,7 @@
 """Shared file sync manager for remote execution backends.
 
 Tracks local file changes via mtime+size, detects deletions, and syncs to
-remote environments transactionally.  Used by SSH, Modal, and Daytona.
+remote environments transactionally.  Used by SSH.
 Docker uses bind mounts (live host FS view) and doesn't need this.
 """
 

@@ -25,7 +25,7 @@ def homes(tmp_path, monkeypatch):
     monkeypatch.setenv("HERMES_HOME", str(launch))
     for seed in ("HERMES_MODEL", "HERMES_INFERENCE_MODEL"):
         monkeypatch.delenv(seed, raising=False)
-    monkeypatch.setenv("GLM_API_KEY", "launch-own-key")
+    monkeypatch.setenv("OPENAI_API_KEY", "launch-own-key")
     monkeypatch.setattr(server, "_hermes_home", launch)
     monkeypatch.setattr(server, "_cfg_cache", None)
     monkeypatch.setattr(server, "_cfg_sig", None)
@@ -41,11 +41,11 @@ def test_session_bound_save_key_writes_only_the_session_profiles_env(homes, monk
     session = {"agent": None, "profile_home": str(worker), "session_key": "worker-session"}
     with patch.dict(server._sessions, {"s-worker": session}, clear=False):
         resp = server._methods["model.save_key"](
-            "rid", {"session_id": "s-worker", "slug": "zai", "api_key": key})
+            "rid", {"session_id": "s-worker", "slug": "openai-api", "api_key": key})
     assert "result" in resp, resp
     assert key in (worker / ".env").read_text(encoding="utf-8")
     assert key not in (launch / ".env").read_text(encoding="utf-8")
-    assert os.environ["GLM_API_KEY"] == "launch-own-key", "a secondary's key never reaches the process env"
+    assert os.environ["OPENAI_API_KEY"] == "launch-own-key", "a secondary's key never reaches the process env"
 
 
 def test_session_create_for_a_profile_reports_and_persists_its_own_model(homes, monkeypatch, tmp_path):

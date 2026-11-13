@@ -14,7 +14,7 @@ import {
 
 import { cutSentences, sanitizeTextForSpeech } from './speech-text'
 
-// Free Edge TTS occasionally hands back audio that never fires `playing`/`ended`
+// A TTS backend occasionally hands back audio that never fires `playing`/`ended`
 // nor `error` — leaving voice mode stuck "speaking" forever. Reject if playback
 // fails to start or stalls mid-stream for this long (rearmed on each progress
 // tick, so legitimately long speech is never cut off).

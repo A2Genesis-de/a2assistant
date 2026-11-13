@@ -497,7 +497,7 @@ def get_sandbox_mirror_warning(path: str) -> Optional[str]:
     the caller surfaces it as a tool-result error and ``cross_profile=True`` bypasses."""
     return _mirror_warning(
         classify_sandbox_mirror_target(path),
-        "a per-task mirror created by a non-local terminal backend (docker/daytona/etc.). "
+        "a per-task mirror created by a non-local terminal backend (docker/ssh/etc.). "
         "Writes here land on a copy that the host A2Assistant process never reads — the "
         "authoritative file is likely {inner_path!r} under the real HERMES_HOME.",
         "this guard after explicit user direction, retry the call",

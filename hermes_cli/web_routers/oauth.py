@@ -13,7 +13,6 @@ import secrets
 import sys
 import threading
 import time
-from datetime import datetime, timezone, UTC
 from typing import Any, Callable, Dict, Optional
 
 from fastapi import APIRouter, HTTPException, Request
@@ -39,7 +38,6 @@ _OAUTH_PROVIDER_CATALOG = LateState("_OAUTH_PROVIDER_CATALOG", "hermes_cli.web_s
 # A direct import here made those mocks no-ops — the real poller then hit the network
 # from the leaked thread and segfaulted a later test's collection (CI flake, 2026-09-09).
 _nous_sign_in_poller = late("_nous_sign_in_poller", "hermes_cli.web_server_oauth")
-_minimax_poller = late("_minimax_poller", "hermes_cli.web_server_oauth")
 _xai_device_poller = late("_xai_device_poller", "hermes_cli.web_server_oauth")
 _profile_device_poller = late("_profile_device_poller", "hermes_cli.web_server_oauth")
 
@@ -370,11 +368,6 @@ def _status_card(
     return card
 
 
-def _epoch_ms_to_iso(value: Any) -> Optional[str]:
-    """Epoch ms (Qwen CLI ``expiry_date``) -> the aware ISO string the other cards send."""
-    return datetime.fromtimestamp(value / 1000, tz=UTC).isoformat() if value else None
-
-
 # Hand-written status cards per provider id: (hauth getter name, raw -> card).
 # Providers absent here fall through to the slug-driven ``get_auth_status``.
 # nous: refresh-free local snapshot so listing providers never performs an OAuth
@@ -388,13 +381,6 @@ _PROVIDER_STATUS: dict[str, tuple[str, Callable[[dict], dict]]] = {
     "openai-codex": ("get_codex_auth_status", lambda r: _status_card(
         r, r.get("source") or "openai_codex", r.get("auth_mode") or "OpenAI Codex",
         _truncate_token(r.get("api_key")), None, False, r.get("last_refresh"),
-    )),
-    "qwen-oauth": ("get_qwen_auth_status", lambda r: _status_card(
-        r, "qwen_cli", r.get("auth_file") or "Qwen CLI",
-        _truncate_token(r.get("api_key")), _epoch_ms_to_iso(r.get("expires_at_ms")), bool(r.get("has_refresh_token")),
-    )),
-    "minimax-oauth": ("get_minimax_oauth_auth_status", lambda r: _status_card(
-        r, "minimax_oauth", f"MiniMax ({r.get('region', 'global')})", None, r.get("expires_at"), True,
     )),
     "xai-oauth": ("get_xai_oauth_auth_status", lambda r: _status_card(
         r, r.get("source") or "xai_oauth", r.get("auth_store") or r.get("source") or "xAI Grok OAuth",
@@ -527,43 +513,6 @@ async def _start_codex_device_code(profile: Optional[str]) -> dict[str, Any]:
     }
 
 
-async def _start_minimax_device_code(profile: Optional[str]) -> dict[str, Any]:
-    # Device-code flow with a PKCE extension: verifier + challenge from
-    # _minimax_pkce_pair bind the token exchange to the original session.
-    from hermes_cli.auth import (
-        MINIMAX_OAUTH_CLIENT_ID, MINIMAX_OAUTH_GLOBAL_BASE, _minimax_pkce_pair, _minimax_request_user_code,
-    )
-    verifier, challenge, state = _minimax_pkce_pair()
-    portal_base_url = (os.getenv("MINIMAX_PORTAL_BASE_URL") or MINIMAX_OAUTH_GLOBAL_BASE).rstrip("/")
-    device_data = await _httpx_call(lambda client: _minimax_request_user_code(
-        client=client, portal_base_url=portal_base_url, client_id=MINIMAX_OAUTH_CLIENT_ID,
-        code_challenge=challenge, state=state,
-    ), follow_redirects=True)
-    # MiniMax's `interval` is in milliseconds (defensive default 2000ms in _minimax_poll_token).
-    interval_raw = device_data.get("interval")
-    interval_ms = int(interval_raw) if interval_raw is not None else None
-    # `expired_in` is overloaded — a unix-ms timestamp OR seconds-from-now.
-    # Mirror the heuristic in _minimax_poll_token; keep the raw value for the
-    # poller and derive expires_at + UI-friendly expires_in seconds.
-    expired_in_raw = int(device_data["expired_in"])
-    if expired_in_raw > 1_000_000_000_000:  # likely unix-ms
-        expires_at_ts = expired_in_raw / 1000.0
-        expires_in_seconds = max(0, int(expires_at_ts - time.time()))
-    else:
-        expires_at_ts = time.time() + expired_in_raw
-        expires_in_seconds = expired_in_raw
-    return _device_session_started(
-        "minimax-oauth", profile, _minimax_poller,
-        dict(
-            interval_ms=interval_ms, user_code=str(device_data["user_code"]), code_verifier=verifier, state=state,
-            portal_base_url=portal_base_url, client_id=MINIMAX_OAUTH_CLIENT_ID, region="global",
-            expired_in_raw=expired_in_raw, expires_at=expires_at_ts,
-        ),
-        str(device_data["user_code"]), str(device_data["verification_uri"]), expires_in_seconds,
-        max(2, (interval_ms or 2000) // 1000),
-    )
-
-
 async def _start_xai_device_code(profile: Optional[str]) -> dict[str, Any]:
     from hermes_cli.auth import _xai_oauth_request_device_code
     device_data = await _httpx_call(_xai_oauth_request_device_code, timeout=20.0)
@@ -581,7 +530,7 @@ async def _start_xai_device_code(profile: Optional[str]) -> dict[str, Any]:
 
 _DEVICE_CODE_STARTERS = {
     "nous": _start_nous_device_code, "openai-codex": _start_codex_device_code,
-    "minimax-oauth": _start_minimax_device_code, "xai-oauth": _start_xai_device_code,
+    "xai-oauth": _start_xai_device_code,
 }
 
 

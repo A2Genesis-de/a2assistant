@@ -222,13 +222,13 @@ describe('pluginSettingsHref', () => {
   })
 
   it('round-trips agent routes and the profile hand-off', () => {
-    const href = pluginSettingsRouteHref({ agent: 'image_gen/fal' }, 'review-b')
+    const href = pluginSettingsRouteHref({ agent: 'image_gen/openai' }, 'review-b')
 
-    expect(href).toBe('/settings?tab=plugins&agent=image_gen%2Ffal&profile=review-b')
+    expect(href).toBe('/settings?tab=plugins&agent=image_gen%2Fopenai&profile=review-b')
 
     const params = new URLSearchParams(href.split('?')[1])
 
-    expect(pluginSettingsRouteFrom(params)).toEqual({ agent: 'image_gen/fal' })
+    expect(pluginSettingsRouteFrom(params)).toEqual({ agent: 'image_gen/openai' })
     expect(pluginSettingsRouteFrom(new URLSearchParams('plugin=weather&ppage=units'))).toEqual({
       page: 'units',
       plugin: 'weather'

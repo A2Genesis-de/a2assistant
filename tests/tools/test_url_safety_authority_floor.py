@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 import pytest
 
-from tools import browser_session_cloud, browser_url_policy, browser_use_cli
+from tools import browser_config, browser_url_policy, browser_use_cli
 from tools.url_safety import is_always_blocked_url, is_safe_url
 
 _LOCALHOST = [(socket.AF_INET, socket.SOCK_STREAM, 6, "", ("127.0.0.1", 0))]
@@ -33,8 +33,8 @@ def _dns():
 @pytest.fixture
 def local_browser(monkeypatch):
     """A local Chromium backend: ``is_safe_url`` is skipped, only the metadata floor applies."""
-    monkeypatch.setattr(browser_session_cloud, "is_local_backend", lambda: True)
-    monkeypatch.setattr(browser_session_cloud, "allow_private_urls", lambda: False)
+    monkeypatch.setattr(browser_config, "is_local_backend", lambda: True)
+    monkeypatch.setattr(browser_config, "allow_private_urls", lambda: False)
     monkeypatch.setattr(browser_url_policy, "hybrid_routes_locally", lambda url: False)
     monkeypatch.setattr(browser_url_policy, "check_website_access", lambda url: None)
 

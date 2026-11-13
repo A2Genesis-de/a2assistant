@@ -176,8 +176,7 @@ def test_reuse_keeps_the_old_container_when_the_replacement_cannot_be_pulled(mon
 
 def test_reuse_keeps_container_built_from_another_image_when_default_flipped(monkeypatch, caplog):
     """A DEFAULT flip (nikolaik base -> hermes-sandbox:desktop) must not replace a sandbox the user has
-    state in: the existing container is kept and the log names the approval command. Same rule Modal
-    (snapshot wins) and Daytona (labeled sandbox wins) already apply."""
+    state in: the existing container is kept and the log names the approval command."""
     import logging
     with caplog.at_level(logging.WARNING, logger=docker_env.logger.name):
         commands = _reuse_guard_harness(monkeypatch, existing_mode="bridge", network=True,

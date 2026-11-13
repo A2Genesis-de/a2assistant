@@ -61,62 +61,6 @@ def _run_logging_git(tmp_path: Path, code: str) -> tuple[dict, list[str]]:
 
 
 @pytest.mark.platforms("linux", "macos")
-@pytest.mark.parametrize("isolation", ["in_process", "host"])
-def test_provider_headers_run_no_git_until_read_and_stay_a_dict_for_overrides(tmp_path, isolation):
-    # User overrides of a bundled profile, found by real discovery once installed: one inherits its
-    # lazy headers as-is, one builds its own with the dict operations the documented
-    # ``default_headers: dict[str, str]`` invites. Under ``plugins.isolation: host`` both run in the
-    # plugin host and reach the parent only through the profile extraction.
-    home = tmp_path / "home"
-    home.mkdir()
-    (home / "config.yaml").write_text(f"plugins:\n  isolation: {isolation}\n", encoding="utf-8")
-    overrides = {
-        "gmi-eu": "register_provider(dataclasses.replace(base, name='gmi-eu', aliases=()))\n",
-        "gmi-acct": (
-            "headers = base.default_headers.copy()\n"
-            "headers['X-Account'] = 'eu'\n"
-            "headers = {'X-Tier': 'pro'} | (base.default_headers | headers)\n"
-            "register_provider(dataclasses.replace(base, name='gmi-acct', aliases=(), default_headers=headers))\n"
-        ),
-        # A lazy header derived from another profile's unread lazy header (nested resolution).
-        "gmi-tag": (
-            "from providers.base import LazyHeaders\n"
-            "headers = LazyHeaders({'User-Agent': lambda: base.default_headers['User-Agent'] + ' eu'})\n"
-            "register_provider(dataclasses.replace(base, name='gmi-tag', aliases=(), default_headers=headers))\n"
-        ),
-    }
-    code = (
-        "import json, os, pathlib, hermes_cli.config, providers\n"
-        "providers.list_providers()\n"
-        "log = os.environ['PATH'].split(os.pathsep)[0] + '/../git.log'\n"
-        "before = open(log, encoding='utf-8-sig').read().splitlines() if os.path.exists(log) else []\n"
-        "ua = dict(providers.get_provider_profile('fireworks').default_headers)['User-Agent']\n"
-        f"for name, body in {overrides!r}.items():\n"
-        "    plugin = pathlib.Path(os.environ['HERMES_HOME'], 'plugins', 'model-providers', name)\n"
-        "    plugin.mkdir(parents=True)\n"
-        "    (plugin / '__init__.py').write_text('import dataclasses\\n'\n"
-        "        'from providers import get_provider_profile, register_provider\\n'\n"
-        "        \"base = get_provider_profile('gmi')\\n\" + body)\n"
-        "providers._home_layer(force_stamp_check=True)\n"
-        "from hermes_cli.version_info import get_version_info\n"
-        "found = {n: providers.get_provider_profile(n) for n in ('gmi-eu', 'gmi-acct', 'gmi-tag')}\n"
-        "print(json.dumps({'before': before, 'ua': ua, 'base': get_version_info().base_version,\n"
-        "                  'found': {n: p and dict(p.default_headers) for n, p in found.items()}}))\n"
-    )
-    result, calls = _run_logging_git(tmp_path, code)
-
-    assert result["before"] == [], "importing config + every provider plugin spawned git"
-    ua = f"HermesAgent/{result['base']}"
-    assert result["ua"] == ua
-    assert calls, "reading the header resolves the release on demand"
-    assert result["found"] == {
-        "gmi-eu": {"User-Agent": ua},
-        "gmi-acct": {"X-Tier": "pro", "User-Agent": ua, "X-Account": "eu"},
-        "gmi-tag": {"User-Agent": f"{ua} eu"},
-    }
-
-
-@pytest.mark.platforms("linux", "macos")
 def test_startup_checkout_sha_read_is_one_rev_parse(tmp_path):
     code = (
         "import json\n"

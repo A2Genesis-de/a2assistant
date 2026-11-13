@@ -281,13 +281,11 @@ export const deA2Gaps = {
     },
     fieldDescriptions: {
       'stt.streaming':
-        'Text anzeigen, während Sie sprechen (OpenAI, xAI, ElevenLabs). Bei Fehlern wird auf die Aufnahme zurückgegriffen.'
+        'Text anzeigen, während Sie sprechen (OpenAI). Bei Fehlern wird auf die Aufnahme zurückgegriffen.'
     },
     fieldLabels: {
-      'stt.deepinfra.model': 'DeepInfra-STT-Modell',
       'stt.openai.streamingModel': 'OpenAI-Modell für Live-Transkription',
-      'stt.streaming': 'Live-Transkription',
-      'stt.xai.model': 'xAI-STT-Modell'
+      'stt.streaming': 'Live-Transkription'
     },
     localModels: {
       downloadEta: time => `noch ca. ${time}`,

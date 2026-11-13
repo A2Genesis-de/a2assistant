@@ -157,23 +157,23 @@ class TestTranscribeAudioE2E:
     def test_builtin_name_does_not_consult_plugin_registry(self, sample_audio_file):
         """Even if a plugin's name collides with a built-in (which the
         registry blocks, but defense in depth matters), transcribe_audio
-        with provider='groq' goes through the legacy elif chain, never
+        with provider='openai' goes through the legacy elif chain, never
         the plugin dispatcher."""
         from unittest.mock import patch
         # Register a plugin that WOULD respond to 'openrouter' — but
-        # we're asking for 'groq', so it shouldn't be called.
+        # we're asking for 'openai', so it shouldn't be called.
         provider = _FakeProvider(name="openrouter")
         transcription_registry.register_provider(provider)
 
-        with patch("tools.transcription_tools._load_stt_config", return_value={"provider": "groq"}), \
-             patch("tools.transcription_tools._get_provider", return_value="groq"), \
-             patch("tools.transcription_tools._transcribe_groq",
-                   return_value={"success": True, "transcript": "from groq", "provider": "groq"}) as mock_groq:
+        with patch("tools.transcription_tools._load_stt_config", return_value={"provider": "openai"}), \
+             patch("tools.transcription_tools._get_provider", return_value="openai"), \
+             patch("tools.transcription_tools._transcribe_openai",
+                   return_value={"success": True, "transcript": "from openai", "provider": "openai"}) as mock_openai:
             result = transcription_tools.transcribe_audio(sample_audio_file)
 
-        assert result["provider"] == "groq"
-        assert result["transcript"] == "from groq"
-        mock_groq.assert_called_once()
+        assert result["provider"] == "openai"
+        assert result["transcript"] == "from openai"
+        mock_openai.assert_called_once()
         # Plugin was never called
         assert provider.last_call is None
 

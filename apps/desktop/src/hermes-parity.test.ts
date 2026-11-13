@@ -38,10 +38,10 @@ describe('A2Assistant REST parity helpers (hub / mcp / maintenance)', () => {
   })
 
   it('reads a backend model catalog scoped to a provider row', async () => {
-    await getToolsetModels('image_gen', 'FAL.ai')
+    await getToolsetModels('image_gen', 'OpenAI')
 
     expect(api).toHaveBeenCalledWith(
-      expect.objectContaining({ path: '/api/tools/toolsets/image_gen/models?provider=FAL.ai' })
+      expect.objectContaining({ path: '/api/tools/toolsets/image_gen/models?provider=OpenAI' })
     )
   })
 })

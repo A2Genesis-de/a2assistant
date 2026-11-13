@@ -230,7 +230,7 @@ def test_suppression_is_scoped_to_its_provider(tmp_path, monkeypatch):
     from tools.tool_backend_helpers import resolve_provider_secret
 
     _write_auth_store(tmp_path, monkeypatch, {"xai": ["env:XAI_API_KEY"]})
-    monkeypatch.setenv("ELEVENLABS_API_KEY", "el-key")
+    monkeypatch.setenv("VOICE_TOOLS_OPENAI_KEY", "voice-key")
     monkeypatch.setenv("XAI_API_KEY", "dead-key")
-    assert resolve_provider_secret("ELEVENLABS_API_KEY", "elevenlabs") == "el-key"
+    assert resolve_provider_secret("VOICE_TOOLS_OPENAI_KEY", "openai-api") == "voice-key"
     assert resolve_provider_secret("XAI_API_KEY", "xai") == ""

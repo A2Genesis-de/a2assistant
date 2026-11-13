@@ -32,7 +32,7 @@ def _settled_native_document(tmp_path, monkeypatch, note):
 
 @pytest.mark.parametrize('note', [
     lambda path: f"[The user sent a document: 'report.pdf'. It is saved at: {path}.]",
-    # A docker/modal backend's agent-visible spelling of the same retained file.
+    # A docker backend's agent-visible spelling of the same retained file.
     lambda path: "It is saved at: /root/.hermes/cache/documents/" + path.split('/documents/', 1)[1],
 ], ids=['host-path', 'agent-visible-path'])
 def test_settled_native_document_named_by_the_transcript_survives_settlement(tmp_path, monkeypatch, note):

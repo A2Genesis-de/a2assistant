@@ -98,13 +98,3 @@ def test_each_provider_lands_on_the_tab_its_auth_type_dictates():
         elif d.tab == "accounts":
             assert d.slug in accounts, f"{d.slug} (accounts tab) missing from /api/providers/oauth"
 
-
-def test_shared_api_key_preserves_each_provider_profile():
-    """One env var must not collapse distinct built-in provider routes."""
-    data = client.get("/api/env", headers=HEADERS).json()
-    profiles = data["DASHSCOPE_API_KEY"]["provider_profiles"]
-    by_provider = {profile["provider"]: profile for profile in profiles}
-
-    assert {"alibaba", "alibaba-cn"} <= by_provider.keys()
-    assert by_provider["alibaba"]["primary"] is True
-    assert by_provider["alibaba-cn"]["primary"] is True

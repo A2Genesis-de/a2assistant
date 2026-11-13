@@ -51,7 +51,7 @@ interface ToolsetConfigPanelProps {
 
 /** Toolsets whose backends expose a selectable model catalog (mirrors the
  *  backend's _MODEL_CATALOG_TOOLSETS map). */
-const MODEL_CATALOG_TOOLSETS = new Set(['image_gen', 'video_gen'])
+const MODEL_CATALOG_TOOLSETS = new Set(['image_gen'])
 
 /**
  * `useNavigate` throws when there is no react-router context. Inside Settings
@@ -99,19 +99,8 @@ function providerStatus(provider: ToolProvider, envState: Record<string, boolean
   return providerConfigured(provider, envState) ? 'ready' : 'needs_keys'
 }
 
-/**
- * Whether a web provider row serves a capability right now. The managed
- * "Nous Subscription" row and the BYOK Firecrawl rows resolve to the same
- * backend name, so the server's `*_via_nous` flag decides which one is lit.
- */
-function capabilityServedBy(provider: ToolProvider, backend: null | string | undefined, viaNous?: boolean): boolean {
-  if (provider.managed_nous_feature) {
-    return Boolean(viaNous)
-  }
-
-  // Rows sharing a backend name (cloud vs self-hosted Firecrawl) are told apart by the server's
-  // is_active, which knows which one's credential is set.
-  return Boolean(provider.web_backend && backend === provider.web_backend && !viaNous && provider.is_active)
+function capabilityServedBy(provider: ToolProvider, backend: null | string | undefined): boolean {
+  return Boolean(provider.web_backend && backend === provider.web_backend && provider.is_active)
 }
 
 interface EnvVarFieldProps {
@@ -420,10 +409,9 @@ interface ModelCatalogPickerProps {
 
 /**
  * Backend model catalog — the GUI counterpart of the model picker `hermes
- * tools` runs after you choose an image/video generation backend (e.g. FAL's
- * multi-model catalog). Renders speed / strengths / price per model as a
- * radio-card list and persists the choice to `image_gen.model` /
- * `video_gen.model`.
+ * tools` runs after you choose an image generation backend. Renders speed /
+ * strengths / price per model as a radio-card list and persists the choice to
+ * `image_gen.model`.
  */
 function ModelCatalogPicker({ toolset, providerName, isActiveBackend, profile }: ModelCatalogPickerProps) {
   const { t } = useI18n()
@@ -754,9 +742,6 @@ export function ToolsetConfigPanel({ toolset, onConfiguredChange, profile }: Too
         return
       }
 
-      // Refetch rather than mirror: whether the capability now rides the Nous
-      // Tool Gateway or the user's own key is resolved server-side (the
-      // managed and BYOK Firecrawl rows share one web_backend).
       await refresh()
       notify({
         kind: 'success',
@@ -794,9 +779,6 @@ export function ToolsetConfigPanel({ toolset, onConfiguredChange, profile }: Too
     return <p className="px-1 py-3 text-xs text-muted-foreground">{copy.noProviders}</p>
   }
 
-  // The gateway route is labelled with the managed row's own (server-provided) name.
-  const managedRowName = providers.find(p => p.managed_nous_feature)?.name
-
   return (
     <div className="grid gap-2">
       {toolset === 'web' && cfg.active_search_backend !== undefined && (
@@ -805,14 +787,10 @@ export function ToolsetConfigPanel({ toolset, onConfiguredChange, profile }: Too
         // each capability resolves to right now.
         <div className="flex flex-wrap items-center gap-2 px-1">
           <Pill>
-            {copy.webSearchActive(
-              (cfg.search_via_nous && managedRowName) || cfg.active_search_backend || copy.webCapabilityUnset
-            )}
+            {copy.webSearchActive(cfg.active_search_backend || copy.webCapabilityUnset)}
           </Pill>
           <Pill>
-            {copy.webExtractActive(
-              (cfg.extract_via_nous && managedRowName) || cfg.active_extract_backend || copy.webCapabilityUnset
-            )}
+            {copy.webExtractActive(cfg.active_extract_backend || copy.webCapabilityUnset)}
           </Pill>
         </div>
       )}
@@ -821,8 +799,8 @@ export function ToolsetConfigPanel({ toolset, onConfiguredChange, profile }: Too
         const isBackendActive = provider.is_active || cfg?.active_provider === provider.name
         const status = providerStatus(provider, envState)
         const webCaps = toolset === 'web' ? (provider.capabilities ?? []) : []
-        const isSearchBackend = capabilityServedBy(provider, cfg.active_search_backend, cfg.search_via_nous)
-        const isExtractBackend = capabilityServedBy(provider, cfg.active_extract_backend, cfg.extract_via_nous)
+        const isSearchBackend = capabilityServedBy(provider, cfg.active_search_backend)
+        const isExtractBackend = capabilityServedBy(provider, cfg.active_extract_backend)
 
         return (
           <div className="overflow-hidden rounded-xl bg-background/60" key={provider.name}>

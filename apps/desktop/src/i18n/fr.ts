@@ -442,8 +442,6 @@ export const frOverrides = {
       disableFailed: name => `Impossible de désactiver ${name} MCP.`
     },
     errors: {
-      elevenLabsNeedsKey: 'STT ElevenLabs nécessite ELEVENLABS_API_KEY.',
-      elevenLabsRejectedKey: 'ElevenLabs a rejeté la clé API (401).',
       diskFull: "Le disque est plein. Libérez de l'espace disque, puis réessayez.",
       storageFailure:
         "A2Assistant n'a pas pu enregistrer dans son dossier de données. Ouvrez Maintenance pour le vérifier et le réparer.",
@@ -1185,9 +1183,7 @@ export const frOverrides = {
         persistentShell: 'Shell persistant',
         envPassthrough: "Transmission de l'environnement",
         dockerImage: 'Image Docker',
-        singularityImage: 'Image Singularity',
-        modalImage: 'Image Modal',
-        daytonaImage: 'Image Daytona'
+        singularityImage: 'Image Singularity'
       },
       fileReadMaxChars: 'Limite de lecture de fichier',
       toolOutput: {
@@ -1234,57 +1230,13 @@ export const frOverrides = {
         },
         openai: {
           model: 'Modèle STT OpenAI'
-        },
-        groq: {
-          model: 'Modèle STT Groq'
-        },
-        mistral: {
-          model: 'Modèle STT Mistral'
-        },
-        elevenlabs: {
-          modelId: 'Modèle STT ElevenLabs',
-          languageCode: 'Langue ElevenLabs',
-          tagAudioEvents: 'Étiqueter les événements audio',
-          diarize: 'Diarisation des locuteurs'
         }
       },
       tts: {
         provider: 'Fournisseur de synthèse vocale',
-        edge: {
-          voice: 'Voix Edge'
-        },
         openai: {
           model: 'Modèle TTS OpenAI',
           voice: 'Voix OpenAI'
-        },
-        elevenlabs: {
-          voiceId: 'Voix ElevenLabs',
-          modelId: 'Modèle ElevenLabs'
-        },
-        xai: {
-          voiceId: 'Voix xAI (Grok)',
-          language: 'Langue xAI',
-          speed: 'Vitesse de lecture xAI',
-          autoSpeechTags: 'Étiquettes vocales automatiques xAI',
-          optimizeStreamingLatency: 'Optimisation de la latence streaming xAI',
-          sampleRate: "Fréquence d'échantillonnage xAI",
-          bitRate: 'Débit binaire xAI'
-        },
-        minimax: {
-          model: 'Modèle TTS MiniMax',
-          voiceId: 'Voix MiniMax'
-        },
-        mistral: {
-          model: 'Modèle TTS Mistral',
-          voiceId: 'Voix Mistral'
-        },
-        gemini: {
-          model: 'Modèle TTS Gemini',
-          voice: 'Voix Gemini'
-        },
-        neutts: {
-          model: 'Modèle NeuTTS',
-          device: 'Appareil NeuTTS'
         },
         kittentts: {
           model: 'Modèle KittenTTS',
@@ -1292,10 +1244,6 @@ export const frOverrides = {
         },
         piper: {
           voice: 'Voix Piper'
-        },
-        deepinfra: {
-          model: 'Modèle TTS DeepInfra',
-          voice: 'Voix DeepInfra'
         }
       },
       memory: {
@@ -1360,9 +1308,7 @@ export const frOverrides = {
         persistentShell: "Conserve l'état du shell entre les commandes lorsque le backend le permet.",
         envPassthrough: "Variables d'environnement à transmettre à l'exécution des outils.",
         dockerImage: "Image de conteneur utilisée lorsque le backend d'exécution est Docker.",
-        singularityImage: "Image utilisée lorsque le backend d'exécution est Singularity.",
-        modalImage: "Image utilisée lorsque le backend d'exécution est Modal.",
-        daytonaImage: "Image utilisée lorsque le backend d'exécution est Daytona."
+        singularityImage: "Image utilisée lorsque le backend d'exécution est Singularity."
       },
       codeExecution: {
         mode: "Degré de restriction de l'exécution du code au projet actuel."
@@ -1405,28 +1351,9 @@ export const frOverrides = {
             'Phrases supplémentaires pour la personnalité vocale en direct (ton, rythme, langue). A2Assistant conserve son propre prompt système.'
         }
       },
-      tts: {
-        xai: {
-          voiceId: 'ID de voix xAI (ex. eve) ou un ID de voix personnalisé.',
-          language: 'Code de langue parlée (ex. en, pt-BR) ou "auto" pour la détection automatique.',
-          speed: 'Vitesse de lecture. 0.7 = plus lent, 1.0 = normal, 1.5 = plus rapide.',
-          autoSpeechTags:
-            'Laisser un LLM insérer des balises audio expressives ([laughing], [sighs]) dans le script avant la synthèse.',
-          optimizeStreamingLatency: 'Compromis latence/qualité. 0 = meilleure qualité, 2 = latence minimale.',
-          sampleRate:
-            "Fréquence d'échantillonnage audio en Hz. Plus élevée = meilleure qualité, fichiers plus volumineux.",
-          bitRate: "Débit binaire MP3 en bps. S'applique uniquement lorsque le codec est mp3."
-        },
-        neutts: {
-          device: "Périphérique d'inférence local pour NeuTTS."
-        }
-      },
       stt: {
         enabled: 'Activer la transcription vocale locale ou via fournisseur.',
-        echoTranscripts: 'Publier la transcription brute 🎙️ des messages vocaux dans la conversation.',
-        elevenlabs: {
-          languageCode: 'Code de langue ISO-639-3 facultatif. Vide = détection automatique par ElevenLabs.'
-        }
+        echoTranscripts: 'Publier la transcription brute 🎙️ des messages vocaux dans la conversation.'
       },
       updates: {
         nonInteractiveLocalChanges:

@@ -129,7 +129,7 @@ def _post_setup_python(spec: dict) -> None:
 
 
 def _post_setup_xai_grok() -> None:
-    """Shared xAI credential bootstrap for any picker row that talks to xAI (TTS, STT, Video Gen, x_search
+    """Shared xAI credential bootstrap for any picker row that talks to xAI (Video Gen
     …). Accepts a SuperGrok-tier OAuth token (preferred — billed to the existing subscription) or a raw
     XAI_API_KEY; the rows declare empty env_vars so the auth UX lives here."""
     try:
@@ -175,54 +175,6 @@ def _post_setup_xai_grok() -> None:
         _print_info("    xAI will remain inactive until credentials are configured.")
 
 
-def _codex_credentials_present() -> bool:
-    """Cheap offline check for Codex/ChatGPT OAuth credentials (auth store + pool only)."""
-    try:
-        from hermes_cli.auth import get_codex_auth_status
-        return bool(get_codex_auth_status().get("logged_in"))
-    except Exception:
-        return False
-
-
-def _post_setup_openai_codex() -> None:
-    """Shared Codex/ChatGPT OAuth bootstrap for any picker row that talks to Codex without an API key
-    (image gen today). The rows declare empty env_vars so the sign-in UX lives here. Saves tokens only —
-    never rewrites ``model.provider``: the user picked an image backend, not a chat model (#102144)."""
-    if _codex_credentials_present():
-        _print_success("    Image generation will use your existing Codex/ChatGPT OAuth credentials")
-        return
-
-    relogin = "hermes auth add openai-codex"
-    _print_info("    OpenAI (Codex auth) needs credentials.")
-    try:
-        from hermes_cli.auth import _codex_device_code_login, _save_codex_tokens
-        from hermes_cli.setup import is_noninteractive, prompt_choice
-    except Exception as exc:
-        _print_warning(f"    Could not load setup helpers: {exc}")
-        _info_lines(f"Run later: {relogin}")
-        return
-
-    if is_noninteractive():
-        # Dashboard/Desktop spawn this hook with stdin=DEVNULL: nobody can finish a device-code
-        # login here, and the panel already shows the needs_auth pill.
-        _info_lines(f"No terminal to sign in from. Run: {relogin}")
-        return
-    idx = prompt_choice(
-        "    How do you want to sign in?", default=0,
-        choices=["Sign in with ChatGPT/Codex OAuth — browser login",
-                 f"Skip — configure later via `{relogin}`"])
-    if idx != 0:
-        _print_info("    Codex image generation will remain inactive until you sign in.")
-        return
-    try:
-        creds = _codex_device_code_login()
-        _save_codex_tokens(creds["tokens"], creds.get("last_refresh"), set_active=False)
-    except (Exception, KeyboardInterrupt) as exc:
-        _print_warning(f"    Codex sign-in did not complete: {exc}. Run later: {relogin}")
-        return
-    _print_success("    Logged in — image generation will use these Codex OAuth credentials")
-
-
 def _xai_credentials_ready() -> bool:
     from hermes_cli.tools_config import _xai_credentials_present  # facade binding: tests patch it there
     return _xai_credentials_present()
@@ -232,7 +184,6 @@ def _xai_credentials_ready() -> bool:
 # side-effect; ``provider_readiness_status`` reports them ready/needs_auth from the auth store.
 _POST_SETUP_AUTH_READY: dict = {
     "xai_grok": _xai_credentials_ready,
-    "openai_codex": _codex_credentials_present,
 }
 
 
@@ -240,11 +191,10 @@ _POST_SETUP_AUTH_READY: dict = {
 _POST_SETUP_HOOKS: dict = {
     "lightpanda": _post_setup_lightpanda,
     "chromium": _post_setup_chromium,
-    # Cloud browser rows (plugins.browser.*): the vendor hosts Chromium; browser_exec attaches over CDP.
+    # Cloud browser plugin rows: the vendor hosts Chromium; browser_exec attaches over CDP.
     "browserbase": lambda: _ensure_browser_use_cli(),
     "cua_driver": lambda: install_cua_driver(upgrade=False),
     "xai_grok": _post_setup_xai_grok,
-    "openai_codex": _post_setup_openai_codex,
     **{key: (lambda spec=spec: _post_setup_python(spec)) for key, spec in _PYTHON_POST_SETUP_HOOKS.items()},
 }
 
@@ -259,14 +209,12 @@ def valid_post_setup_keys() -> set[str]:
     plugin-registered providers). This is the allowlist ``post-setup`` and the dashboard endpoint
     validate against, so a caller cannot drive ``_run_post_setup`` with an arbitrary key."""
     from hermes_cli.tools_config import (
-        TOOL_CATEGORIES, _plugin_browser_providers, _plugin_image_gen_providers,
-        _plugin_video_gen_providers, _plugin_web_search_providers)
+        TOOL_CATEGORIES, _plugin_browser_providers, _plugin_image_gen_providers, _plugin_web_search_providers)
 
     keys: set[str] = set()
     for cat in TOOL_CATEGORIES.values():
         keys.update(ps for prov in cat.get("providers", []) if (ps := prov.get("post_setup")))
-    for builder in (_plugin_web_search_providers, _plugin_image_gen_providers,
-                    _plugin_video_gen_providers, _plugin_browser_providers):
+    for builder in (_plugin_web_search_providers, _plugin_image_gen_providers, _plugin_browser_providers):
         try:
             keys.update(ps for prov in builder() if (ps := prov.get("post_setup")))
         except Exception:  # pragma: no cover — defensive; plugins optional
@@ -347,7 +295,7 @@ def _lightpanda_installed() -> bool:
 
 # post_setup_key -> predicate(): True when the install side-effect is satisfied. Used by
 # ``provider_readiness_status`` to mark a keyless post_setup row "ready" vs "needs_setup"; mirrors the
-# installed-checks the hooks perform. Credential bootstraps (``xai_grok``, ``openai_codex``) are absent —
+# installed-checks the hooks perform. Credential bootstraps (``xai_grok``) are absent —
 # they live in ``_POST_SETUP_AUTH_READY`` as auth checks. Late-bound lambdas so tests can monkeypatch the underlying predicates.
 _POST_SETUP_READY: dict = {
     **{key: (lambda m=spec["module"]: _module_installed(m)) for key, spec in _PYTHON_POST_SETUP_HOOKS.items()},

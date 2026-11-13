@@ -200,18 +200,6 @@ const ERROR_SUMMARIES: ErrorSummaryRule[] = [
     action: () => RECOVERY_ACTIONS.openKeys('OPENAI_API_KEY')
   },
   {
-    category: 'api_key_missing',
-    test: msg => /ELEVENLABS_API_KEY not set/i.test(msg),
-    summarize: () => translateNow('notifications.errors.elevenLabsNeedsKey'),
-    action: () => RECOVERY_ACTIONS.openKeys('ELEVENLABS_API_KEY')
-  },
-  {
-    category: 'api_key_rejected',
-    test: msg => /ElevenLabs STT API error \(HTTP 401\)/i.test(msg),
-    summarize: () => translateNow('notifications.errors.elevenLabsRejectedKey'),
-    action: () => RECOVERY_ACTIONS.openKeys('ELEVENLABS_API_KEY')
-  },
-  {
     category: 'method_not_allowed',
     test: msg => /method not allowed/i.test(msg),
     summarize: () => translateNow('notifications.errors.methodNotAllowed'),

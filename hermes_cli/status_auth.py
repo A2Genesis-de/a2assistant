@@ -27,10 +27,6 @@ def _format_iso_timestamp(value) -> str:
     return safe_strftime(parsed.astimezone(), "%Y-%m-%d %H:%M:%S %Z")
 
 
-def _qwen_expiry(expires_at_ms) -> str:
-    return datetime.fromtimestamp(int(expires_at_ms) / 1000, tz=UTC).isoformat()
-
-
 def _oauth_block(name: str, status: dict, hint: str, rows) -> None:
     """Print an OAuth provider row plus its conditional detail lines.
 
@@ -48,14 +44,8 @@ def _oauth_block(name: str, status: dict, hint: str, rows) -> None:
 # Values may be a single env var name (str) or a tuple of alternates (first found wins).
 _API_KEYS: dict[str, str | tuple[str, ...]] = {
     "OpenRouter": "OPENROUTER_API_KEY", "OpenAI": "OPENAI_API_KEY",
-    "Google / Gemini": ("GOOGLE_API_KEY", "GEMINI_API_KEY"), "DeepSeek": "DEEPSEEK_API_KEY",
-    "xAI / Grok": "XAI_API_KEY", "NVIDIA NIM": "NVIDIA_API_KEY", "Z.AI / GLM": "GLM_API_KEY",
-    "Kimi": "KIMI_API_KEY", "StepFun Step Plan": "STEPFUN_API_KEY", "MiniMax": "MINIMAX_API_KEY",
-    "MiniMax-CN": "MINIMAX_CN_API_KEY", "DeepInfra": "DEEPINFRA_API_KEY", "Firecrawl": "FIRECRAWL_API_KEY",
-    "Tavily": "TAVILY_API_KEY", "Perplexity": "PERPLEXITY_API_KEY", "Keenable": "KEENABLE_API_KEY",
-    "Browser Use": "BROWSER_USE_API_KEY",  # Optional — local browser works without this
-    "Browserbase": "BROWSERBASE_API_KEY",  # Optional — direct credentials only
-    "FAL": "FAL_KEY", "ElevenLabs": "ELEVENLABS_API_KEY", "GitHub": "GITHUB_TOKEN"}
+    "DeepInfra": "DEEPINFRA_API_KEY", "Firecrawl": "FIRECRAWL_API_KEY",
+    "GitHub": "GITHUB_TOKEN"}
 
 # OAuth detail rows: (label, status key, formatter, gate) — see _oauth_block.
 _FILE_REFRESH_ROWS = (
@@ -65,20 +55,7 @@ _FILE_REFRESH_ROWS = (
 _OAUTH_BLOCKS = (
     # (row name, auth getter, login hint, detail rows)
     ("OpenAI Codex", "get_codex_auth_status", "hermes model", _FILE_REFRESH_ROWS),
-    ("Qwen OAuth", "get_qwen_auth_status", "qwen auth qwen-oauth", (
-        ("Auth file:", "auth_file", None, None),
-        ("Access exp:", "expires_at_ms", _qwen_expiry, None),
-        ("Error:", "error", None, False))),
-    ("MiniMax OAuth", "get_minimax_oauth_auth_status", "hermes auth add minimax-oauth", (
-        ("Region:", "region", None, True),
-        ("Access exp:", "expires_at", None, None),
-        ("Error:", "error", None, False))),
     ("xAI OAuth", "get_xai_oauth_auth_status", "hermes auth add xai-oauth", _FILE_REFRESH_ROWS))
-
-_APIKEY_PROVIDERS = {
-    "Z.AI / GLM": ("GLM_API_KEY", "ZAI_API_KEY", "Z_AI_API_KEY"), "Kimi / Moonshot": ("KIMI_API_KEY",),
-    "StepFun Step Plan": ("STEPFUN_API_KEY",), "MiniMax": ("MINIMAX_API_KEY",),
-    "MiniMax (China)": ("MINIMAX_CN_API_KEY",), "DeepInfra": ("DEEPINFRA_API_KEY",)}
 
 # Nous Tool Gateway per-feature state: first matching (predicate(feature, nous_auth), text(feature)).
 _FEATURE_STATES = (
@@ -181,10 +158,6 @@ def _render_nous_gateway(ctx):
 
 def _render_apikey_providers(ctx):
     _status._section("API-Key Providers")
-    for pname, env_vars in _APIKEY_PROVIDERS.items():
-        configured = bool(_status._first_env_value(env_vars))
-        _status._row(pname, configured, "configured" if configured else "not configured (run: hermes model)", 16, " ")
-
     # LM Studio reachability: probe only when it is the active provider so users with foreign
     # configs see no noise. Auth rejection vs. a silent empty list is the common support case.
     if _status._effective_provider_label() == "LM Studio":

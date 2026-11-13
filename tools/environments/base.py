@@ -29,7 +29,7 @@ from tools.environments.base_session_env import (
     _wrap_command_script,
 )
 from tools.environments.base_wait import _WaitTrace
-from utils import atomic_json_write, env_var_enabled, file_signature
+from utils import env_var_enabled, file_signature
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ def kill_live_foreground_processes(*, now: bool = False) -> int:
     KILLs, so a SIGTERM-ignoring command outlives a hard exit that lands inside that window. It also
     raises the exit fence and waits for spawns already past it to register, so no command started
     around the snapshot survives, and it never blocks past ``_HARD_KILL_BUDGET_S``: SDK cancels
-    (Modal, Daytona, Vercel) run on daemon threads under that one deadline."""
+    run on daemon threads under that one deadline."""
     global _exit_fenced
     if not now:
         with _live_foreground_cond:
@@ -193,50 +193,6 @@ def get_sandbox_dir() -> Path:
     return p
 
 
-def _load_json_store(path: Path) -> dict:
-    """Treat a missing or damaged snapshot store as empty."""
-    try:
-        data = json.loads(path.read_text(encoding="utf-8-sig"))
-    except (OSError, ValueError):
-        return {}
-    return data if isinstance(data, dict) else {}
-
-
-def _save_json_store(path: Path, data: dict) -> None:
-    """Write *data* as pretty-printed JSON to *path* atomically (readers never see a torn file)."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    atomic_json_write(path, data, indent=2)
-
-
-_JSON_STORE_LOCK_HOLDER = threading.local()
-
-
-def _update_json_store(path: Path, update: Callable[[dict], None]) -> None:
-    """Read-modify-write the JSON store at *path* under a cross-process lock.
-
-    Concurrent sandbox cleanups (delegate children, gateway sessions, the idle reaper) each
-    record a snapshot id; an unlocked load/mutate/save lets one cleanup drop the other's entry.
-    An unusable lock (no flock on the filesystem, a wedged holder) degrades to an unlocked
-    update: a sandbox lifecycle step (modal's restore fallback included) must not abort on it."""
-    from contextlib import ExitStack
-
-    from hermes_cli.auth import _file_lock
-
-    lock_path = path.with_name(f"{path.name}.lock")
-    with ExitStack() as stack:
-        try:
-            stack.enter_context(_file_lock(
-                lock_path, _JSON_STORE_LOCK_HOLDER, 10.0, f"Timed out waiting for the snapshot store lock ({path})",
-            ))
-        except (OSError, TimeoutError):
-            logger.warning("Updating %s without its lock", path, exc_info=True)
-        data = _load_json_store(path)
-        before = dict(data)
-        update(data)
-        if data != before:
-            _save_json_store(path, data)
-
-
 def _file_mtime_key(host_path: str) -> tuple[int, int, int, int] | None:
     """Return the ``file_signature`` change key, or ``None`` if unreadable.
 
@@ -267,7 +223,7 @@ class BaseEnvironment(ABC):
 
     # How execute() hands stdin to _run_bash: "pipe" (process stdin, default),
     # "payload" (passed through as stdin_data; the backend transports it via its
-    # SDK -- Modal/managed Modal stream it, Daytona/Vercel stage a file) or
+    # SDK) or
     # "heredoc" (embedded in the command; no built-in backend, plugins only).
     _stdin_mode: str = "pipe"  # "pipe" | "payload" | "heredoc"
 
@@ -653,7 +609,7 @@ class BaseEnvironment(ABC):
 
     # --- Hooks ---
     def _before_execute(self) -> None:
-        """Hook before each command. Remote backends (SSH, Modal, Daytona)
+        """Hook before each command. Remote backends (SSH)
         trigger their FileSyncManager here; bind-mount backends and Local don't."""
 
     def _mark_recreated(self) -> None:

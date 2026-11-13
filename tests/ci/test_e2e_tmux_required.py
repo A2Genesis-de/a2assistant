@@ -16,10 +16,7 @@ import pytest
 from tests.e2e.core.cli_tmux import _classic
 
 _REPO = Path(__file__).resolve().parents[2]
-_TMUX_SUITES = sorted(
-    [*(_REPO / "tests" / "e2e" / "core" / "cli_tmux").glob("test_*.py"),
-     _REPO / "tests" / "e2e" / "core" / "providers" / "test_native_vertex_cli_background.py"]
-)
+_TMUX_SUITES = sorted((_REPO / "tests" / "e2e" / "core" / "cli_tmux").glob("test_*.py"))
 _BARE_SKIP = re.compile(r"skipif\(\s*shutil\.which\(\s*[\"']tmux[\"']\s*\)")
 
 
@@ -46,7 +43,7 @@ def test_missing_tmux_skips_outside_the_ci_e2e_lane(monkeypatch, ci, require):
 
 
 def test_every_tmux_suite_uses_the_gate_instead_of_a_bare_skip():
-    assert len(_TMUX_SUITES) >= 4, _TMUX_SUITES
+    assert len(_TMUX_SUITES) >= 3, _TMUX_SUITES
     bare = [str(p.relative_to(_REPO)) for p in _TMUX_SUITES if _BARE_SKIP.search(p.read_text(encoding="utf-8"))]
     assert not bare, f"skip over zero coverage in the e2e lane: {bare}"
     ungated = [str(p.relative_to(_REPO)) for p in _TMUX_SUITES if "require_tmux()" not in p.read_text(encoding="utf-8")]

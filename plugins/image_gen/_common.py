@@ -6,7 +6,6 @@ from __future__ import annotations
 
 import logging
 import os
-from dataclasses import dataclass
 from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 from agent.image_gen_provider import (
@@ -14,7 +13,7 @@ from agent.image_gen_provider import (
 
 logger = logging.getLogger(__name__)
 
-# OpenAI-style ``size`` per semantic aspect, shared by every OpenAI-compatible backend.
+# OpenAI-style ``size`` per semantic aspect.
 OPENAI_SIZES: dict[str, str] = {"landscape": "1536x1024", "square": "1024x1024", "portrait": "1024x1536"}
 
 # gpt-image-2 quality tiers as virtual model ids (same API model, different ``quality`` knob).
@@ -229,37 +228,13 @@ def cache_url_best_effort(
         return url
 
 
-def requests_error_message(response: Any, exc: Exception) -> str:
-    """``error.message`` from an HTTP error body, else the first 300 chars of it."""
-    try:
-        return response.json().get("error", {}).get("message", response.text[:300])
-    except Exception:
-        return response.text[:300] if response is not None else str(exc)
-
-
-@dataclass
-class HttpFailure:
-    """One failed ``post_json`` attempt as ``(error, error_type)``. ``kind`` ∈ http / timeout /
-    unreachable (DNS failure or refused connection: nothing was sent) / connection (dropped
-    after connecting) / request / invalid_json; ``message`` = HTTP error text or decode error;
-    ``status`` / ``response`` are set for ``http`` only."""
-
-    kind: str
-    error: str
-    error_type: str
-    status: int = 0
-    message: str = ""
-    response: Any = None
-
-
 def record_token_usage(usage: Any, *, model: str, provider: str, base_url: Optional[str] = None) -> None:
     """Record a token-billed image call against the ambient session as task ``image_generation``.
 
-    Token-metered image models (OpenRouter chat-image and Image API models, OpenAI ``gpt-image``)
-    bill exactly like a chat completion, so they get a ``session_model_usage`` row through the
-    same chokepoint as auxiliary calls. ``usage`` is the response's usage block (dict or SDK
-    object). Per-image backends (FAL, xAI, Krea, ...) return no token usage and never call this;
-    a body without tokens is a no-op inside ``record_aux_usage``, as is running outside a turn.
+    Token-metered image models (OpenAI ``gpt-image``) bill exactly like a chat completion, so they
+    get a ``session_model_usage`` row through the same chokepoint as auxiliary calls. ``usage`` is
+    the response's usage block (dict or SDK object); a body without tokens is a no-op inside
+    ``record_aux_usage``, as is running outside a turn.
     """
     if not usage:
         return
@@ -269,52 +244,3 @@ def record_token_usage(usage: Any, *, model: str, provider: str, base_url: Optio
 
     record_aux_usage(
         SimpleNamespace(model=model, usage=usage), "image_generation", provider=provider, base_url=base_url)
-
-
-def _never_connected(exc: Exception) -> bool:
-    """True when the last connection attempt never connected, so no server accepted the request body
-    (a redirect hop may have answered earlier, but a redirect accepts nothing)."""
-    from urllib3.exceptions import MaxRetryError, NameResolutionError, NewConnectionError
-
-    cause = exc.args[0] if exc.args else None
-    reason = cause.reason if isinstance(cause, MaxRetryError) else cause
-    return isinstance(reason, (NewConnectionError, NameResolutionError))
-
-
-def post_json(
-    url: str, *, headers: dict[str, str], payload: dict[str, Any], timeout: Any, label: str,
-    error_message: Callable[[Any, Exception], str] = requests_error_message,
-    catch_request_exception: bool = False,
-) -> tuple[Optional[Any], Optional[HttpFailure]]:
-    """POST ``payload`` → ``(json_body, None)`` or ``(None, failure)``. ``timeout`` goes to ``requests``
-    verbatim (message reports the read component); ``error_message(response, exc)`` extracts the
-    backend-specific HTTP error text."""
-    import requests
-
-    read_timeout = timeout[1] if isinstance(timeout, tuple) else timeout
-    try:
-        response = requests.post(url, headers=headers, json=payload, timeout=timeout)
-        response.raise_for_status()
-    except requests.HTTPError as exc:
-        resp = exc.response
-        status = resp.status_code if resp is not None else 0
-        message = error_message(resp, exc)
-        return None, HttpFailure(
-            "http", f"{label} image generation failed ({status}): {message}", "api_error",
-            status=status, message=message, response=resp)
-    except requests.Timeout:
-        return None, HttpFailure(
-            "timeout", f"{label} image generation timed out ({int(read_timeout)}s)", "timeout")
-    except requests.ConnectionError as exc:
-        kind = "unreachable" if _never_connected(exc) else "connection"
-        return None, HttpFailure(kind, f"{label} connection error: {exc}", "connection_error")
-    except requests.RequestException as exc:
-        if not catch_request_exception:
-            raise
-        return None, HttpFailure("request", f"{label} request failed: {exc}", "api_error")
-    try:
-        return response.json(), None
-    except Exception as exc:
-        return None, HttpFailure(
-            "invalid_json", f"{label} returned invalid JSON: {exc}", "invalid_response", message=str(exc),
-        )

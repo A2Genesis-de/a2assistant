@@ -158,26 +158,6 @@ class TestResolveProviderClientNamedCustom:
 class TestResolveProviderClientModelNormalization:
     """Direct-provider auxiliary routing should normalize models like main runtime."""
 
-    def test_matching_native_prefix_is_stripped_for_main_provider(self, tmp_path):
-        _write_config(tmp_path, {
-            "model": {"default": "zai/glm-5.1", "provider": "zai"},
-        })
-        with (
-            patch("hermes_cli.auth.resolve_api_key_provider_credentials", return_value={
-                "api_key": "glm-key",
-                "base_url": "https://api.z.ai/api/paas/v4",
-            }),
-            patch("agent.auxiliary_client.OpenAI") as mock_openai,
-        ):
-            mock_openai.return_value = MagicMock()
-            from agent.auxiliary_client import resolve_provider_client
-
-            client, model = resolve_provider_client("main", "zai/glm-5.1")
-
-        assert client is not None
-        assert model == "glm-5.1"
-
-
     def test_aggregator_vendor_slug_is_preserved(self, monkeypatch):
         monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
         with patch("agent.auxiliary_client.OpenAI") as mock_openai:
@@ -190,31 +170,6 @@ class TestResolveProviderClientModelNormalization:
 
         assert client is not None
         assert model == "anthropic/claude-sonnet-4.6"
-
-
-class TestResolveVisionProviderClientModelNormalization:
-    """Vision auto-routing should reuse the same provider-specific normalization."""
-
-    def test_vision_auto_strips_matching_main_provider_prefix(self, tmp_path):
-        _write_config(tmp_path, {
-            "model": {"default": "zai/glm-5.1", "provider": "zai"},
-        })
-        with (
-            patch("agent.auxiliary_client._read_nous_auth", return_value=None),
-            patch("hermes_cli.auth.resolve_api_key_provider_credentials", return_value={
-                "api_key": "glm-key",
-                "base_url": "https://api.z.ai/api/paas/v4",
-            }),
-            patch("agent.auxiliary_client.OpenAI") as mock_openai,
-        ):
-            mock_openai.return_value = MagicMock()
-            from agent.auxiliary_client import resolve_vision_provider_client
-
-            provider, client, model = resolve_vision_provider_client()
-
-        assert provider == "zai"
-        assert client is not None
-        assert model == "glm-5.3-flash"  # zai coding endpoints support this vision-capable fallback
 
 
 class TestAutoClientCacheModelCompatibility:
@@ -342,20 +297,6 @@ class TestCustomProviderAliasCollision:
         assert client.api_key == "my-kimi-key"
         assert model == "my-kimi-model"
 
-    def test_bare_kimi_without_custom_still_routes_to_builtin(self, tmp_path, monkeypatch):
-        """Regression guard: bare 'kimi' with no custom entry must still
-        reach the built-in kimi-coding provider."""
-        _write_config(tmp_path, {
-            "model": {"provider": "openrouter", "default": "anthropic/claude-sonnet-4.6"},
-        })
-        monkeypatch.setenv("KIMI_API_KEY", "builtin-kimi-key")
-        from agent.auxiliary_client import resolve_provider_client
-        client, _ = resolve_provider_client("kimi", model="kimi-k2-0905-preview", raw_codex=True)
-        assert client is not None
-        base_url = str(client.base_url)
-        # Built-in kimi-coding points at api.moonshot.ai
-        assert "moonshot" in base_url or "kimi" in base_url, f"unexpected base_url {base_url!r}"
-
     @pytest.mark.parametrize("provider", ["llamacpp", "custom:llamacpp"])
     def test_named_llamacpp_wins_over_local_server_alias(self, tmp_path, provider):
         """A ``providers:`` entry whose name is also a local-server alias (``llamacpp``) resolves to
@@ -386,11 +327,11 @@ class TestCustomProviderAliasCollision:
         _write_config(tmp_path, {
             "model": {"provider": "openrouter", "default": "anthropic/claude-sonnet-4.6"},
         })
-        monkeypatch.setenv("KIMI_API_KEY", "builtin-kimi-key")
+        monkeypatch.setenv("LM_API_KEY", "builtin-lmstudio-key")
         from agent.auxiliary_client import resolve_provider_client
         from openai import OpenAI
         client, _ = resolve_provider_client(
-            "kimi-coding", model="kimi-k2", raw_codex=True,
+            "lmstudio", model="qwen3-8b", raw_codex=True,
             explicit_base_url="https://override.example.com",
             explicit_api_key="override-key",
         )

@@ -738,24 +738,6 @@ def _spawn_gateway_restart(profile: Optional[str] = None, *, interrupt: bool = F
     return proc, False
 
 
-# Collapses repeated identical ElevenLabs voice-list failures (the desktop
-# re-polls on every settings focus) to one log line; re-arms on success or a
-# changed signature.
-_voice_list_last_error: Optional[str] = None
-
-
-def _voice_list_error_logged_once(signature: Optional[str]) -> bool:
-    """True if ``signature`` is new and should be logged now; ``None`` clears the latch."""
-    global _voice_list_last_error
-    if signature is None:
-        _voice_list_last_error = None
-        return False
-    if signature == _voice_list_last_error:
-        return False
-    _voice_list_last_error = signature
-    return True
-
-
 _ACTION_LOG_FILES.setdefault("computer-use-grant", "action-computer-use-grant.log")
 
 # Cache discovered plugins per-process (refresh on explicit re-scan).

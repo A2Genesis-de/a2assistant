@@ -8,7 +8,6 @@ import type {
   BackendUpdateCheckResponse,
   CuratorStatusResponse,
   DebugShareResponse,
-  ElevenLabsVoicesResponse,
   MemoryProviderConfig,
   MemoryProviderOAuthStatus,
   MemoryStatusResponse
@@ -257,13 +256,6 @@ export function setSttLease(lease: string, active: boolean, owner: ResolvedOwner
     method: 'POST',
     body: { active, lease },
     timeoutMs: AUDIO_STT_LEASE_REQUEST_TIMEOUT_MS
-  })
-}
-
-export function getElevenLabsVoices(profile?: null | string): Promise<ElevenLabsVoicesResponse> {
-  return hermesApi<ElevenLabsVoicesResponse>({
-    path: '/api/audio/elevenlabs/voices',
-    ...profileScoped(profile)
   })
 }
 

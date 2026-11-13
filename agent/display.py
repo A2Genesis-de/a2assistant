@@ -528,7 +528,7 @@ def prepare_tool_preview(tool_name: str, args: dict | None, *, fallback: str, ma
 _TOOL_VERB_TOOLS: frozenset[str] = frozenset({
     "web_search", "web_extract", "browser_navigate", "browser_click", "browser_type",
     "read_file", "write_file", "patch", "search_files", "terminal", "execute_code",
-    "image_generate", "video_generate", "text_to_speech", "vision_analyze", "session_search",
+    "image_generate", "text_to_speech", "vision_analyze", "session_search",
     "skill_view", "skills_list", "skill_manage", "delegate_task", "cronjob_manage", "clarify",
     "memory", "todo_list",
 })

@@ -48,11 +48,11 @@ def _run(path: Path, provider: str, *, model: str | None = None):
 
 def test_oversized_wav_is_reencoded_into_one_upload(tmp_path, monkeypatch):
     """A WAV over the byte cap that compresses under it goes up once, as m4a, with no seams."""
-    monkeypatch.setitem(chunking._PROVIDER_MAX_BYTES, "groq", 400_000)
+    monkeypatch.setitem(chunking._PROVIDER_MAX_BYTES, "openai", 400_000)
     wav = tmp_path / "note.wav"
     _tone_with_pauses(wav, 20)  # 640 KB of PCM, ~80 KB as 32 kbps AAC
-    result, uploads = _run(wav, "groq")
-    assert result == {"success": True, "transcript": "part1", "provider": "groq"}
+    result, uploads = _run(wav, "openai", model="whisper-1")
+    assert result == {"success": True, "transcript": "part1", "provider": "openai"}
     assert len(uploads) == 1 and uploads[0]["suffix"] == ".m4a" and uploads[0]["bytes"] < 400_000
 
 

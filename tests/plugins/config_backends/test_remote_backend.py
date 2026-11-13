@@ -1492,10 +1492,9 @@ def test_config_only_migration_ladder_touches_no_file(tmp_path, monkeypatch, con
     home = tmp_path / "home"
     home.mkdir()
     monkeypatch.setenv("HERMES_HOME", str(home))
-    for name in ("HERMES_CONFIG_BACKEND", "LLM_MODEL", "OPENAI_MODEL", "TERMINAL_VERCEL_RUNTIME"):
+    for name in ("HERMES_CONFIG_BACKEND", "LLM_MODEL", "OPENAI_MODEL"):
         monkeypatch.delenv(name, raising=False)
-    from hermes_cli.config_defaults import LEGACY_VERCEL_RUNTIME
-    (home / ".env").write_text(f"LLM_MODEL=old-model\nTERMINAL_VERCEL_RUNTIME={LEGACY_VERCEL_RUNTIME}\n")
+    (home / ".env").write_text("LLM_MODEL=old-model\n")
     (home / "SOUL.md").write_text(_LEGACY_SOUL)
     _sibling_with_legacy_soul(home)
     doc = {"_config_version": config_migrations.SUPPORT_FLOOR_VERSION, "model": {"default": "m"}}

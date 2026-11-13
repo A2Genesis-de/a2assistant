@@ -179,10 +179,10 @@ def _prepare_container_image(
     prompt_index: int, prompt_data: dict[str, Any], batch_num: int, task_id: str, config: dict[str, Any]
 ) -> Optional[dict[str, Any]]:
     """Register the dataset row's per-prompt container image (``image``/``docker_image``)
-    for this task's sandbox (Docker, Modal, Daytona, or a plugin backend such as Singularity).
+    for this task's sandbox (Docker or a plugin backend such as Singularity).
 
     For Docker the image is verified (local cache, then pull) before spending tokens on the
-    agent loop; Modal pulls server-side so no local check. Returns a failure result when the
+    agent loop. Returns a failure result when the
     pull fails, else ``None``.
     """
     container_image = prompt_data.get("image") or prompt_data.get("docker_image")
@@ -211,15 +211,13 @@ def _prepare_container_image(
                         f"Docker image not available: {container_image}\n{pull.stderr[:500]}",
                     )
         except FileNotFoundError:
-            pass  # Docker CLI not installed — skip check (e.g., Modal backend)
+            pass  # Docker CLI not installed — skip check
         except Exception as img_err:
             if config.get("verbose"):
                 print(f"   Prompt {prompt_index}: Docker image check failed: {img_err}", flush=True)
     from tools.terminal_tool import register_task_env_overrides
     overrides = {
         "docker_image": container_image,
-        "modal_image": container_image,
-        "daytona_image": container_image,
         # A plugin backend reads its own ``<backend>_image`` override (tools.terminal_tool._select_image).
         f"{env_type}_image": container_image,
     }

@@ -14,12 +14,12 @@ from tools import tts_tool
 
 
 @pytest.fixture(autouse=True)
-def _edge_without_session_platform(monkeypatch):
+def _piper_without_session_platform(monkeypatch):
     for var in _VAR_MAP.values():
         var.set(_UNSET)
     monkeypatch.delenv("HERMES_SESSION_PLATFORM", raising=False)
-    monkeypatch.setattr(tts_tool, "_load_tts_config", lambda: {"provider": "edge"})
-    monkeypatch.setattr(tts_tool, "_import_edge_tts", lambda: object())
+    monkeypatch.setattr(tts_tool, "_load_tts_config", lambda: {"provider": "piper"})
+    monkeypatch.setattr(tts_tool, "_import_piper", lambda: object())
     yield
     for var in _VAR_MAP.values():
         var.set(_UNSET)
@@ -32,12 +32,12 @@ def audio_dir(tmp_path):
     return path
 
 
-async def _partial_write_then_fail(_text: str, output_path: str, _cfg: dict) -> str:
+def _partial_write_then_fail(_text: str, output_path: str, _cfg: dict) -> str:
     Path(output_path).write_bytes(b"partial")
     raise RuntimeError("provider unreachable")
 
 
-async def _write_audio(_text: str, output_path: str, _cfg: dict) -> str:
+def _write_audio(_text: str, output_path: str, _cfg: dict) -> str:
     Path(output_path).write_bytes(b"new-audio")
     return output_path
 
@@ -45,7 +45,7 @@ async def _write_audio(_text: str, output_path: str, _cfg: dict) -> str:
 def test_failed_synthesis_keeps_existing_file_and_cleans_partial(audio_dir, monkeypatch):
     existing = audio_dir / "notes.mp3"
     existing.write_bytes(b"user data")
-    monkeypatch.setattr(tts_tool, "_generate_edge_tts", _partial_write_then_fail)
+    monkeypatch.setattr(tts_tool, "_generate_piper_tts", _partial_write_then_fail)
 
     result = json.loads(tts_tool.text_to_speech_tool("hello", output_path=str(existing)))
 
@@ -55,7 +55,7 @@ def test_failed_synthesis_keeps_existing_file_and_cleans_partial(audio_dir, monk
 
 
 def test_failed_synthesis_to_new_path_leaves_nothing_behind(audio_dir, monkeypatch):
-    monkeypatch.setattr(tts_tool, "_generate_edge_tts", _partial_write_then_fail)
+    monkeypatch.setattr(tts_tool, "_generate_piper_tts", _partial_write_then_fail)
 
     result = json.loads(tts_tool.text_to_speech_tool("hello", output_path=str(audio_dir / "new.mp3")))
 
@@ -66,7 +66,7 @@ def test_failed_synthesis_to_new_path_leaves_nothing_behind(audio_dir, monkeypat
 def test_successful_synthesis_still_overwrites_existing_file(audio_dir, monkeypatch):
     existing = audio_dir / "notes.mp3"
     existing.write_bytes(b"user data")
-    monkeypatch.setattr(tts_tool, "_generate_edge_tts", _write_audio)
+    monkeypatch.setattr(tts_tool, "_generate_piper_tts", _write_audio)
 
     result = json.loads(tts_tool.text_to_speech_tool("hello", output_path=str(existing)))
 

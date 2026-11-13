@@ -21,18 +21,18 @@ def _clean_session_platform(monkeypatch):
     _reset_session_context()
 
 
-async def _write_edge_output(_text: str, output_path: str, _tts_config: dict) -> str:
+def _write_piper_output(_text: str, output_path: str, _tts_config: dict) -> str:
     Path(output_path).write_bytes(b"mp3")
     return output_path
 
 
-def test_edge_cli_preserves_native_mp3(tmp_path, monkeypatch):
+def test_piper_cli_preserves_native_mp3(tmp_path, monkeypatch):
     out = tmp_path / "speech.mp3"
     convert = Mock()
 
-    monkeypatch.setattr(tts_tool, "_load_tts_config", lambda: {"provider": "edge"})
-    monkeypatch.setattr(tts_tool, "_import_edge_tts", lambda: object())
-    monkeypatch.setattr(tts_tool, "_generate_edge_tts", _write_edge_output)
+    monkeypatch.setattr(tts_tool, "_load_tts_config", lambda: {"provider": "piper"})
+    monkeypatch.setattr(tts_tool, "_import_piper", lambda: object())
+    monkeypatch.setattr(tts_tool, "_generate_piper_tts", _write_piper_output)
     monkeypatch.setattr(tts_tool, "_convert_to_opus", convert)
 
     result = json.loads(tts_tool.text_to_speech_tool("hello", output_path=str(out)))
@@ -44,7 +44,7 @@ def test_edge_cli_preserves_native_mp3(tmp_path, monkeypatch):
     convert.assert_not_called()
 
 
-def test_edge_telegram_converts_to_opus_voice(tmp_path, monkeypatch):
+def test_piper_telegram_converts_to_opus_voice(tmp_path, monkeypatch):
     out = tmp_path / "speech.mp3"
     opus = tmp_path / "speech.ogg"
 
@@ -56,9 +56,9 @@ def test_edge_telegram_converts_to_opus_voice(tmp_path, monkeypatch):
     convert = Mock(side_effect=fake_convert)
 
     monkeypatch.setenv("HERMES_SESSION_PLATFORM", "telegram")
-    monkeypatch.setattr(tts_tool, "_load_tts_config", lambda: {"provider": "edge"})
-    monkeypatch.setattr(tts_tool, "_import_edge_tts", lambda: object())
-    monkeypatch.setattr(tts_tool, "_generate_edge_tts", _write_edge_output)
+    monkeypatch.setattr(tts_tool, "_load_tts_config", lambda: {"provider": "piper"})
+    monkeypatch.setattr(tts_tool, "_import_piper", lambda: object())
+    monkeypatch.setattr(tts_tool, "_generate_piper_tts", _write_piper_output)
     monkeypatch.setattr(tts_tool, "_convert_to_opus", convert)
 
     result = json.loads(tts_tool.text_to_speech_tool("hello", output_path=str(out)))
@@ -70,7 +70,7 @@ def test_edge_telegram_converts_to_opus_voice(tmp_path, monkeypatch):
     convert.assert_called_once_with(str(out))
 
 
-def test_edge_matrix_converts_to_opus_voice(tmp_path, monkeypatch):
+def test_piper_matrix_converts_to_opus_voice(tmp_path, monkeypatch):
     """Matrix voice bubbles need Ogg/Opus too (MSC3245, issue #14841)."""
     out = tmp_path / "speech.mp3"
     opus = tmp_path / "speech.ogg"
@@ -83,9 +83,9 @@ def test_edge_matrix_converts_to_opus_voice(tmp_path, monkeypatch):
     convert = Mock(side_effect=fake_convert)
 
     monkeypatch.setenv("HERMES_SESSION_PLATFORM", "matrix")
-    monkeypatch.setattr(tts_tool, "_load_tts_config", lambda: {"provider": "edge"})
-    monkeypatch.setattr(tts_tool, "_import_edge_tts", lambda: object())
-    monkeypatch.setattr(tts_tool, "_generate_edge_tts", _write_edge_output)
+    monkeypatch.setattr(tts_tool, "_load_tts_config", lambda: {"provider": "piper"})
+    monkeypatch.setattr(tts_tool, "_import_piper", lambda: object())
+    monkeypatch.setattr(tts_tool, "_generate_piper_tts", _write_piper_output)
     monkeypatch.setattr(tts_tool, "_convert_to_opus", convert)
 
     result = json.loads(tts_tool.text_to_speech_tool("hello", output_path=str(out)))

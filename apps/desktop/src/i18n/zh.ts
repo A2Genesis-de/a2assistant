@@ -234,8 +234,6 @@ export const zhOverrides = {
       disableFailed: name => `无法禁用 ${name} MCP。`
     },
     errors: {
-      elevenLabsNeedsKey: 'ElevenLabs STT 需要 ELEVENLABS_API_KEY。',
-      elevenLabsRejectedKey: 'ElevenLabs 拒绝了该 API key (401)。',
       diskFull: '磁盘已满 — 请腾出一些空间后再试。',
       gatewayAuthFailed: '网关认证失败 — 请检查你的 API_SERVER_KEY。',
       methodNotAllowed: '桌面后端拒绝了该请求 (405 Method Not Allowed)。请尝试重启 A2Assistant Desktop。',
@@ -898,9 +896,7 @@ export const zhOverrides = {
         persistentShell: '持久化 Shell',
         envPassthrough: '环境变量透传',
         dockerImage: 'Docker 镜像',
-        singularityImage: 'Singularity 镜像',
-        modalImage: 'Modal 镜像',
-        daytonaImage: 'Daytona 镜像'
+        singularityImage: 'Singularity 镜像'
       },
       fileReadMaxChars: '文件读取上限',
       toolOutput: {
@@ -949,61 +945,13 @@ export const zhOverrides = {
         },
         openai: {
           model: 'OpenAI STT 模型'
-        },
-        groq: {
-          model: 'Groq STT 模型'
-        },
-        mistral: {
-          model: 'Mistral STT 模型'
-        },
-        elevenlabs: {
-          modelId: 'ElevenLabs STT 模型',
-          languageCode: 'ElevenLabs 语言',
-          tagAudioEvents: '标记音频事件',
-          diarize: '说话人区分'
         }
       },
       tts: {
         provider: '文字转语音提供方',
-        edge: {
-          voice: 'Edge 语音'
-        },
         openai: {
           model: 'OpenAI TTS 模型',
           voice: 'OpenAI 语音'
-        },
-        elevenlabs: {
-          voiceId: 'ElevenLabs 语音',
-          modelId: 'ElevenLabs 模型'
-        },
-        deepinfra: {
-          model: 'DeepInfra TTS 模型',
-          voice: 'DeepInfra 语音'
-        },
-        xai: {
-          voiceId: 'xAI (Grok) 语音',
-          language: 'xAI 语言',
-          speed: '播放速度',
-          autoSpeechTags: '自动语音标签',
-          optimizeStreamingLatency: '流式延迟优化',
-          sampleRate: '采样率',
-          bitRate: '比特率'
-        },
-        minimax: {
-          model: 'MiniMax TTS 模型',
-          voiceId: 'MiniMax 语音'
-        },
-        mistral: {
-          model: 'Mistral TTS 模型',
-          voiceId: 'Mistral 语音'
-        },
-        gemini: {
-          model: 'Gemini TTS 模型',
-          voice: 'Gemini 语音'
-        },
-        neutts: {
-          model: 'NeuTTS 模型',
-          device: 'NeuTTS 设备'
         },
         kittentts: {
           model: 'KittenTTS 模型',
@@ -1070,9 +1018,7 @@ export const zhOverrides = {
         persistentShell: '当后端支持时，在命令之间保留 Shell 状态。',
         envPassthrough: '传入工具执行的环境变量。',
         dockerImage: '当执行后端为 Docker 时使用的容器镜像。',
-        singularityImage: '当执行后端为 Singularity 时使用的镜像。',
-        modalImage: '当执行后端为 Modal 时使用的镜像。',
-        daytonaImage: '当执行后端为 Daytona 时使用的镜像。'
+        singularityImage: '当执行后端为 Singularity 时使用的镜像。'
       },
       codeExecution: {
         mode: '代码执行被限定到当前项目的严格程度。'
@@ -1119,24 +1065,7 @@ export const zhOverrides = {
       },
       stt: {
         enabled: '启用本地或提供方支持的语音转写。',
-        echoTranscripts: '将语音消息的原始 🎙️ 转写文本发回聊天。',
-        elevenlabs: {
-          languageCode: '可选的 ISO-639-3 语言代码。留空让 ElevenLabs 自动检测。'
-        }
-      },
-      tts: {
-        xai: {
-          voiceId: 'xAI 语音 ID（如 eve）或自定义语音 ID。',
-          language: '口语语言代码（如 en、pt-BR），或填 "auto" 自动检测。',
-          speed: '播放速度。0.7 = 较慢，1.0 = 正常，1.5 = 较快。',
-          autoSpeechTags: '合成前让 LLM 在文稿中插入表现力音频标签（如 [laughing]、[sighs]）。',
-          optimizeStreamingLatency: '延迟与质量的权衡。0 = 最佳质量，2 = 最低延迟。',
-          sampleRate: '音频采样率（Hz）。越高音质越好、文件越大。',
-          bitRate: 'MP3 比特率（bps）。仅当编码为 mp3 时生效。'
-        },
-        neutts: {
-          device: 'NeuTTS 的本地推理设备。'
-        }
+        echoTranscripts: '将语音消息的原始 🎙️ 转写文本发回聊天。'
       },
       updates: {
         nonInteractiveLocalChanges:

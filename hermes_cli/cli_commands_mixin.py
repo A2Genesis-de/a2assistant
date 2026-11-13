@@ -369,12 +369,12 @@ def _browser_status() -> None:
         except Exception:
             print(f"   {_t('browser.status_unreachable')}")
     else:
-        provider = _probe("tools.browser_session_cloud", "get_cloud_provider", None)
+        provider = _probe("tools.browser_config", "get_cloud_provider", None)
         if provider is not None:
             print(_t("browser.status_cloud", provider=provider.display_name))
             _print_lightpanda_engine_status()
         else:
-            engine = _probe("tools.browser_session_cloud", "get_browser_engine", "auto")
+            engine = _probe("tools.browser_config", "get_browser_engine", "auto")
             _pr(*_local_engine_lines(engine))
             if engine == "lightpanda":
                 _print_lightpanda_engine_status()

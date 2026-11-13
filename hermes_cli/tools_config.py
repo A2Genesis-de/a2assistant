@@ -23,12 +23,12 @@ from hermes_cli.tools_config_post_setup import (
     _ensure_browser_use_cli, _run_post_setup, valid_post_setup_keys, run_post_setup_command, _POST_SETUP_INSTALLED,
     _post_setup_already_installed, _module_installed, _POST_SETUP_READY)
 from hermes_cli.tools_config_providers import (
-    _plugin_image_gen_providers, _plugin_video_gen_providers, _plugin_web_search_providers, _plugin_browser_providers,
+    _plugin_image_gen_providers, _plugin_web_search_providers, _plugin_browser_providers,
     _plugin_tts_providers, web_provider_capabilities, _visible_providers, provider_readiness_status,
-    _toolset_needs_configuration_prompt, _configure_tool_category, _web_tier_matches, _is_provider_active,
-    _detect_active_provider_index, IMAGEGEN_BACKENDS, _plugin_image_gen_catalog, _plugin_video_gen_catalog,
-    _configure_imagegen_model, _configure_imagegen_model_for_plugin, _configure_videogen_model_for_plugin,
-    _select_plugin_image_gen_provider, _select_plugin_video_gen_provider, STT_MODEL_CATALOG, _configure_stt_model,
+    _toolset_needs_configuration_prompt, _configure_tool_category, _is_provider_active,
+    _detect_active_provider_index, _plugin_image_gen_catalog,
+    _configure_imagegen_model_for_plugin,
+    _select_plugin_image_gen_provider, STT_MODEL_CATALOG, _configure_stt_model,
     _write_provider_config, apply_provider_selection, _configure_provider, _reconfigure_provider,
     _configure_vision_backend, _configure_vision_provider_model, _configure_simple_requirements)
 from hermes_cli.tools_config_mcp import (
@@ -75,8 +75,6 @@ CONFIGURABLE_TOOLSETS = [
     ("vision",          "👁️  Vision / Image Analysis",  "vision_analyze"),
     ("video",           "🎬 Video Analysis",            "video_analyze (requires video-capable model)"),
     ("image_gen",       "🎨 Image Generation",          "image_generate"),
-    ("video_gen",       "🎬 Video Generation",          "video_generate (text/image/reference)"),
-    ("x_search",        "🐦 X (Twitter) Search",        "x_search (requires xAI OAuth or XAI_API_KEY)"),
     ("tts",             "🔊 Text-to-Speech",            "text_to_speech"),
     ("stt",             "🎙️ Speech-to-Text",           "voice transcription (gateway voice messages + voice mode)"),
     ("skills",          "📚 Skills",                    "list, view, manage"),
@@ -105,10 +103,9 @@ def gui_toolset_label(label: str) -> str:
     return text
 
 
-# OFF by default for new installs (still in _HERMES_CORE_TOOLS; the checklist won't pre-select them). x_search
-# auto-enables when xAI creds exist; its check_fn still gates the schema. ``spotify`` and ``a2a`` are plugin
-# toolsets (catalog / bundled plugin) that stay opt-in once installed.
-_DEFAULT_OFF_TOOLSETS = {"spotify", "discord", "discord_admin", "video", "video_gen", "x_search", "a2a", "kanban"}
+# OFF by default for new installs (still in _HERMES_CORE_TOOLS; the checklist won't pre-select them).
+# ``spotify`` and ``a2a`` are plugin toolsets (catalog / bundled plugin) that stay opt-in once installed.
+_DEFAULT_OFF_TOOLSETS = {"spotify", "discord", "discord_admin", "video", "a2a", "kanban"}
 
 # Config-only capabilities: provider setup in `hermes tools` (TOOL_CATEGORIES) but not model toolsets — zero
 # schemas, own switch (``stt.enabled``), never in ``platform_toolsets`` or the per-platform checklist.
@@ -235,30 +232,19 @@ def _row(name: str, badge: str = "", tag: str = "", env_vars: list = (), **marke
 
 _NOUS = {"requires_nous_auth": True}
 _OPENAI_VOICE_KEY = _key("VOICE_TOOLS_OPENAI_KEY", "OpenAI API key", "https://platform.openai.com/api-keys")
-_ELEVENLABS_KEY = _key("ELEVENLABS_API_KEY", "ElevenLabs API key", "https://elevenlabs.io/app/settings/api-keys")
-_DEEPINFRA_KEY = _key("DEEPINFRA_API_KEY", "DeepInfra API key", "https://deepinfra.com/dash/api_keys")
 
 TOOL_CATEGORIES = {
     "tts": {
         "name": "Text-to-Speech", "icon": "🔊",
         "providers": [
-            _row("Microsoft Edge TTS", "★ recommended · free", "Good quality, no API key needed", tts_provider="edge"),
             _row("Nous Subscription", "subscription", "Managed OpenAI TTS billed to your subscription", tts_provider="openai",
                  **_NOUS, managed_nous_feature="tts", override_env_vars=["VOICE_TOOLS_OPENAI_KEY", "OPENAI_API_KEY"]),
-            _row("OpenAI TTS", "paid", "High quality voices", [_OPENAI_VOICE_KEY], tts_provider="openai"),
-            _row("xAI TTS", tag="Grok voices — uses xAI Grok OAuth or XAI_API_KEY", tts_provider="xai", post_setup="xai_grok"),
-            _row("ElevenLabs", "paid", "Most natural voices", [_ELEVENLABS_KEY], tts_provider="elevenlabs"),
-            # Mistral Voxtral TTS — `mistralai` SDK lazy-installs on first use.
-            _row("Mistral (Voxtral TTS)", "paid", "Multilingual, native Opus",
-                 [_key("MISTRAL_API_KEY", "Mistral API key", "https://console.mistral.ai/")], tts_provider="mistral"),
-            _row("Google Gemini TTS", "preview", "30 prebuilt voices, controllable via prompts",
-                 [_key("GEMINI_API_KEY", "Gemini API key", "https://aistudio.google.com/app/apikey")], tts_provider="gemini"),
+            _row("OpenAI TTS", "★ recommended", "OpenAI or any OpenAI-compatible endpoint (tts.openai.base_url)",
+                 [_OPENAI_VOICE_KEY], tts_provider="openai"),
             _row("KittenTTS", "local · free", "Lightweight local ONNX TTS (~25MB), no API key", tts_provider="kittentts",
                  post_setup="kittentts"),
             _row("Piper", "local · free", "Local neural TTS, 44 languages (voices ~20-90MB)", tts_provider="piper",
                  post_setup="piper"),
-            _row("DeepInfra TTS", "paid", "Chatterbox, Qwen3-TTS, … — live catalog from api.deepinfra.com", [_DEEPINFRA_KEY],
-                 tts_provider="deepinfra"),
         ],
     },
     "stt": {
@@ -270,74 +256,23 @@ TOOL_CATEGORIES = {
                  stt_provider="openai", **_NOUS, managed_nous_feature="stt",
                  override_env_vars=["VOICE_TOOLS_OPENAI_KEY", "OPENAI_API_KEY"]),
             _row("OpenAI", "paid", "whisper-1, gpt-4o-transcribe, gpt-transcribe", [_OPENAI_VOICE_KEY], stt_provider="openai"),
-            _row("Groq", "free tier", "whisper-large-v3-turbo, whisper-large-v3 — very fast",
-                 [_key("GROQ_API_KEY", "Groq API key", "https://console.groq.com/keys")], stt_provider="groq"),
-            _row("xAI", tag="Grok Voice Transcribe — uses xAI Grok OAuth or XAI_API_KEY", stt_provider="xai", post_setup="xai_grok"),
-            _row("ElevenLabs Scribe", "paid", "scribe_v2 — diarization + audio-event tagging", [_ELEVENLABS_KEY],
-                 stt_provider="elevenlabs"),
-            _row("Mistral Voxtral", "paid", "voxtral-mini-latest — multilingual",
-                 [_key("MISTRAL_API_KEY", "Mistral API key", "https://console.mistral.ai/")], stt_provider="mistral"),
-            _row("DeepInfra", "paid", "Live STT catalog from api.deepinfra.com", [_DEEPINFRA_KEY], stt_provider="deepinfra"),
         ],
     },
     "web": {
         "name": "Web Search & Extract", "setup_title": "Select Search Provider",
-        "setup_note": "A free DuckDuckGo search skill is also included — skip this if you don't need a premium provider.",
         "icon": "🔍",
-        # Provider rows come from plugins.web.<vendor> via _plugin_web_search_providers(). Only the two
-        # non-provider firecrawl setup-flow rows live here: managed via Nous subscription, and self-hosted.
-        "providers": [
-            {"name": "Nous Subscription", "badge": "subscription", "tag": "Managed web search and extract billed to your subscription",
-             "web_backend": "firecrawl", "env_vars": [], **_NOUS, "managed_nous_feature": "web",
-             "override_env_vars": ["FIRECRAWL_API_KEY", "FIRECRAWL_API_URL", "PERPLEXITY_API_KEY"]},
-            {"name": "Firecrawl Self-Hosted", "badge": "free · self-hosted", "tag": "Run your own Firecrawl instance (Docker)",
-             "web_backend": "firecrawl",
-             "env_vars": [_key("FIRECRAWL_API_URL", "Your Firecrawl instance URL (e.g., http://localhost:3002)")]},
-        ],
+        "providers": [],
     },
     "image_gen": {
         "name": "Image Generation", "icon": "🎨",
-        # Provider rows (FAL, OpenAI, OpenAI Codex, xAI, Krea, …) come from plugins.image_gen.<vendor> via
-        # _plugin_image_gen_providers(). Only the managed "Nous Subscription" row lives here: ONE row for the
-        # FAL, Krea and Portal gateways, whose union catalog is `imagegen_backend: "nous"`; the stored model id
-        # picks the gateway at run time (tools/image_generation_managed.py).
-        "providers": [
-            _row("Nous Subscription", "subscription",
-                 "Managed image generation (FAL, Krea 3 and Krea 2, Nous Portal models) billed to your subscription", **_NOUS,
-                 managed_nous_feature="image_gen", override_env_vars=["FAL_KEY"], imagegen_backend="nous"),
-        ],
-    },
-    "video_gen": {
-        "name": "Video Generation", "icon": "🎬",
-        # Mirrors image_gen: managed FAL video billed via the Nous Portal. Plugin-backed rows (FAL BYOK, xAI, …)
-        # are injected at runtime by ``_plugin_video_gen_providers()`` in ``_visible_providers``. Picking this row
-        # sets video_gen.provider = "fal" + use_gateway so the FAL plugin routes through the managed queue gateway.
-        "providers": [
-            _row("Nous Subscription", "subscription", "Managed FAL video generation billed to your subscription", **_NOUS,
-                 managed_nous_feature="video_gen", override_env_vars=["FAL_KEY"], video_gen_plugin_name="fal"),
-        ],
-    },
-    "x_search": {
-        "name": "X (Twitter) Search", "setup_title": "Select xAI Credential Source",
-        "setup_note": (
-            "A2Assistant routes X searches through xAI's built-in x_search Responses tool for read-only public X "
-            "discovery. Use the xurl skill for authenticated X API reads and account actions. Both credential "
-            "sources hit the same https://api.x.ai/v1/responses endpoint — pick whichever you already have. "
-            "SuperGrok OAuth is preferred when both are set (uses your subscription quota instead of API spend)."
-        ),
-        "icon": "🐦",
-        "providers": [
-            _row("xAI Grok OAuth (SuperGrok / Premium+)", "subscription", "Browser login at accounts.x.ai — no API key required",
-                 post_setup="xai_grok"),
-            _row("xAI API key", "paid", "Direct xAI API billing via XAI_API_KEY",
-                 [_key("XAI_API_KEY", "xAI API key", "https://console.x.ai/")]),
-        ],
+        # Provider rows come from plugins.image_gen.<vendor> via _plugin_image_gen_providers().
+        "providers": [],
     },
     "browser": {
         "name": "Browser Automation", "icon": "🌐",
-        # Cloud provider rows (Browserbase, Browser Use, Firecrawl) come from plugins.browser.<vendor> via
-        # _plugin_browser_providers(); only non-provider setup-flow rows live here. "Local Browser" MUST stay
-        # first so a fresh install's Enter lands on the free local backend (index 0), never on the paid Nous row.
+        # Cloud provider rows come from browser provider plugins via _plugin_browser_providers(); only
+        # non-provider setup-flow rows live here. "Local Browser" MUST stay first so a fresh install's Enter
+        # lands on the free local backend (index 0).
         # Lightpanda is local too (cloud_provider: local, browser.engine: lightpanda — browser_exec spawns
         # ``lightpanda serve``; no Chromium).
         "providers": [
@@ -345,11 +280,6 @@ TOOL_CATEGORIES = {
                  browser_engine="auto", post_setup="chromium"),
             _row("Lightpanda", "free · local · no Chromium", "Zig headless browser spawned by A2Assistant, text-only (no screenshots)",
                  browser_provider="local", browser_engine="lightpanda", post_setup="lightpanda"),
-            # Browser Use hosts its own Chromium, so the local-Chromium install and readiness gate must not
-            # apply (with "chromium" this row read "needs setup" forever on machines without a local build).
-            _row("Nous Subscription (Browser Use cloud)", "subscription", "Managed Browser Use billed to your subscription",
-                 browser_provider="browser-use", **_NOUS, managed_nous_feature="browser",
-                 override_env_vars=["BROWSER_USE_API_KEY"], post_setup="browserbase"),
         ],
     },
     "computer_use": {
@@ -506,16 +436,12 @@ def _explicit_toolsets(
 
 def _composite_toolsets(toolset_names: list[str], platform: str, explicitly_configured: bool) -> set[str]:
     """Enabled set inferred from composite names by reverse-mapping tool names (only while no explicit list is
-    saved). ``x_search`` is not in any composite, so inject it when xAI creds exist and exempt it from default-off."""
+    saved)."""
     from toolsets import resolve_toolset
 
     all_tool_names = {t for ts_name in toolset_names for t in resolve_toolset(ts_name)}
     enabled = _configurable_subset_of(all_tool_names, platform)
-    default_off = _default_off_toolsets(platform, explicitly_configured)
-    if _toolset_allowed_for_platform("x_search", platform) and _xai_credentials_present():
-        enabled.add("x_search")
-        default_off.discard("x_search")
-    return enabled - default_off
+    return enabled - _default_off_toolsets(platform, explicitly_configured)
 
 
 def _enabled_plugin_toolsets(config: dict, platform: str, toolset_names: list[str], plugin_ts_keys: set[str]) -> set[str]:
@@ -851,13 +777,13 @@ def _toolset_has_keys(
             return resolve_vision_provider_client()[1] is not None
         except Exception:
             return False
-    if ts_key in {"web", "image_gen", "video_gen", "tts", "stt", "browser"}:
+    if ts_key in {"web", "image_gen", "tts", "stt", "browser"}:
         if features is None:
             features = get_nous_subscription_features(config, force_fresh=force_fresh)
         feature = features.features.get(ts_key)
         if feature and (feature.available or feature.managed_by_nous):
             return True
-    # Provider-aware categories first: a no-key provider (Local Browser, Edge TTS) counts as configured.
+    # Provider-aware categories first: a no-key provider (Local Browser, Piper TTS) counts as configured.
     cat = TOOL_CATEGORIES.get(ts_key)
     if cat:
         return any(_provider_env_ready(p) for p in _visible_providers(cat, config, force_fresh=force_fresh, features=features))
@@ -1083,7 +1009,7 @@ def _first_install_flow(config: dict, enabled_platforms: list[str]) -> None:
             label = next((l for k, l, _ in CONFIGURABLE_TOOLSETS if k == ts_key), ts_key)
             print(color(f"  ✓ {label}: using your Nous subscription defaults", Colors.GREEN))
         # Walk through ALL selected tools with provider options or key requirements, so browser (Local vs
-        # Browserbase), TTS (Edge vs OpenAI vs ElevenLabs), etc. are shown even when a free provider exists.
+        # Lightpanda), TTS (OpenAI vs Piper), etc. are shown even when a free provider exists.
         _configure_list(
             [ts for ts in sorted(new_enabled) if _is_configurable(ts) and ts not in auto_configured],
             config, selected=False)

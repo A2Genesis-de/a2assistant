@@ -71,24 +71,9 @@ TOOLSETS = {
     # Basic toolsets - individual tool categories
     "web": _ts("Web research and content extraction tools", ["web_search", "web_extract"]),
     "search": _ts("Web search only (no content extraction/scraping)", ["web_search"]),
-    "x_search": _ts(
-        "Search X (Twitter) posts and threads via xAI's built-in x_search Responses "
-        "tool. Read-only public X discovery; use the xurl skill for authenticated X "
-        "API reads and account actions. Available when xAI credentials are configured "
-        "(SuperGrok OAuth or XAI_API_KEY). Off by default; enable in `hermes tools` → "
-        "X (Twitter) Search.",
-        ["x_search"],
-    ),
     "vision": _ts("Image analysis and vision tools", ["vision_analyze"]),
     "video": _ts("Video analysis and understanding tools (opt-in, not in default toolset)", ["video_analyze"]),
     "image_gen": _ts("Creative generation tools (images)", ["image_generate"]),
-    "video_gen": _ts(
-        "Video generation tools. Single ``video_generate`` tool covers text-to-video "
-        "(prompt only) and image-to-video (prompt + image_url), plus "
-        "reference-to-video. Provider-specific edit/extend workflows may appear as "
-        "separate tools. Configure via ``hermes tools`` → Video Generation.",
-        ["video_generate", "xai_video_edit", "xai_video_extend"],
-    ),
     "computer_use": _ts(
         "Background desktop control via cua-driver (macOS/Windows/Linux) — "
         "screenshots, mouse, keyboard, scroll, drag. Does NOT steal the user's cursor "
@@ -120,7 +105,7 @@ TOOLSETS = {
         "search (content + files)",
         ["read_file", "write_file", "patch", "search_files"],
     ),
-    "tts": _ts("Text-to-speech: convert text to audio with Edge TTS (free), ElevenLabs, OpenAI, or xAI", ["text_to_speech"]),
+    "tts": _ts("Text-to-speech: convert text to audio with an OpenAI-compatible or local engine", ["text_to_speech"]),
     "todo": _ts("Task planning and tracking for multi-step work", ["todo_list"]),
     "memory": _ts("Persistent memory across sessions (personal notes + user profile)", ["memory"]),
     "context_engine": _ts("Runtime tools exposed by the active context engine"),

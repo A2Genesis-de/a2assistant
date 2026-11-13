@@ -26,14 +26,14 @@ def homes(tmp_path, monkeypatch):
 def _reset():
     import hermes_cli.config as cfg
     from hermes_cli import config_effective, managed_scope
-    from tools import browser_session_cloud
+    from tools import browser_config
 
     cfg._LOAD_CONFIG_CACHE.clear()
     cfg._RAW_CONFIG_CACHE.clear()
     config_effective._EFFECTIVE_CACHE.clear()
     config_effective._LAST_GOOD_USER_RAW.clear()
     managed_scope.invalidate_managed_cache()
-    browser_session_cloud.reset_caches()
+    browser_config.reset_caches()
 
 
 def _write(path, body):
@@ -42,7 +42,7 @@ def _write(path, body):
 
 
 def test_user_data_dir_and_chromium_args_expand_env_references(homes, tmp_path, monkeypatch):
-    from tools.browser_session_cloud import chromium_args, user_data_dir
+    from tools.browser_config import chromium_args, user_data_dir
 
     home, _managed = homes
     monkeypatch.setenv("FIXTURE_PROFILE_ROOT", str(tmp_path / "profiles"))
@@ -57,7 +57,7 @@ def test_user_data_dir_and_chromium_args_expand_env_references(homes, tmp_path, 
 
 
 def test_managed_profile_pin_and_flags_win_over_the_user_file(homes, tmp_path):
-    from tools.browser_session_cloud import chromium_args, user_data_dir
+    from tools.browser_config import chromium_args, user_data_dir
 
     home, managed = homes
     _write(home / "config.yaml", f"""
@@ -77,7 +77,7 @@ def test_managed_profile_pin_and_flags_win_over_the_user_file(homes, tmp_path):
 def test_managed_local_cloud_provider_wins_over_the_user_file(homes, monkeypatch):
     """The cloud-provider read is a ``browser.*`` read too: a managed ``local`` keeps the user's own
     Browserbase selection (and its credentials) from routing every page to the cloud."""
-    from tools.browser_session_cloud import get_cloud_provider
+    from tools.browser_config import get_cloud_provider
 
     home, managed = homes
     monkeypatch.setenv("BROWSERBASE_API_KEY", "bb-key")
@@ -91,23 +91,6 @@ def test_managed_local_cloud_provider_wins_over_the_user_file(homes, monkeypatch
           cloud_provider: local
         """)
     assert get_cloud_provider() is None
-
-
-def test_browser_exec_cloud_routing_reads_the_managed_gateway_selection(homes):
-    """``browser_exec``'s own ``browser:`` read (Browser Use direct API vs the Nous gateway) sees the managed
-    selection the session layer sees."""
-    from tools import browser_use_cli
-
-    home, managed = homes
-    _write(home / "config.yaml", """
-        browser:
-          cloud_provider: browser-use
-        """)
-    _write(managed / "config.yaml", """
-        browser:
-          cloud_provider: nous
-        """)
-    assert browser_use_cli._use_gateway(browser_use_cli._read_browser_cfg()) is True
 
 
 def test_real_profile_pin_follows_the_managed_overlay(homes):

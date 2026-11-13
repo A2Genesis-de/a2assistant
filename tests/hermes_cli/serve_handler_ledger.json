@@ -2,12 +2,12 @@
  "counts": {
   "http": {
    "keep-host-wide": 1,
-   "undecided": 338
+   "undecided": 342
   },
   "rpc": {
    "authority": 108,
    "keep-host-wide": 1,
-   "undecided": 181
+   "undecided": 182
   },
   "websocket": {
    "undecided": 10
@@ -50,7 +50,6 @@
   {"current_path": "hermes_cli.web_routers.actions:get_action_status", "decision": "undecided", "handler": "GET /api/actions/{name}/status", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.analytics:get_models_analytics", "decision": "undecided", "handler": "GET /api/analytics/models", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.analytics:get_usage_analytics", "decision": "undecided", "handler": "GET /api/analytics/usage", "kind": "http", "ref": ""},
-  {"current_path": "hermes_cli.web_routers.audio:get_elevenlabs_voices", "decision": "undecided", "handler": "GET /api/audio/elevenlabs/voices", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.audio:get_client_voice_config", "decision": "undecided", "handler": "GET /api/audio/voice-config", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.audio:get_voice_live_status", "decision": "undecided", "handler": "GET /api/audio/voice-live/status", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.dashboard_auth.routes:api_auth_me", "decision": "undecided", "handler": "GET /api/auth/me", "kind": "http", "ref": ""},
@@ -69,6 +68,8 @@
   {"current_path": "hermes_cli.web_routers.status:get_curator_status", "decision": "undecided", "handler": "GET /api/curator", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.dashboard_ui:get_dashboard_font", "decision": "undecided", "handler": "GET /api/dashboard/font", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.dashboard_ui:get_dashboard_plugins", "decision": "undecided", "handler": "GET /api/dashboard/plugins", "kind": "http", "ref": ""},
+  {"current_path": "hermes_cli.web_routers.dashboard_ui:get_plugins_auto_update", "decision": "undecided", "handler": "GET /api/dashboard/plugins/auto-update", "kind": "http", "ref": ""},
+  {"current_path": "hermes_cli.web_routers.dashboard_ui:get_plugins_catalog", "decision": "undecided", "handler": "GET /api/dashboard/plugins/catalog", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.dashboard_ui:get_plugins_hub", "decision": "undecided", "handler": "GET /api/dashboard/plugins/hub", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.dashboard_ui:rescan_dashboard_plugins", "decision": "undecided", "handler": "GET /api/dashboard/plugins/rescan", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.dashboard_ui:get_dashboard_themes", "decision": "undecided", "handler": "GET /api/dashboard/themes", "kind": "http", "ref": ""},
@@ -222,8 +223,10 @@
   {"current_path": "hermes_cli.web_routers.status:run_curator", "decision": "undecided", "handler": "POST /api/curator/run", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.dashboard_ui:post_agent_plugin_activate", "decision": "undecided", "handler": "POST /api/dashboard/agent-plugins/activate", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.dashboard_ui:post_agent_plugin_install", "decision": "undecided", "handler": "POST /api/dashboard/agent-plugins/install", "kind": "http", "ref": ""},
+  {"current_path": "hermes_cli.web_routers.dashboard_ui:post_agent_plugins_update_all", "decision": "undecided", "handler": "POST /api/dashboard/agent-plugins/update-all", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.dashboard_ui:post_agent_plugin_disable", "decision": "undecided", "handler": "POST /api/dashboard/agent-plugins/{name:path}/disable", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.dashboard_ui:post_agent_plugin_enable", "decision": "undecided", "handler": "POST /api/dashboard/agent-plugins/{name:path}/enable", "kind": "http", "ref": ""},
+  {"current_path": "hermes_cli.web_routers.dashboard_ui:post_agent_plugin_update", "decision": "undecided", "handler": "POST /api/dashboard/agent-plugins/{name:path}/update", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.dashboard_ui:post_plugin_visibility", "decision": "undecided", "handler": "POST /api/dashboard/plugins/{name:path}/visibility", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.desktop_plugins:reconcile_desktop_plugins; surface: desktop_plugins", "decision": "undecided", "handler": "POST /api/desktop-plugins/reconcile", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.config_env:reveal_env_var", "decision": "undecided", "handler": "POST /api/env/reveal", "kind": "http", "ref": ""},
@@ -336,6 +339,7 @@
   {"current_path": "hermes_cli.web_routers.status:set_curator_paused", "decision": "undecided", "handler": "PUT /api/curator/paused", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.dashboard_ui:set_dashboard_font", "decision": "undecided", "handler": "PUT /api/dashboard/font", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.dashboard_ui:put_plugin_providers", "decision": "undecided", "handler": "PUT /api/dashboard/plugin-providers", "kind": "http", "ref": ""},
+  {"current_path": "hermes_cli.web_routers.dashboard_ui:put_plugins_auto_update", "decision": "undecided", "handler": "PUT /api/dashboard/plugins/auto-update", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.dashboard_ui:set_dashboard_theme", "decision": "undecided", "handler": "PUT /api/dashboard/theme", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.delegation:select_delegation_backend", "decision": "undecided", "handler": "PUT /api/delegation/backend", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.delegation:save_model_routes", "decision": "undecided", "handler": "PUT /api/delegation/backends/model_map", "kind": "http", "ref": ""},
@@ -519,6 +523,7 @@
   {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "pet.thumb", "kind": "rpc", "ref": "D3"},
   {"current_path": "authority; standalone: legacy server.dispatch", "decision": "authority", "handler": "ping", "kind": "rpc", "ref": ""},
   {"current_path": "authority (after its own verbs); standalone: unknown method", "decision": "authority", "handler": "plugin.{plugin_id}.{name}", "kind": "rpc", "ref": ""},
+  {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "plugins.catalog.lookup", "kind": "rpc", "ref": "D3"},
   {"current_path": "authority; standalone: legacy server.dispatch", "decision": "authority", "handler": "plugins.list", "kind": "rpc", "ref": ""},
   {"current_path": "legacy fallback; standalone: legacy server.dispatch", "decision": "undecided", "handler": "plugins.manage", "kind": "rpc", "ref": "D3"},
   {"current_path": "authority; standalone: legacy server.dispatch", "decision": "authority", "handler": "preview.restart", "kind": "rpc", "ref": ""},

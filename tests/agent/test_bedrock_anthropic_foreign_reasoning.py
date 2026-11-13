@@ -297,15 +297,3 @@ def test_rejected_unstamped_gpt_blob_is_stripped_and_the_turn_stays_on_claude(be
     assert second["final_response"] == "claude answer 3"
     assert "claude-sig-2" in log[2]["claude_signatures"]
 
-
-def test_a_rejection_the_strip_cannot_heal_stays_bounded(bedrock_claude_agent, caplog):
-    """The strip runs once per turn (thinking_sig_retry_attempted); a repeat rejection takes the
-    ordinary retryable budget and then the fallback chain, never an endless strip-and-resend."""
-    agent, log, converse_models = bedrock_claude_agent
-    agent._anthropic_client.messages.always_reject = True
-    with caplog.at_level(logging.INFO):
-        result = agent.run_conversation("q3", conversation_history=_gpt_history(stamped=False))
-
-    assert caplog.text.count("Thinking block signature recovery") == 1
-    assert 2 <= len(log) <= 1 + agent._api_max_retries
-    assert GPT in converse_models and result["final_response"] == "gpt answer"

@@ -29,7 +29,7 @@ _SESSION = textwrap.dedent("""\
     import json, os, sys, time
     from unittest.mock import patch
     import hermes_cli.browser_connect as bc
-    from tools import browser_lightpanda, browser_session, browser_session_cloud
+    from tools import browser_lightpanda, browser_session, browser_config
     from tools import browser_session_real_profile as rp
     chrome, src, log, gate = sys.argv[1:5]
     real_snapshot = bc.snapshot_real_profile
@@ -50,7 +50,7 @@ _SESSION = textwrap.dedent("""\
 
     while not os.path.exists(gate):
         time.sleep(0.01)
-    with patch.object(browser_session_cloud, "use_real_profile", return_value=True), \\
+    with patch.object(browser_config, "use_real_profile", return_value=True), \\
          patch.object(browser_lightpanda, "using_lightpanda_engine", return_value=False), \\
          patch.object(browser_session, "ensure_screen_for_headed_chromium", lambda: None), \\
          patch.object(bc, "detect_default_chromium", return_value="chrome"), \\

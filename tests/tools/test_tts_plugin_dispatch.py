@@ -111,7 +111,7 @@ class TestBuiltinAlwaysWins:
         )
 
     def test_dispatcher_short_circuits_builtin_case_insensitive(self):
-        for variant in ("EDGE", "Edge", "  edge  ", "eDgE"):
+        for variant in ("PIPER", "Piper", "  piper  ", "pIpEr"):
             assert (
                 tts_tool._dispatch_to_plugin_provider(
                     text="hello", output_path="/tmp/x.mp3",

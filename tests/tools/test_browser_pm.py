@@ -215,11 +215,11 @@ def test_exact_pm_child_receives_composed_scrubbed_environment(browser_store, mo
     records.mkdir()
     monkeypatch.setattr(launcher, "_records_dir", lambda _home: records)
     monkeypatch.setattr(launcher, "needs_chromium_sandbox_bypass", lambda: False)
-    monkeypatch.setattr("tools.browser_session_cloud.chromium_args", list)
-    monkeypatch.setattr("tools.browser_session_cloud.is_headed_mode", lambda: False)
+    monkeypatch.setattr("tools.browser_config.chromium_args", list)
+    monkeypatch.setattr("tools.browser_config.is_headed_mode", lambda: False)
     monkeypatch.setenv("PATH", str(tmp_path / "hostile-path"))
     monkeypatch.setenv("OPENAI_API_KEY", "must-not-reach-browser")
-    monkeypatch.setenv("BROWSERBASE_API_KEY", "browser-provider-key")
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "bot-key")
     before = dict(os.environ)
     browser, err = launcher.launch_chromium("pm-child", timeout=10)
     try:
@@ -231,7 +231,7 @@ def test_exact_pm_child_receives_composed_scrubbed_environment(browser_store, mo
         launcher.stop_browser("pm-child")
     assert Path(child["argv"][0]) == chromium
     assert "OPENAI_API_KEY" not in child["env"]
-    assert "BROWSERBASE_API_KEY" not in child["env"]
+    assert "TELEGRAM_BOT_TOKEN" not in child["env"]
     assert dict(os.environ) == before
 
 

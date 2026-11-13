@@ -8,7 +8,7 @@ transcript and the Artifacts panel point at deleted files a day later, with no
 way to recover the bytes.
 
 Living outside the swept dirs means ``cache/generated`` needs its own
-credential-files mount/sync entry: Docker/SSH/Modal backends only reach paths
+credential-files mount/sync entry: Docker/SSH backends only reach paths
 that map through ``tools.credential_files``, and an unmapped path also drops
 ``agent_visible_image`` from the provider result.
 
@@ -26,7 +26,6 @@ from pathlib import Path
 import pytest
 
 from agent.image_gen_provider import save_b64_image
-from agent.video_gen_provider import save_b64_video
 from gateway.platforms import base
 
 PNG_1PX = bytes.fromhex(
@@ -41,12 +40,7 @@ def _backdate_hours(path, hours: float = 25.0) -> None:
     os.utime(path, (old, old))
 
 
-@pytest.mark.parametrize(
-    "save, sweeper",
-    [(save_b64_image, base.cleanup_image_cache), (save_b64_video, base.cleanup_video_cache)],
-    ids=["image", "video"],
-)
-def test_old_generated_media_is_not_swept(tmp_path, monkeypatch, save, sweeper):
+def test_old_generated_media_is_not_swept(tmp_path, monkeypatch):
     # Profile home so the check-time per-profile cache roots (built from
     # _MEDIA_DELIVERY_CACHE_SUBDIRS) cover it; the import-time roots do not.
     home = tmp_path / "profiles" / "p"
@@ -54,9 +48,9 @@ def test_old_generated_media_is_not_swept(tmp_path, monkeypatch, save, sweeper):
     monkeypatch.setattr(base, "_HERMES_ROOT", tmp_path)
     monkeypatch.setenv("HERMES_HOME", str(home))
 
-    path = save(base64.b64encode(PNG_1PX).decode(), prefix="red_test")
+    path = save_b64_image(base64.b64encode(PNG_1PX).decode(), prefix="red_test")
     _backdate_hours(path)
-    removed = sweeper(max_age_hours=24)
+    removed = base.cleanup_image_cache(max_age_hours=24)
     assert path.exists(), f"25h-old generated media was swept ({removed} removed): {path}"
 
     # Still deliverable on a strict gateway with recency trust off: only the

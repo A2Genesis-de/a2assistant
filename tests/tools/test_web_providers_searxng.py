@@ -114,9 +114,9 @@ class TestSearXNGSearchProviderSearch:
 class TestIsBackendAvailable:
     def test_searxng_available_when_url_set(self, monkeypatch):
         monkeypatch.setenv("SEARXNG_URL", "http://localhost:8080")
+        register_all_web_providers()
         from tools.web_tools import _is_backend_available
         assert _is_backend_available("searxng") is True
-
 
     def test_unknown_backend_still_false(self):
         from tools.web_tools import _is_backend_available
@@ -136,36 +136,18 @@ class TestGetBackendSearXNG:
         assert web_tools._get_backend() == "searxng"
 
 
-    def test_searxng_does_not_override_higher_priority_provider(self, monkeypatch):
-        """Exa (higher priority than searxng) should win in auto-detect."""
-        from tools import web_tools
-        monkeypatch.setattr(web_tools, "_load_web_config", dict)
-        monkeypatch.delenv("FIRECRAWL_API_KEY", raising=False)
-        monkeypatch.delenv("FIRECRAWL_API_URL", raising=False)
-        monkeypatch.delenv("PARALLEL_API_KEY", raising=False)
-        monkeypatch.setenv("EXA_API_KEY", "exa_test_key")
-        monkeypatch.setenv("SEARXNG_URL", "http://localhost:8080")
-        monkeypatch.setattr(web_tools, "_is_tool_gateway_ready", lambda: False)
-        assert web_tools._get_backend() == "exa"
-
     def test_auto_detect_picks_searxng_when_url_only_in_hermes_config(self, monkeypatch):
         """#34290 follow-up: a config-only SEARXNG_URL (absent from process env)
         must still drive auto-detect via the now config-aware ``_has_env``."""
         from hermes_cli import config as hermes_config
         from tools import web_tools
         monkeypatch.setattr(web_tools, "_load_web_config", dict)
-        monkeypatch.delenv("FIRECRAWL_API_KEY", raising=False)
-        monkeypatch.delenv("FIRECRAWL_API_URL", raising=False)
-        monkeypatch.delenv("PARALLEL_API_KEY", raising=False)
-        monkeypatch.delenv("EXA_API_KEY", raising=False)
-        monkeypatch.delenv("EXA_API_KEY", raising=False)
         monkeypatch.delenv("SEARXNG_URL", raising=False)
         monkeypatch.setattr(
             hermes_config,
             "get_env_value",
             lambda key: "http://config-only:8080" if key == "SEARXNG_URL" else None,
         )
-        monkeypatch.setattr(web_tools, "_is_tool_gateway_ready", lambda: False)
         assert web_tools._get_backend() == "searxng"
 
 
@@ -198,18 +180,10 @@ class TestCheckWebApiKey:
         from tools import web_tools
         from agent import web_search_registry
         monkeypatch.setattr(web_tools, "_load_web_config", dict)
-        monkeypatch.delenv("FIRECRAWL_API_KEY", raising=False)
-        monkeypatch.delenv("FIRECRAWL_API_URL", raising=False)
-        monkeypatch.delenv("PARALLEL_API_KEY", raising=False)
-        monkeypatch.delenv("EXA_API_KEY", raising=False)
-        monkeypatch.delenv("EXA_API_KEY", raising=False)
         monkeypatch.delenv("SEARXNG_URL", raising=False)
-        monkeypatch.setattr(web_tools, "_is_tool_gateway_ready", lambda: False)
-        monkeypatch.setattr(web_tools, "check_firecrawl_api_key", lambda: False)
         monkeypatch.setattr(web_tools, "_ddgs_package_importable", lambda: False)
         # Disable the keyless free tier — with it on, zero credentials still
         # resolves (Parallel/Exa anonymous MCP; see test_web_keyless_fallback.py).
-        monkeypatch.setattr(web_search_registry, "_keyless_tier_enabled", lambda: False)
         assert web_tools.check_web_api_key() is False
 
 
@@ -236,7 +210,6 @@ class TestSearXNGOnlyExtractCrawlErrors:
 
         monkeypatch.setattr(web_tools, "_load_web_config", lambda: {"backend": "searxng"})
         monkeypatch.setenv("SEARXNG_URL", "http://localhost:8080")
-        monkeypatch.setattr(web_tools, "_is_tool_gateway_ready", lambda: False)
         async def _allow_ssrf(_url: str) -> bool:
             return True
 

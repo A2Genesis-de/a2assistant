@@ -286,36 +286,6 @@ def test_opencode_go_upstream_throttle_keeps_the_key_on_an_unnamed_route(monkeyp
 
 
 @pytest.mark.parametrize("is_async", [False, True], ids=["sync", "async"])
-@pytest.mark.parametrize("zen_url,go_url", [
-    ("https://opencode.ai/zen/v1", "https://opencode.ai/zen/go/v1"),  # Zen beside Go
-    ("https://proxy.example:9443/zen/go/v1", "https://proxy.example:8443/zen/go/v1"),  # same path, other port
-    ("http://proxy.example/zen/go/v1", "https://proxy.example/zen/go/v1"),  # same path, other scheme
-], ids=["other-path", "other-port", "other-scheme"])
-def test_a_custom_zen_endpoint_is_not_classified_as_the_main_runtimes_go(is_async, zen_url, go_url):
-    """OpenCode Zen and Go share opencode.ai: a custom Zen endpoint with its own key, while the main runtime is Go,
-    is judged as custom, so its upstream 429 gets the same-key retry and the second request answers. So is
-    an endpoint on Go's path at another origin."""
-    import model_tools  # registers the bundled provider profiles
-
-    sent, statuses = [], iter([429, 200])
-
-    def handle(request):
-        sent.append(request.url.path)
-        if next(statuses) == 429:
-            return httpx.Response(429, json={"error": {"type": "server_error", "message":
-                                                       "Upstream request failed: Rate limit exceeded."}}, request=request)
-        return httpx.Response(200, json={"id": "x", "object": "chat.completion", "created": 0, "model": "fast-1",
-                                         "choices": [{"index": 0, "finish_reason": "stop", "message": {
-                                             "role": "assistant", "content": "ok"}}]}, request=request)
-
-    zen = _wire(handle, key="sk-zen", url=zen_url, is_async=is_async)
-    runtime = {"provider": "opencode-go", "base_url": go_url, "api_key": "sk-go"}
-    with patch("agent.auxiliary_rate_limit_backoff.rate_limit_wait", return_value=0.0):
-        assert _routed_call([zen] * 2, provider="custom", is_async=is_async, main_runtime=runtime) == "ok"
-    assert sent == [httpx.URL(zen_url).path + "/chat/completions"] * 2
-
-
-@pytest.mark.parametrize("is_async", [False, True], ids=["sync", "async"])
 def test_a_custom_zen_endpoints_payment_error_benches_that_endpoint_not_go(is_async):
     """The same Zen endpoint under a Go session answers 402: the endpoint that sent it is benched, Go stays eligible."""
     from agent import auxiliary_client as aux
@@ -395,81 +365,6 @@ def test_plugin_hook_overrides_win_over_aux_defaults(monkeypatch, hook, expected
 def test_429_then_generic_403_reraises_the_403(is_async):
     outcome = run_ladder([sdk(429, "Rate limit exceeded"), sdk(403, "Forbidden")], is_async=is_async)
     assert isinstance(outcome.result, openai.PermissionDeniedError) and not outcome.fell_back
-
-
-@pytest.mark.parametrize("is_async", [False, True], ids=["sync", "async"])
-@pytest.mark.parametrize("effective,backend", [("opencode-go", None), ("api-key", "opencode-go")],
-                         ids=["effective-provider", "backend-tag"])
-def test_opencode_go_candidate_classifies_on_its_concrete_provider(monkeypatch, is_async, effective, backend):
-    """A sync candidate tagged opencode-go (converted to async by ``async_call_llm``) classifies on Go's
-    profile: the upstream throttle quarantines the candidate without rotating its key. A discovered candidate keeps
-    the route label ``api-key`` as its effective provider and names Go in its backend tag."""
-    import model_tools  # registers the bundled provider profiles
-    from agent import auxiliary_error_policy as aux_errors
-
-    seen, real = [], aux_errors.classify_api_error
-    monkeypatch.setattr(aux_errors, "classify_api_error", lambda exc, **kw: seen.append(
-        (kw["provider"], (v := real(exc, **kw)).reason, v.should_rotate_credential)) or v)
-    body = {"error": {"type": "server_error", "message": "Upstream request failed: Rate limit exceeded."}}
-    transport = httpx.MockTransport(lambda request: httpx.Response(429, json=body, request=request))
-    go = openai.OpenAI(api_key="sk-go", base_url="https://opencode.ai/zen/go/v1", max_retries=0,
-                       http_client=httpx.Client(transport=transport))
-    go._hermes_aux_effective_provider = effective  # type: ignore[attr-defined]
-    go._hermes_aux_backend_provider = backend  # type: ignore[attr-defined]
-    primary = MagicMock(base_url="https://openrouter.ai/api/v1", api_key="sk-primary")
-    primary.chat.completions.create = (AsyncMock if is_async else MagicMock)(side_effect=sdk(503, "down"))
-    with (
-        patch("agent.auxiliary_client._resolve_task_provider_model", return_value=("openrouter", "m", None, None, None)),
-        patch("agent.auxiliary_client._get_cached_client", return_value=(primary, "m")),
-        patch("agent.auxiliary_client._openai_http_client_kwargs",
-              return_value={"http_client": httpx.AsyncClient(transport=transport)}),
-        patch("agent.auxiliary_client._transient_retry_count", return_value=0),
-        patch("agent.auxiliary_client._recoverable_pool_provider", return_value=None),
-        patch("agent.auxiliary_client._try_configured_fallback_chain", return_value=(go, "go-model", "auto")),
-        patch("agent.auxiliary_client._try_main_agent_model_fallback", return_value=(None, None, "")),
-        patch("agent.auxiliary_client._mark_provider_unhealthy"),
-        pytest.raises(openai.APIError),
-    ):
-        if is_async:
-            asyncio.run(async_call_llm(task="title_generation", messages=_MESSAGES))
-        else:
-            call_llm(task="title_generation", messages=_MESSAGES)
-    assert ("opencode-go", FailoverReason.upstream_rate_limit, False) in seen
-
-
-@pytest.mark.parametrize("is_async", [False, True], ids=["sync", "async"])
-def test_discovered_api_key_client_classifies_on_its_concrete_provider(monkeypatch, is_async):
-    """Auto discovery's API-key step builds the OpenCode Go client itself (no hand-set tag): its upstream
-    throttle is judged on Go's profile, not under the route label "api-key", so the key is not rotated."""
-    import model_tools  # registers the bundled provider profiles
-    from agent import auxiliary_client as aux, auxiliary_error_policy as aux_errors
-
-    seen, real = [], aux_errors.classify_api_error
-    monkeypatch.setattr(aux_errors, "classify_api_error", lambda exc, **kw: seen.append(
-        (kw["provider"], (v := real(exc, **kw)).reason, v.should_rotate_credential)) or v)
-    monkeypatch.setenv("OPENCODE_GO_API_KEY", "sk-go")
-    monkeypatch.setattr(aux, "_client_cache", {})
-    body = {"error": {"type": "server_error", "message": "Upstream request failed: Rate limit exceeded."}}
-    transport = httpx.MockTransport(lambda request: httpx.Response(429, json=body, request=request))
-    none = lambda *_a, **_k: (None, None)
-    with (
-        patch.multiple(aux, _try_openrouter=none, _try_nous=none, _try_custom_endpoint=none),
-        patch("agent.auxiliary_client._openai_http_client_kwargs", lambda _url, async_mode=False: {
-            "http_client": (httpx.AsyncClient if async_mode else httpx.Client)(transport=transport)}),
-        patch("agent.auxiliary_client._resolve_task_provider_model", return_value=("auto", None, None, None, None)),
-        patch("agent.auxiliary_client._transient_retry_count", return_value=0),
-        patch("agent.auxiliary_client._try_configured_fallback_chain", return_value=(None, None, "")),
-        patch("agent.auxiliary_client._try_main_fallback_chain", return_value=(None, None, "")),
-        patch("agent.auxiliary_client._try_payment_fallback", return_value=(None, None, "")),
-        patch("agent.auxiliary_client._try_main_agent_model_fallback", return_value=(None, None, "")),
-        patch("agent.auxiliary_client._mark_provider_unhealthy"),
-        pytest.raises(openai.APIError),
-    ):
-        if is_async:
-            asyncio.run(async_call_llm(task="title_generation", messages=_MESSAGES))
-        else:
-            call_llm(task="title_generation", messages=_MESSAGES)
-    assert seen and set(seen) == {("opencode-go", FailoverReason.upstream_rate_limit, False)}
 
 
 def _wire(handle, *, key, url="https://openrouter.ai/api/v1", is_async=False):

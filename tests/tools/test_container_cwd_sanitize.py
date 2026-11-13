@@ -59,7 +59,6 @@ class TestOverrideCwdSanitizedAtCallSite:
             "docker_mount_cwd_to_workspace": False,
             "docker_run_as_host_user": False,
             "docker_forward_env": [],
-            "modal_mode": "auto",
         }
 
         class _DummyEnv:
@@ -125,8 +124,6 @@ class TestFileOpsCwdSanitizedAtCallSite:
         config = {
             "env_type": env_type,
             "docker_image": "pytorch/pytorch:latest",
-            "modal_image": "pytorch/pytorch:latest",
-            "daytona_image": "pytorch/pytorch:latest",
             "cwd": config_cwd,
             "host_cwd": None,
             "timeout": 180,
@@ -141,7 +138,6 @@ class TestFileOpsCwdSanitizedAtCallSite:
             "docker_mount_cwd_to_workspace": False,
             "docker_run_as_host_user": False,
             "docker_forward_env": [],
-            "modal_mode": "auto",
             "ssh_host": "",
             "ssh_user": "",
             "ssh_port": 22,
@@ -190,7 +186,3 @@ class TestFileOpsCwdSanitizedAtCallSite:
         cwd = self._run_and_capture_cwd(monkeypatch, "/workspace/task42")
         assert cwd == "/workspace/task42"
 
-    def test_host_override_sanitized_on_daytona(self, monkeypatch):
-        cwd = self._run_and_capture_cwd(
-            monkeypatch, "/Users/me/workspace", env_type="daytona")
-        assert cwd == "/workspace"

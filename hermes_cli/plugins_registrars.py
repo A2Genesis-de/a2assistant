@@ -59,10 +59,6 @@ _SCOPED_PROVIDER_REGISTRARS: tuple[tuple[str, str, str, str, str, str, dict[str,
      "agent.image_gen_provider:ImageGenProvider", "image_gen provider",
      "Register an :class:`agent.image_gen_provider.ImageGenProvider`; "
      "``provider.name`` is matched by ``image_gen.provider``.", {"article": "an"}),
-    ("register_video_gen_provider", "video_gen_provider", "agent.video_gen_registry",
-     "agent.video_gen_provider:VideoGenProvider", "video_gen provider",
-     "Register an :class:`agent.video_gen_provider.VideoGenProvider`; "
-     "``provider.name`` is matched by ``video_gen.provider``.", {}),
     ("register_web_search_provider", "web_search_provider", "agent.web_search_registry",
      "agent.web_search_provider:WebSearchProvider", "web provider",
      "Register an :class:`agent.web_search_provider.WebSearchProvider`; "
@@ -72,13 +68,13 @@ _SCOPED_PROVIDER_REGISTRARS: tuple[tuple[str, str, str, str, str, str, dict[str,
      "agent.browser_provider:BrowserProvider", "browser provider",
      "Register an :class:`agent.browser_provider.BrowserProvider`; "
      "``provider.name`` is matched by ``browser.cloud_provider`` (consulted by "
-     "``tools.browser_session_cloud.get_cloud_provider``).", {}),
+     "``tools.browser_config.get_cloud_provider``).", {}),
     ("register_terminal_environment_provider", "terminal_environment_provider",
      "agent.terminal_env_registry", "agent.terminal_env_provider:TerminalEnvironmentProvider",
      "terminal environment provider",
      "Register a :class:`agent.terminal_env_provider.TerminalEnvironmentProvider`; ``provider.name`` "
      "is matched by ``terminal.backend`` when no built-in backend has that name. Built-in names (local, "
-     "docker, modal, daytona, vercel_sandbox, ssh) are rejected — plugins never shadow "
+     "docker, ssh) are rejected — plugins never shadow "
      "in-tree backends.",
      {"normalize": "lower", "reject_message": "Plugin '%s' terminal environment provider rejected: %s"}),
     ("register_secret_source", "secret_source", "agent.secret_sources.registry",

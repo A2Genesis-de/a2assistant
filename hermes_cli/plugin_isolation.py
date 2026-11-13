@@ -64,7 +64,6 @@ HOST_REMOTE_FACADES: frozenset[str] = frozenset({
 # and the parent builds a subclass of that ABC whose methods run in the host.
 HOST_OBJECT_BASES: dict[str, str] = {
     "register_image_gen_provider": "agent.image_gen_provider:ImageGenProvider",
-    "register_video_gen_provider": "agent.video_gen_provider:VideoGenProvider",
     "register_web_search_provider": "agent.web_search_provider:WebSearchProvider",
     "register_browser_provider": "agent.browser_provider:BrowserProvider",
     "register_terminal_environment_provider": "agent.terminal_env_provider:TerminalEnvironmentProvider",

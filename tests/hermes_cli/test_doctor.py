@@ -309,14 +309,8 @@ class TestDoctorToolAvailabilityOverrides:
 
 
 
-def test_doctor_reports_vercel_backend_diagnostics(monkeypatch, tmp_path):
-    monkeypatch.setenv("TERMINAL_ENV", "vercel_sandbox")
-    monkeypatch.setenv("TERMINAL_VERCEL_RUNTIME", "python3.13")
-    monkeypatch.setenv("TERMINAL_CONTAINER_DISK", "2048")
-    monkeypatch.setenv("VERCEL_TOKEN", "super-secret-value")
-    monkeypatch.delenv("VERCEL_PROJECT_ID", raising=False)
-    monkeypatch.setenv("VERCEL_TEAM_ID", "team")
-    monkeypatch.setattr(importlib.util, "find_spec", lambda name: object() if name == "vercel" else None)
+def test_doctor_reports_removed_cloud_backend_as_unknown(monkeypatch, tmp_path):
+    monkeypatch.setenv("TERMINAL_ENV", "modal")
 
     fake_model_tools = types.SimpleNamespace(
         check_tool_availability=lambda *a, **kw: ([], []),
@@ -329,8 +323,7 @@ def test_doctor_reports_vercel_backend_diagnostics(monkeypatch, tmp_path):
         doctor_mod.run_doctor(Namespace(fix=False))
 
     out = buf.getvalue()
-    assert "VERCEL_PROJECT_ID" in out  # names the missing auth var
-    assert "super-secret-value" not in out  # never echoes the token value
+    assert "Unknown terminal backend 'modal'" in out
 
 
 # ── Memory provider section (doctor should only check the *active* provider) ──
@@ -613,7 +606,6 @@ def test_run_doctor_flags_missing_credentials_for_active_openrouter_provider(mon
 
         monkeypatch.setattr(_auth_mod, "get_nous_auth_status_local", dict)
         monkeypatch.setattr(_auth_mod, "get_codex_auth_status", dict)
-        monkeypatch.setattr(_auth_mod, "get_minimax_oauth_auth_status", dict)
         monkeypatch.setattr(_auth_mod, "get_gemini_oauth_auth_status", dict)
     except Exception:
         pass
@@ -629,11 +621,6 @@ def test_run_doctor_flags_missing_credentials_for_active_openrouter_provider(mon
 @pytest.mark.parametrize(
     ("provider", "default_model"),
     [
-        ("ai-gateway", "anthropic/claude-sonnet-4.6"),
-        ("opencode-zen", "anthropic/claude-sonnet-4.6"),
-        ("kilocode", "anthropic/claude-sonnet-4.6"),
-        ("kimi-coding", "kimi-k2"),
-        ("nvidia", "qwen/qwen3.5-122b-a10b"),
         ("moa", "anthropic/claude-sonnet-4.6"),
     ],
 )
@@ -784,45 +771,6 @@ def test_run_doctor_vendor_slug_policy_for_openai_api_endpoint(
 
 
 
-def test_run_doctor_accepts_kimi_coding_cn_provider(monkeypatch, tmp_path):
-    home = tmp_path / ".hermes"
-    home.mkdir(parents=True, exist_ok=True)
-    (home / ".env").write_text("KIMI_CN_API_KEY=***\n", encoding="utf-8")
-    (home / "config.yaml").write_text(
-        "model:\n"
-        "  provider: kimi-coding-cn\n"
-        "  default: kimi-k2.6\n",
-        encoding="utf-8",
-    )
-
-    monkeypatch.setattr(doctor_mod, "HERMES_HOME", home)
-    monkeypatch.setattr(doctor_mod, "PROJECT_ROOT", tmp_path / "project")
-    monkeypatch.setattr(doctor_mod, "_DHH", str(home))
-    (tmp_path / "project").mkdir(exist_ok=True)
-
-    fake_model_tools = types.SimpleNamespace(
-        check_tool_availability=lambda *a, **kw: ([], []),
-        TOOLSET_REQUIREMENTS={},
-    )
-    monkeypatch.setitem(sys.modules, "model_tools", fake_model_tools)
-
-    try:
-        from hermes_cli import auth as _auth_mod
-        monkeypatch.setattr(_auth_mod, "get_nous_auth_status_local", dict)
-        monkeypatch.setattr(_auth_mod, "get_codex_auth_status", dict)
-        monkeypatch.setattr(_auth_mod, "get_auth_status", lambda provider: {"logged_in": True})
-        monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", dict)
-    except Exception:
-        pass
-
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        doctor_mod.run_doctor(Namespace(fix=False))
-
-    out = buf.getvalue()
-    assert "model.provider 'kimi-coding-cn' is not a recognised provider" not in out
-
-
 def _doctor_env_for_browser(monkeypatch, tmp_path):
     """Shared fixture setup for the Node + Chromium rows of run_doctor."""
     home = tmp_path / ".hermes"
@@ -912,7 +860,7 @@ def test_doctor_fix_reports_pm_install_failure(monkeypatch, tmp_path):
 @pytest.mark.parametrize("browser_yaml,reason", [
     ("browser:\n  cdp_url: http://127.0.0.1:9222\n", "CDP override"),
     ("browser:\n  engine: lightpanda\n", "lightpanda"),
-    ("browser:\n  cloud_provider: browserbase\n", "browserbase"),
+    ("browser:\n  cloud_provider: browserless\n", "browserless"),
 ])
 def test_missing_chromium_is_info_when_config_needs_none(monkeypatch, tmp_path, browser_yaml, reason):
     """A CDP override, Lightpanda or a cloud provider runs no local Chromium: no warning row."""
@@ -930,164 +878,6 @@ def test_missing_chromium_is_info_when_config_needs_none(monkeypatch, tmp_path, 
 
     assert "not needed" in out and reason in out
     assert "hermes pm install chromium" not in out
-
-
-def test_run_doctor_kimi_cn_env_is_detected_and_probe_is_null_safe(monkeypatch, tmp_path):
-    home = tmp_path / ".hermes"
-    home.mkdir(parents=True, exist_ok=True)
-    (home / "config.yaml").write_text("memory: {}\n", encoding="utf-8")
-    (home / ".env").write_text("KIMI_CN_API_KEY=sk-test\n", encoding="utf-8")
-    project = tmp_path / "project"
-    project.mkdir(exist_ok=True)
-
-    monkeypatch.setattr(doctor_mod, "HERMES_HOME", home)
-    monkeypatch.setattr(doctor_mod, "PROJECT_ROOT", project)
-    monkeypatch.setattr(doctor_mod, "_DHH", str(home))
-    monkeypatch.setenv("KIMI_CN_API_KEY", "sk-test")
-
-    fake_model_tools = types.SimpleNamespace(
-        check_tool_availability=lambda *a, **kw: ([], []),
-        TOOLSET_REQUIREMENTS={},
-    )
-    monkeypatch.setitem(sys.modules, "model_tools", fake_model_tools)
-
-    try:
-        from hermes_cli import auth as _auth_mod
-        monkeypatch.setattr(_auth_mod, "get_nous_auth_status", dict)
-        monkeypatch.setattr(_auth_mod, "get_codex_auth_status", dict)
-        monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", dict)
-    except Exception:
-        pass
-
-    calls = []
-
-    def fake_get(url, headers=None, timeout=None):
-        calls.append((url, headers, timeout))
-        return types.SimpleNamespace(status_code=200)
-
-    import httpx
-    monkeypatch.setattr(httpx, "get", fake_get)
-
-    import io, contextlib
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        doctor_mod.run_doctor(Namespace(fix=False))
-    out = buf.getvalue()
-
-    assert "API key or custom endpoint configured" in out
-    assert "Kimi / Moonshot (China)" in out
-    assert "str expected, not NoneType" not in out
-    assert any(url == "https://api.moonshot.cn/v1/models" for url, _, _ in calls)
-
-
-def test_run_doctor_dashscope_retries_china_endpoint_after_intl_unauthorized(monkeypatch, tmp_path):
-    home = tmp_path / ".hermes"
-    home.mkdir(parents=True, exist_ok=True)
-    (home / "config.yaml").write_text("memory: {}\n", encoding="utf-8")
-    (home / ".env").write_text("DASHSCOPE_API_KEY=sk-test\n", encoding="utf-8")
-    project = tmp_path / "project"
-    project.mkdir(exist_ok=True)
-
-    monkeypatch.setattr(doctor_mod, "HERMES_HOME", home)
-    monkeypatch.setattr(doctor_mod, "PROJECT_ROOT", project)
-    monkeypatch.setattr(doctor_mod, "_DHH", str(home))
-    monkeypatch.setenv("DASHSCOPE_API_KEY", "sk-test")
-    monkeypatch.delenv("DASHSCOPE_BASE_URL", raising=False)
-
-    fake_model_tools = types.SimpleNamespace(
-        check_tool_availability=lambda *a, **kw: ([], []),
-        TOOLSET_REQUIREMENTS={},
-    )
-    monkeypatch.setitem(sys.modules, "model_tools", fake_model_tools)
-
-    try:
-        from hermes_cli import auth as _auth_mod
-        monkeypatch.setattr(_auth_mod, "get_nous_auth_status", dict)
-        monkeypatch.setattr(_auth_mod, "get_codex_auth_status", dict)
-        monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", dict)
-    except ImportError:
-        pass
-
-    calls = []
-
-    def fake_get(url, headers=None, timeout=None):
-        calls.append((url, headers, timeout))
-        status = 200 if "dashscope.aliyuncs.com" in url else 401
-        return types.SimpleNamespace(status_code=status)
-
-    import httpx
-    monkeypatch.setattr(httpx, "get", fake_get)
-
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        doctor_mod.run_doctor(Namespace(fix=False))
-    out = buf.getvalue()
-
-    assert "Alibaba/DashScope" in out
-    assert "invalid API key" not in out
-    assert any(
-        url == "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/models"
-        for url, _, _ in calls
-    )
-    assert any(
-        url == "https://dashscope.aliyuncs.com/compatible-mode/v1/models"
-        for url, _, _ in calls
-    )
-
-
-@pytest.mark.parametrize("base_url", [None, "https://opencode.ai/zen/go/v1"])
-def test_run_doctor_opencode_go_skips_invalid_models_probe(monkeypatch, tmp_path, base_url):
-    home = tmp_path / ".hermes"
-    home.mkdir(parents=True, exist_ok=True)
-    (home / "config.yaml").write_text("memory: {}\n", encoding="utf-8")
-    (home / ".env").write_text("OPENCODE_GO_API_KEY=***\n", encoding="utf-8")
-    project = tmp_path / "project"
-    project.mkdir(exist_ok=True)
-
-    monkeypatch.setattr(doctor_mod, "HERMES_HOME", home)
-    monkeypatch.setattr(doctor_mod, "PROJECT_ROOT", project)
-    monkeypatch.setattr(doctor_mod, "_DHH", str(home))
-    monkeypatch.setenv("OPENCODE_GO_API_KEY", "sk-test")
-    if base_url:
-        monkeypatch.setenv("OPENCODE_GO_BASE_URL", base_url)
-    else:
-        monkeypatch.delenv("OPENCODE_GO_BASE_URL", raising=False)
-
-    fake_model_tools = types.SimpleNamespace(
-        check_tool_availability=lambda *a, **kw: ([], []),
-        TOOLSET_REQUIREMENTS={},
-    )
-    monkeypatch.setitem(sys.modules, "model_tools", fake_model_tools)
-
-    try:
-        from hermes_cli import auth as _auth_mod
-        monkeypatch.setattr(_auth_mod, "get_nous_auth_status", dict)
-        monkeypatch.setattr(_auth_mod, "get_codex_auth_status", dict)
-        monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", dict)
-    except ImportError:
-        pass
-
-    calls = []
-
-    def fake_get(url, headers=None, timeout=None):
-        calls.append((url, headers, timeout))
-        return types.SimpleNamespace(status_code=200)
-
-    import httpx
-    monkeypatch.setattr(httpx, "get", fake_get)
-
-    import io, contextlib
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        doctor_mod.run_doctor(Namespace(fix=False))
-    out = buf.getvalue()
-
-    assert any(
-        "OpenCode Go" in line and "(key configured)" in line
-        for line in out.splitlines()
-    )
-    assert not any(url == "https://opencode.ai/zen/go/v1/models" for url, _, _ in calls)
-    assert not any("opencode" in url.lower() and "models" in url.lower() for url, _, _ in calls)
 
 
 class TestGitHubTokenCheck:
@@ -1112,116 +902,6 @@ class TestGitHubTokenCheck:
 
         monkeypatch.setattr(subprocess, "run", gh_2_98)
         assert doctor_state._gh_authenticated() is True
-
-
-def _run_doctor_with_healthy_oauth_fallback(
-    monkeypatch,
-    tmp_path,
-    *,
-    env_key: str,
-    bad_key: str,
-    failing_host: str,
-    minimax_oauth_status: dict,
-    xai_oauth_status: dict | None = None,
-) -> str:
-    home = tmp_path / ".hermes"
-    home.mkdir(parents=True, exist_ok=True)
-    (home / "config.yaml").write_text(
-        "model:\n"
-        "  provider: nous\n"
-        "  default: moonshotai/kimi-k2.6\n",
-        encoding="utf-8",
-    )
-    project = tmp_path / "project"
-    project.mkdir(exist_ok=True)
-
-    monkeypatch.setattr(doctor_mod, "HERMES_HOME", home)
-    monkeypatch.setattr(doctor_mod, "PROJECT_ROOT", project)
-    monkeypatch.setattr(doctor_mod, "_DHH", str(home))
-    monkeypatch.setenv(env_key, bad_key)
-    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
-    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
-    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
-    monkeypatch.delenv("MINIMAX_API_KEY", raising=False)
-    monkeypatch.delenv("MINIMAX_CN_API_KEY", raising=False)
-    monkeypatch.setenv(env_key, bad_key)
-
-    fake_model_tools = types.SimpleNamespace(
-        check_tool_availability=lambda *a, **kw: ([], []),
-        TOOLSET_REQUIREMENTS={},
-    )
-    monkeypatch.setitem(sys.modules, "model_tools", fake_model_tools)
-
-    from hermes_cli import auth as _auth_mod
-
-    monkeypatch.setattr(_auth_mod, "get_nous_auth_status_local", lambda: {"logged_in": True})
-    monkeypatch.setattr(_auth_mod, "get_codex_auth_status", dict)
-    monkeypatch.setattr(_auth_mod, "get_minimax_oauth_auth_status", lambda: minimax_oauth_status)
-    _xai_status = xai_oauth_status if xai_oauth_status is not None else {}
-    monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", lambda: _xai_status)
-
-    def fake_get(url, headers=None, timeout=None):
-        status = 401 if failing_host in url else 200
-        return types.SimpleNamespace(status_code=status)
-
-    import httpx
-
-    monkeypatch.setattr(httpx, "get", fake_get)
-
-    buf = io.StringIO()
-    with contextlib.redirect_stdout(buf):
-        doctor_mod.run_doctor(Namespace(fix=False))
-    return buf.getvalue()
-
-
-@pytest.mark.parametrize(
-    ("env_key", "bad_key", "failing_host", "minimax_oauth_status", "xai_oauth_status", "unexpected_issue"),
-    [
-        (
-            "MINIMAX_API_KEY",
-            "bad-minimax-key",
-            "minimax.io",
-            {"logged_in": True, "region": "global"},
-            None,
-            "Check MINIMAX_API_KEY in .env",
-        ),
-        (
-            "XAI_API_KEY",
-            "bad-xai-key",
-            "api.x.ai",
-            {},
-            {"logged_in": True, "auth_mode": "oauth_pkce"},
-            "Check XAI_API_KEY in .env",
-        ),
-    ],
-)
-def test_run_doctor_ignores_invalid_direct_keys_when_oauth_fallback_is_healthy(
-    monkeypatch,
-    tmp_path,
-    env_key,
-    bad_key,
-    failing_host,
-    minimax_oauth_status,
-    xai_oauth_status,
-    unexpected_issue,
-):
-    out = _run_doctor_with_healthy_oauth_fallback(
-        monkeypatch,
-        tmp_path,
-        env_key=env_key,
-        bad_key=bad_key,
-        failing_host=failing_host,
-        minimax_oauth_status=minimax_oauth_status,
-        xai_oauth_status=xai_oauth_status,
-    )
-
-    assert "invalid API key" in out
-    assert unexpected_issue not in out
-
-
-
-
 
 
 # ---------------------------------------------------------------------------
@@ -1258,7 +938,6 @@ class TestDoctorXaiOAuthStatus:
         from hermes_cli import auth as _auth_mod
         monkeypatch.setattr(_auth_mod, "get_nous_auth_status_local", lambda: {"logged_in": False})
         monkeypatch.setattr(_auth_mod, "get_codex_auth_status", lambda: {"logged_in": False})
-        monkeypatch.setattr(_auth_mod, "get_minimax_oauth_auth_status", lambda: {"logged_in": False})
         monkeypatch.setattr(_auth_mod, "get_xai_oauth_auth_status", xai_auth_fn)
 
         buf = io.StringIO()
@@ -1300,7 +979,6 @@ class TestDoctorXaiOAuthStatus:
         from hermes_cli import auth as _auth_mod
         monkeypatch.setattr(_auth_mod, "get_nous_auth_status_local", lambda: {"logged_in": True})
         monkeypatch.setattr(_auth_mod, "get_codex_auth_status", lambda: {"logged_in": False})
-        monkeypatch.setattr(_auth_mod, "get_minimax_oauth_auth_status", lambda: {"logged_in": False})
         monkeypatch.delattr(_auth_mod, "get_xai_oauth_auth_status", raising=False)
 
         buf = io.StringIO()

@@ -29,8 +29,8 @@ def counted_profiles(monkeypatch):
 
 
 @pytest.mark.parametrize("name, expected", [
-    ("gemini", "gemini"), ("Anthropic", "anthropic"), ("openrouter", "openrouter"), ("custom", "custom"),
-    ("nous", "nous"), ("claude", "anthropic"), ("kimi-coding", "kimi-for-coding"),
+    ("Anthropic", "anthropic"), ("openrouter", "openrouter"), ("custom", "custom"),
+    ("nous", "nous"), ("claude", "anthropic"),
 ])
 def test_builtin_names_skip_the_profile_scan(counted_profiles, name, expected):
     from hermes_cli.providers import normalize_provider
@@ -47,12 +47,3 @@ def test_overlay_names_still_resolve_through_profiles(counted_profiles):
     assert normalize_provider("not-a-provider") == "not-a-provider"
     assert counted_profiles
 
-
-def test_registry_wide_alias_check_reads_profiles_once(counted_profiles):
-    from hermes_cli.auth import PROVIDER_REGISTRY
-    from hermes_cli.providers import _lossy_alias_registry_pdef
-
-    PROVIDER_REGISTRY.get("kimi-coding")  # a home's first registry read mirrors its plugin scan, once
-    counted_profiles.clear()
-    assert _lossy_alias_registry_pdef("kimi-coding", "kimi-for-coding") is not None
-    assert len(counted_profiles) == 1

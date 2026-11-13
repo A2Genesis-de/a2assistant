@@ -28,19 +28,14 @@ from hermes_cli.process_identity import (
 from hermes_constants import get_hermes_home, hermes_home_key
 from tools.browser_harness_dirs import (daemon_env, daemon_identity, fit_default_socket_dir, harness_pid_file,
                                         namespace_harness_dirs)
-from utils import is_truthy_value
 
 logger = logging.getLogger(__name__)
-
-_BROWSER_USE_PROVIDER = "browser-use"
-# The one credential the harness itself reads (BU_AUTOSPAWN of a Browser Use cloud browser).
-_HARNESS_PASSTHROUGH_KEYS: tuple[str, ...] = ("BROWSER_USE_API_KEY",)
 
 # Cloud daemon names become the BU_NAME env var
 _SESSION_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
 
 # Set on the env dict by the CDP resolvers when the resolved browser is EXCLUSIVE to this named session
-# (per-name provider / named BU cloud / Lightpanda). Popped before the subprocess launches — never exported.
+# (per-name provider / Lightpanda). Popped before the subprocess launches — never exported.
 _PRIVATE_BROWSER_SENTINEL = "_HERMES_BU_PRIVATE_BROWSER"
 # Internal route provenance: this exec resolved to a browser on the Bot Desktop display and must use
 # the same human-control lease fence as the built-in browser tools. Popped before launching the CLI.
@@ -122,7 +117,7 @@ def _lazy_call(module: str, name: str, default: Any, log_prefix: str) -> Any:
 
 
 def _real_profile_consented() -> bool:
-    return _lazy_call("tools.browser_session_cloud", "use_real_profile", False, "real-profile consent lookup failed")
+    return _lazy_call("tools.browser_config", "use_real_profile", False, "real-profile consent lookup failed")
 
 
 def _set_cdp_env(env: dict, cdp: str) -> None:
@@ -170,20 +165,9 @@ def _code_url_verdict(code: str) -> _CodeUrlVerdict:
     return _CodeUrlVerdict(None, local_sidecar)
 
 
-def _harness_credentials() -> dict:
-    """The harness's own credential from the active profile's secret scope, never ``os.environ``: under
-    multiplex that holds the LAUNCH profile's key, and a served profile's browser runs on its own (or none)."""
-    from agent.secret_scope import current_secret_scope, get_secret, serves_routed_profile
-    routed = serves_routed_profile()
-    scope = (current_secret_scope() or {}) if routed else None
-    values = {key: (scope.get(key) if routed else get_secret(key)) for key in _HARNESS_PASSTHROUGH_KEYS}
-    return {key: value for key, value in values.items() if value is not None}
-
-
 def _base_subprocess_env() -> dict:
     from tools.browser_session import build_browser_env
     env = build_browser_env()
-    env.update(_harness_credentials())
     # The harness runs on Hermes's own interpreter, but a bundled Desktop install boots that
     # interpreter with its site dir on PYTHONPATH (no venv to activate), and the harness's daemon
     # re-runs sys.executable. Point PYTHONPATH at the harness's site dir, replacing whatever the
@@ -212,48 +196,6 @@ def _floor_subprocess_path(path: str) -> str:
         return path
     parts = [p for p in (path or "").split(os.pathsep) if p]
     return os.pathsep.join(parts + [d for d in _FHS_BIN_DIRS if d not in set(parts) and os.path.isdir(d)])
-
-
-def _read_browser_cfg() -> dict:
-    """Return the ``browser:`` config section, or {} on any failure."""
-    try:
-        from tools.browser_session_cloud import browser_section
-        return browser_section()
-    except Exception as e:
-        logger.debug("Could not read browser config section: %s", e)
-        return {}
-
-
-def _use_gateway(browser_cfg: dict) -> bool:
-    """True when the browser section selects the Nous Tool Gateway — by the current ``hermes tools``
-    picker row (``cloud_provider: nous``) or the pre-picker ``use_gateway: true`` flag. Reading only
-    the legacy flag missed every picker-configured gateway, and the direct-API branch it fell into
-    holds no credentials in managed mode (#108310)."""
-    if is_truthy_value(browser_cfg.get("use_gateway"), default=False):
-        return True
-    try:
-        from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER
-    except Exception:  # pragma: no cover — helper ships with the package
-        return False
-    return str(browser_cfg.get("cloud_provider") or "").strip().lower() == NOUS_MANAGED_PROVIDER
-
-
-def is_legacy_browser_use_cloud_config(browser_cfg: dict) -> bool:
-    """True for pre-CLI direct-API Browser Use cloud configs: no cloud_provider (or ``browser-use``), not the
-    Nous gateway, and BROWSER_USE_API_KEY set; the CLI then reaches Browser Use cloud natively."""
-    if not isinstance(browser_cfg, dict):
-        return False
-    provider = str(browser_cfg.get("cloud_provider") or "").strip().lower()
-    if provider not in {"browser-use", ""} or _use_gateway(browser_cfg):
-        return False
-    return _browser_use_api_key_set()
-
-
-def _browser_use_api_key_set() -> bool:
-    """BROWSER_USE_API_KEY for the served profile: the only credential Hermes autospawns BU cloud with.
-    Profile-scoped so a multiplexed secondary never inherits the default's cloud mode."""
-    from agent.secret_scope import get_secret
-    return bool(get_secret("BROWSER_USE_API_KEY", ""))
 
 
 def _harness_site_dir() -> Optional[str]:
@@ -404,9 +346,7 @@ def _resolve_backend_cdp(env: dict, task_id: Optional[str], session_name: str = 
     env / ``browser.cdp_url`` (``/browser connect``); (3) a cloud provider via ``browser_session.get_session_info``
     (per-key cache, expiry, reaper, atexit; a provider failure falls back to a local browser);
     (4) the local engine — ``browser.engine: lightpanda`` or Hermes' packaged Chromium via the launcher
-    (never the harness's own discovery of the user's installed Chrome); (5) BU direct-API configs WITH
-    ``BROWSER_USE_API_KEY`` → None (checked before (3)): the CLI reaches BU cloud natively (BU_AUTOSPAWN); a
-    keyless ``browser-use`` provider (managed-gateway autodetect, or a selection missing its key) takes (3).
+    (never the harness's own discovery of the user's installed Chrome).
     ``session_name`` (BU_NAME) keys the session cache so each name gets its OWN browser — what makes named
     sessions concurrent-safe.
 
@@ -417,7 +357,7 @@ def _resolve_backend_cdp(env: dict, task_id: Optional[str], session_name: str = 
         return None
     from tools.browser_session import get_session_info
     from tools.browser_session_cdp import get_cdp_override
-    from tools.browser_session_cloud import get_cloud_provider
+    from tools.browser_config import get_cloud_provider
     override = _quiet(get_cdp_override, "")
     if override:
         _set_cdp_env(env, override)
@@ -427,22 +367,6 @@ def _resolve_backend_cdp(env: dict, task_id: Optional[str], session_name: str = 
     provider = _quiet(get_cloud_provider, None, "Cloud provider lookup failed")
     if provider is None:
         return _resolve_local_cdp(env, task_id, session_name)
-
-    # Browser Use direct-API configs: the CLI talks to BU cloud natively (BU_AUTOSPAWN) — the
-    # legacy provider would create a second, redundant session. Nous-gateway configs (cloud_provider: nous
-    # from the picker, or the pre-picker use_gateway: true) DO resolve through the provider: the gateway
-    # provisions the browser server-side and returns its CDP URL. Without BROWSER_USE_API_KEY the CLI cannot
-    # autospawn, and the provider is either the managed gateway (autodetect on a never-configured install) or
-    # a selection missing its key; both go through the session path (gateway CDP, or the session layer's
-    # local-Chromium fallback) instead of leaving the harness to hunt for an installed Chrome.
-    provider_key = str(getattr(provider, "name", "") or "").strip().lower()
-    if provider_key == _BROWSER_USE_PROVIDER and not _use_gateway(_read_browser_cfg()) and _browser_use_api_key_set():
-        env[_PRIVATE_BROWSER_SENTINEL] = "1"  # named BU cloud browsers are exclusive to their daemon
-        # Only intent: the harness attaches to a local Chrome already listening instead of autospawning, so
-        # the live daemon's own report decides.
-        from tools.browser_use_shot import ACTIVATE_IF_CLOUD
-        env[_CLOUD_BROWSER_SENTINEL] = ACTIVATE_IF_CLOUD
-        return None
 
     provider_name = type(provider).__name__
     session: dict = {}
@@ -480,21 +404,20 @@ def _resolve_backend_cdp(env: dict, task_id: Optional[str], session_name: str = 
 def _resolve_real_profile_cdp(env: dict, force_local: bool) -> Optional[str]:
     """Point the harness at the user's real-profile copy-browser (a SNAPSHOT of their default Chromium
     profile, hermes_cli.browser_connect) when consented. Two ways in: the effective backend is already local
-    (no provider, CDP override, or legacy BU cloud config) → silent upgrade; or ``force_local`` (consent-gated
+    (no provider or CDP override) → silent upgrade; or ``force_local`` (consent-gated
     ``local`` arg) → the user's browser even under a cloud backend. Operator overrides (BU_CDP_* env,
     /browser connect, ``browser.cdp_url``) own the session either way. A launch error is returned;
     ``_route_backend`` then falls back to the normal backend and reports it, never silently."""
     if not _real_profile_consented() or _has_cdp_env(env):
         return None
     from tools.browser_session_cdp import get_cdp_override_raw
-    from tools.browser_session_cloud import get_cloud_provider
+    from tools.browser_config import get_cloud_provider
     from tools.browser_session_real_profile import real_profile_cdp
     if _quiet(get_cdp_override_raw, ""):
         return None
-    # Only auto-upgrade genuinely-local attaches; any cloud path (provider, provider lookup failure, or
-    # legacy BU cloud config) stays on its backend unless the model passes local=true.
-    if not force_local and (_quiet(get_cloud_provider, object()) is not None
-                            or is_legacy_browser_use_cloud_config(_read_browser_cfg())):
+    # Only auto-upgrade genuinely-local attaches; any cloud path (provider or provider lookup failure)
+    # stays on its backend unless the model passes local=true.
+    if not force_local and _quiet(get_cloud_provider, object()) is not None:
         return None
     cdp, err = real_profile_cdp()
     if cdp and not err:
@@ -505,8 +428,8 @@ def _resolve_real_profile_cdp(env: dict, force_local: bool) -> Optional[str]:
 
 def _attach_vault_supervisor(env: dict, task_id: Optional[str]) -> None:
     """Attach the per-task CDP supervisor to the browser this exec drives so ``browser_vault`` fill has
-    a secret-capable WebSocket (never argv) into the SAME browser. Only CDP-routed backends expose an
-    endpoint; BU direct-cloud (BU_AUTOSPAWN) does not, and the vault tools report ``supervisor_required``."""
+    a secret-capable WebSocket (never argv) into the SAME browser. Without a CDP endpoint the vault tools
+    report ``supervisor_required``."""
     cdp = env.get("BU_CDP_WS") or env.get("BU_CDP_URL")
     if not cdp:
         return
@@ -826,11 +749,6 @@ def browser_exec(code: str, session: str = "", timeout_s: int = _DEFAULT_TIMEOUT
     if workspace:
         env["BH_AGENT_WORKSPACE"] = workspace
 
-    # BU_AUTOSPAWN makes the CLI start a Browser Use cloud browser when no local
-    # Chrome/CDP endpoint is reachable (their API key authenticates it)
-    if "BU_AUTOSPAWN" not in env and is_legacy_browser_use_cloud_config(_read_browser_cfg()):
-        env["BU_AUTOSPAWN"] = "1"
-
     timeout = _clamp_timeout(timeout_s)
     started = time.time()
 
@@ -1020,7 +938,7 @@ _exec_local_engine: contextvars.ContextVar[Optional[str]] = contextvars.ContextV
 def _handle_browser_exec(args: dict, **kw):
     """Registry handler; each call counts against the backend that served it (shared metrics, opt-in)."""
     from hermes_cli.observability.shared_metrics_loop import record_browser_call
-    from tools.browser_session_cloud import browser_backend_name
+    from tools.browser_config import browser_backend_name
     token = _exec_local_engine.set(None)
     try:
         return record_browser_call(lambda: browser_exec(

@@ -1,14 +1,10 @@
 #!/usr/bin/env python3
 """Terminal tool: run shell commands in the configured backend.
 
-Backends (``TERMINAL_ENV``): local (default), docker, modal (direct or
-managed gateway), daytona, vercel_sandbox, ssh, plus plugin-registered
-backends (the ``singularity`` catalog plugin, ...). Handles background
-processes, sandbox lifecycle (per-task cache, idle reaper, atexit teardown)
-and sudo password plumbing.
-Cloud-sandbox persistent filesystems preserve working state across sandbox
-recreation but do NOT guarantee the same live sandbox or long-running
-processes survive cleanup, idle reaping, or Hermes exit.
+Backends (``TERMINAL_ENV``): local (default), docker, ssh, plus
+plugin-registered backends (the ``singularity`` catalog plugin, ...). Handles
+background processes, sandbox lifecycle (per-task cache, idle reaper, atexit
+teardown) and sudo password plumbing.
 
 Companion modules (re-exported here, so ``tools.terminal_tool.<name>`` stays the
 import/patch target): ``terminal_tool_config`` (TERMINAL_* reads, ``_quiet``),
@@ -51,11 +47,11 @@ from tools.terminal_tool_config import (
     translate_mounted_host_path,
 )
 from tools.terminal_tool_backends import (
-    _REQUIREMENT_CHECKERS, _VERCEL_SANDBOX_DEFAULT_CWD, _check_plugin_requirements,
+    _REQUIREMENT_CHECKERS, _check_plugin_requirements,
     _record_unavailable_reason, terminal_backend_unavailable_reason,
 )
 # display_hermes_home imported lazily at call site (stale-module safety during hermes update)
-from tools.tool_backend_helpers import coerce_modal_mode, managed_nous_tools_enabled
+from tools.tool_backend_helpers import managed_nous_tools_enabled
 
 
 def _safe_parse_import_env(name: str, default: Any, converter, type_label: str):
@@ -327,8 +323,8 @@ def _sanitize_cwd_for_live_env(env: Any, new_cwd: str) -> Optional[str]:
 
 
 def register_task_env_overrides(task_id: str, overrides: dict[str, Any]):
-    """Register per-task sandbox overrides (``docker_image``/``modal_image``/
-    ``daytona_image`` or a plugin backend's ``<backend>_image``, ``env_type``,
+    """Register per-task sandbox overrides (``docker_image`` or a
+    plugin backend's ``<backend>_image``, ``env_type``,
     ``cwd``) before the agent loop runs.
 
     A ``cwd`` override takes effect immediately: it becomes the session's
@@ -633,8 +629,6 @@ def resolve_task_overrides(task_id: Optional[str]) -> dict[str, Any]:
 # Backends that take an image, keyed to the override/config key carrying it.
 _IMAGE_KEY_BY_BACKEND = {
     "docker": "docker_image",
-    "modal": "modal_image",
-    "daytona": "daytona_image",
 }
 
 
@@ -749,7 +743,7 @@ def _ensure_terminal_env_bridged() -> None:
 
 
 # Default cwd per backend; plugins may declare ``default_cwd``; anything else (container backends) is "/root".
-_DEFAULT_CWD_BY_BACKEND = {"ssh": "~", "vercel_sandbox": _VERCEL_SANDBOX_DEFAULT_CWD}
+_DEFAULT_CWD_BY_BACKEND = {"ssh": "~"}
 
 
 def _backend_default_cwd(env_type: str) -> str:
@@ -840,14 +834,9 @@ def _get_env_config() -> dict[str, Any]:
 
     return {
         "env_type": env_type,
-        "modal_mode": coerce_modal_mode(_tenv("TERMINAL_MODAL_MODE", "auto")),
         "docker_image": _tenv("TERMINAL_DOCKER_IMAGE", default_image),
         "docker_image_pinned": _tenv("TERMINAL_DOCKER_IMAGE_PINNED", "0") == "1",
         "docker_forward_env": docker_forward_env,
-        "modal_image": _tenv("TERMINAL_MODAL_IMAGE", default_image),
-        "daytona_image": _tenv("TERMINAL_DAYTONA_IMAGE", default_image),
-        "vercel_runtime": _tenv("TERMINAL_VERCEL_RUNTIME", "").strip(),
-        "vercel_image": _tenv("TERMINAL_VERCEL_IMAGE", "").strip(),
         "cwd": cwd,
         "host_cwd": host_cwd,
         "docker_mount_cwd_to_workspace": mount_docker_cwd,
