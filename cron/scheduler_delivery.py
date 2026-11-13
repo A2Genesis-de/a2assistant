@@ -24,10 +24,8 @@ logger = logging.getLogger("cron.scheduler")
 
 
 # Validates user-supplied delivery platform names, preventing env-var enumeration via crafted names.
-# Plugin platforms are known through ``PlatformEntry.cron_deliver_env_var``; these rows have none:
-# ``webhook`` is core-only and ``wecom_callback`` (a ``wecom`` plugin sibling) delivers only to its
-# config.yaml ``home_channel``.
-_KNOWN_DELIVERY_PLATFORMS = frozenset({"webhook", "wecom_callback"})
+# Plugin platforms are known through ``PlatformEntry.cron_deliver_env_var``; ``webhook`` is core-only.
+_KNOWN_DELIVERY_PLATFORMS = frozenset({"webhook"})
 
 # Gateway platforms whose adapter declares ``supports_async_delivery = False`` (request/response
 # only, ``send()`` is a stub) — a cron report can never reach them, so they are never a
@@ -38,13 +36,7 @@ _NON_PUSH_ORIGIN_PLATFORMS = frozenset({"api_server"})
 # platform with a home chat wins) and ``deliver=all``; their env var is the plugin's
 # ``cron_deliver_env_var``. Other plugin platforms follow by name (a fresh process loads deferred
 # entries in name order, so this is the order they had when they trailed a static table).
-_HOME_TARGET_PRIORITY = (
-    "matrix", "telegram", "discord", "slack", "signal", "mattermost", "sms", "email", "dingtalk",
-    "feishu", "wecom", "weixin", "bluebubbles", "qqbot", "whatsapp", "whatsapp_cloud",
-)
-
-# Back-compat: primary env var -> previous name, consulted when the primary is unset.
-_LEGACY_HOME_TARGET_ENV_VARS = {"QQBOT_HOME_CHANNEL": "QQ_HOME_CHANNEL"}
+_HOME_TARGET_PRIORITY = ("telegram",)
 
 
 def _resolve_cron_surface_mode(pconfig, logical_platform_name: str) -> str:
@@ -237,7 +229,7 @@ def _maybe_mirror_cron_delivery(
 # key the shared "thread" lane; Slack, Matrix and Telegram (forum topics: ``_build_message_event``
 # types every supergroup "group") keep the parent channel/room's "group" — a seed on the wrong slot
 # is a row no reply ever resolves to (#111896, #112918).
-_THREAD_REPLY_CHAT_TYPE = {"slack": "group", "matrix": "group", "telegram": "group"}
+_THREAD_REPLY_CHAT_TYPE = {"telegram": "group"}
 
 
 def _open_continuable_cron_thread(job: dict, adapter, chat_id: str, loop) -> Optional[str]:
@@ -266,11 +258,11 @@ def _open_continuable_cron_thread(job: dict, adapter, chat_id: str, loop) -> Opt
 def _seed_cron_session(
     job: dict, adapter, platform_name: str, chat_id: str, text: str, *, thread_id: Optional[str],
     chat_type: str, user_id: Optional[str], user_name: Optional[str] = None,
-    chat_name: Optional[str], scope_id: Optional[str], discord_keys_on_thread: bool = False,
+    chat_name: Optional[str], scope_id: Optional[str],
 ) -> bool:
     """Create the session row (so the mirror has a target) and mirror the brief as a USER turn.
     The seeded key must equal the reply's ``build_session_key``: chat_type, user_id, thread_id and
-    scope_id (Slack team id) are all part of it, so callers pass exactly what the reply carries."""
+    scope_id are all part of it, so callers pass exactly what the reply carries."""
     from gateway.config import Platform
     from gateway.session import SessionSource
     from gateway.mirror import mirror_to_session
@@ -282,15 +274,8 @@ def _seed_cron_session(
         except (ValueError, KeyError):
             platform_enum = None
         if platform_enum is not None:
-            # Discord keys in-thread messages with chat_id == thread_id; Slack/Telegram use the
-            # parent channel.
-            seed_chat_id = (
-                str(thread_id)
-                if discord_keys_on_thread and platform_enum == Platform.DISCORD
-                else str(chat_id)
-            )
             dest_source = SessionSource(
-                platform=platform_enum, chat_id=seed_chat_id, chat_name=chat_name,
+                platform=platform_enum, chat_id=str(chat_id), chat_name=chat_name,
                 chat_type=chat_type,
                 user_id=user_id, user_name=user_name, thread_id=thread_id,
                 scope_id=str(scope_id) if scope_id else None)
@@ -323,8 +308,7 @@ def _seed_cron_thread_session(
             job, adapter, platform_name, chat_id, text,
             thread_id=str(thread_id),
             chat_type="dm" if is_dm else _THREAD_REPLY_CHAT_TYPE.get(platform_name.lower(), "thread"),
-            user_id="system:cron", user_name="Cron", chat_name=chat_name, scope_id=scope_id,
-            discord_keys_on_thread=True)
+            user_id="system:cron", user_name="Cron", chat_name=chat_name, scope_id=scope_id)
         if ok:
             logger.info(
                 "Job '%s': opened continuable thread %s on %s:%s and seeded the brief",
@@ -441,11 +425,7 @@ def _home_env_lookup(env_var: str, suffix: str = "", *, strip: bool = False) -> 
         value = (get_secret(name, "") or "") if get_secret is not None else os.getenv(name, "")
         return value.strip() if strip else value
 
-    value = read(env_var + suffix)
-    legacy = _LEGACY_HOME_TARGET_ENV_VARS.get(env_var)
-    if not value and legacy:
-        value = read(legacy + suffix)
-    return value
+    return read(env_var + suffix)
 
 
 def _env_home_target_chat_id(platform_name: str) -> str:
@@ -561,24 +541,6 @@ def cron_delivery_targets() -> list[dict]:
     return targets
 
 
-def _origin_thread_is_stale(origin: dict) -> bool:
-    """True when a Slack origin's thread is a stale creation-turn artifact. Thread-per-message
-    Slack stamps each top-level message id as the session thread (a KEY, not a location); old jobs
-    carry it as ``origin.thread_id``. Heuristic: if the origin chat IS the Slack home chat, the
-    pinned thread is that artifact and delivery goes top-level (or to the home target's thread)."""
-    if str(origin.get("platform") or "").lower() != "slack" or not origin.get("thread_id"):
-        return False
-    home_chat = _get_home_target_chat_id("slack")
-    return bool(home_chat) and str(origin.get("chat_id")) == str(home_chat)
-
-
-def _origin_delivery_thread(origin: dict):
-    """The thread a deliver=origin job should use, stale stamps dropped."""
-    if _origin_thread_is_stale(origin):
-        return _get_home_target_thread_id("slack") or None
-    return origin.get("thread_id")
-
-
 def _home_target(platform_name: str, chat_id: str, resolved_from: Optional[str] = None) -> dict:
     """Target dict for a platform's configured home channel (+ optional mirror provenance)."""
     target = {
@@ -615,7 +577,7 @@ def _resolve_single_delivery_target(
             return {
                 "platform": origin["platform"],
                 "chat_id": str(origin["chat_id"]),
-                "thread_id": _origin_delivery_thread(origin),
+                "thread_id": origin.get("thread_id"),
                 "_resolved_from": "origin",  # provenance for _target_mirror_eligible
             }
         # No origin (API/script job): fall back to a home channel instead of silently dropping.
@@ -641,16 +603,6 @@ def _resolve_single_delivery_target(
         if resolution_error:
             logger.warning("Invalid cron delivery target '%s': %s", deliver_value, resolution_error)
             return None
-        if (
-            thread_id is None
-            and platform_key == "slack"
-            and origin
-            and str(origin.get("platform") or "").lower() == platform_key
-            and str(origin.get("chat_id")) == str(chat_id)
-            and origin.get("thread_id")
-            and not _origin_thread_is_stale(origin)
-        ):
-            thread_id = origin.get("thread_id")
         return {
             "platform": platform_name,
             "chat_id": chat_id,

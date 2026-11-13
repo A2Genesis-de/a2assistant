@@ -99,7 +99,7 @@ def carry_callback(event, rewritten):
             bound_var.set((bound[0], rewritten, *bound[2:]))
 
 
-_PREFIX_PRODUCERS = ('webhook', 'api_server', 'msgraph_webhook')
+_PREFIX_PRODUCERS = ('webhook', 'api_server')
 
 
 def _runtime_profile(runner, source, profile, owner_name, homes, relay):

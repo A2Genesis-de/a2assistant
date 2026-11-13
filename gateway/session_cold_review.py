@@ -105,11 +105,10 @@ def start_cold_refine(runner, source, session_key, session_id, history, focus):
     on the thread that built it."""
     from agent.async_utils import safe_schedule_threadsafe
     from agent.memory_provider import spawn_context_thread
-    from gateway.run import _interim_metadata, _non_conversational_metadata
+    from gateway.run import _interim_metadata
     loop = asyncio.get_running_loop()
     adapter = runner._delivery_adapter_for(source)
-    metadata = _interim_metadata(_non_conversational_metadata(
-        runner._thread_metadata_for_source(source), platform=source.platform))
+    metadata = _interim_metadata(runner._thread_metadata_for_source(source))
     started = concurrent.futures.Future()
 
     def deliver(message):

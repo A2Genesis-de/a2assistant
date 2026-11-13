@@ -96,7 +96,7 @@ _TIME = lambda default="08:00": BlueprintSlot(
 )
 _DELIVER = BlueprintSlot(
     name="deliver", type="enum", label="Where to deliver?",
-    default="origin", options=("origin", "local", "telegram", "discord", "email"),
+    default="origin", options=("origin", "local", "telegram"),
     optional=False, strict=False,
     help="origin = the chat you set this up from (or your configured home "
     "channel when created from the dashboard); local = save only, no message; "

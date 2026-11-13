@@ -72,8 +72,7 @@ class GatewayUpdateNotificationsMixin:
         platform: Any
 
         def send_metadata(self):
-            from gateway.run import _non_conversational_metadata
-            return _non_conversational_metadata(self.metadata, platform=self.platform)
+            return self.metadata
 
         async def send(self, text: str):
             return await self.adapter.send(self.chat_id, text, metadata=self.send_metadata())
@@ -302,7 +301,6 @@ class GatewayUpdateNotificationsMixin:
 
         False while the update is still running (caller may retry); True after a definitive send/skip.
         """
-        from gateway.run import _non_conversational_metadata
         paths = self._update_paths()
         if not paths.any_pending():
             return False
@@ -363,7 +361,7 @@ class GatewayUpdateNotificationsMixin:
                     msg = _update_failed_notice()
                     if output:
                         msg = t("gateway.update.last_lines", msg=msg, tail=_update_output_tail(output, 800))
-                await adapter.send(chat_id, msg, metadata=_non_conversational_metadata(metadata, platform=platform))
+                await adapter.send(chat_id, msg, metadata=metadata)
                 logger.info("Sent post-update notification to %s:%s (exit=%s)", platform_str, chat_id, exit_code)
         except Exception as e:
             logger.warning("Post-update notification failed: %s", e)

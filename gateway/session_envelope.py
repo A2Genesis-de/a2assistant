@@ -8,7 +8,6 @@ import asyncio
 from copy import copy, deepcopy
 from dataclasses import replace
 from datetime import datetime
-import json
 import logging
 import os
 
@@ -27,39 +26,13 @@ _EVENT_FIELDS = (
 # ``reply_anchor_override`` = '' is Telegram topic transfer's "do not quote the root DM" (#139136).
 _CONTEXT_FIELDS = ('auto_skill', 'channel_prompt', 'channel_context', 'reply_expected', 'reply_anchor_override',
                    'edit_revision')
-# Closed metadata contract: only the keys the Baileys adapter stamps on ordinary inbound
-# (``WhatsAppAdapter._build_message_event``) cross native admission; any other key refuses.
-_WHATSAPP_METADATA = frozenset({'whatsapp_native_type', 'whatsapp_native', 'whatsapp_from_owner'})
-# Top-level ``nativeMetadata`` keys the bridge emits (scripts/whatsapp-bridge/bridge_helpers.js).
-_WHATSAPP_NATIVE_KEYS = frozenset({'video', 'audio', 'sticker', 'location', 'contact', 'contacts',
-                                   'reaction', 'poll', 'pollUpdate'})
-_WHATSAPP_NATIVE_MAX_BYTES = 16 * 1024
 _MEDIA_FIELDS = ('media_urls', 'media_types', 'media_text_inlined', 'media_filenames')
 
 
 def _native_metadata(event):
     """JSON projection of the adapter metadata a native replay keeps; ``None`` refuses the event.
-    An oversized ``whatsapp_native`` (vCards with photos) is dropped, never refused."""
-    metadata = event.metadata
-    if not metadata:
-        return {}
-    if (not isinstance(metadata, dict) or event.source.platform.value != 'whatsapp'
-            or not set(metadata) <= _WHATSAPP_METADATA):
-        return None
-    kind, native = metadata.get('whatsapp_native_type'), metadata.get('whatsapp_native')
-    if (kind is not None and not (isinstance(kind, str) and 0 < len(kind) <= 64)
-            or metadata.get('whatsapp_from_owner') not in (None, True)
-            or native is not None and not (isinstance(native, dict) and set(native) <= _WHATSAPP_NATIVE_KEYS)):
-        return None
-    projected = {key: metadata[key] for key in ('whatsapp_native_type', 'whatsapp_from_owner') if key in metadata}
-    if native is not None:
-        try:
-            encoded = json.dumps(native, ensure_ascii=False, allow_nan=False)
-        except (TypeError, ValueError):
-            return None
-        if len(encoded.encode()) <= _WHATSAPP_NATIVE_MAX_BYTES:
-            projected['whatsapp_native'] = json.loads(encoded)
-    return projected
+    No adapter metadata crosses native admission."""
+    return {} if not event.metadata else None
 
 
 def _adapter_event(event, **changes):

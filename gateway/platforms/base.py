@@ -123,11 +123,6 @@ def _thread_metadata_for_source(source, reply_to_message_id: str | None = None) 
     thread_id = getattr(source, "thread_id", None)
     platform = _platform_name(getattr(source, "platform", None))
     metadata = {"thread_id": thread_id} if thread_id is not None else {}
-    # Slack workspace identity is routing state: carry it so a multi-workspace Socket Mode
-    # gateway never falls back to its primary WebClient.
-    scope_id = getattr(source, "scope_id", None) if platform == "slack" else None
-    if scope_id:
-        metadata["slack_team_id"] = str(scope_id)
     if not metadata:
         return None
     if platform == "telegram" and getattr(source, "chat_type", None) == "dm":
@@ -165,11 +160,9 @@ def _reply_anchor_for_event(event) -> str | None:
     source = getattr(event, "source", None)
     platform = _platform_name(getattr(source, "platform", None))
     thread_id = getattr(source, "thread_id", None)
-    raw_message = getattr(event, "raw_message", None)
-    if getattr(event, "internal", False) or (platform == "slack" and isinstance(raw_message, dict)
-                                             and raw_message.get("_hermes_no_thread_response")):
+    if getattr(event, "internal", False):
         # A synthetic wake's message_id is its producer identity, not a platform id (Telegram int()s
-        # it; #52694). A Slack reaction handoff is a new top-level message, not a thread reply.
+        # it; #52694).
         return None
     if platform == "telegram" and thread_id:
         # Forum topics route by topic metadata (no reply); DM-topic lanes reply to the triggering
@@ -177,8 +170,6 @@ def _reply_anchor_for_event(event) -> str | None:
         if getattr(source, "chat_type", None) != "dm":
             return None
         return getattr(event, "message_id", None) or getattr(event, "reply_to_message_id", None)
-    if platform == "feishu" and thread_id and getattr(event, "reply_to_message_id", None):
-        return getattr(event, "reply_to_message_id", None)
     return getattr(event, "message_id", None)
 
 

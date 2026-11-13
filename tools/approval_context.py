@@ -172,13 +172,13 @@ def _is_cron_approval_context() -> bool:
 # Programmatic/unattended platforms: no human can answer a prompt and the adapter has no ``send_exec_approval`` /
 # ``/approve`` surface. Governed by ``approvals.unattended_mode`` (default deny), mirroring ``cron_mode`` — never an
 # interactive round-trip that blocks for the full timeout with nobody to answer.
-_UNATTENDED_APPROVAL_PLATFORMS = frozenset({"webhook", "msgraph_webhook", "api_server"})
+_UNATTENDED_APPROVAL_PLATFORMS = frozenset({"webhook", "api_server"})
 
 
 def _is_unattended_platform_approval_context() -> bool:
     """True when the session platform is a programmatic/unattended surface.
 
-    Webhook, msgraph_webhook, and api_server sessions bind ``HERMES_SESSION_PLATFORM`` like chat gateways
+    Webhook and api_server sessions bind ``HERMES_SESSION_PLATFORM`` like chat gateways
     do, but there is no human who can resolve a pending approval. Treating them as gateway approval contexts
     blocks the session for the full approval timeout (60-300s) and then fails closed anyway — the deadlock
     in #37284/#87509.
@@ -192,7 +192,7 @@ def _is_unattended_platform_approval_context() -> bool:
 # adapter renders no ``send_exec_approval``/``/approve`` surface and the inbound lane is a
 # fire-and-forget ``POST -> 202`` with no reader. Notifier presence is only a meaningful
 # "someone can answer" discriminator on api_server, whose turn paths choose whether to register one.
-_NOTIFIER_BLIND_APPROVAL_PLATFORMS = frozenset({"webhook", "msgraph_webhook"})
+_NOTIFIER_BLIND_APPROVAL_PLATFORMS = frozenset({"webhook"})
 
 
 def _is_single_query_approval_context() -> bool:
@@ -229,7 +229,7 @@ def _is_gateway_approval_context() -> bool:
     delivery routing): falling through would submit a pending approval with no
     listener and block the job indefinitely; unattended platforms likewise.
 
-    Unattended programmatic platforms (webhook, msgraph_webhook, api_server) are excluded for the same
+    Unattended programmatic platforms (webhook, api_server) are excluded for the same
     reason: those adapters have no ``send_exec_approval`` and no way to receive ``/approve`` replies.
     Submitting a pending approval there blocks the session for the full approval timeout (60-300 s) with no
     human who can resolve it (#37284, 87509). Their dangerous-command handling is governed by
@@ -365,7 +365,7 @@ def _get_single_query_approval_mode() -> str:
 
 
 def _get_unattended_approval_mode() -> str:
-    """Approval mode for webhook / msgraph_webhook / api_server sessions; default
+    """Approval mode for webhook / api_server sessions; default
     deny — an unattended session never silently runs a flagged action unless the
     operator explicitly trusts it."""
     return _binary_approval_mode("unattended_mode")

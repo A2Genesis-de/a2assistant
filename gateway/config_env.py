@@ -141,23 +141,6 @@ def _webhook(config: GatewayConfig) -> None:
     env_extras(webhook_config.extra, (("port", "WEBHOOK_PORT", INT), ("secret", "WEBHOOK_SECRET")))
 
 
-def _msgraph_webhook(config: GatewayConfig) -> None:
-    enabled = is_truthy_value(getenv("MSGRAPH_WEBHOOK_ENABLED"))
-    client_state = getenv("MSGRAPH_WEBHOOK_CLIENT_STATE")
-    resources = getenv("MSGRAPH_WEBHOOK_ACCEPTED_RESOURCES")
-    allowed_cidrs = getenv("MSGRAPH_WEBHOOK_ALLOWED_SOURCE_CIDRS")
-    if not (enabled or Platform.MSGRAPH_WEBHOOK in config.platforms or getenv("MSGRAPH_WEBHOOK_PORT")
-            or client_state or resources or allowed_cidrs):
-        return
-    msgraph_cfg = config.platforms.setdefault(Platform.MSGRAPH_WEBHOOK, PlatformConfig())
-    if enabled:  # same guard as webhook, but READ (don't pop) the marker: the relay pass still consults it
-        _enable_from_env(config, Platform.MSGRAPH_WEBHOOK, warn=False)
-    env_extras(msgraph_cfg.extra, (("port", "MSGRAPH_WEBHOOK_PORT", INT),))
-    if client_state:
-        msgraph_cfg.extra["client_state"] = client_state
-    csv_extras(msgraph_cfg.extra, (("accepted_resources", resources), ("allowed_source_cidrs", allowed_cidrs)))
-
-
 def _plugin_probe_seed(entry) -> Optional[dict]:
     """``env_enablement_fn()`` result as a non-empty dict, else None."""
     if entry.env_enablement_fn is None:
@@ -256,12 +239,12 @@ def _bundled_env_fallbacks(config: GatewayConfig, entries: list, *, only: Option
     ``gateway.platform_env.bundled_env_rows``. They only run the env steps, never the enable pass."""
     from types import SimpleNamespace
     from gateway.platform_activation import activation_predicate
-    from gateway.platform_env import _BUNDLED_ENV_SIBLINGS, bundled_env_rows
+    from gateway.platform_env import bundled_env_rows
     have = {getattr(e, "name", "") for e in entries}
     if only is not None:  # bundled_env_rows() answers for one name without scanning every manifest
         names = {only.value} - have
     else:
-        names = (set(Platform._scan_bundled_plugin_platforms()[0]) | set(_BUNDLED_ENV_SIBLINGS)) - have
+        names = set(Platform._scan_bundled_plugin_platforms()[0]) - have
     if not names:
         return []
     wanted = activation_predicate(yaml_cfg={}, platform_names=config.platforms)
@@ -381,7 +364,6 @@ def _apply_env_overrides(config: GatewayConfig, *, only: Optional[Platform] = No
     _apply_plugin_env_overrides(config, entries + _bundled_env_fallbacks(config, entries, only=only))
     _api_server(config)
     _webhook(config)
-    _msgraph_webhook(config)
     _enable_plugin_platforms_from_env(config, entries)
     _relay(config)
     _scrub_explicit_markers(config)

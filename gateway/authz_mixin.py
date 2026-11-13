@@ -17,10 +17,6 @@ from typing import Optional
 from gateway.bot_loop_guard import BotLoopGuard
 from gateway.config import Platform
 from gateway.session import SessionSource
-from gateway.whatsapp_identity import (
-    expand_whatsapp_aliases as _expand_whatsapp_auth_aliases,
-    normalize_whatsapp_identifier as _normalize_whatsapp_identifier,
-)
 
 _GROUP_CHAT_TYPES = frozenset({"group", "forum", "channel"})
 _GROUP_FORUM_TYPES = frozenset({"group", "forum"})
@@ -91,103 +87,9 @@ def _adapter_config_extra(adapter) -> dict:
     return getattr(getattr(adapter, "config", None), "extra", None) or {}
 
 
-# Nostr npub -> hex (Buzz): ``BUZZ_ALLOWED_USERS`` accepts hex or ``npub1…`` but inbound pubkeys
-# are always hex. Pure stdlib; mirrors plugins/platforms/buzz/adapter.py.
-# Without decoding, the central allowlist comparison string-matches the raw npub against the hex pubkey and
-# an operator who listed only their npub sees every message rejected ("Unauthorized user: <hex pubkey>",
-# #78428).
-_BECH32_CHARSET = "qpzry9x8gf2tvdw0s3jn54khce6mua7l"
-_BECH32_GENERATOR = (0x3B6A57B2, 0x26508E6D, 0x1EA119FA, 0x3D4233DD, 0x2A1462B3)
-
-
-def _bech32_polymod(values):
-    chk = 1
-    for value in values:
-        top = chk >> 25
-        chk = (chk & 0x1FFFFFF) << 5 ^ value
-        for i, gen in enumerate(_BECH32_GENERATOR):
-            chk ^= gen if ((top >> i) & 1) else 0
-    return chk
-
-
-def _bech32_hrp_expand(hrp: str):
-    return [ord(c) >> 5 for c in hrp] + [0] + [ord(c) & 31 for c in hrp]
-
-
-def _convertbits(data, frombits: int, tobits: int, pad: bool = True):
-    acc = 0
-    bits = 0
-    ret = []
-    maxv = (1 << tobits) - 1
-    for value in data:
-        if value < 0 or (value >> frombits):
-            return None
-        acc = (acc << frombits) | value
-        bits += frombits
-        while bits >= tobits:
-            bits -= tobits
-            ret.append((acc >> bits) & maxv)
-    if pad and bits:
-        ret.append((acc << (tobits - bits)) & maxv)
-    elif not pad and (bits >= frombits or ((acc << (tobits - bits)) & maxv)):
-        return None
-    return ret
-
-
-def _npub_to_hex(npub: str) -> Optional[str]:
-    """Decode an ``npub1…`` bech32 string to a 64-char hex pubkey, else None."""
-    npub = npub.strip().lower()
-    if not npub.startswith("npub1"):
-        return None
-    try:
-        data = [_BECH32_CHARSET.index(c) for c in npub[len("npub1"):]]
-    except ValueError:
-        return None
-    if _bech32_polymod(_bech32_hrp_expand("npub") + data) != 1:
-        return None
-    decoded = _convertbits(data[:-6], 5, 8, pad=False)
-    if decoded is None or len(decoded) != 32:
-        return None
-    return bytes(decoded).hex()
-
-
-def _normalize_nostr_allow_entries(entries: set) -> set:
-    """Add the hex form of every valid ``npub1…`` entry; invalid entries are kept as-is.
-
-    Hex entries pass through unchanged; each valid ``npub1…`` entry is decoded and its 64-char hex form
-    added, so either form authorizes the same identity (#78428). Invalid entries are kept as-is (they simply
-    never match an inbound hex pubkey).
-    """
-    return set(entries) | {h for e in entries if e.lower().startswith("npub1") and (h := _npub_to_hex(e))}
-
-
 def _principal_matches_allowlist(source, user_id: str, allowed_ids: set) -> bool:
-    """Whether *user_id* (under any platform-specific alias) is in *allowed_ids*."""
-    check_ids = {user_id}
-
-    # WhatsApp (Baileys + Cloud): phone<->LID / JID aliases match the same principal.
-    if source.platform in {Platform.WHATSAPP, Platform.WHATSAPP_CLOUD}:
-        allowed_ids = set().union(*(_expand_whatsapp_auth_aliases(a) for a in allowed_ids)) or allowed_ids
-        check_ids.update(_expand_whatsapp_auth_aliases(user_id))
-        normalized_user_id = _normalize_whatsapp_identifier(user_id)
-        if normalized_user_id:
-            check_ids.add(normalized_user_id)
-
-    platform_value = source.platform.value if source.platform is not None else None
-    # SimpleX: SIMPLEX_ALLOWED_USERS matches only the stable numeric contactId (user_id).
-    # The display name (user_name) is attacker-controlled — any contact can adopt another
-    # contact's display name, so matching it would bypass the allowlist (#44729).
-    # Buzz: allowlist may hold npub or hex; inbound pubkeys are hex.
-    if platform_value == "buzz":
-        # Buzz (Nostr-based): BUZZ_ALLOWED_USERS accepts npub or hex, but inbound event pubkeys are always
-        # 64-char hex. Decode npub entries to hex so an operator who listed only their npub authorizes the
-        # same identity as the hex form (#78428). Hex entries pass through unchanged, so existing hex-only
-        # allowlists keep working.
-        allowed_ids = _normalize_nostr_allow_entries(allowed_ids)
-        hex_user = _npub_to_hex(user_id) if user_id.startswith("npub") else None
-        if hex_user:
-            check_ids.add(hex_user)
-    return bool(check_ids & allowed_ids)
+    """Whether *user_id* is in *allowed_ids*."""
+    return user_id in allowed_ids
 
 
 class GatewayAuthorizationMixin:
@@ -552,7 +454,7 @@ class GatewayAuthorizationMixin:
         if self._adapter_policy(source.platform, "group" if is_group else "dm", adapter_profile) != "allowlist":
             return None
         # Re-check DMs via the live adapter's ``_is_dm_allowed`` when present: pairing revoke can clear
-        # WHATSAPP_ALLOWED_USERS while a construction-time snapshot would keep authorizing until
+        # PLATFORM_ALLOWED_USERS while a construction-time snapshot would keep authorizing until
         # restart. Others keep the historical rubber-stamp.
         if not is_group:
             adapter = self._authorization_adapter(source.platform, profile=adapter_profile)
@@ -824,7 +726,7 @@ class GatewayAuthorizationMixin:
         non-default global; adapter dm_policy (pairing → "pair", allowlist/disabled → "ignore"); any
         configured allowlist → "ignore" (spamming unknown contacts with codes is noisy and leaks); else "pair".
 
-        1. 2. Email defaults to ``"ignore"`` unless explicitly opted into pairing. 3. Explicit global
+        1. Per-platform ``unauthorized_dm_behavior`` override. 2. Explicit global
         ``unauthorized_dm_behavior`` in config — wins for chat-shaped platforms when no per-platform
         override is set. 4. When an adapter-level DM policy opts into pairing or silent drop, honor it. 5.
         When an allowlist (``PLATFORM_ALLOWED_USERS``, ``PLATFORM_GROUP_ALLOWED_USERS`` /
@@ -838,8 +740,6 @@ class GatewayAuthorizationMixin:
             and "unauthorized_dm_behavior" in self._config_extra(platform)
         ):
             return config.get_unauthorized_dm_behavior(platform)
-        if platform == Platform.EMAIL:
-            return "ignore"
         if config and hasattr(config, "unauthorized_dm_behavior") and config.unauthorized_dm_behavior != "pair":
             return config.unauthorized_dm_behavior
 

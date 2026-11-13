@@ -52,10 +52,7 @@ logger = logging.getLogger(__name__)
 _PROFILE_REJECTED = object()
 _UNPARSEABLE = object()
 
-_BUILTIN_DELIVER_PLATFORMS = {
-    "telegram", "discord", "slack", "signal", "sms", "whatsapp", "matrix", "mattermost",
-    "email", "dingtalk", "feishu", "wecom", "wecom_callback", "weixin",
-    "bluebubbles", "qqbot"}
+_BUILTIN_DELIVER_PLATFORMS = {"telegram"}
 
 # ``None`` → aiohttp binds BOTH address families. "0.0.0.0" is IPv4-only (unreachable on IPv6-only
 # networks such as Fly.io 6PN); "::" becomes IPv6-only where the kernel sets IPV6_V6ONLY=1, breaking
@@ -268,7 +265,7 @@ class WebhookAdapter(BasePlatformAdapter):
             deliver = route.get("deliver", "log")
             if not deliver or deliver == "log":
                 raise ValueError(f"[webhook] Route '{name}' has deliver_only=true but deliver is '{deliver}'. Direct "
-                                 f"delivery requires a real target (telegram, discord, slack, github_comment, etc.).")
+                                 f"delivery requires a real target (telegram, github_comment, etc.).")
             if route.get("cron_job"):
                 raise ValueError(f"[webhook] Route '{name}' sets both deliver_only and cron_job. They are mutually "
                                  f"exclusive: deliver_only pushes the rendered template as a message, cron_job fires "
@@ -1013,7 +1010,7 @@ class WebhookAdapter(BasePlatformAdapter):
         return self.gateway_runner._authorization_adapter(target_platform, profile)
 
     async def _deliver_cross_platform(self, platform_name: str, content: str, delivery: dict) -> SendResult:
-        """Route response to another platform (telegram, discord, etc.)."""
+        """Route response to another platform (e.g. telegram)."""
         if not self.gateway_runner:
             return SendResult(success=False, error="No gateway runner for cross-platform delivery")
         try:

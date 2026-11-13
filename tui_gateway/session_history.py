@@ -8,13 +8,6 @@ import re
 from .method_ctx import bind_module
 from agent.prompt_builder import STEER_DISPLAY_KIND
 
-# Discord routing note (gateway/run_inbound.py::discord_triggering_note) persisted as user
-# ``content`` by gateways before the authored-text fix; presentation-only heal for those rows.
-_DISCORD_TRIGGERING_NOTE_RE = re.compile(
-    r"(^|\n)\[Triggering message id: `[^`\n]*` — use as `message_id` for reply/react/pin via the discord tools\.\]\n*"
-)
-
-
 def _bridged_tool_labels(name: str, args: dict) -> list[dict]:
     from agent.display import tool_labels_for_call
 
@@ -323,7 +316,6 @@ def _history_to_messages(history: list[dict], *, profile_home=None, image_urls: 
         if _is_display_hidden_marker(role, content_text):
             continue
         if role == "user":
-            content_text = _DISCORD_TRIGGERING_NOTE_RE.sub(r"\1", content_text)
             # A pre_llm_call veto stores a placeholder; the transcript shows what the user typed.
             content_text = withheld_prompt_text(m) or content_text
         if role == "user" and m.get("display_kind") == STEER_DISPLAY_KIND:

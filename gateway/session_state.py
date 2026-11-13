@@ -74,7 +74,6 @@ class ConversationState:
     ephemeral_pin: Optional[tuple[Any, ...]] = None  # pinned session-context (change_key, text, redact_pii)
     # (channel_prompt, parent_chat_id) of the last non-internal turn; internal events reuse it
     channel_pin: Optional[tuple[Optional[str], Optional[str]]] = None
-    vc_last: Optional[str] = None  # last voice-channel context delivered
 
     def clear(self) -> None:
         """Reset every field to its default, so new fields are cleared automatically."""

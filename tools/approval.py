@@ -1058,7 +1058,7 @@ def _presence(approval_callback=None) -> tuple:
     pending approval. Unattended *platforms* keep ``is_ask`` only while a client on the session
     could actually answer: ``/v1/runs`` and streaming chat completions bridge an approval
     notifier (``approval.request`` → ``POST /v1/runs/{id}/approval``), so on api_server a
-    registered notifier is the discriminator. webhook/msgraph_webhook turns run through the
+    registered notifier is the discriminator. webhook turns run through the
     generic TurnRunner lane, which registers a notifier for *every* turn — but those adapters
     render no approval surface and the inbound lane has no reader, so there ``is_ask`` drops
     regardless and the unattended branch resolves from ``approvals.unattended_mode`` instead of
