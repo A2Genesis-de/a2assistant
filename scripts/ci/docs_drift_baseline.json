@@ -122,8 +122,7 @@
   "vault.onepassword.binary_path",
   "voice.gpt_live.model",
   "voice.thinking_sound",
-  "wake_word.sherpa.model_dir",
-  "x_search.reasoning_effort"
+  "wake_word.sherpa.model_dir"
  ],
  "slash_commands": []
 }

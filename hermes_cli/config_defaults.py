@@ -2335,18 +2335,6 @@ DEFAULT_CONFIG = {
         # language_id: "..." (didOpen languageId), description: "...". Manual install only.
         "servers": {},
     },
-    # X (Twitter) Search via xAI's x_search Responses tool. Registers when xAI creds exist
-    # (SuperGrok OAuth or XAI_API_KEY) AND the toolset is enabled in `hermes tools`.
-    "x_search": {
-        # xAI model for the Responses call; any Grok model with x_search access works.
-        "model": "grok-4.5",
-        # Reasoning effort for models that support it; null keeps the model default.
-        "reasoning_effort": None,
-        # Request timeout in seconds (minimum 30); complex queries can take 60-120s.
-        "timeout_seconds": 180,
-        # Retries on 5xx / ReadTimeout / ConnectionError (backoff 1.5x attempt s, cap 5s).
-        "retries": 2,
-    },
     # External secret sources — pull credentials from secret managers at startup instead of storing
     # them in ~/.hermes/.env.
     # Browser credential vault: which login sources browser_vault may draw from. The local

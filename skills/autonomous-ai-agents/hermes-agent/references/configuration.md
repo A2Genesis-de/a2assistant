@@ -41,7 +41,6 @@ Full enumeration: `TOOLSETS` dict in `toolsets.py` (`_HERMES_CORE_TOOLS` is the 
 | `vision` | Image analysis |
 | `image_gen` | Image generation and image-to-image editing |
 | `video` / `video_gen` | Video analysis / video generation |
-| `x_search` | X (Twitter) search (X OAuth or API key) |
 | `tts` | Text-to-speech |
 | `skills` | Skill browsing and management |
 | `memory` | Persistent cross-session memory |

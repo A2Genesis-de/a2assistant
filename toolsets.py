@@ -71,14 +71,6 @@ TOOLSETS = {
     # Basic toolsets - individual tool categories
     "web": _ts("Web research and content extraction tools", ["web_search", "web_extract"]),
     "search": _ts("Web search only (no content extraction/scraping)", ["web_search"]),
-    "x_search": _ts(
-        "Search X (Twitter) posts and threads via xAI's built-in x_search Responses "
-        "tool. Read-only public X discovery; use the xurl skill for authenticated X "
-        "API reads and account actions. Available when xAI credentials are configured "
-        "(SuperGrok OAuth or XAI_API_KEY). Off by default; enable in `hermes tools` → "
-        "X (Twitter) Search.",
-        ["x_search"],
-    ),
     "vision": _ts("Image analysis and vision tools", ["vision_analyze"]),
     "video": _ts("Video analysis and understanding tools (opt-in, not in default toolset)", ["video_analyze"]),
     "image_gen": _ts("Creative generation tools (images)", ["image_generate"]),
