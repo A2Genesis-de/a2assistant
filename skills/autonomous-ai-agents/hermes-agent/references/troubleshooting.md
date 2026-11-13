@@ -31,7 +31,7 @@ Automatic carveouts (always fetched live, never cached):
   hostnames / private + link-local IP ranges (dev servers, hot-reload
   builds, chat-GUI artifact previews)
 - URLs matched by `security.website_blocklist`
-- failed responses and keyless-rescue-served responses
+- failed responses
 
 Developing a site tested over the PUBLIC internet (Vercel/Netlify
 preview, ngrok/cloudflared tunnel, staging domain)? Public DNS isn't

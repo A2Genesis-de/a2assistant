@@ -20,8 +20,7 @@ _STT_SUMMARY_DEFAULT = ("Local Whisper", "faster_whisper", "run 'hermes tools' �
 _BROWSER_MISSING_HINTS = {
     "Local browser": "Chromium: run 'hermes pm install chromium'"}
 _BROWSER_MISSING_DEFAULT = "Chromium (run 'hermes pm install chromium')"
-_WEB_MISSING = ("EXA_API_KEY, PARALLEL_API_KEY, FIRECRAWL_API_KEY/FIRECRAWL_API_URL, TAVILY_API_KEY, "
-                "PERPLEXITY_API_KEY, KEENABLE_API_KEY, or SEARXNG_URL")
+_WEB_MISSING = "the ddgs package (run 'hermes tools' → Web Search) or a web provider plugin"
 
 _DONE_BANNER = (
     "┌─────────────────────────────────────────────────────────┐",
@@ -99,7 +98,6 @@ def _managed_or_provider_row(feature, name: str, managed_label: str, missing_hin
 
 
 def _web_row(config, feats):
-    # Web tools (Exa, Parallel, Firecrawl, Tavily, or Keenable)
     return _managed_or_provider_row(feats.web, "Web Search & Extract", "Nous subscription", _WEB_MISSING)
 
 

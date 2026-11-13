@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router'
 import type * as ReactRouterDom from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { ToolsetConfig, WebCapability } from '@/types/hermes'
+import type { ToolsetConfig } from '@/types/hermes'
 
 // Collect the component graph before the behavioral test deadline starts.
 import { ToolsetConfigPanel } from './toolset-config-panel'
@@ -872,32 +872,32 @@ describe('ToolsetConfigPanel', () => {
       return {
         name: 'web',
         has_category: true,
-        active_provider: 'SearXNG',
-        active_search_backend: 'searxng',
-        active_extract_backend: 'firecrawl',
+        active_provider: 'DuckDuckGo (ddgs)',
+        active_search_backend: 'ddgs',
+        active_extract_backend: 'example',
         providers: [
           {
-            name: 'SearXNG',
-            badge: 'free · self-hosted',
-            tag: 'Free metasearch',
+            name: 'DuckDuckGo (ddgs)',
+            badge: 'free · no key · search only',
+            tag: 'Search via the ddgs Python package',
             env_vars: [],
             post_setup: null,
             requires_nous_auth: false,
             is_active: true,
             status: 'ready',
-            web_backend: 'searxng',
+            web_backend: 'ddgs',
             capabilities: ['search']
           },
           {
-            name: 'Firecrawl',
-            badge: 'paid',
+            name: 'Example',
+            badge: 'plugin',
             tag: 'Full search + extract',
             env_vars: [],
             post_setup: null,
             requires_nous_auth: false,
             is_active: true,
             status: 'ready',
-            web_backend: 'firecrawl',
+            web_backend: 'example',
             capabilities: ['search', 'extract']
           }
         ],
@@ -909,83 +909,41 @@ describe('ToolsetConfigPanel', () => {
       // The panel refetches after a capability pick: second load is the server's truth.
       getToolsetConfig
         .mockResolvedValueOnce(webConfig())
-        .mockResolvedValue(webConfig({ active_search_backend: 'firecrawl' }))
-      selectToolsetProvider.mockResolvedValue({ ok: true, name: 'web', provider: 'SearXNG', capability: 'search' })
+        .mockResolvedValue(webConfig({ active_search_backend: 'example' }))
+      selectToolsetProvider.mockResolvedValue({ ok: true, name: 'web', provider: 'Example', capability: 'search' })
 
       render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="web" />)
 
-      // Active/expanded provider is search-only SearXNG.
-      await screen.findByText('Search: searxng')
+      await screen.findByText('Search: ddgs')
       expect(await screen.findByRole('button', { name: 'Use for Search' })).toBeTruthy()
       expect(screen.queryByRole('button', { name: 'Use for Extract' })).toBeNull()
 
-      // Expand Firecrawl (search + extract) and assign it as the search backend.
-      fireEvent.click(screen.getByRole('button', { name: /Firecrawl/ }))
+      fireEvent.click(screen.getByRole('button', { name: /^Example/ }))
       const useForSearch = await screen.findByRole('button', { name: 'Use for Search' })
       fireEvent.click(useForSearch)
 
-      await waitFor(() => expect(selectToolsetProvider).toHaveBeenCalledWith('web', 'Firecrawl', 'search'))
-      await waitFor(() => expect(screen.getByText('Search: firecrawl')).toBeTruthy())
-    })
-
-    it('lights the Nous row for a gateway-served capability and the BYOK row for the own-key one', async () => {
-      const nous = {
-        name: 'Nous Subscription',
-        badge: 'subscription',
-        tag: 'Managed web search and extract billed to your subscription',
-        env_vars: [],
-        post_setup: null,
-        requires_nous_auth: true,
-        managed_nous_feature: 'web',
-        is_active: false,
-        status: 'ready' as const,
-        web_backend: 'firecrawl',
-        capabilities: ['search', 'extract'] as WebCapability[]
-      }
-
-      // Search through the gateway, extract on the user's own Firecrawl key:
-      // both rows share web_backend 'firecrawl', only the *_via_nous flags tell them apart.
-      getToolsetConfig.mockResolvedValue(
-        webConfig({
-          active_search_backend: 'perplexity',
-          active_extract_backend: 'firecrawl',
-          search_via_nous: true,
-          extract_via_nous: false,
-          providers: [...webConfig().providers, nous]
-        })
-      )
-
-      render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="web" />)
-
-      expect(await screen.findByText('Search: Nous Subscription')).toBeTruthy()
-      expect(screen.getByText('Extract: firecrawl')).toBeTruthy()
-      const nousRow = screen.getByRole('button', { name: /Nous Subscription/ })
-      const byokRow = screen.getByRole('button', { name: /^Firecrawl/ })
-      expect(within(nousRow).getByText('Search backend')).toBeTruthy()
-      expect(within(nousRow).queryByText('Extract backend')).toBeNull()
-      expect(within(byokRow).getByText('Extract backend')).toBeTruthy()
-      expect(within(byokRow).queryByText('Search backend')).toBeNull()
+      await waitFor(() => expect(selectToolsetProvider).toHaveBeenCalledWith('web', 'Example', 'search'))
+      await waitFor(() => expect(screen.getByText('Search: example')).toBeTruthy())
     })
 
     it('marks only the configured row of two sharing one backend name', async () => {
-      // Cloud and self-hosted Firecrawl share web_backend 'firecrawl'; the server's is_active says which
-      // one's credential is set, and only that row carries the capability pills.
+      // The server's is_active says which row's credential is set, and only that row carries the pills.
       const selfHosted = {
         ...webConfig().providers[1],
-        name: 'Firecrawl Self-Hosted',
+        name: 'Example Self-Hosted',
         badge: 'free · self-hosted',
         is_active: false,
         status: 'needs_keys' as const
       }
 
       getToolsetConfig.mockResolvedValue(
-        webConfig({ active_search_backend: 'firecrawl', providers: [selfHosted, webConfig().providers[1]] })
+        webConfig({ active_search_backend: 'example', providers: [selfHosted, webConfig().providers[1]] })
       )
 
       render(<ToolsetConfigPanel onConfiguredChange={vi.fn()} toolset="web" />)
 
-      const cloudRow = await screen.findByRole('button', { name: /^Firecrawl(?! Self)/ })
-      const selfRow = screen.getByRole('button', { name: /^Firecrawl Self-Hosted/ })
+      const cloudRow = await screen.findByRole('button', { name: /^Example(?! Self)/ })
+      const selfRow = screen.getByRole('button', { name: /^Example Self-Hosted/ })
       expect(within(cloudRow).getByText('Search backend')).toBeTruthy()
       expect(within(cloudRow).getByText('Extract backend')).toBeTruthy()
       expect(within(selfRow).queryByText('Search backend')).toBeNull()

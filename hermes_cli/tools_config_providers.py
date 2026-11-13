@@ -38,12 +38,10 @@ def _plugin_registry(module: str):
 
 def _plugin_provider_rows(
     registry_module: str, marker_keys: tuple[str, ...], *, require_name: bool = True, skip_builtin: bool = False,
-    flatten_variants: bool = False) -> list[dict]:
+) -> list[dict]:
     """Picker-row dicts (TOOL_CATEGORIES-shaped) for a plugin registry's providers.
     ``marker_keys`` are all set to the registry name so downstream config/model-picker code routes
-    through the registry. ``skip_builtin`` drops names shadowing ``_BUILTIN_NAMES``;
-    ``flatten_variants`` expands a schema's tier ``variants`` into separate rows sharing one backend
-    name, distinguished by ``web_tier``."""
+    through the registry. ``skip_builtin`` drops names shadowing ``_BUILTIN_NAMES``."""
     registry = _plugin_registry(registry_module)
     if registry is None:
         return []
@@ -67,18 +65,12 @@ def _plugin_provider_rows(
             continue
         if not require_name:
             name = provider.name
-        entries = [schema]
-        if flatten_variants:
-            entries += [v for v in (schema.get("variants") or []) if isinstance(v, dict)]
-        for entry in entries:
-            row = {"name": entry.get("name", provider.display_name), "badge": entry.get("badge", ""),
-                   "tag": entry.get("tag", ""), "env_vars": entry.get("env_vars", [])}
-            row.update({key: name for key in marker_keys})
-            if flatten_variants and entry.get("web_tier"):
-                row["web_tier"] = entry["web_tier"]
-            if entry.get("post_setup"):
-                row["post_setup"] = entry["post_setup"]
-            rows.append(row)
+        row = {"name": schema.get("name", provider.display_name), "badge": schema.get("badge", ""),
+               "tag": schema.get("tag", ""), "env_vars": schema.get("env_vars", [])}
+        row.update({key: name for key in marker_keys})
+        if schema.get("post_setup"):
+            row["post_setup"] = schema["post_setup"]
+        rows.append(row)
     return rows
 
 
@@ -88,7 +80,7 @@ def _plugin_provider_rows(
 _PLUGIN_PROVIDER_ROW_SPECS = {
     "image_gen": ("agent.image_gen_registry", ("image_gen_plugin_name",), {"require_name": False}),
     "video_gen": ("agent.video_gen_registry", ("video_gen_plugin_name",), {"require_name": False}),
-    "web": ("agent.web_search_registry", ("web_backend", "web_search_plugin_name"), {"flatten_variants": True}),
+    "web": ("agent.web_search_registry", ("web_backend", "web_search_plugin_name"), {}),
     "browser": ("agent.browser_registry", ("browser_provider", "browser_plugin_name"), {}),
     "tts": ("agent.tts_registry", ("tts_provider", "tts_plugin_name"), {"skip_builtin": True})}
 
@@ -107,7 +99,7 @@ _plugin_image_gen_providers, _plugin_video_gen_providers, _plugin_web_search_pro
 def web_provider_capabilities(backend: str) -> list:
     """Capabilities (``search`` / ``extract``) a web backend supports, per the registry provider instance.
     Lets the Capabilities GUI offer ``web.search_backend`` / ``web.extract_backend`` only where it makes
-    sense (ddgs and brave-free are search-only). Unknown backend or registry failure -> both."""
+    sense (ddgs is search-only). Unknown backend or registry failure -> both."""
     try:
         from agent.web_search_registry import get_provider
 
@@ -217,11 +209,9 @@ def provider_readiness_status(provider: dict, config: dict, *, features=None, is
 
 
 def _web_registry_readiness(provider: dict) -> str:
-    """Keyless, untiered web rows are ready only when their registry provider is available: the only such
-    row's ``is_available()`` is an account login (OpenAI Native = openai-codex), hence ``needs_auth``.
-    Free-tier rows are exempt: they run on the public keyless ring, which ``is_available()`` ignores."""
+    """Keyless web rows are ready only when their registry provider is available, else ``needs_auth``."""
     backend = provider.get("web_backend")
-    if not backend or provider.get("web_tier"):
+    if not backend:
         return "ready"
     from agent.web_search_registry import get_provider
 
@@ -333,31 +323,6 @@ def _configure_tool_category(ts_key: str, cat: dict, config: dict, *, force_fres
     _configure_provider(providers[provider_idx], config, force_fresh=force_fresh, reconfigure=reconfigure)
 
 
-def _web_tier_matches(provider: dict, config: dict) -> bool:
-    """True when a web picker row's tier matches the configured tier (``web.provider_tier.<backend>``).
-    Tiered rows (Exa/Parallel Free vs Paid) share one ``web_backend`` and differ only in ``web_tier``.
-    No ``web_tier`` on the row → matches; configured tier set → must equal the row's tier; unset →
-    "auto": paid when the row's key is present, free otherwise (highlight the row the runtime would
-    actually use)."""
-    row_tier = provider.get("web_tier")
-    if not row_tier:
-        return True
-    web_cfg = config.get("web") if isinstance(config.get("web"), dict) else {}
-    tiers = web_cfg.get("provider_tier") if isinstance(web_cfg.get("provider_tier"), dict) else {}
-    configured = str(tiers.get(provider["web_backend"], "") or "").lower().strip()
-    if configured in ("free", "paid"):
-        return configured == row_tier
-    # Auto: mirror plugins.web.keyless_mcp.use_keyless — key present → paid.
-    try:
-        from agent.web_search_provider import get_provider_env
-
-        key_var = {"exa": "EXA_API_KEY", "parallel": "PARALLEL_API_KEY"}.get(provider["web_backend"])
-        has_key = bool(get_provider_env(key_var)) if key_var else False
-    except Exception:
-        has_key = False
-    return row_tier == ("paid" if has_key else "free")
-
-
 def _web_serving_backends(config: dict) -> set:
     """Backend names serving web search / extract as configured: each capability's own
     ``web.<cap>_backend`` override first, else the shared ``web.backend`` (``tools/web_tools.py``
@@ -382,18 +347,10 @@ def _web_backend_active(provider: dict, config: dict) -> bool:
     and a shared vendor shadowed by both overrides serves nothing. Managed Nous rows never reach
     here — they answer in ``_managed_provider_active``."""
     backend = provider.get("web_backend")
-    if not (backend and backend in _web_serving_backends(config) and _web_tier_matches(provider, config)):
+    if not (backend and backend in _web_serving_backends(config)):
         return False
-    # Rows sharing one backend name (cloud "Firecrawl" vs the "Firecrawl Self-Hosted" setup row) differ only in
-    # the env var they configure, and the one whose var is set is what serves the call. A setup row needs its
-    # var; the registry row also stays active keyless (explicit ``firecrawl`` with no key = anonymous cloud)
-    # unless a sibling setup row's var is set instead.
-    from hermes_cli.tools_config import TOOL_CATEGORIES, _provider_env_ready
-    if not provider.get("env_vars") or _provider_env_ready(provider):
-        return True
-    return bool(provider.get("web_search_plugin_name")) and not any(
-        row.get("web_backend") == backend and row.get("env_vars") and _provider_env_ready(row)
-        for row in TOOL_CATEGORIES["web"]["providers"])
+    from hermes_cli.tools_config import _provider_env_ready
+    return not provider.get("env_vars") or _provider_env_ready(provider) or bool(provider.get("web_search_plugin_name"))
 
 
 # Managed-row marker -> (config section, key) the pick writes, in check order.
@@ -713,13 +670,6 @@ def _write_provider_config(provider: dict, config: dict, *, managed_feature) -> 
             # so a leftover one would keep outranking the "nous" selection just written.
             web_cfg.pop("search_backend", None)
             web_cfg.pop("extract_backend", None)
-        tier = provider.get("web_tier")
-        tiers = web_cfg.setdefault("provider_tier", {}) if tier else web_cfg.get("provider_tier")
-        if isinstance(tiers, dict):
-            if tier:
-                tiers[provider["web_backend"]] = tier
-            else:
-                tiers.pop(provider["web_backend"], None)
 
     if provider.get("computer_use_backend"):
         config.setdefault("computer_use", {})["backend"] = provider["computer_use_backend"]
@@ -837,9 +787,8 @@ def _print_provider_selection(provider: dict, managed_feature, *, reconfigure: b
     if provider.get("browser_engine") and provider["browser_engine"] != "auto":
         _print_success(f"  Browser engine set to: {provider['browser_engine']}")
     if provider.get("web_backend"):
-        tier = f" ({provider['web_tier']} tier)" if reconfigure and provider.get("web_tier") else ""
         backend = NOUS_MANAGED_PROVIDER if managed_feature else provider["web_backend"]
-        _print_success(f"  Web backend set to: {backend}{tier}")
+        _print_success(f"  Web backend set to: {backend}")
     if reconfigure and provider.get("computer_use_backend"):
         _print_success(f"  Computer Use backend set to: {provider['computer_use_backend']}")
 

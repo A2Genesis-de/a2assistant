@@ -153,7 +153,7 @@ hermes-agent/
 │   ├── approval.py               # Detección de comandos peligrosos + aprobación por sesión
 │   ├── terminal_tool.py          # Orquestación del terminal (sudo, ciclo de vida del entorno, backends)
 │   ├── file_operations.py        # read_file, write_file, búsqueda, patch, etc.
-│   ├── web_tools.py              # web_search, web_extract (Paralelo/Firecrawl + resumición Gemini)
+│   ├── web_tools.py              # web_search, web_extract sobre plugins de proveedores web (incluido: ddgs)
 │   ├── vision_tools.py           # Análisis de imágenes a través de modelos multimodales
 │   ├── delegate_tool.py          # Lanzamiento de subagentes y ejecución paralela de tareas
 │   ├── code_execution_tool.py    # Python sandboxado con acceso a herramientas vía RPC

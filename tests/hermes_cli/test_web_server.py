@@ -2880,42 +2880,52 @@ class TestNewEndpoints:
     def test_select_web_search_backend_matches_runtime_resolution(self, monkeypatch):
         """PUT provider with capability=search writes web.search_backend and the
         runtime search dispatcher resolves to it — while extract is untouched."""
-        # Make SearXNG available so both the endpoint gate and the runtime
-        # availability check agree it's usable.
-        monkeypatch.setenv("SEARXNG_URL", "http://localhost:8888")
-        # Give extract an explicit shared backend so the assertion isn't
-        # hostage to whatever creds exist on the machine running the tests.
-        monkeypatch.setenv("FIRECRAWL_API_URL", "http://localhost:3002")
-        base = self.client.put(
-            "/api/tools/toolsets/web/provider",
-            json={"provider": "Firecrawl Self-Hosted"},
-        )
-        assert base.status_code == 200
+        from agent import web_search_registry
+        from agent.web_search_provider import WebSearchProvider
 
-        resp = self.client.put(
-            "/api/tools/toolsets/web/provider",
-            json={"provider": "SearXNG", "capability": "search"},
-        )
-        assert resp.status_code == 200
-        body = resp.json()
-        assert body["ok"] is True
-        assert body["capability"] == "search"
+        class ExampleProvider(WebSearchProvider):
+            name = "example"
+            display_name = "Example"
 
-        from hermes_cli.config import load_config
-        cfg = load_config()
-        assert cfg["web"]["search_backend"] == "searxng"
-        # The shared backend selected first must be preserved for extract.
-        assert cfg["web"]["backend"] == "firecrawl"
+            def is_available(self):
+                return True
 
-        # The REAL runtime resolution — not a parallel reimplementation.
-        from tools.web_tools import _get_extract_backend, _get_search_backend
-        assert _get_search_backend() == "searxng"
-        assert _get_extract_backend() == "firecrawl"
+            def supports_extract(self):
+                return True
 
-        # And the config endpoint reports the same split.
-        data = self.client.get("/api/tools/toolsets/web/config").json()
-        assert data["active_search_backend"] == "searxng"
-        assert data["active_extract_backend"] == "firecrawl"
+            def get_setup_schema(self):
+                return {"name": "Example", "badge": "plugin", "tag": "search + extract", "env_vars": []}
+
+        from hermes_cli.plugins import _ensure_plugins_discovered
+        _ensure_plugins_discovered()
+        web_search_registry.register_provider(ExampleProvider())
+        try:
+            base = self.client.put("/api/tools/toolsets/web/provider", json={"provider": "Example"})
+            assert base.status_code == 200
+
+            resp = self.client.put(
+                "/api/tools/toolsets/web/provider",
+                json={"provider": "DuckDuckGo (ddgs)", "capability": "search"},
+            )
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["ok"] is True
+            assert body["capability"] == "search"
+
+            from hermes_cli.config import load_config
+            cfg = load_config()
+            assert cfg["web"]["search_backend"] == "ddgs"
+            assert cfg["web"]["backend"] == "example"
+
+            from tools.web_tools import _get_extract_backend, _get_search_backend
+            assert _get_search_backend() == "ddgs"
+            assert _get_extract_backend() == "example"
+
+            data = self.client.get("/api/tools/toolsets/web/config").json()
+            assert data["active_search_backend"] == "ddgs"
+            assert data["active_extract_backend"] == "example"
+        finally:
+            web_search_registry._providers.pop("example", None)
 
 
     # -- Terminal execution backend picker ---------------------------------

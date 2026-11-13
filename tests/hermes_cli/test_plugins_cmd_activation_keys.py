@@ -210,7 +210,7 @@ def test_status_reports_bundled_defaults_and_the_live_memory_provider(home):
     active = plugins_cmd._category_active_names()
 
     by_key = {e[5]: e for e in plugins_cmd._discover_all_plugins()}
-    for key in ("web/firecrawl", "fakemem"):
+    for key in ("web/ddgs", "fakemem"):
         name, _v, _d, source, dir_path, _k = by_key[key]
         status = plugins_cmd._plugin_status(name, enabled, disabled, key=key, source=source, dir_path=dir_path,
                                             active=active)

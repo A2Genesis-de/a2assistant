@@ -1335,7 +1335,7 @@ export interface ToolProvider {
    *  post-setup install state). Optional for older backends. */
   status?: ToolProviderStatus
   /** Web toolset only: the backend key written to web.*backend config
-   *  (e.g. 'searxng'). Absent on other toolsets and older backends. */
+   *  (e.g. 'ddgs'). Absent on other toolsets and older backends. */
   web_backend?: string
   /** TTS toolset only: the provider key written to tts.provider when this row
    *  is selected (e.g. 'openai'). Doubles as the config section that holds the
@@ -1343,7 +1343,7 @@ export interface ToolProvider {
    *  and older backends. */
   tts_provider?: string
   /** Web toolset only: capabilities this backend can serve. Search-only
-   *  providers (ddgs, brave-free) report ['search']. */
+   *  providers (ddgs) report ['search']. */
   capabilities?: WebCapability[]
   /** Set on the "Nous Subscription" rows (e.g. 'web'): served through the
    *  Nous Tool Gateway rather than the user's own key. */
@@ -1365,10 +1365,6 @@ export interface ToolsetConfig {
   active_search_backend?: string | null
   /** Web toolset only: backend the web_extract tool resolves to right now. */
   active_extract_backend?: string | null
-  /** Web toolset only: web_search / web_extract currently go through the Nous
-   *  Tool Gateway (billed to the subscription) instead of the user's own key. */
-  search_via_nous?: boolean
-  extract_via_nous?: boolean
 }
 
 /** Health status of a terminal execution backend row.

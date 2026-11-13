@@ -25,7 +25,7 @@ from hermes_cli.tools_config_post_setup import (
 from hermes_cli.tools_config_providers import (
     _plugin_image_gen_providers, _plugin_video_gen_providers, _plugin_web_search_providers, _plugin_browser_providers,
     _plugin_tts_providers, web_provider_capabilities, _visible_providers, provider_readiness_status,
-    _toolset_needs_configuration_prompt, _configure_tool_category, _web_tier_matches, _is_provider_active,
+    _toolset_needs_configuration_prompt, _configure_tool_category, _is_provider_active,
     _detect_active_provider_index, IMAGEGEN_BACKENDS, _plugin_image_gen_catalog, _plugin_video_gen_catalog,
     _configure_imagegen_model, _configure_imagegen_model_for_plugin, _configure_videogen_model_for_plugin,
     _select_plugin_image_gen_provider, _select_plugin_video_gen_provider, STT_MODEL_CATALOG, _configure_stt_model,
@@ -76,7 +76,6 @@ CONFIGURABLE_TOOLSETS = [
     ("video",           "🎬 Video Analysis",            "video_analyze (requires video-capable model)"),
     ("image_gen",       "🎨 Image Generation",          "image_generate"),
     ("video_gen",       "🎬 Video Generation",          "video_generate (text/image/reference)"),
-    ("x_search",        "🐦 X (Twitter) Search",        "x_search (requires xAI OAuth or XAI_API_KEY)"),
     ("tts",             "🔊 Text-to-Speech",            "text_to_speech"),
     ("stt",             "🎙️ Speech-to-Text",           "voice transcription (gateway voice messages + voice mode)"),
     ("skills",          "📚 Skills",                    "list, view, manage"),
@@ -105,10 +104,9 @@ def gui_toolset_label(label: str) -> str:
     return text
 
 
-# OFF by default for new installs (still in _HERMES_CORE_TOOLS; the checklist won't pre-select them). x_search
-# auto-enables when xAI creds exist; its check_fn still gates the schema. ``spotify`` and ``a2a`` are plugin
-# toolsets (catalog / bundled plugin) that stay opt-in once installed.
-_DEFAULT_OFF_TOOLSETS = {"spotify", "discord", "discord_admin", "video", "video_gen", "x_search", "a2a", "kanban"}
+# OFF by default for new installs (still in _HERMES_CORE_TOOLS; the checklist won't pre-select them).
+# ``spotify`` and ``a2a`` are plugin toolsets (catalog / bundled plugin) that stay opt-in once installed.
+_DEFAULT_OFF_TOOLSETS = {"spotify", "discord", "discord_admin", "video", "video_gen", "a2a", "kanban"}
 
 # Config-only capabilities: provider setup in `hermes tools` (TOOL_CATEGORIES) but not model toolsets — zero
 # schemas, own switch (``stt.enabled``), never in ``platform_toolsets`` or the per-platform checklist.
@@ -263,18 +261,8 @@ TOOL_CATEGORIES = {
     },
     "web": {
         "name": "Web Search & Extract", "setup_title": "Select Search Provider",
-        "setup_note": "A free DuckDuckGo search skill is also included — skip this if you don't need a premium provider.",
         "icon": "🔍",
-        # Provider rows come from plugins.web.<vendor> via _plugin_web_search_providers(). Only the two
-        # non-provider firecrawl setup-flow rows live here: managed via Nous subscription, and self-hosted.
-        "providers": [
-            {"name": "Nous Subscription", "badge": "subscription", "tag": "Managed web search and extract billed to your subscription",
-             "web_backend": "firecrawl", "env_vars": [], **_NOUS, "managed_nous_feature": "web",
-             "override_env_vars": ["FIRECRAWL_API_KEY", "FIRECRAWL_API_URL", "PERPLEXITY_API_KEY"]},
-            {"name": "Firecrawl Self-Hosted", "badge": "free · self-hosted", "tag": "Run your own Firecrawl instance (Docker)",
-             "web_backend": "firecrawl",
-             "env_vars": [_key("FIRECRAWL_API_URL", "Your Firecrawl instance URL (e.g., http://localhost:3002)")]},
-        ],
+        "providers": [],
     },
     "image_gen": {
         "name": "Image Generation", "icon": "🎨",
@@ -296,22 +284,6 @@ TOOL_CATEGORIES = {
         "providers": [
             _row("Nous Subscription", "subscription", "Managed FAL video generation billed to your subscription", **_NOUS,
                  managed_nous_feature="video_gen", override_env_vars=["FAL_KEY"], video_gen_plugin_name="fal"),
-        ],
-    },
-    "x_search": {
-        "name": "X (Twitter) Search", "setup_title": "Select xAI Credential Source",
-        "setup_note": (
-            "A2Assistant routes X searches through xAI's built-in x_search Responses tool for read-only public X "
-            "discovery. Use the xurl skill for authenticated X API reads and account actions. Both credential "
-            "sources hit the same https://api.x.ai/v1/responses endpoint — pick whichever you already have. "
-            "SuperGrok OAuth is preferred when both are set (uses your subscription quota instead of API spend)."
-        ),
-        "icon": "🐦",
-        "providers": [
-            _row("xAI Grok OAuth (SuperGrok / Premium+)", "subscription", "Browser login at accounts.x.ai — no API key required",
-                 post_setup="xai_grok"),
-            _row("xAI API key", "paid", "Direct xAI API billing via XAI_API_KEY",
-                 [_key("XAI_API_KEY", "xAI API key", "https://console.x.ai/")]),
         ],
     },
     "browser": {
@@ -482,16 +454,12 @@ def _explicit_toolsets(
 
 def _composite_toolsets(toolset_names: list[str], platform: str, explicitly_configured: bool) -> set[str]:
     """Enabled set inferred from composite names by reverse-mapping tool names (only while no explicit list is
-    saved). ``x_search`` is not in any composite, so inject it when xAI creds exist and exempt it from default-off."""
+    saved)."""
     from toolsets import resolve_toolset
 
     all_tool_names = {t for ts_name in toolset_names for t in resolve_toolset(ts_name)}
     enabled = _configurable_subset_of(all_tool_names, platform)
-    default_off = _default_off_toolsets(platform, explicitly_configured)
-    if _toolset_allowed_for_platform("x_search", platform) and _xai_credentials_present():
-        enabled.add("x_search")
-        default_off.discard("x_search")
-    return enabled - default_off
+    return enabled - _default_off_toolsets(platform, explicitly_configured)
 
 
 def _enabled_plugin_toolsets(config: dict, platform: str, toolset_names: list[str], plugin_ts_keys: set[str]) -> set[str]:
