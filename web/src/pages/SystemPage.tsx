@@ -1008,19 +1008,6 @@ export default function SystemPage() {
                 Manage subscription
               </a>
             </div>
-            {portal?.features && portal.features.length > 0 && (
-              <div className="flex flex-col gap-1 border-t border-border pt-3">
-                <span className="text-xs uppercase tracking-wider text-muted-foreground">
-                  Tool Gateway routing
-                </span>
-                {portal.features.map((f) => (
-                  <div key={f.label} className="flex items-center justify-between text-sm">
-                    <span>{f.label}</span>
-                    <span className="text-muted-foreground">{f.state}</span>
-                  </div>
-                ))}
-              </div>
-            )}
             {!portal?.logged_in && (
               <p className="text-xs text-muted-foreground">
                 Log in with <span className="font-mono">hermes portal</span>.

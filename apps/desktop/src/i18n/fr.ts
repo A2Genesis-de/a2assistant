@@ -2258,16 +2258,6 @@ export const frOverrides = {
       activeBackend: 'Actif',
       activeBackendHint: "Il s'agit de votre backend actif",
       useBackend: 'Utiliser ce backend',
-      nousIncluded: 'Inclus avec un abonnement Nous — connectez-vous au portail Nous pour activer.',
-      nousAuthNeededTitle: 'Se connecter au portail Nous',
-      nousAuthNeededMessage: provider =>
-        `${provider} est enregistré mais ne s'activera pas tant que vous ne vous serez pas connecté au portail Nous.`,
-      nousAuthSignIn: 'Se connecter',
-      nousAuthDoneTitle: 'Portail Nous connecté',
-      nousAuthDoneMessage: "Vos backends d'abonnement sont maintenant actifs.",
-      nousAuthFailed: "La connexion au portail Nous n'a pas été terminée",
-      nousAuthFailedMessage: 'Réessayez.',
-      nousAuthTryAgain: 'Réessayer',
       noApiKeyRequired: 'Aucune clé API requise.',
       postSetupHint: step =>
         `Ce backend nécessite une installation unique (${step}). S'exécute sur cette machine — peut prendre quelques minutes.`,

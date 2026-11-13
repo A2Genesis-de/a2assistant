@@ -362,36 +362,6 @@ function notifyReady(provider: string) {
   notify({ kind: 'success', title: 'A2Assistant is ready', message: `${provider} connected.` })
 }
 
-// Human-friendly labels for tools auto-routed through the Nous Tool Gateway,
-// mirroring hermes_cli/nous_subscription._GATEWAY_TOOL_LABELS so the GUI and
-// CLI describe the same thing.
-const GATEWAY_TOOL_LABELS: Record<string, string> = {
-  browser: 'browser automation',
-  image_gen: 'image generation',
-  tts: 'text-to-speech',
-  video_gen: 'video generation',
-  web: 'web search & extract'
-}
-
-// When switching to Nous auto-routes unconfigured tools through the Tool
-// Gateway, tell the user which ones — same information the CLI prints. Silent
-// when nothing changed (subscriber already configured, has own keys, etc.).
-function notifyGatewayTools(tools: string[] | undefined) {
-  if (!tools || tools.length === 0) {
-    return
-  }
-
-  const labels = tools.map(t => GATEWAY_TOOL_LABELS[t] ?? t)
-  const list = labels.length === 1 ? labels[0] : `${labels.slice(0, -1).join(', ')} and ${labels[labels.length - 1]}`
-
-  notify({
-    durationMs: 8000,
-    kind: 'info',
-    message: `${list} now run through your Nous subscription — no separate API keys needed.`,
-    title: 'Tool Gateway enabled'
-  })
-}
-
 // After credentials are persisted, ask the backend which provider+models
 // are now authenticated. Pick the first curated model for the matching
 // provider as a sensible default, persist it via /api/model/set, and
@@ -526,7 +496,7 @@ async function completeWithModelConfirm(
     // setup) cannot make setup.runtime_check validate the wrong backend
     // after a fresh OAuth login. There's no prior default to protect here.
     try {
-      const res = await setMainModelAssignment(
+      await setMainModelAssignment(
         {
           provider: defaults.providerSlug,
           model: defaults.defaultModel
@@ -540,8 +510,6 @@ async function completeWithModelConfirm(
       if (generation !== flowGeneration) {
         return
       }
-
-      notifyGatewayTools(res.gateway_tools)
     } catch (error) {
       if (generation !== flowGeneration) {
         return
@@ -1510,11 +1478,9 @@ export async function confirmOnboardingModel(ctx: OnboardingContext) {
     // this file's non-blocking gateway calls. The alternative (silently
     // keeping the previous default) is still safer than the bug this fixes.
     try {
-      const res = await setMainModelAssignment({ provider: flow.providerSlug, model: flow.currentModel }, undefined, {
+      await setMainModelAssignment({ provider: flow.providerSlug, model: flow.currentModel }, undefined, {
         skipConfirmPrompt: true
       })
-
-      notifyGatewayTools(res.gateway_tools)
     } catch (error) {
       notifyError(error, 'Could not save the selected model.')
     }

@@ -2258,16 +2258,6 @@ const deBaseOverrides = {
       activeBackend: 'Aktiv',
       activeBackendHint: 'Das ist Ihr aktives Backend',
       useBackend: 'Dieses Backend verwenden',
-      nousIncluded: 'In einem Nous-Abo enthalten – melden Sie sich im Nous Portal an, um es zu aktivieren.',
-      nousAuthNeededTitle: 'Im Nous Portal anmelden',
-      nousAuthNeededMessage: provider =>
-        `${provider} ist gespeichert, wird aber erst aktiviert, wenn Sie sich im Nous Portal anmelden.`,
-      nousAuthSignIn: 'Anmelden',
-      nousAuthDoneTitle: 'Nous Portal verbunden',
-      nousAuthDoneMessage: 'Ihre Abo-Backends sind jetzt aktiv.',
-      nousAuthFailed: 'Die Nous-Portal-Anmeldung wurde nicht abgeschlossen',
-      nousAuthFailedMessage: 'Versuchen Sie es erneut.',
-      nousAuthTryAgain: 'Erneut versuchen',
       noApiKeyRequired: 'Kein API-Key erforderlich.',
       postSetupHint: step =>
         `Dieses Backend braucht eine einmalige Installation (${step}). Läuft auf diesem Rechner – kann ein paar Minuten dauern.`,

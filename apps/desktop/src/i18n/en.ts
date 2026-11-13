@@ -1887,16 +1887,6 @@ export const en: Translations = {
       activeBackend: 'Active',
       activeBackendHint: 'This is your active backend',
       useBackend: 'Use this backend',
-      nousIncluded: 'Included with a Nous subscription — sign in with your Nous account to activate.',
-      nousAuthNeededTitle: 'Sign in with your Nous account',
-      nousAuthNeededMessage: provider =>
-        `${provider} is saved but will only work once you sign in with your Nous account.`,
-      nousAuthSignIn: 'Sign in',
-      nousAuthDoneTitle: 'Nous account connected',
-      nousAuthDoneMessage: 'Your subscription backends are now active.',
-      nousAuthFailed: 'Nous sign-in did not complete',
-      nousAuthFailedMessage: 'Try again.',
-      nousAuthTryAgain: 'Try again',
       noApiKeyRequired: 'No API key required.',
       postSetupHint: step =>
         `This backend needs a one-time install (${step}). Runs on this machine — may take a few minutes.`,

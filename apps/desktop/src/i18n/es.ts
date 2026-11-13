@@ -2242,16 +2242,6 @@ export const esOverrides = {
       activeBackend: 'Activo',
       activeBackendHint: 'Este es tu backend activo',
       useBackend: 'Usar este backend',
-      nousIncluded: 'Incluido con una suscripción de Nous: inicia sesión con tu cuenta de Nous para activarlo.',
-      nousAuthNeededTitle: 'Inicia sesión con tu cuenta de Nous',
-      nousAuthNeededMessage: (provider: string) =>
-        `${provider} está guardado, pero solo funcionará cuando inicies sesión con tu cuenta de Nous.`,
-      nousAuthSignIn: 'Iniciar sesión',
-      nousAuthDoneTitle: 'Cuenta de Nous conectada',
-      nousAuthDoneMessage: 'Los backends de tu suscripción ya están activos.',
-      nousAuthFailed: 'No se completó el inicio de sesión en Nous',
-      nousAuthFailedMessage: 'Vuelve a intentarlo.',
-      nousAuthTryAgain: 'Reintentar',
       noApiKeyRequired: 'No se requiere clave API.',
       postSetupHint: step =>
         `Este backend necesita una instalación única (${step}). Se ejecuta en esta máquina y puede tardar unos minutos.`,
