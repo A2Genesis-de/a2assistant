@@ -20,7 +20,7 @@ _STT_SUMMARY_DEFAULT = ("Local Whisper", "faster_whisper", "run 'hermes tools' �
 _BROWSER_MISSING_HINTS = {
     "Local browser": "Chromium: run 'hermes pm install chromium'"}
 _BROWSER_MISSING_DEFAULT = "Chromium (run 'hermes pm install chromium')"
-_WEB_MISSING = "the ddgs package (run 'hermes tools' → Web Search) or a web provider plugin"
+_WEB_MISSING = "the ddgs package (run 'hermes tools' → Web Search), SEARXNG_URL or a web provider plugin"
 
 _DONE_BANNER = (
     "┌─────────────────────────────────────────────────────────┐",

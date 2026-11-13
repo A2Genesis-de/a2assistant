@@ -2655,6 +2655,9 @@ OPTIONAL_ENV_VARS = OptionalEnvVars({
         "Picovoice access key for the Porcupine 'Hey Hermes' wake word engine (optional; "
         "openWakeWord is the free default)", "Picovoice access key",
         "https://console.picovoice.ai/"),
+    "SEARXNG_URL": _tool("URL of your SearXNG instance for free self-hosted web search",
+        "SearXNG URL (e.g. http://localhost:8080)", "https://searxng.github.io/searxng/",
+        tools=["web_search"], password=False),
     "GITHUB_TOKEN": _tool("GitHub token for Skills Hub (higher API rate limits, skill publish)",
         "GitHub Token", "https://github.com/settings/tokens"),
     # ── Bundled skills (opt-in) ── category="skill" (not "tool") so the sandbox env blocklist in

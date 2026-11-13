@@ -119,9 +119,11 @@ def register_all_web_providers():
     for test classes that need the registry populated for dispatch checks)."""
     from agent.web_search_registry import register_provider, _reset_for_tests
     from plugins.web.ddgs.provider import DDGSWebSearchProvider
+    from plugins.web.searxng.provider import SearXNGWebSearchProvider
 
     _reset_for_tests()
     register_provider(DDGSWebSearchProvider())
+    register_provider(SearXNGWebSearchProvider())
 
 
 @pytest.fixture

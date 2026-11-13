@@ -29,7 +29,7 @@ _registry: ProviderRegistry[WebSearchProvider] = ProviderRegistry(
 )
 _registry.export(globals())
 
-_PREFERENCE = ("ddgs",)
+_PREFERENCE = ("searxng", "ddgs")
 
 
 def _read_config_key(*path: str) -> Optional[str]:
