@@ -8,7 +8,7 @@ platforms: [linux, macos, windows]
 metadata:
   hermes:
     tags: [RSS, Atom, Feeds, Monitoring, Research, Blogs, Releases]
-    related_skills: [reddit-reading, competitor-news-monitor, grounded-citations, youtube-content, blogwatcher]
+    related_skills: [competitor-news-monitor, grounded-citations, youtube-content, blogwatcher]
 ---
 
 # RSS Feeds Skill

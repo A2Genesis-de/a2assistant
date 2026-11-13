@@ -2904,8 +2904,7 @@ OPTIONAL_ENV_VARS = OptionalEnvVars({
         "Notion API key", "https://www.notion.so/my-integrations"),
     "LINEAR_API_KEY": _skill("Linear personal API key (used by the `linear` skill)",
         "Linear API key", "https://linear.app/settings/account/security"),
-    "TENOR_API_KEY": _skill("Tenor API key for GIF search (used by the `gif-search` skill)",
-        "Tenor API key", "https://developers.google.com/tenor/guides/quickstart"),
+
     # ── Honcho ──
     "HONCHO_API_KEY": _tool("Honcho API key for AI-native persistent memory", "Honcho API key",
         "https://app.honcho.dev", tools=["honcho_context"]),
