@@ -373,39 +373,6 @@ class TestGenerateErrors:
         assert "Invalid API key" in result["error"]
 
 
-    @pytest.mark.parametrize("failure, eligible", [
-        ("refused", True), (429, True), ("disconnected", False), (503, False), (422, False), ("timeout", False),
-        ("invalid_json", False),
-    ])
-    def test_submit_failure_marks_whether_a_fal_fallback_is_safe(self, failure, eligible):
-        """Only failures that prove Krea created no job may fall back: a connection that was never
-        established, or the gateway's 429. A connection dropped after sending, a timeout or a 5xx may
-        have happened after Krea accepted the job."""
-        import requests as req_lib
-        from urllib3.exceptions import MaxRetryError, NewConnectionError
-        from plugins.image_gen.krea import KreaImageGenProvider
-
-        if failure == "refused":
-            refused = MaxRetryError(None, "http://x", reason=NewConnectionError(None, "Connection refused"))
-            post = patch("plugins.image_gen.krea.requests.post", side_effect=req_lib.ConnectionError(refused))
-        elif failure == "disconnected":
-            post = patch("plugins.image_gen.krea.requests.post",
-                         side_effect=req_lib.ConnectionError("Remote end closed connection without response"))
-        elif failure == "timeout":
-            post = patch("plugins.image_gen.krea.requests.post", side_effect=req_lib.Timeout())
-        else:
-            resp = req_lib.Response()
-            resp.status_code = 200 if failure == "invalid_json" else failure
-            resp._content = b"not json" if failure == "invalid_json" else b'{"error": "nope"}'
-            resp.raise_for_status = MagicMock(side_effect=None if failure == "invalid_json" else req_lib.HTTPError(response=resp))
-            post = patch("plugins.image_gen.krea.requests.post", return_value=resp)
-
-        with post:
-            result = KreaImageGenProvider().generate(prompt="test")
-
-        assert result["success"] is False
-        assert result["fallback_eligible"] is eligible
-
     def test_job_failed(self):
         from plugins.image_gen.krea import KreaImageGenProvider
 
@@ -535,85 +502,9 @@ class TestPollRetryPolicy:
         assert mock_get.call_count == 1
 
 
-# ---------------------------------------------------------------------------
-# Managed Nous gateway path
-# ---------------------------------------------------------------------------
-
-
-def _managed_cfg(
-    origin: str = "https://krea-gateway.example.com",
-    token: str = "nous-tok-abc",
-):
-    from types import SimpleNamespace
-
-    return SimpleNamespace(
-        vendor="krea",
-        gateway_origin=origin,
-        nous_user_token=token,
-        managed_mode=True,
-    )
-
-
-class TestManagedGateway:
-    def test_managed_submit_uses_gateway_origin_and_nous_token(self, monkeypatch):
-        """Managed mode submits to the gateway origin with the Nous token."""
-        import plugins.image_gen.krea as krea_mod
-        from plugins.image_gen.krea import KreaImageGenProvider
-
-        # Even with a direct key present, an active managed gateway wins.
-        monkeypatch.setattr(krea_mod, "_resolve_managed_krea_gateway", lambda: _managed_cfg())
-
-        submit = _submit_response()
-        poll = _poll_response(_completed_job())
-        with patch("plugins.image_gen.krea.requests.post", return_value=submit) as mock_post, \
-             patch("plugins.image_gen.krea.requests.get", return_value=poll) as mock_get, \
-             patch(
-                 "plugins.image_gen.krea.save_url_image",
-                 return_value=Path("/tmp/x.png"),
-             ), \
-             patch("plugins.image_gen.krea.time.sleep"):
-            result = KreaImageGenProvider().generate(prompt="A managed lamp", upscale=False)
-
-        assert result["success"] is True
-        post_url = mock_post.call_args[0][0]
-        assert post_url == (
-            "https://krea-gateway.example.com/generate/image/krea/krea-2/medium"
-        )
-        headers = mock_post.call_args.kwargs["headers"]
-        assert headers["Authorization"] == "Bearer nous-tok-abc"
-        # Idempotency key drives the gateway's per-generation billing boundary.
-        assert headers["x-idempotency-key"]
-        # Poll is bound to the same gateway + Nous token.
-        poll_url = mock_get.call_args[0][0]
-        assert poll_url.startswith("https://krea-gateway.example.com/jobs/")
-        poll_headers = mock_get.call_args.kwargs["headers"]
-        assert poll_headers["Authorization"] == "Bearer nous-tok-abc"
-
-
-    def test_managed_429_concurrency_hint(self, monkeypatch):
-        import requests as req_lib
-        import plugins.image_gen.krea as krea_mod
-        from plugins.image_gen.krea import KreaImageGenProvider
-
-        monkeypatch.setattr(krea_mod, "_resolve_managed_krea_gateway", lambda: _managed_cfg())
-
-        resp = req_lib.Response()
-        resp.status_code = 429
-        resp._content = b'{"error": {"message": "maximum number of concurrent jobs"}}'
-        resp.headers["Content-Type"] = "application/json"
-        resp.raise_for_status = MagicMock(side_effect=req_lib.HTTPError(response=resp))
-
-        with patch("plugins.image_gen.krea.requests.post", return_value=resp):
-            result = KreaImageGenProvider().generate(prompt="test")
-
-        assert result["success"] is False
-        assert "429" in result["error"]
-        assert "concurrency" in result["error"].lower()
-
-
 class TestExplicitModelOverride:
     def test_model_kwarg_overrides_config(self, monkeypatch):
-        """An explicit ``model`` kwarg (managed routing) wins over config/default."""
+        """An explicit ``model`` kwarg wins over config/default."""
         from plugins.image_gen.krea import _resolve_model
 
         model_id, meta = _resolve_model("krea-2-large")
@@ -786,7 +677,7 @@ class TestKrea3:
         assert (payload["resolution"], payload["thinking_mode"]) == ("2K", "high")
         assert not {"aspect_ratio", "creativity", "intensity", "image_style_references"} & set(payload)
 
-    def test_caps_reference_images_at_the_gateway_limit(self, monkeypatch):
+    def test_caps_reference_images_at_the_plugin_limit(self, monkeypatch):
         _, call = self._generate(monkeypatch, reference_image_urls=[f"https://example.com/{i}.png" for i in range(6)])
         assert len(call.kwargs["json"]["image_urls"]) == 4
 
@@ -803,12 +694,10 @@ class TestKrea3:
         assert "creativity" in krea2["creative_controls"]
 
     def test_capabilities_describe_the_stored_model_the_dispatcher_sends(self, monkeypatch):
-        """Managed and direct dispatch both pass ``image_gen.model`` to generate() explicitly, so the
-        schema must describe that model even when KREA_IMAGE_MODEL names another one."""
+        """Dispatch passes ``image_gen.model`` to generate() explicitly, so the schema must describe
+        that model even when KREA_IMAGE_MODEL names another one."""
         import plugins.image_gen.krea as krea_mod
 
         monkeypatch.setenv("KREA_IMAGE_MODEL", "krea-2-large")
-        for provider, gateway in (("nous", _managed_cfg()), ("krea", None)):
-            monkeypatch.setattr(krea_mod, "_load_krea_config", lambda p=provider: {"provider": p, "model": "krea-3"})
-            monkeypatch.setattr(krea_mod, "_resolve_managed_krea_gateway", lambda g=gateway: g)
-            assert krea_mod.KreaImageGenProvider().capabilities()["creative_controls"] == ["thinking", "resolution"]
+        monkeypatch.setattr(krea_mod, "_load_krea_config", lambda: {"provider": "krea", "model": "krea-3"})
+        assert krea_mod.KreaImageGenProvider().capabilities()["creative_controls"] == ["thinking", "resolution"]

@@ -3871,7 +3871,7 @@ tips:
   t305: "a2assistant curator rollback يستعيد المهارات من لقطة سابقة للتشغيل — النسخ الاحتياطية تحت skills/.curator_backups/."
   t306: "a2assistant auth reset <provider> [target] يمسح فترات التهدئة وعلامات النفاد عن مجمّع اعتمادات كامل، أو عن اعتماد واحد بالفهرس أو المعرّف أو التسمية."
   t307: "credential_pool_strategies.<provider>: round_robin يدوّر المفاتيح بالتساوي بدلًا من الافتراضي fill_first."
-  t308: "use_gateway: true لكل أداة يوجّه web أو image أو tts أو browser عبر اشتراكك في Nous — دون مفاتيح إضافية."
+  t308: "يختار web.search_backend وweb.extract_backend خلفيتين منفصلتين لـ web_search وweb_extract."
   t309: "provider_routing.data_collection: deny يستثني المزوّدين الذين يخزّنون البيانات على OpenRouter."
   t310: "provider_routing.require_parameters: true يوجّه فقط إلى المزوّدين الذين يدعمون كل معامل في طلبك."
   t311: "HERMES_TUI_RESUME=1 يُعيد الاتصال تلقائيًا بأحدث جلسة TUI عند الإطلاق — مفيد بعد انقطاع SSH."

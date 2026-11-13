@@ -1,5 +1,5 @@
 """`hermes config get/set` must recognize keys the runtime reads but DEFAULT_CONFIG leaves unseeded:
-core provider selections (``browser.cloud_provider``, ``<category>.use_gateway``), MoA preset fields
+core provider selections (``browser.cloud_provider``), MoA preset fields
 (``moa.presets.<name>.fanout``), core-owned keys with a known reader (``computer_use.backend``), and keys
 an ACTIVE plugin declares through ``config_keys``.
 Declarations never weaken the schema's typo notices."""
@@ -47,9 +47,9 @@ def _set_notice(key, value, capsys):
 
 
 def test_config_get_browser_selection_keys_print_value_without_notice(hermes_home, capsys):
-    _write_config(hermes_home, {"browser": {"cloud_provider": "browser-use", "use_gateway": True}})
+    _write_config(hermes_home, {"browser": {"cloud_provider": "browser-use"}})
 
-    for key, expected in (("browser.cloud_provider", "browser-use"), ("browser.use_gateway", True)):
+    for key, expected in (("browser.cloud_provider", "browser-use"),):
         config_command(argparse.Namespace(config_command="get", key=key, json=True))
         captured = capsys.readouterr()
         assert json.loads(captured.out) == expected
@@ -58,7 +58,6 @@ def test_config_get_browser_selection_keys_print_value_without_notice(hermes_hom
 
 @pytest.mark.parametrize("key,value", [
     ("browser.cloud_provider", "browserbase"),   # core: tools.tool_backend_helpers.read_selection
-    ("web.use_gateway", "true"),                 # core: legacy managed-gateway flag, every category
     ("dashboard.kanban.default_tenant", "t1"),   # core: bundled kanban dashboard preferences
 ])
 def test_config_set_runtime_read_key_is_silent(key, value, hermes_home, capsys):
@@ -126,7 +125,7 @@ def test_every_selection_category_key_set_is_what_read_selection_returns(hermes_
     for dotted in selection_config_keys():
         section, key = dotted.split(".")
         name_keys.setdefault(section, set()).add(key)
-    # Every `hermes tools` / Tool Gateway category read_selection serves.
+    # Every `hermes tools` category read_selection serves.
     assert {"web", "image_gen", "video_gen", "tts", "stt", "browser"} <= set(name_keys)
     for section, keys in name_keys.items():
         key = next(k for k in ("cloud_provider", "backend", "provider") if k in keys)

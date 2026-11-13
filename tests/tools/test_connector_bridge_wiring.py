@@ -1,6 +1,6 @@
 """Behavior tests for the connector leg of the tool_search bridge.
 
-DI-callable idiom (test_managed_tool_gateway.py precedent): remote legs are
+DI-callable idiom: remote legs are
 injected as plain callables; no module mocks, no network. Local-only behavior
 is pinned byte-identical when the remote leg fails (D32).
 """

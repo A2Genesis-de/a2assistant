@@ -2786,29 +2786,10 @@ OPTIONAL_ENV_VARS = OptionalEnvVars({
         "https://firecrawl.dev/", tools=["web_search", "web_extract"]),
     "FIRECRAWL_API_URL": _tool("Firecrawl API URL for self-hosted instances (optional)",
         "Firecrawl API URL (leave empty for cloud)", None, password=False, advanced=True),
-    "FIRECRAWL_GATEWAY_URL": _tool(
-        "Exact Firecrawl tool-gateway origin override for Nous Subscribers only (optional)",
-        "Firecrawl gateway URL (leave empty to derive from domain)", None, password=False,
-        advanced=True),
-    "TOOL_GATEWAY_URL": _tool(
-        "Exact shared tool-gateway origin for on-origin vendors and media uploads (optional)",
-        "Shared tool-gateway URL (leave empty to derive from domain)", None,
-        password=False, advanced=True),
     "CONNECTOR_GATEWAY_URL": _tool(
         "Exact connector-gateway origin for the connectors API (optional)",
-        "Connector-gateway URL (leave empty to derive from domain)", None,
+        "Connector-gateway URL (leave empty for the default)", None,
         password=False, advanced=True),
-    "TOOL_GATEWAY_DOMAIN": _tool(
-        "Shared tool-gateway domain suffix for Nous Subscribers only, used to derive vendor "
-        "hosts, e.g. nousresearch.com -> firecrawl-gateway.nousresearch.com",
-        "Tool-gateway domain suffix", None, password=False, advanced=True),
-    "TOOL_GATEWAY_SCHEME": _tool(
-        "Shared tool-gateway URL scheme for Nous Subscribers only, used to derive vendor hosts "
-        "(`https` by default, set `http` for local gateway testing)", "Tool-gateway URL scheme",
-        None, password=False, advanced=True),
-    "TOOL_GATEWAY_USER_TOKEN": _tool(
-        "Explicit Nous Subscriber access token for tool-gateway requests (optional; otherwise "
-        "read from the A2Assistant auth store)", "Tool-gateway user token", None, advanced=True),
     "TAVILY_API_KEY": _tool(
         "Tavily API key for AI-native web search and extract (optional — keyless works when "
         "Tavily is selected)", "Tavily API key", "https://app.tavily.com/home",

@@ -673,7 +673,7 @@ def ensure_portal_identity(
 
     ``explicit`` is required and must be True: the only callers are the first hosted connector action
     (``tools.connectors.gateway.config.ensure_guest_identity``), the connectors dead-credential
-    replacement (``managed_tool_gateway._replace_dead_guest_token``) and the desktop's welcome-trial
+    replacement (``managed_gateway_auth._replace_dead_guest_token``) and the desktop's welcome-trial
     claim (``welcome_trial.claim_desktop_free_tier``), which passes ``welcome_claim=True`` so a guest
     it mints carries the stamp from its first write. Every other guest is minted with
     ``welcome_claim: False`` and serves connectors only.

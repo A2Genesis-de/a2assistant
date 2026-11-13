@@ -1,7 +1,7 @@
 """Firecrawl extract re-checks the website policy against the URL it was redirected to.
 
 Firecrawl reports the requested URL as ``sourceURL`` (REST) / ``source_url`` (v4 SDK ``model_dump``, used
-by the direct-key and Tool Gateway paths) and the post-redirect URL as ``url``. Reading the requested URL
+by the direct-key path) and the post-redirect URL as ``url``. Reading the requested URL
 made the re-check a no-op, so a public redirector returned a blocklisted page.
 """
 

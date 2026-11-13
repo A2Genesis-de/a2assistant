@@ -810,22 +810,14 @@ async def update_learning_node(body: LearningNodeEdit, profile: Optional[str] = 
         body.profile or profile, lambda: edit_node(body.id, body.content), 400, "edit failed")
 
 
-# Portal — Nous Portal auth + Tool Gateway routing status (read-only).
+# Portal — Nous Portal auth status (read-only).
 
 
 @router.get("/api/portal")
 async def get_portal_status(profile: Optional[str] = None):
-    # load_config() + auth/subscription snapshots are disk reads on a polled endpoint —
+    # load_config() + auth snapshots are disk reads on a polled endpoint —
     # keep them off the event loop.
     return await config_scoped_to_thread(profile, _get_portal_status_sync)
-
-
-def _feature_state(feat) -> str:
-    if getattr(feat, "managed_by_nous", False):
-        return "via Nous Portal"
-    if getattr(feat, "active", False):
-        return getattr(feat, "current_provider", None) or "active"
-    return "not configured"
 
 
 def _get_portal_status_sync():
@@ -838,16 +830,6 @@ def _get_portal_status_sync():
     except Exception:
         auth = {}
 
-    features = []
-    try:
-        from hermes_cli.nous_subscription import get_nous_subscription_features
-        feats = get_nous_subscription_features(cfg)
-        if feats is not None:
-            features = [{"label": getattr(feat, "label", ""), "state": _feature_state(feat)}
-                        for feat in feats.items()]
-    except Exception:
-        _log.exception("portal features failed")
-
     model_cfg = cfg.get("model") if isinstance(cfg.get("model"), dict) else {}
     return {
         "logged_in": bool(auth.get("logged_in")), "portal_url": auth.get("portal_base_url"),
@@ -856,8 +838,7 @@ def _get_portal_status_sync():
         # Free tier: a token exists, so logged_in stays true for callers that only ask "is there a
         # credential"; surfaces that render an account must branch on free_tier first.
         "free_tier": bool(auth.get("free_tier")), "account_tier": auth.get("account_tier"),
-        "subscription_url": "https://portal.nousresearch.com/manage-subscription",
-        "features": features}
+        "subscription_url": "https://portal.nousresearch.com/manage-subscription"}
 
 
 # Diagnostics: text-output actions spawned in the background, tailed via /api/actions/<name>.

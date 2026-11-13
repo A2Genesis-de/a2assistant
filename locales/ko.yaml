@@ -3871,7 +3871,7 @@ tips:
   t305: "a2assistant curator rollback은 실행 전 스냅샷에서 스킬을 복원해요 — 백업은 skills/.curator_backups/ 아래에 있어요."
   t306: "a2assistant auth reset <provider> [target]은 자격 증명 풀 전체, 또는 인덱스·id·라벨로 지정한 자격 증명 하나의 쿨다운과 소진 플래그를 지워요."
   t307: "credential_pool_strategies.<provider>: round_robin은 기본값 fill_first 대신 키를 균등하게 순환해요."
-  t308: "도구별 use_gateway: true는 web, image, tts, browser를 Nous 구독으로 라우팅해요 — 추가 키가 필요 없어요."
+  t308: "web.search_backend와 web.extract_backend로 web_search와 web_extract에 각각 다른 백엔드를 고를 수 있어요."
   t309: "provider_routing.data_collection: deny는 OpenRouter에서 데이터를 저장하는 제공자를 제외해요."
   t310: "provider_routing.require_parameters: true는 요청의 모든 파라미터를 지원하는 제공자에게만 라우팅해요."
   t311: "HERMES_TUI_RESUME=1은 실행 시 가장 최근 TUI 세션에 자동으로 다시 연결해요 — SSH가 끊긴 뒤에 유용해요."

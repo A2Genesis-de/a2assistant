@@ -227,18 +227,13 @@ class TestVaultEgressRedaction:
 class TestLegacyCloudMigration:
     """Pre-CLI direct-API Browser Use cloud configs (cloud_provider:
     "browser-use" + BROWSER_USE_API_KEY) run on the CLI's native Browser Use
-    cloud (BU_AUTOSPAWN); Nous-gateway users stay on the provider path."""
+    cloud (BU_AUTOSPAWN)."""
 
     _LEGACY = {"browser": {"cloud_provider": "browser-use"}}
 
     def test_direct_api_config_migrates(self, monkeypatch):
         monkeypatch.setenv("BROWSER_USE_API_KEY", "bu-key")
         assert bu_cli.is_legacy_browser_use_cloud_config(self._LEGACY["browser"]) is True
-
-    def test_gateway_config_stays_on_legacy_path(self, monkeypatch):
-        monkeypatch.setenv("BROWSER_USE_API_KEY", "bu-key")
-        assert bu_cli.is_legacy_browser_use_cloud_config(
-            {"cloud_provider": "browser-use", "use_gateway": True}) is False
 
     def test_no_api_key_stays_on_legacy_path(self, monkeypatch):
         assert bu_cli.is_legacy_browser_use_cloud_config(self._LEGACY["browser"]) is False
@@ -457,29 +452,10 @@ class TestBackendCdpResolution:
         assert env["BU_CDP_WS"] == "ws://127.0.0.1:47000/devtools/browser/t1"
         assert _fake_managed_chromium == ["t1"]
 
-    def test_picker_managed_selection_resolves_gateway_provider(self, monkeypatch):
-        """``cloud_provider: nous`` (the `hermes tools` managed row) must resolve through the
-        provider: the picker never writes the legacy ``use_gateway`` flag, and the direct-API
-        branch leaves browser_exec with no CDP endpoint at all (#108310)."""
-        class _BUProvider:
-            name = "browser-use"
-
-        monkeypatch.setattr("tools.browser_session_cdp.get_cdp_override", lambda: "")
-        monkeypatch.setattr(bs_cloud, "get_cloud_provider", lambda: _BUProvider())
-        monkeypatch.setattr(
-            bs, "get_session_info",
-            lambda task_id: {"cdp_url": "wss://gateway.example/cdp/managed"},
-        )
-        monkeypatch.setattr(bu_cli, "_read_browser_cfg", lambda: {"cloud_provider": "nous"})
-        env = {}
-        assert bu_cli._resolve_backend_cdp(env, "t1") is None
-        assert env["BU_CDP_WS"] == "wss://gateway.example/cdp/managed"
-
-    def test_never_configured_autodetect_managed_provider_resolves_through_provider(self, monkeypatch):
-        """A never-configured install (no ``browser.cloud_provider``, no BROWSER_USE_API_KEY) can
-        still get a ``browser-use`` provider back from autodetect — via the managed Nous gateway
-        token, which needs no API key. That provider DOES have a session/CDP path, so it must
-        resolve through the provider instead of the direct-API shortcut: the shortcut leaves
+    def test_never_configured_autodetect_provider_resolves_through_provider(self, monkeypatch):
+        """A never-configured install (no ``browser.cloud_provider``, no BROWSER_USE_API_KEY) that
+        still gets a ``browser-use`` provider back from autodetect must resolve through the
+        provider's session/CDP path instead of the direct-API shortcut: the shortcut leaves
         BU_CDP_* unset and the harness falls back to hunting the user's profile dirs
         (chrome-not-running on a headless host with no ~/.config/chromium)."""
         class _BUProvider:
@@ -496,22 +472,6 @@ class TestBackendCdpResolution:
         env = {}
         assert bu_cli._resolve_backend_cdp(env, "t1") is None
         assert env["BU_CDP_WS"] == "wss://gateway.example/cdp/autodetect"
-
-    def test_legacy_use_gateway_flag_still_resolves_gateway_provider(self, monkeypatch):
-        """Regression guard for the pre-picker shape of the same selection."""
-        class _BUProvider:
-            name = "browser-use"
-
-        monkeypatch.setattr("tools.browser_session_cdp.get_cdp_override", lambda: "")
-        monkeypatch.setattr(bs_cloud, "get_cloud_provider", lambda: _BUProvider())
-        monkeypatch.setattr(
-            bs, "get_session_info",
-            lambda task_id: {"cdp_url": "wss://gateway.example/cdp/legacy"},
-        )
-        monkeypatch.setattr(bu_cli, "_read_browser_cfg", lambda: {"use_gateway": True})
-        env = {}
-        assert bu_cli._resolve_backend_cdp(env, "t1") is None
-        assert env["BU_CDP_WS"] == "wss://gateway.example/cdp/legacy"
 
 
 class TestOwnTabPreamble:
@@ -965,7 +925,7 @@ class TestLightpandaPickerRow:
         from hermes_cli.tools_config import _write_provider_config
 
         config = {"browser": {"cloud_provider": "browserbase"}}
-        _write_provider_config(self._row("Lightpanda"), config, managed_feature=None)
+        _write_provider_config(self._row("Lightpanda"), config)
         assert config["browser"]["cloud_provider"] == "local"
         assert config["browser"]["engine"] == "lightpanda"
 
@@ -973,7 +933,7 @@ class TestLightpandaPickerRow:
         from hermes_cli.tools_config import _write_provider_config
 
         config = {"browser": {"cloud_provider": "local", "engine": "lightpanda"}}
-        _write_provider_config(self._row("Local Browser"), config, managed_feature=None)
+        _write_provider_config(self._row("Local Browser"), config)
         assert config["browser"]["engine"] == "auto"
 
     def test_active_row_follows_engine(self):

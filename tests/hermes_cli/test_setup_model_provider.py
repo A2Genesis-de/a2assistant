@@ -68,7 +68,7 @@ def test_setup_summary_local_browser_unavailable_without_chromium(
     render as unavailable with an install hint — not a false 'available'.
 
     Unlike the mocked-feature tests above, this drives the real
-    ``get_nous_subscription_features`` so the surface stays aligned with the
+    ``get_tool_features`` so the surface stays aligned with the
     launcher's Chromium selection (``hermes_cli.browser_runtime.chromium_executable``).
     """
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))
@@ -83,11 +83,7 @@ def test_setup_summary_local_browser_unavailable_without_chromium(
     save_config(cfg)
 
     # Only stub the readiness probes; the feature resolver itself is real.
-    monkeypatch.setattr("hermes_cli.nous_subscription._has_browser_harness", lambda: True)
-    monkeypatch.setattr(
-        "hermes_cli.nous_subscription.get_nous_portal_account_info",
-        lambda *a, **k: None,
-    )
+    monkeypatch.setattr("hermes_cli.tool_features._has_browser_harness", lambda: True)
     monkeypatch.setattr("hermes_cli.browser_runtime.chromium_executable", lambda **_kw: None)
     monkeypatch.setattr(
         "agent.auxiliary_client.get_available_vision_backends", list

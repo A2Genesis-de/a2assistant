@@ -82,7 +82,7 @@ def _(rid, request):
 )
 def _(rid, _params):
     from tools.connectors.portal.client import PortalConnectorClient
-    from tools.managed_tool_gateway import read_nous_access_token
+    from tools.managed_gateway_auth import read_nous_access_token
     from tui_gateway.contracts.connectors import ConnectorsCatalogResult
 
     client = PortalConnectorClient()
@@ -101,7 +101,7 @@ def _(rid, _params):
 )
 def _(rid, request):
     from tools.connectors.portal.client import PortalConnectorClient
-    from tools.managed_tool_gateway import read_nous_access_token
+    from tools.managed_gateway_auth import read_nous_access_token
     from tui_gateway.contracts.connectors import ConnectorAccountRow, ConnectorAccountsResult
 
     accounts = PortalConnectorClient().list_accounts() if read_nous_access_token() else []

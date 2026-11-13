@@ -7,43 +7,10 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from utils import is_truthy_value
-
 logger = logging.getLogger(__name__)
 _DEFAULT_BROWSER_PROVIDER = "local"
 _DEFAULT_MODAL_MODE = "auto"
-_VALID_MODAL_MODES = {"auto", "direct", "managed"}
-
-
-def managed_nous_tools_enabled(*, force_fresh: bool = False) -> bool:
-    """Coarse gate: entitled to the Nous Tool Gateway (paid Portal access OR a live free
-    pool). Fails closed on unknown/error — never blocks startup. Callers narrow per category
-    via ``tool_gateway_entitled_for``; ``force_fresh`` is for flows needing a just-bought grant."""
-    try:
-        from hermes_cli.nous_account import get_nous_portal_account_info
-        # Branched call, not ``force_fresh=force_fresh``: tests stub the reader with zero-arg lambdas.
-        account_info = (get_nous_portal_account_info(force_fresh=True) if force_fresh
-                        else get_nous_portal_account_info())
-        return bool(account_info.logged_in) and account_info.tool_gateway_entitled
-    except Exception:
-        return False
-
-
-def nous_tool_gateway_unavailable_message(capability: str = "the Nous Tool Gateway", *,
-                                          force_fresh: bool = False) -> str:
-    """Return account-aware guidance for an unavailable Nous Tool Gateway path."""
-    try:
-        from hermes_cli.nous_account import (
-            format_nous_portal_entitlement_message, get_nous_portal_account_info)
-        message = format_nous_portal_entitlement_message(
-            get_nous_portal_account_info(force_fresh=force_fresh), capability=capability,
-            in_chat=True)
-        if message:
-            return message
-    except Exception:
-        pass
-    return (f"{capability} is unavailable. Run `hermes model` to refresh your "
-            "Nous Portal login and billing status.")
+_VALID_MODAL_MODES = {"auto", "direct"}
 
 
 def normalize_browser_cloud_provider(value: object | None) -> str:
@@ -71,25 +38,6 @@ def has_direct_modal_credentials() -> bool:
         return (Path.home() / ".modal.toml").exists()
     except OSError:  # includes PermissionError on Path.home()
         return False
-
-
-def resolve_modal_backend_state(modal_mode: object | None, *, has_direct: bool,
-                                managed_ready: bool,
-                                managed_enabled: bool | None = None) -> dict[str, Any]:
-    """Resolve direct vs managed Modal backend: ``direct``/``managed`` are exclusive; ``auto``
-    prefers managed when available, else direct."""
-    requested_mode = coerce_modal_mode(modal_mode)
-    if managed_enabled is None:
-        managed_enabled = managed_nous_tools_enabled()
-    managed_ok = managed_enabled and managed_ready
-    exclusive = {"managed": "managed" if managed_ok else None,
-                 "direct": "direct" if has_direct else None}
-    selected_backend = exclusive.get(
-        requested_mode, "managed" if managed_ok else "direct" if has_direct else None)
-    return {"requested_mode": requested_mode, "mode": requested_mode, "has_direct": has_direct,
-            "managed_ready": managed_ready,
-            "managed_mode_blocked": requested_mode == "managed" and not managed_enabled,
-            "selected_backend": selected_backend}
 
 
 def _scoped_credential(name: str) -> str:
@@ -180,23 +128,9 @@ def resolve_openai_audio_api_key() -> str:
             or resolve_provider_secret("OPENAI_API_KEY", "openai-api"))
 
 
-def prefers_gateway(config_section: str) -> bool:
-    """True when ``<section>.use_gateway`` is set in config.yaml. Never raises."""
-    try:
-        from hermes_cli.config import load_config
-        section = (load_config() or {}).get(config_section)
-        return isinstance(section, dict) and is_truthy_value(section.get("use_gateway"))
-    except Exception:
-        return False
-
-
-# Provider value the managed "Nous Subscription" picker rows write for every category;
-# any other name = that vendor direct; no key = legacy autodetect.
-NOUS_MANAGED_PROVIDER = "nous"
-# Per-capability keys that also count as "this category has been configured".
 _EXTRA_SELECTION_KEYS = {"web": ("search_backend", "extract_backend")}
 _DEFAULT_NAME_KEYS = ("provider", "backend", "cloud_provider")
-# Key(s) carrying each category's provider selection: one entry per `hermes tools` / Tool Gateway
+# Key(s) carrying each category's provider selection: one entry per `hermes tools`
 # category read_selection() serves. A leftover ``browser.backend`` (the pre-v52 driver choice) is
 # not the cloud provider — excluded.
 _SELECTION_NAME_KEYS = {
@@ -212,7 +146,7 @@ def selection_config_keys() -> frozenset[str]:
     return frozenset(
         f"{section}.{key}"
         for section, name_keys in _SELECTION_NAME_KEYS.items()
-        for key in ("use_gateway", *name_keys, *_EXTRA_SELECTION_KEYS.get(section, ())))
+        for key in (*name_keys, *_EXTRA_SELECTION_KEYS.get(section, ())))
 
 
 def _raw_section(section: str) -> dict[str, Any] | None:
@@ -227,31 +161,23 @@ def _raw_section(section: str) -> dict[str, Any] | None:
 
 
 def read_selection(section: str) -> str | None:
-    """THE single runtime read of the persisted `hermes tools` selection: ``"nous"`` (managed
-    gateway row), a vendor name (direct, own credentials), or ``None`` (never configured ->
-    legacy autodetect allowed). Reads the RAW config.yaml so key presence means "actually
-    written", not "schema default"; a raw ``local`` is therefore a real user selection.
-    Legacy shim: ``use_gateway: true`` was only ever written by the managed row, so it maps
-    to ``"nous"`` regardless of the name key. Never raises."""
+    """THE single runtime read of the persisted `hermes tools` selection: a vendor name, or
+    ``None`` (never configured -> legacy autodetect allowed). Reads the RAW config.yaml so key
+    presence means "actually written", not "schema default"; a raw ``local`` is therefore a
+    real user selection. Never raises."""
     raw = _raw_section(section)
     if raw is None:
         return None
-    if is_truthy_value(raw.get("use_gateway")):
-        return NOUS_MANAGED_PROVIDER
     for key in _SELECTION_NAME_KEYS.get(section, _DEFAULT_NAME_KEYS):
         text = str(raw.get(key)).strip().lower() if raw.get(key) is not None else ""
         if text:
             return text
-    # use_gateway: false with no name key is not a usable selection shape;
-    # per-capability web keys still count as configured via selection_exists().
     return None
 
 
 def read_web_capability_selection(capability: Optional[str] = None) -> str | None:
     """Stored selection that decides ONE web capability (``"search"`` / ``"extract"``):
-    ``web.<capability>_backend`` when set (``"nous"`` = managed gateway, a vendor name =
-    that vendor direct), else the shared :func:`read_selection`. Lets search and extract
-    each choose between the user's own key and the Nous Tool Gateway."""
+    ``web.<capability>_backend`` when set, else the shared :func:`read_selection`."""
     if capability:
         raw = _raw_section("web") or {}
         pin = str(raw.get(f"{capability}_backend") or "").strip().lower()
@@ -270,22 +196,12 @@ def selection_exists(section: str) -> bool:
     return raw is not None and any(str(raw.get(key) or "").strip() for key in extra)
 
 
-# Backends that once shipped in-tree but were removed; a config still pointing at one would
-# otherwise fail silently at the FIRST tool call with a generic "no registered provider has that
-# name". Used by the startup config check and selection_error(); add removals here, never as
-# one-off string checks:  "web": {"<name>": "the <Name> backend was removed in vX (...)"}
-REMOVED_BACKENDS: dict[str, dict[str, str]] = {}
+_TOOL_GATEWAY_REMOVED = "the Nous Tool Gateway was removed; pick a provider that uses your own key or runs locally"
+REMOVED_BACKENDS: dict[str, dict[str, str]] = {
+    section: {"nous": _TOOL_GATEWAY_REMOVED} for section in ("web", "browser", "tts", "stt", "video_gen")
+}
 
 
-# Backends that once shipped in-tree but were removed. A config that still points at one otherwise fails
-# silently at the FIRST tool call with a generic "no registered provider has that name" — no migration, no
-# startup notice (reported after the Tavily removal in #99199). Both the startup config check
-# (hermes_cli.config.validate_config_structure) and selection_error() consult this map so the user learns
-# what actually happened and what to do. Declared data, one policy — add future removals here, never as
-# one-off string checks at call sites.
-# Currently empty: the Tavily removal (#99199) that introduced this registry was reverted by the #99731
-# restore. Future backend removals add an entry here, e.g. "web": {"<name>": "the <Name> backend was removed
-# in vX.Y.Z (...)"},
 def removed_backend_note(section: str, name: str) -> Optional[str]:
     """Explanation for a backend that used to ship in-tree, or None. ``name`` tolerates the
     quoted form callers pass to selection_error()."""

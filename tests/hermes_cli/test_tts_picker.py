@@ -84,7 +84,7 @@ class TestVisibleProvidersInjectsTTSPlugins:
         tts_registry.register_provider(_FakeTTSProvider(name="cartesia"))
 
         tts_cat = tools_config.TOOL_CATEGORIES["tts"]
-        visible = tools_config._visible_providers(tts_cat, config={})
+        visible = tools_config._visible_providers(tts_cat)
 
         names = [row.get("name") for row in visible]
         # Plugin row injected at the end
@@ -101,7 +101,7 @@ class TestVisibleProvidersInjectsTTSPlugins:
         tts_registry.register_provider(_FakeTTSProvider(name="cartesia"))
 
         img_cat = tools_config.TOOL_CATEGORIES["image_gen"]
-        visible = tools_config._visible_providers(img_cat, config={})
+        visible = tools_config._visible_providers(img_cat)
         names = [row.get("name") for row in visible]
         assert "Cartesia" not in names
 

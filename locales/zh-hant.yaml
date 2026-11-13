@@ -3871,7 +3871,7 @@ tips:
   t305: "a2assistant curator rollback 會從執行前的快照還原技能 — 備份位於 skills/.curator_backups/。"
   t306: "a2assistant auth reset <provider> [target] 會清除整個憑證池的冷卻與耗盡標記，也可依索引、id 或標籤只清除單一憑證。"
   t307: "credential_pool_strategies.<provider>: round_robin 會平均輪替金鑰，取代預設的 fill_first。"
-  t308: "針對單一工具設定 use_gateway: true，可將 web、image、tts 或 browser 經由你的 Nous 訂閱路由 — 不需額外金鑰。"
+  t308: "web.search_backend 與 web.extract_backend 可分別為 web_search 和 web_extract 選擇後端。"
   t309: "provider_routing.data_collection: deny 會在 OpenRouter 上排除會儲存資料的提供方。"
   t310: "provider_routing.require_parameters: true 只會路由到支援你請求中每個參數的提供方。"
   t311: "HERMES_TUI_RESUME=1 會在啟動時自動重新連接最近的 TUI 工作階段 — SSH 斷線後特別好用。"

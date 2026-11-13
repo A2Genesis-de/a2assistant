@@ -45,14 +45,8 @@ def _step_up(monkeypatch):
     auth_nous.step_up_nous_billing_scope(open_browser=False)
 
 
-def _tool_login(monkeypatch):
-    from hermes_cli import nous_subscription
-    monkeypatch.setattr(nous_subscription, "_confirm", lambda prompt: True)
-    assert nous_subscription._run_nous_portal_login_only(capability="Web search") is True
-
-
-@pytest.mark.parametrize("surface", [_terminal_login, _auth_add, _step_up, _tool_login],
-                         ids=["hermes model / login", "auth add nous", "billing step-up", "tool setup login"])
+@pytest.mark.parametrize("surface", [_terminal_login, _auth_add, _step_up],
+                         ids=["hermes model / login", "auth add nous", "billing step-up"])
 def test_the_sign_in_settles_the_config_once_after_its_locks_are_released(
         portal, free_account, monkeypatch, surface):
     from hermes_cli import auth
@@ -76,8 +70,8 @@ def test_the_sign_in_settles_the_config_once_after_its_locks_are_released(
     assert model_cfg["base_url"] == INFERENCE.rstrip("/")
 
 
-@pytest.mark.parametrize("surface", [_terminal_login, _auth_add, _tool_login],
-                         ids=["hermes model / login", "auth add nous", "tool setup login"])
+@pytest.mark.parametrize("surface", [_terminal_login, _auth_add],
+                         ids=["hermes model / login", "auth add nous"])
 def test_the_terminal_sign_in_prints_what_moved(portal, free_account, monkeypatch, capsys, surface):
     from hermes_cli import auth
     anon_auth.ensure_portal_identity(explicit=True)

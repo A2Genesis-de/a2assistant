@@ -127,13 +127,6 @@ def _login_nous(account, monkeypatch):
     auth_nous._login_nous(SimpleNamespace(), auth.PROVIDER_REGISTRY["nous"])
 
 
-def _subscription_login(account, monkeypatch):
-    from hermes_cli import auth, nous_subscription
-    monkeypatch.setattr(auth, "_nous_device_code_login", lambda **_kw: account)
-    monkeypatch.setattr(nous_subscription, "_confirm", lambda _p: True)
-    assert nous_subscription._run_nous_portal_login_only(capability="Web search")
-
-
 def _sibling_adoption(account, monkeypatch, tmp_path):
     """Another profile signed in (account in the shared store); this one adopts it on next use."""
     import os
@@ -150,7 +143,6 @@ WRITERS = {
     "persist_nous_credentials": lambda a, mp, tp: _persist(a),
     "step_up_nous_billing_scope": lambda a, mp, tp: _step_up(a, mp),
     "_login_nous": lambda a, mp, tp: _login_nous(a, mp),
-    "nous_subscription_login": lambda a, mp, tp: _subscription_login(a, mp),
     "shared_store_adoption": _sibling_adoption,
 }
 

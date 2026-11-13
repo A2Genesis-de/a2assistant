@@ -41,9 +41,6 @@ def _clear_web_env(monkeypatch: pytest.MonkeyPatch) -> None:
         "PARALLEL_SEARCH_MODE",
         "FIRECRAWL_API_KEY",
         "FIRECRAWL_API_URL",
-        "FIRECRAWL_GATEWAY_URL",
-        "TOOL_GATEWAY_DOMAIN",
-        "TOOL_GATEWAY_USER_TOKEN",
         "XAI_API_KEY",
     ):
         monkeypatch.delenv(k, raising=False)

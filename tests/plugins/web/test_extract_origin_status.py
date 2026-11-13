@@ -28,7 +28,7 @@ def _scrape(payload: dict) -> dict:
 
 
 @pytest.mark.parametrize("metadata, expected", [
-    # Firecrawl SDK v4 model_dump (direct key and Nous Tool Gateway): snake_case, stub body.
+    # Firecrawl SDK v4 model_dump (direct key): snake_case, stub body.
     ({"status_code": 403, "error": "Forbidden", "source_url": "https://t.test/x"}, "HTTP 403 from origin: Forbidden"),
     # REST payload (keyless / self-hosted): camelCase.
     ({"statusCode": 404, "sourceURL": "https://t.test/x"}, "HTTP 404 from origin"),

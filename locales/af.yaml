@@ -3871,7 +3871,7 @@ tips:
   t305: "a2assistant curator rollback herstel vaardighede vanaf 'n momentopname van voor die lopie — rugsteune woon onder skills/.curator_backups/."
   t306: "a2assistant auth reset <provider> [target] vee afkoeltye en uitputtingsvlae op 'n hele geloofsbriewe-poel uit, of op een geloofsbrief volgens indeks, id of etiket."
   t307: "credential_pool_strategies.<provider>: round_robin roteer sleutels eweredig in plaas van die fill_first-verstek."
-  t308: "use_gateway: true per gereedskap stuur web, image, tts of browser deur jou Nous-subskripsie — geen ekstra sleutels nodig nie."
+  t308: "web.search_backend en web.extract_backend kies aparte backends vir web_search en web_extract."
   t309: "provider_routing.data_collection: deny sluit verskaffers op OpenRouter uit wat data stoor."
   t310: "provider_routing.require_parameters: true stuur net na verskaffers wat elke parameter in jou versoek ondersteun."
   t311: "HERMES_TUI_RESUME=1 herkoppel by die begin outomaties aan die mees onlangse TUI-sessie — handig nadat SSH afgebreek het."

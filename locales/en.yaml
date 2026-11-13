@@ -3985,7 +3985,7 @@ tips:
   t305: "hermes curator rollback restores skills from a pre-run snapshot — backups live under skills/.curator_backups/."
   t306: "hermes auth reset <provider> [target] clears cooldowns and exhaustion flags on a whole credential pool, or on one credential by index, id, or label."
   t307: "credential_pool_strategies.<provider>: round_robin cycles keys evenly instead of the fill_first default."
-  t308: "use_gateway: true per-tool routes web, image, tts, or browser through your Nous subscription — no extra keys."
+  t308: "web.search_backend and web.extract_backend pick separate backends for web_search and web_extract."
   t309: "provider_routing.data_collection: deny excludes data-storing providers on OpenRouter."
   t310: "provider_routing.require_parameters: true only routes to providers that support every param in your request."
   t311: "HERMES_TUI_RESUME=1 auto-re-attaches to the most recent TUI session on launch — handy after SSH drops."

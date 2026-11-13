@@ -68,9 +68,7 @@ os.environ["HERMES_HOME"] = home
 
 # Clear FAL-related env so dispatch decisions are config-driven.
 for k in (
-    "FAL_KEY", "FAL_QUEUE_GATEWAY_URL",
-    "TOOL_GATEWAY_DOMAIN", "TOOL_GATEWAY_USER_TOKEN",
-    "FAL_IMAGE_MODEL",
+    "FAL_KEY", "FAL_IMAGE_MODEL",
 ):
     os.environ.pop(k, None)
 
@@ -160,14 +158,6 @@ SCENARIOS: list[tuple[str, str, dict[str, str]]] = [
         "explicit-typo-provider",
         "image_gen:\n  provider: not-a-real-backend\n",
         {"FAL_KEY": "test-key"},
-    ),
-    (
-        "managed-gateway-only",
-        "",
-        {
-            "TOOL_GATEWAY_DOMAIN": "nousresearch.com",
-            "TOOL_GATEWAY_USER_TOKEN": "nous-token",
-        },
     ),
 ]
 

@@ -3871,7 +3871,7 @@ tips:
   t305: "a2assistant curator rollback は実行前のスナップショットからスキルを復元します。バックアップは skills/.curator_backups/ にあります。"
   t306: "a2assistant auth reset <provider> [target] は、認証情報プール全体、またはインデックス・id・ラベルで指定した 1 件のクールダウンと枯渇フラグをクリアします。"
   t307: "credential_pool_strategies.<provider>: round_robin は、デフォルトの fill_first ではなくキーを均等に巡回させます。"
-  t308: "ツールごとに use_gateway: true を設定すると、web、image、tts、browser を Nous サブスクリプション経由で使えます。追加のキーは不要です。"
+  t308: "web.search_backend と web.extract_backend で web_search と web_extract に別々のバックエンドを選べます。"
   t309: "provider_routing.data_collection: deny は、OpenRouter 上でデータを保存するプロバイダーを除外します。"
   t310: "provider_routing.require_parameters: true は、リクエストのすべてのパラメーターに対応するプロバイダーだけにルーティングします。"
   t311: "HERMES_TUI_RESUME=1 は起動時に最新の TUI セッションへ自動で再接続します。SSH が切れた後に便利です。"

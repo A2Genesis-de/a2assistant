@@ -1,7 +1,7 @@
 """Behavior tests for the pure connectors.gateway merge/partition/name logic.
 
-Pure functions, zero fakes, no I/O — matching the DI-callable test idiom
-(``test_managed_tool_gateway.py``). Wire/client behavior is covered in the
+Pure functions, zero fakes, no I/O — matching the DI-callable test idiom.
+Wire/client behavior is covered in the
 client PR; this file owns partition → splice → assemble and the name codec.
 """
 

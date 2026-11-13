@@ -3871,7 +3871,7 @@ tips:
   t305: "a2assistant curator rollback, skill'leri çalıştırma öncesi anlık görüntüden geri yükler — yedekler skills/.curator_backups/ altında durur."
   t306: "a2assistant auth reset <provider> [target], bekleme sürelerini ve tükenme işaretlerini tüm kimlik bilgisi havuzunda ya da dizin, id veya etikete göre tek bir kimlik bilgisinde temizler."
   t307: "credential_pool_strategies.<provider>: round_robin, varsayılan fill_first yerine anahtarları eşit biçimde sırayla kullanır."
-  t308: "Araç başına use_gateway: true, web, image, tts veya browser'ı Nous aboneliğiniz üzerinden yönlendirir — ek anahtar gerekmez."
+  t308: "web.search_backend ve web.extract_backend, web_search ve web_extract için ayrı arka uçlar seçer."
   t309: "provider_routing.data_collection: deny, OpenRouter'da veri saklayan sağlayıcıları dışarıda bırakır."
   t310: "provider_routing.require_parameters: true, yalnızca isteğinizdeki her parametreyi destekleyen sağlayıcılara yönlendirir."
   t311: "HERMES_TUI_RESUME=1, başlatıldığında en son TUI oturumuna otomatik olarak yeniden bağlanır — SSH kopmalarından sonra işe yarar."

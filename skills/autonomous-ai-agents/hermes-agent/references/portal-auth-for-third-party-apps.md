@@ -120,9 +120,3 @@ When the user asks "can $APP use my Portal subscription":
    A2Assistant agent itself") is fully supported. A2Assistant treats agent
    provider/model and tool-side LLM calls as independent config; you can
    point each at a different endpoint.
-
-**Note on the Tool Gateway**: the "no separate accounts, no API key juggling"
-pitch in the Tool Gateway announcement is specifically about A2Assistant's
-*tools* (web search, browser, image gen, TTS) flowing through the Portal
-subscription when A2Assistant is configured to use Portal as its provider. It is
-**not** a claim that arbitrary third-party apps inherit Portal auth.

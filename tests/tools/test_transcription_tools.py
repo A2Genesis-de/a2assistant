@@ -1625,14 +1625,11 @@ def test_command_stt_idle_timeout_preserves_transcription_contract(tmp_path, pro
 # ============================================================================
 
 class TestExplicitOpenaiSelectionError:
-    """A managed-route outage must not be reported as generic setup guidance.
+    """An explicit OpenAI selection without credentials must not be reported as generic setup guidance.
 
-    When ``_resolve_openai_audio_client_config()`` raises its
-    selection-specific ValueError (managed openai-audio gateway unavailable,
-    with the ``hermes tools`` remediation for managed-Nous users), the old
-    boolean probe flattened it into False — the log said "no API key" and
-    the transcription result returned the all-provider install hint,
-    pointing operators at unrelated setup instead of their managed route.
+    When ``_resolve_openai_audio_client_config()`` raises its ValueError, the
+    transcription result carries that reason instead of the all-provider
+    install hint.
     """
 
     def _no_openai_credentials(self, monkeypatch):
@@ -1642,29 +1639,18 @@ class TestExplicitOpenaiSelectionError:
             "tools.tool_backend_helpers.resolve_openai_audio_api_key",
             lambda: None,
         )
-        monkeypatch.setattr(
-            "tools.managed_tool_gateway.resolve_managed_tool_gateway",
-            lambda vendor: None,
-        )
 
 
     def test_dispatch_returns_selection_specific_error(self, monkeypatch):
-        """The final transcription result carries the managed-route error and
-        its hermes tools remediation instead of the all-provider install
-        hint."""
+        """The final transcription result carries the credential error of the
+        selected provider instead of the all-provider install hint."""
         self._no_openai_credentials(monkeypatch)
-        monkeypatch.setattr(
-            "tools.tool_backend_helpers.managed_nous_tools_enabled", lambda: True
-        )
         monkeypatch.setattr(
             "tools.transcription_tools._load_stt_config", dict
         )
+        monkeypatch.setattr("tools.tool_backend_helpers.read_selection", lambda section: "openai")
         with patch("tools.transcription_tools._HAS_OPENAI", True), \
-             patch("tools.transcription_tools._HAS_FASTER_WHISPER", False), \
-             patch(
-                 "tools.tool_backend_helpers.nous_tool_gateway_unavailable_message",
-                 lambda what: f"managed route down for {what}; run `hermes tools`",
-             ):
+             patch("tools.transcription_tools._HAS_FASTER_WHISPER", False):
             from tools.transcription_tools import _dispatch_stt_provider
 
             result = _dispatch_stt_provider(
@@ -1672,7 +1658,7 @@ class TestExplicitOpenaiSelectionError:
             )
 
         assert result["success"] is False
-        assert "managed route down" in result["error"]
+        assert "stt is configured to use openai" in result["error"]
         assert "hermes tools" in result["error"]
         assert "No STT provider available" not in result["error"]
 

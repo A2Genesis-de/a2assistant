@@ -9,24 +9,6 @@ from hermes_cli.config import load_config
 
 DEFAULT_PORTAL_URL = "https://portal.nousresearch.com"
 SUBSCRIPTION_URL = "https://portal.nousresearch.com/manage-subscription"
-DOCS_URL = "https://hermes-agent.nousresearch.com/docs/user-guide/features/tool-gateway"
-# Static `portal tools` catalog — the partners Tool Gateway routes to today: (key, label, partner).
-_CATALOG = [
-    ("web", "Web search & extract", "Nous-managed"),
-    ("image_gen", "Image generation", "FAL"),
-    ("tts", "Text-to-speech", "OpenAI TTS"),
-    ("browser", "Browser automation", "Browser Use"),
-    ("modal", "Cloud terminal", "Modal"),
-]
-
-
-def _feature_state(feat, *, via_nous: str) -> str:
-    """Routing column shared by `portal info` and `portal tools`."""
-    if feat.managed_by_nous:
-        return color(via_nous, Colors.GREEN)
-    if feat.active:
-        return feat.current_provider or "active"
-    return color("not configured", Colors.DIM)
 
 
 def _heading(title: str) -> None:
@@ -36,9 +18,8 @@ def _heading(title: str) -> None:
 
 
 def _cmd_status(args) -> int:
-    """Show Portal auth + Tool Gateway routing summary."""
+    """Show Portal auth summary."""
     from hermes_cli.auth import get_nous_auth_status_local
-    from hermes_cli.nous_subscription import get_nous_subscription_features
 
     config = load_config() or {}
     try:
@@ -71,20 +52,6 @@ def _cmd_status(args) -> int:
         print(f"  Model:   {color('✓ using Nous as inference provider', Colors.GREEN)}")
     elif provider:
         print(f"  Model:   currently {provider} (switch with `hermes model`)")
-
-    _heading("Tool Gateway")
-    try:
-        features = get_nous_subscription_features(config)
-    except Exception:
-        print("  (could not resolve subscription state)")
-        return 0
-    rows = [(feat.label, _feature_state(feat, via_nous="via Nous Portal")) for feat in features.items()]
-    width = max((len(r[0]) for r in rows), default=0)
-    for label, state in rows:
-        print(f"  {label:<{width}}   {state}")
-    if not logged_in:
-        print()
-        print(color(f"  Docs: {DOCS_URL}", Colors.DIM))
     return 0
 
 
@@ -102,38 +69,8 @@ def _cmd_open(args) -> int:
     return 1
 
 
-def _cmd_tools(args) -> int:
-    """List the Tool Gateway catalog + current routing."""
-    from hermes_cli.nous_subscription import get_nous_subscription_features, managed_image_partner
-
-    config = load_config() or {}
-    try:
-        features = get_nous_subscription_features(config)
-    except Exception:
-        print("Could not resolve Tool Gateway state.", file=sys.stderr)
-        return 1
-
-    _heading("Tool Gateway catalog")
-    if not features.nous_auth_present:
-        print(color("  Not logged into Nous Portal — sign in with `hermes portal`.", Colors.YELLOW))
-        print()
-
-    label_width = max(len(label) for _, label, _ in _CATALOG)
-    for key, label, partner in _CATALOG:
-        if key == "image_gen":
-            partner = managed_image_partner(config) or partner
-        feat = features.features.get(key)
-        state = color("unknown", Colors.DIM) if feat is None else _feature_state(feat, via_nous="✓ via Nous Portal")
-        print(f"  {label:<{label_width}}  partner: {partner:<14} {state}")
-
-    print()
-    print(color(f"  Manage your subscription: {SUBSCRIPTION_URL}", Colors.DIM))
-    print(color(f"  Docs: {DOCS_URL}", Colors.DIM))
-    return 0
-
-
 def _cmd_login(args) -> int:
-    """One-shot Nous Portal onboarding (login + model + provider + tools).
+    """One-shot Nous Portal onboarding (login + model + provider).
 
     Reuses the exact wiring behind ``hermes setup --portal`` so the commands stay in lockstep.
     """
@@ -158,7 +95,6 @@ _SUBCOMMANDS = {
     "info": _cmd_status,
     "status": _cmd_status,
     "open": _cmd_open,
-    "tools": _cmd_tools,
 }
 
 
@@ -177,13 +113,13 @@ def add_parser(subparsers) -> None:
     """Register `hermes portal` on the given argparse subparsers object."""
     portal_parser = subparsers.add_parser(
         "portal",
-        help="Set up Nous Portal (login, model pick, Tool Gateway); see also `portal info`",
+        help="Set up Nous Portal (login, model pick); see also `portal info`",
         description=(
             "Run `hermes portal` with no subcommand to log in to Nous Portal "
-            "and set it up — pick a model, set Nous as your provider, and offer "
-            "the Tool Gateway (the human-readable alias for `hermes auth add "
-            "nous --type oauth`, identical to `hermes setup --portal`). "
-            "Subcommands: login (default), info, open, tools."
+            "and set it up — pick a model and set Nous as your provider (the "
+            "human-readable alias for `hermes auth add nous --type oauth`, "
+            "identical to `hermes setup --portal`). "
+            "Subcommands: login (default), info, open."
         ),
     )
     portal_sub = portal_parser.add_subparsers(dest="portal_command")
@@ -191,10 +127,9 @@ def add_parser(subparsers) -> None:
     # `status` is a hidden (no help) back-compat alias; registration order = `hermes portal -h` order.
     for name, help_text in (
         ("login", "Log in to Nous Portal + set it up (default; one-shot onboarding)"),
-        ("info", "Show Portal auth + Tool Gateway routing summary"),
+        ("info", "Show Portal auth summary"),
         ("status", None),
         ("open", "Open the Portal subscription page in your default browser"),
-        ("tools", "List Tool Gateway tools and which are routed via Nous"),
     ):
         portal_sub.add_parser(name, **({} if help_text is None else {"help": help_text}))
 

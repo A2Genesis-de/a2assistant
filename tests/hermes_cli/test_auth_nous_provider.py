@@ -468,7 +468,6 @@ class TestLoginNousSkipKeepsCurrent:
         from hermes_cli import auth_nous
         import hermes_cli.models as models_mod
         from hermes_cli import models_pricing
-        import hermes_cli.nous_subscription as ns
 
         fake_auth_state = {
             "access_token": "fake-nous-token",
@@ -501,7 +500,6 @@ class TestLoginNousSkipKeepsCurrent:
             models_mod, "partition_nous_models_by_tier",
             lambda ids, p, free_tier=False: (ids, []),
         )
-        monkeypatch.setattr(ns, "prompt_enable_tool_gateway", lambda cfg: None)
         # Not a usage-window account, and no live portal read of the fake token.
         import hermes_cli.model_picker_usage as mpu
         monkeypatch.setattr(mpu, "nous_picker_usage", lambda **kw: None)

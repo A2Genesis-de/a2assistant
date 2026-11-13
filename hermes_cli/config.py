@@ -861,9 +861,7 @@ def _unset_nested(config, dotted_key: str) -> bool:
 _ENV_CONFIG_KEYS = frozenset({
     'OPENROUTER_API_KEY', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOICE_TOOLS_OPENAI_KEY',
     'EXA_API_KEY', 'PARALLEL_API_KEY', 'FIRECRAWL_API_KEY', 'FIRECRAWL_API_URL',
-    'FIRECRAWL_GATEWAY_URL', 'TOOL_GATEWAY_URL', 'CONNECTOR_GATEWAY_URL',
-    'TOOL_GATEWAY_DOMAIN', 'TOOL_GATEWAY_SCHEME',
-    'TOOL_GATEWAY_USER_TOKEN', 'TAVILY_API_KEY', 'PERPLEXITY_API_KEY', 'API_SERVER_KEY',
+    'CONNECTOR_GATEWAY_URL', 'TAVILY_API_KEY', 'PERPLEXITY_API_KEY', 'API_SERVER_KEY',
     'BROWSERBASE_API_KEY', 'BROWSERBASE_PROJECT_ID', 'BROWSER_USE_API_KEY',
     'FAL_KEY', 'TELEGRAM_BOT_TOKEN', 'DISCORD_BOT_TOKEN',
     'TERMINAL_SSH_HOST', 'TERMINAL_SSH_USER', 'TERMINAL_SSH_KEY',
@@ -956,7 +954,6 @@ _EXTRA_KNOWN_ROOT_KEYS = {
     "platform_toolsets",     # written by the setup wizard
     "known_plugin_toolsets", # hermes_cli/tools_config.py toolset-save flow
     "known_builtin_toolsets",  # ditto — builtin toolsets a platform's checklist has offered
-    "tool_gateway_declined_tools",  # per-tool Tool Gateway offer declines
     # Top-level forms read/bridged by gateway/config.py:
     "group_sessions_per_user", "thread_sessions_per_user",
     "stt_echo_transcripts", "reset_triggers", "always_log_local", "filter_silence_narration",
@@ -2858,7 +2855,7 @@ _SECRET_CONFIG_KEYS = frozenset({
 # the suffixes ``_is_env_config_key`` routes to .env. Suffix-only so ``token_count`` stays visible.
 _SECRET_CONFIG_KEY_SUFFIXES = ("_api_key", "_token", "_secret", "_password", "_key", "_access_key")
 # .env-routed keys are credentials by default; these suffixes name the non-secret exceptions
-# (``TERMINAL_SSH_HOST``, ``TOOL_GATEWAY_URL``, ``BROWSERBASE_PROJECT_ID``).
+# (``TERMINAL_SSH_HOST``, ``CONNECTOR_GATEWAY_URL``, ``BROWSERBASE_PROJECT_ID``).
 _NON_SECRET_KEY_SUFFIXES = ("_url", "_host", "_user", "_id", "_domain", "_scheme")
 _ENV_PLACEHOLDER_RE = re.compile(r"^\$\{[A-Za-z_][A-Za-z0-9_]*\}$")
 

@@ -26,7 +26,7 @@ def test_first_hosted_action_creates_one_connectors_only_guest(nas, monkeypatch)
     from tools.connectors.gateway import client
     from tools.connectors.gateway.config import connectors_available
     from tools.connectors.tool import manage_connections
-    from tools.managed_tool_gateway import read_nous_access_token
+    from tools.managed_gateway_auth import read_nous_access_token
 
     bearers = []
 

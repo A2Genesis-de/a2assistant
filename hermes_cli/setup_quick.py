@@ -36,7 +36,7 @@ def _reload_config_into(config: dict, *, dict_only: bool = False) -> None:
 
 
 def _run_nous_flow(config: dict, *, context: str, cancel_exc: tuple, cancel_lines: tuple, print_error) -> bool:
-    """Run ``_model_flow_nous`` (login, model pick, provider switch, Tool Gateway opt-in) — the
+    """Run ``_model_flow_nous`` (login, model pick, provider switch) — the
     single source of truth shared with ``hermes model``. False when cancelled or failed (the
     message is already printed)."""
     from hermes_cli.setup import _info
@@ -58,9 +58,7 @@ def _run_portal_one_shot(config: dict) -> None:
     """One-shot Nous Portal setup (``hermes setup --portal`` / ``hermes portal``)."""
     from hermes_cli.setup import _info, _print_banner, _record_setup_completed, print_error, print_info, print_success
     _print_banner("│     ☤ A2Assistant Setup — Nous Portal (one-shot)             │")
-    _info(None, "  One subscription, 300+ models, plus the Tool Gateway:",
-          "    web search, image generation, TTS, browser automation",
-          "    — all routed through your Nous Portal sub.", None,
+    _info(None, "  One subscription, 300+ models.", None,
           "  Sign up: https://portal.nousresearch.com/manage-subscription", None)
 
     def _on_error(exc: Exception) -> None:
@@ -113,7 +111,7 @@ def _keep_imported_model(config: dict, imported_from: str) -> bool:
     _info(f"Settings were imported from {imported_from}.")
     return prompt_choice(f"Keep your imported model ({label}) or switch to Nous Portal?", [
         f"Keep {label}",
-        "Switch to Nous Portal — free OAuth login, 300+ models plus the Tool Gateway",
+        "Switch to Nous Portal — free OAuth login, 300+ models",
     ], 0, description=f"  Settings were imported from {imported_from}.") == 0
 
 
@@ -121,8 +119,7 @@ def _quick_setup_nous_portal(config: dict) -> None:
     """Quick Setup's Nous Portal step: OAuth login + model selection (provider set to "nous" by the save)."""
     from hermes_cli.setup import _info, print_header, print_info, print_warning
     print_header("Nous Portal", gap=True)
-    _info("One subscription, 300+ models, plus the Tool Gateway:",
-          "  web search, image generation, TTS, browser automation.",
+    _info("One subscription, 300+ models.",
           "Sign up: https://portal.nousresearch.com/manage-subscription", None)
 
     def _on_error(exc: Exception) -> None:

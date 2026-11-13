@@ -28,7 +28,6 @@ from hermes_cli.process_identity import (
 from hermes_constants import get_hermes_home, hermes_home_key
 from tools.browser_harness_dirs import (daemon_env, daemon_identity, fit_default_socket_dir, harness_pid_file,
                                         namespace_harness_dirs)
-from utils import is_truthy_value
 
 logger = logging.getLogger(__name__)
 
@@ -224,27 +223,13 @@ def _read_browser_cfg() -> dict:
         return {}
 
 
-def _use_gateway(browser_cfg: dict) -> bool:
-    """True when the browser section selects the Nous Tool Gateway — by the current ``hermes tools``
-    picker row (``cloud_provider: nous``) or the pre-picker ``use_gateway: true`` flag. Reading only
-    the legacy flag missed every picker-configured gateway, and the direct-API branch it fell into
-    holds no credentials in managed mode (#108310)."""
-    if is_truthy_value(browser_cfg.get("use_gateway"), default=False):
-        return True
-    try:
-        from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER
-    except Exception:  # pragma: no cover — helper ships with the package
-        return False
-    return str(browser_cfg.get("cloud_provider") or "").strip().lower() == NOUS_MANAGED_PROVIDER
-
-
 def is_legacy_browser_use_cloud_config(browser_cfg: dict) -> bool:
-    """True for pre-CLI direct-API Browser Use cloud configs: no cloud_provider (or ``browser-use``), not the
-    Nous gateway, and BROWSER_USE_API_KEY set; the CLI then reaches Browser Use cloud natively."""
+    """True for pre-CLI direct-API Browser Use cloud configs: no cloud_provider (or ``browser-use``) and
+    BROWSER_USE_API_KEY set; the CLI then reaches Browser Use cloud natively."""
     if not isinstance(browser_cfg, dict):
         return False
     provider = str(browser_cfg.get("cloud_provider") or "").strip().lower()
-    if provider not in {"browser-use", ""} or _use_gateway(browser_cfg):
+    if provider not in {"browser-use", ""}:
         return False
     return _browser_use_api_key_set()
 
@@ -429,14 +414,11 @@ def _resolve_backend_cdp(env: dict, task_id: Optional[str], session_name: str = 
         return _resolve_local_cdp(env, task_id, session_name)
 
     # Browser Use direct-API configs: the CLI talks to BU cloud natively (BU_AUTOSPAWN) — the
-    # legacy provider would create a second, redundant session. Nous-gateway configs (cloud_provider: nous
-    # from the picker, or the pre-picker use_gateway: true) DO resolve through the provider: the gateway
-    # provisions the browser server-side and returns its CDP URL. Without BROWSER_USE_API_KEY the CLI cannot
-    # autospawn, and the provider is either the managed gateway (autodetect on a never-configured install) or
-    # a selection missing its key; both go through the session path (gateway CDP, or the session layer's
+    # legacy provider would create a second, redundant session. Without BROWSER_USE_API_KEY the CLI cannot
+    # autospawn, so a selection missing its key goes through the session path (the session layer's
     # local-Chromium fallback) instead of leaving the harness to hunt for an installed Chrome.
     provider_key = str(getattr(provider, "name", "") or "").strip().lower()
-    if provider_key == _BROWSER_USE_PROVIDER and not _use_gateway(_read_browser_cfg()) and _browser_use_api_key_set():
+    if provider_key == _BROWSER_USE_PROVIDER and _browser_use_api_key_set():
         env[_PRIVATE_BROWSER_SENTINEL] = "1"  # named BU cloud browsers are exclusive to their daemon
         # Only intent: the harness attaches to a local Chrome already listening instead of autospawning, so
         # the live daemon's own report decides.

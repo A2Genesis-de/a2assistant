@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Speech-to-text transcription used by the gateway for voice messages.
 
-Built-in providers: local (faster-whisper, default/free), local_command, groq, openai
-(also serves the managed ``nous`` selection), mistral, xai, elevenlabs, deepinfra; plus
+Built-in providers: local (faster-whisper, default/free), local_command, groq, openai,
+mistral, xai, elevenlabs, deepinfra; plus
 user-declared command providers and plugin providers. ``transcribe_audio(path)`` returns
 ``{"success", "transcript", "error"?, "provider"?}``. This module owns provider resolution,
 the dispatcher and the cached local model + idle-unload state; backends live in
@@ -115,11 +115,8 @@ def _resolve_stt_language(
 
 
 def _openai_audio_unavailable_reason() -> Optional[str]:
-    """None when OpenAI audio has usable credentials (config, env, or managed gateway); else the reason."""
+    """None when OpenAI audio has usable credentials (config or env); else the reason."""
     try:
-        # Resolve directly instead of via the boolean probe: the probe flattens
-        # _resolve_openai_audio_client_config's selection-specific ValueError into False, so a managed
-        # openai-audio gateway outage would be logged as a generic "no API key" hint (#93045).
         _resolve_openai_audio_client_config()
         return None
     except ValueError as exc:
@@ -253,9 +250,6 @@ def _get_provider(stt_config: dict) -> str:
         return "none"
     explicit = "provider" in stt_config
     provider = stt_config.get("provider", DEFAULT_PROVIDER)
-    # The managed "Nous Subscription" selection is the OpenAI backend routed via the managed gateway.
-    if isinstance(provider, str) and provider.strip().lower() == "nous":
-        provider = "openai"
     if explicit and provider == "local":
         # Legacy DEFAULT_CONFIG seeded ``stt.provider: local`` on every install, so only a
         # raw config.yaml selection counts as explicit; otherwise autodetect (local-first anyway).

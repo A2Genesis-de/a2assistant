@@ -92,7 +92,6 @@ def run_exec(monkeypatch, tmp_path):
         monkeypatch.setattr(bs_cloud, "get_cloud_provider", (lambda: object()) if cloud else (lambda: None))
         if autospawn_daemon_kind:  # direct-API Browser Use config: the harness picks its own browser
             monkeypatch.setattr(bs_cloud, "get_cloud_provider", lambda: SimpleNamespace(name="browser-use"))
-            monkeypatch.setattr(bu_cli, "_use_gateway", lambda cfg: False)
             monkeypatch.setattr(bu_cli, "_browser_use_api_key_set", lambda: True)
         monkeypatch.setenv("FAKE_DAEMON_KIND", autospawn_daemon_kind)
         monkeypatch.setattr(bs, "get_session_info",

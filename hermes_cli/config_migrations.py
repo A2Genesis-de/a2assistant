@@ -550,7 +550,7 @@ def _migrate_to_39(results: dict[str, Any], quiet: bool) -> None:
             "removed retired 'bfl' toolset from saved toolset lists",
             "  ✓ Removed the retired BFL FLUX 3 toolset from saved toolset "
             "lists — video generation now lives under `hermes tools` → "
-            "Video Generation (Nous Subscription or FAL).")
+            "Video Generation.")
 
 
 def _migrate_to_41(results: dict[str, Any], quiet: bool) -> None:
