@@ -22,7 +22,6 @@ import {
 import { useComposerScope } from '@/app/chat/composer/scope'
 import { useSessionView } from '@/app/chat/session-view'
 import { SETTINGS_ROUTE } from '@/app/routes'
-import { useBillingApi } from '@/app/settings/billing/api'
 import { dispatchedTo } from '@/components/assistant-ui/thread/agent-delivery'
 import { ChangedFilesCard } from '@/components/assistant-ui/thread/changed-files-card'
 import {
@@ -54,15 +53,13 @@ import {
   type ErrorActionId,
   errorCardActions,
   errorCardSeverity,
-  errorCardShowsDiagnostics,
   type ErrorSurface,
   formatCountdown,
   formatErrorDiagnostics,
   formatResetClock,
   isOAuthReauthSurface,
   providerSettingsUrl,
-  scheduledRetryDelayMs,
-  type UsageLimitSuggestion
+  scheduledRetryDelayMs
 } from '@/lib/error-surface'
 import { errorCardText, errorProviderName } from '@/lib/error-surface-copy'
 import { openExternalLink } from '@/lib/external-link'
@@ -83,9 +80,8 @@ import { $touchPointer } from '@/lib/touch-interaction'
 import { useEnterAnimation } from '@/lib/use-enter-animation'
 import { cn } from '@/lib/utils'
 import { playSpeechText, stopVoicePlayback } from '@/lib/voice-playback'
-import { $billingBlock, requestBillingSettings, runBillingRecovery } from '@/store/billing-block'
+import { $billingBlock, runBillingRecovery } from '@/store/billing-block'
 import { DESKTOP_BUTTON_ACTIONS, recordAction } from '@/store/desktop-metrics'
-import { openFreeTierSignIn } from '@/store/free-tier-sign-in'
 import { notifyError } from '@/store/notifications'
 import { startManualProviderOAuth } from '@/store/onboarding'
 import { $activeGatewayProfile, normalizeProfileKey, requestFreshSession } from '@/store/profile'
@@ -724,92 +720,6 @@ const CompressConversationAction: FC<{ className: string; label: string }> = ({ 
   )
 }
 
-// usage_window: "Switch to Model A" — the plan's recommended model that
-// still works past the limit (agent/plan_limits.py picked it). Switches THIS
-// session (session.info repaints the composer), then re-runs the refused turn
-// only once the switch applied: a guarded target waits for the user's answer,
-// and keeping the current model re-runs nothing. Session-only on purpose: the
-// user's default stays put.
-const SwitchToModelAction: FC<{ className: string; suggestion: UsageLimitSuggestion }> = ({
-  className,
-  suggestion
-}) => {
-  const { t } = useI18n()
-  const copy = t.assistant.thread
-  const aui = useAui()
-  const view = useSessionView()
-  const sessionId = useStore(view.$runtimeId)
-  const [busy, setBusy] = useState(false)
-
-  const switchAndRetry = useCallback(async () => {
-    const switchSessionModel = sessionTileDelegate()?.switchSessionModel
-
-    if (!sessionId || !switchSessionModel) {
-      notifyError(new Error('session delegate unavailable'), copy.errorSwitchModelFailed)
-
-      return
-    }
-
-    triggerHaptic('submit')
-    setBusy(true)
-
-    try {
-      if (await switchSessionModel(sessionId, suggestion.model, suggestion.provider)) {
-        aui.message().reload()
-      }
-    } catch (error) {
-      notifyError(error, copy.errorSwitchModelFailed)
-    } finally {
-      setBusy(false)
-    }
-  }, [aui, copy.errorSwitchModelFailed, sessionId, suggestion.model, suggestion.provider])
-
-  return (
-    <button className={className} disabled={busy} onClick={() => void switchAndRetry()} type="button">
-      {busy && <Loader2Icon className="size-3 animate-spin" />}
-      {copy.errorSwitchToModel(suggestion.label, suggestion.note)}
-    </button>
-  )
-}
-
-// usage_window, Keep going off with a balance: "Use credits" turns the account
-// setting on (the same call as Settings → Billing's switch), then re-runs the
-// turn. A refusal (remote spending not allowed yet, step-up) opens Billing, which
-// explains and fixes it.
-const UseCreditsAction: FC<{ className: string }> = ({ className }) => {
-  const { t } = useI18n()
-  const copy = t.assistant.thread
-  const aui = useAui()
-  const api = useBillingApi()
-  const [busy, setBusy] = useState(false)
-
-  const turnOnCredits = useCallback(async () => {
-    triggerHaptic('submit')
-    setBusy(true)
-
-    try {
-      const result = await api.updateKeepGoingOnCredits(true)
-
-      if (result.ok) {
-        aui.message().reload()
-      } else {
-        requestBillingSettings()
-      }
-    } catch (error) {
-      notifyError(error, copy.errorUseCreditsFailed)
-    } finally {
-      setBusy(false)
-    }
-  }, [api, aui, copy.errorUseCreditsFailed])
-
-  return (
-    <button className={className} disabled={busy} onClick={() => void turnOnCredits()} type="button">
-      {busy && <Loader2Icon className="size-3 animate-spin" />}
-      {copy.errorUseCredits}
-    </button>
-  )
-}
-
 // One client-side retry of THIS turn at the provider's own reset moment (#98852,
 // option B): arm → visible countdown + Cancel → fires `message().reload()` — the
 // exact call behind the Retry button — exactly once. Nothing persists: closing
@@ -957,8 +867,6 @@ const ErrorCard: FC<{ onDismiss?: () => void }> = ({ onDismiss }) => {
   const detailsId = useId()
   const { body, title } = errorCardText(copy, surface)
   const severity = errorCardSeverity(surface)
-  // A plan limit is not a fault: no diagnostics to bury the actions that fix it.
-  const diagnostics = errorCardShowsDiagnostics(surface)
 
   return (
     <ErrorPrimitive.Root className="aui-error-card" data-severity={severity} data-slot="aui_error-card" role="alert">
@@ -971,21 +879,17 @@ const ErrorCard: FC<{ onDismiss?: () => void }> = ({ onDismiss }) => {
       </div>
       <div className="aui-error-card-row">
         <ErrorCardActionRow surface={surface} />
-        {diagnostics && (
-          <button
-            aria-controls={detailsId}
-            aria-expanded={detailsOpen}
-            className="aui-error-card-toggle"
-            onClick={() => setDetailsOpen(open => !open)}
-            type="button"
-          >
-            {detailsOpen ? copy.errorHideDetails : copy.errorDetails}
-          </button>
-        )}
+        <button
+          aria-controls={detailsId}
+          aria-expanded={detailsOpen}
+          className="aui-error-card-toggle"
+          onClick={() => setDetailsOpen(open => !open)}
+          type="button"
+        >
+          {detailsOpen ? copy.errorHideDetails : copy.errorDetails}
+        </button>
       </div>
-      {diagnostics && (
-        <ErrorDetailsBlock errorText={errorText} hidden={!detailsOpen} id={detailsId} surface={surface} />
-      )}
+      <ErrorDetailsBlock errorText={errorText} hidden={!detailsOpen} id={detailsId} surface={surface} />
       {severity === 'degraded' && onDismiss && (
         <button aria-label={copy.dismissError} className="aui-error-card-close" onClick={onDismiss} type="button">
           <XIcon aria-hidden className="size-4" />
@@ -1088,8 +992,8 @@ const textButton = (className: string, onClick: () => void, label: ReactNode) =>
 )
 
 // Out of credits runs the same recovery as the banner and toast: the failing provider's own
-// billing page (Nous → Settings → Billing). A plan limit is Nous billing. Without this chat's
-// billing descriptor Hermes doesn't know where a third-party provider bills, so no button.
+// billing page. Without this chat's billing descriptor Hermes doesn't know where the provider
+// bills, so no button.
 const sameProvider = (a?: string | null, b?: string | null) =>
   Boolean(a && b && a.trim().toLowerCase() === b.trim().toLowerCase())
 
@@ -1104,29 +1008,17 @@ const OpenBillingAction: FC<{ className: string; label: string; surface?: ErrorS
   // This chat's wall, and only for the provider this card failed on: a later wall from another
   // provider in the same chat must not retarget an older card.
   const block =
-    surface?.code !== 'usage_window' &&
-    wall?.sessionId === runtimeId &&
-    sameProvider(wall.block.provider, surface?.provider)
-      ? wall.block
-      : null
+    wall?.sessionId === runtimeId && sameProvider(wall.block.provider, surface?.provider) ? wall.block : null
 
-  const nousBilling = surface?.code === 'usage_window' || (surface?.provider || 'nous').toLowerCase() === 'nous'
-
-  if (!block && !nousBilling) {
+  if (!block?.billing_url) {
     return null
   }
 
-  return textButton(className, () => (block ? runBillingRecovery(block) : requestBillingSettings()), label)
+  return textButton(className, () => runBillingRecovery(block), label)
 }
 
 // One renderer per action (Error System Overhaul action table → the app's existing handlers).
 const ERROR_ACTION_RENDERERS: Record<ErrorActionId, (ctx: ErrorActionContext) => ReactNode> = {
-  switch_to_model: ({ className, surface }) => {
-    const suggestion = surface?.usageLimit?.suggestions[0]
-
-    return suggestion ? <SwitchToModelAction className={className} suggestion={suggestion} /> : null
-  },
-  use_credits: ({ className }) => <UseCreditsAction className={className} />,
   open_billing: ({ className, copy, surface }) => (
     <OpenBillingAction className={className} label={copy.errorOpenBillingSettings} surface={surface} />
   ),
@@ -1163,7 +1055,6 @@ const ERROR_ACTION_RENDERERS: Record<ErrorActionId, (ctx: ErrorActionContext) =>
       copy.errorSignInAgain(surface.providerLabel || surface.provider)
     )
   },
-  sign_in_free_tier: ({ className, copy }) => textButton(className, openFreeTierSignIn, copy.errorSignInFreeTier),
   switch_provider: ({ className, copy, inRouter }) =>
     inRouter ? <SwitchProviderAction className={className} label={copy.errorSwitchProvider} /> : null,
   open_model_settings: ({ className, copy, inRouter }) =>

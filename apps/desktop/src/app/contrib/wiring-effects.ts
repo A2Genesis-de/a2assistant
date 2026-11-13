@@ -22,25 +22,6 @@ export function useOpenKeybindsListener(navigate: NavigateFunction) {
   }, [navigate])
 }
 
-// Dev-only: install the credit-notice demo trigger (Ctrl+Shift+C / ⌘K palette
-// / window.__creditsDemo). Dynamic import inside the DEV guard so the module
-// is dropped from production builds.
-export function useCreditsNoticeDemo() {
-  useEffect(() => {
-    if (!import.meta.env.DEV) {
-      return
-    }
-
-    let dispose: (() => void) | undefined
-
-    void import('./dev/credits-notice-demo').then(m => {
-      dispose = m.installCreditsNoticeDemo()
-    })
-
-    return () => dispose?.()
-  }, [])
-}
-
 // Expose the restart handler to the preview pane contribution (module
 // boundary crossed via atom — contrib-panes can't import wiring.tsx).
 export function usePublishRestartPreviewServer(restartPreviewServer: RestartPreviewServer) {

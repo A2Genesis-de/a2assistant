@@ -4,7 +4,7 @@ import { StatusRow } from '@/components/chat/status-row'
 import { Button } from '@/components/ui/button'
 import { Codicon } from '@/components/ui/codicon'
 import { useI18n } from '@/i18n'
-import { $billingBlock, billingCtaLabel, clearBillingBlock, runBillingRecovery } from '@/store/billing-block'
+import { $billingBlock, clearBillingBlock, runBillingRecovery } from '@/store/billing-block'
 import { recordFriction } from '@/store/desktop-metrics'
 
 function firstLine(text: string): string {
@@ -15,9 +15,8 @@ function firstLine(text: string): string {
  * Persistent, in-stack billing wall for THIS session. Rendered as a shared
  * {@link StatusRow} — same chrome as its status-stack siblings, so it reads as
  * one piece with the composer card (no bordered alert-in-a-card). It never
- * disables the composer — slash commands (`/topup`, `/model`, `/login`) stay
- * usable — it only offers recovery: Nous opens Settings → Billing in-app, other
- * providers deep-link out. The failed turn's card also names the wall (it can't
+ * disables the composer — slash commands (`/model`, `/login`) stay usable — it
+ * only offers recovery: a deep link to the provider's billing page. The failed turn's card also names the wall (it can't
  * know whether this banner is on screen: a collapsed drawer, a popped-out
  * composer); a wall in a background chat also raises a sticky toast.
  */
@@ -31,7 +30,7 @@ export function BillingBanner({ sessionId }: { sessionId: null | string }) {
 
   const { block } = active
   const copy = t.billingBlock
-  const title = block.is_nous ? copy.titleNous : copy.titleProvider(block.provider_label)
+  const title = copy.titleProvider(block.provider_label)
   const message = firstLine(block.message) || copy.fallbackMessage
 
   return (
@@ -39,15 +38,17 @@ export function BillingBanner({ sessionId }: { sessionId: null | string }) {
       leading={<Codicon aria-hidden className="text-destructive/85" name="credit-card" size="0.8rem" />}
       trailing={
         <>
-          <Button
-            className="text-foreground/90 hover:text-foreground"
-            onClick={() => runBillingRecovery(block)}
-            size="micro"
-            type="button"
-            variant="text"
-          >
-            {billingCtaLabel(block, copy)}
-          </Button>
+          {block.billing_url && (
+            <Button
+              className="text-foreground/90 hover:text-foreground"
+              onClick={() => runBillingRecovery(block)}
+              size="micro"
+              type="button"
+              variant="text"
+            >
+              {copy.addCredits}
+            </Button>
+          )}
           <Button
             aria-label={copy.dismiss}
             className="size-4 rounded-md text-muted-foreground/60 hover:text-foreground/90"

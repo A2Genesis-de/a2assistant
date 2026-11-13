@@ -4,8 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { runInTerminal } from '@/app/right-sidebar/store'
 import {
-  FEATURED_ID,
-  FeaturedProviderRow,
   FireworksProviderRow,
   LocalModelsProviderRow,
   OpenRouterProviderRow,
@@ -180,16 +178,12 @@ function OAuthPicker({
 
   const select = (p: OAuthProvider) => startManualProviderOAuth(p.id, profile)
 
-  // The free tier holds a token but no account: it is never "connected"; the featured Nous row
-  // names it (Nous · free tier) and offers the sign-in that keeps its connectors.
-  const isConnected = (p: OAuthProvider) => Boolean(p.status?.logged_in) && p.status?.free_tier !== true
-  const featured = ordered.find(p => p.id === FEATURED_ID && !isConnected(p)) ?? null
-  const rest = featured ? ordered.filter(p => p.id !== FEATURED_ID) : ordered
+  const isConnected = (p: OAuthProvider) => Boolean(p.status?.logged_in)
   // Keep connected accounts grouped and always visible; only the unconnected
   // providers hide behind the disclosure, so the page leads with what's set up.
   // Both lists preserve `sortProviders` order (curated priority, then name).
-  const connected = rest.filter(isConnected)
-  const others = rest.filter(p => !isConnected(p))
+  const connected = ordered.filter(isConnected)
+  const others = ordered.filter(p => !isConnected(p))
   const collapsible = others.length > 0
   const showOthers = !collapsible || showAll
 
@@ -210,8 +204,7 @@ function OAuthPicker({
       <p className="-mt-2 mb-1 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
         {p.intro}
       </p>
-      {featured && <FeaturedProviderRow onSelect={select} provider={featured} />}
-      {/* Slot #2 — the no-account path, matching onboarding. Behind the
+      {/* The no-account path, matching onboarding. Behind the
           --local launch flag like every local-models surface. */}
       {$localModelsEnabled.get() && <LocalModelsProviderRow onClick={onWantLocalModels} />}
       {connected.length > 0 && (

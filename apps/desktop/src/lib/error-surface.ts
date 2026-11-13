@@ -71,19 +71,7 @@ export const ERROR_CODE_KEYS = [
   'disk_full',
   // Raised by the desktop, never by the backend: the backend reported a turn
   // over after its events stopped, and no reply reached this window.
-  'no_reply',
-  // The Nous free tier refused or could not serve the turn (agent/error_surface.py
-  // `free_tier_<kind>`). The backend's sentence rides in `message` and is the card body.
-  'free_tier_disabled',
-  'free_tier_rate_limited',
-  'free_tier_at_capacity',
-  'free_tier_model_not_free',
-  'free_tier_route',
-  'free_tier_outage',
-  'free_tier_refused',
-  // A usage-window plan limit ran out and credits won't pay. The backend's
-  // stop-line sentence (which limit, the reset, the way on) rides in `message`.
-  'usage_window'
+  'no_reply'
 ] as const
 
 export type ErrorCodeKey = (typeof ERROR_CODE_KEYS)[number]
@@ -103,72 +91,21 @@ export interface ErrorSurface {
    *  the fix is signing in again (expired/revoked grant); `api_key` means a
    *  key needs replacing. Absent from older backends. */
   authKind?: 'api_key' | 'oauth'
-  /** Auth layer only: display name of the failing provider ("Nous Portal"). */
+  /** Auth layer only: display name of the failing provider. */
   providerLabel?: string
   /** Auth layer, api_key only: the env var holding the rejected key
    *  (OPENAI_API_KEY). Deep-links Settings → Keys to that row. Absent from
    *  older backends. */
   apiKeyEnv?: string
-  /** Free-tier codes: the backend's own plain sentence for this failure (it
-   *  names the wait, the model, the way forward). Shown as the card body. */
+  /** The backend's own plain sentence for this failure, when it sent one. */
   message?: string
   /** Epoch seconds when the provider said its limit lifts (Retry-After header /
    *  `resets_at` body field on a 429). Rendered as "Limit resets at HH:mm" next
    *  to Retry. Absent when the provider named no reset or on older backends. */
   resetsAt?: number
-  /** usage_window only: the plan's recommended models that still work past the
-   *  limit (best first) and the credits option — the card's one-click buttons
-   *  (agent/plan_limits.py). Absent on older backends. */
-  usageLimit?: UsageLimitSurface
-}
-
-export interface UsageLimitSuggestion {
-  model: string
-  label: string
-  /** 'free' | 'included' */
-  note: string
-  provider: string
-}
-
-export interface UsageLimitSurface {
-  suggestions: UsageLimitSuggestion[]
-  /** agent/plan_limits.py::credits_action. use_credits: Keep going is off and there is a balance; add_credits:
-   * top up; add_credits_and_keep_going: both. Only use_credits gets its own button, the others open billing. */
-  credits?: 'add_credits' | 'add_credits_and_keep_going' | 'use_credits'
-}
-
-function parseUsageLimit(value: unknown): UsageLimitSurface | undefined {
-  if (!value || typeof value !== 'object') {
-    return undefined
-  }
-
-  const raw = value as { credits?: { action?: unknown } | null; suggestions?: unknown }
-
-  const suggestions = (Array.isArray(raw.suggestions) ? raw.suggestions : []).flatMap(item => {
-    const s = item as Partial<Record<keyof UsageLimitSuggestion, unknown>>
-
-    return typeof s?.model === 'string' && s.model
-      ? [
-          {
-            model: s.model,
-            label: typeof s.label === 'string' && s.label ? s.label : s.model,
-            note: typeof s.note === 'string' ? s.note : '',
-            provider: typeof s.provider === 'string' && s.provider ? s.provider : 'nous'
-          }
-        ]
-      : []
-  })
-
-  const action = raw.credits?.action
-
-  const credits =
-    action === 'use_credits' || action === 'add_credits' || action === 'add_credits_and_keep_going' ? action : undefined
-
-  return suggestions.length || credits ? { suggestions, ...(credits ? { credits } : {}) } : undefined
 }
 
 /** Validate a wire payload into an ErrorSurface, or null when absent/garbled. */
-// health: allow CC -- usage-window: one branch for the optional usageLimit payload (parsed in parseUsageLimit); over target on main
 export function parseErrorSurface(value: unknown): ErrorSurface | null {
   if (!value || typeof value !== 'object') {
     return null
@@ -185,7 +122,6 @@ export function parseErrorSurface(value: unknown): ErrorSurface | null {
     provider_label?: unknown
     resets_at?: unknown
     retryable?: unknown
-    usage_limit?: unknown
   }
 
   const layer = typeof raw.layer === 'string' ? (raw.layer as ErrorSurfaceLayer) : null
@@ -193,8 +129,6 @@ export function parseErrorSurface(value: unknown): ErrorSurface | null {
   if (!layer || !ERROR_SURFACE_LAYERS.includes(layer)) {
     return null
   }
-
-  const usageLimit = parseUsageLimit(raw.usage_limit)
 
   return {
     layer,
@@ -208,8 +142,7 @@ export function parseErrorSurface(value: unknown): ErrorSurface | null {
     ...(typeof raw.message === 'string' && raw.message.trim() ? { message: raw.message.trim() } : {}),
     ...(typeof raw.resets_at === 'number' && Number.isFinite(raw.resets_at) && raw.resets_at > 0
       ? { resetsAt: raw.resets_at }
-      : {}),
-    ...(usageLimit ? { usageLimit } : {})
+      : {})
   }
 }
 
@@ -246,12 +179,6 @@ export function formatCountdown(remainingMs: number): string {
   const tail = `${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`
 
   return hours > 0 ? `${hours}h ${tail}` : tail.replace(/^0/, '')
-}
-
-/** True when the Nous free tier refused or could not serve the turn: the way
- *  forward is the free sign-in (or another provider), never an OAuth re-login. */
-export function isFreeTierSurface(surface: ErrorSurface | null | undefined): boolean {
-  return typeof surface?.code === 'string' && surface.code.startsWith('free_tier_')
 }
 
 /** True when the failed turn's provider rejected an OAuth grant — the
@@ -296,12 +223,6 @@ export function errorCardKey(surface: ErrorSurface | null | undefined): ErrorCar
 // Layers where another provider can be the fix (the provider side failed, not the gateway or disk).
 const SWITCH_PROVIDER_LAYERS: readonly ErrorSurfaceLayer[] = ['auth', 'billing', 'endpoint', 'provider']
 
-/** Open logs / Send diagnostics / Copy details. Off for a plan limit: it is not a fault,
- *  and those links would bury the actions that fix it. */
-export function errorCardShowsDiagnostics(surface: ErrorSurface | null | undefined): boolean {
-  return surface?.code !== 'usage_window'
-}
-
 /** Plain-text error-details blob for the error card's "Copy error details". */
 export function formatErrorDiagnostics(input: {
   appVersion?: string
@@ -345,7 +266,6 @@ export type ErrorActionId =
   | 'retry_at_reset'
   | 'update_api_key'
   | 'sign_in_again'
-  | 'sign_in_free_tier'
   | 'switch_provider'
   | 'choose_model'
   | 'compress'
@@ -357,8 +277,6 @@ export type ErrorActionId =
   | 'open_setup_guide_tls'
   | 'open_setup_guide_local'
   | 'open_model_settings'
-  | 'switch_to_model'
-  | 'use_credits'
   | 'open_billing'
 
 export interface ErrorCardActions {
@@ -373,8 +291,7 @@ export const ERROR_SETUP_GUIDE_URLS = {
 
 /** Provider pages where the user fixes an account-level routing/privacy block. */
 const PROVIDER_SETTINGS_URLS: Record<string, string> = {
-  openrouter: 'https://openrouter.ai/settings/privacy',
-  nous: 'https://portal.nousresearch.com'
+  openrouter: 'https://openrouter.ai/settings/privacy'
 }
 
 /** The provider's own settings page (privacy/data policy), when Hermes knows one. */
@@ -388,9 +305,7 @@ const CODE_ACTIONS: Partial<Record<ErrorCodeKey, ErrorCardActions>> = {
   content_policy_blocked: { primary: 'edit_message' },
   context_overflow: { primary: 'compress', secondary: 'start_new_session' },
   disk_full: { primary: 'open_hermes_folder', secondary: 'retry' },
-  free_tier_at_capacity: { primary: 'sign_in_free_tier', secondary: 'retry' },
   format_error: { primary: 'switch_provider', secondary: 'start_new_session' },
-  free_tier_outage: { primary: 'retry' },
   model_not_found: { primary: 'choose_model' },
   payload_too_large: { primary: 'compress', secondary: 'start_new_session' },
   provider_policy_blocked: { primary: 'open_provider_settings', secondary: 'choose_model' },
@@ -407,36 +322,6 @@ const CODE_ACTIONS: Partial<Record<ErrorCodeKey, ErrorCardActions>> = {
   workspace_unavailable: { primary: 'retry', secondary: 'start_new_session' },
   launch_credentials_unavailable: { primary: 'start_new_session' },
   loop_error: { primary: 'retry', secondary: 'start_new_session' }
-}
-
-// A window plan's limit: switch to the plan's recommended model, else spend credits
-// (Use credits when Keep going is off with a balance, else Add credits via Billing).
-// An older backend sends no structured limit: Billing, or another model.
-// Once the reset has passed the allowance is back, so a plain Retry replaces the scheduled one.
-function usageWindowActions(surface: ErrorSurface): ErrorCardActions {
-  const limit = surface.usageLimit
-  const credits: ErrorActionId = limit?.credits === 'use_credits' ? 'use_credits' : 'open_billing'
-
-  if (limit?.suggestions.length) {
-    return { primary: 'switch_to_model', secondary: credits }
-  }
-
-  if (!limit) {
-    return { primary: credits, secondary: 'choose_model' }
-  }
-
-  if (surface.resetsAt === undefined) {
-    return { primary: credits }
-  }
-
-  if (surface.resetsAt * 1000 <= Date.now()) {
-    return { primary: credits, secondary: 'retry' }
-  }
-
-  // Still ahead: Retry at the reset, unless it is too far off for a browser timer (a monthly window).
-  return scheduledRetryDelayMs(surface.resetsAt) === null
-    ? { primary: credits }
-    : { primary: credits, secondary: 'retry_at_reset' }
 }
 
 /** Actions for a model server the user runs (custom endpoint or the managed local runtime). */
@@ -477,10 +362,6 @@ export function errorCardActions(surface: ErrorSurface | null | undefined): Erro
     return endpoint
   }
 
-  if (surface.code === 'usage_window') {
-    return usageWindowActions(surface)
-  }
-
   const byCode = 'code' in key ? CODE_ACTIONS[key.code] : undefined
 
   // A provider without a known settings page: choosing another model is the fix left.
@@ -490,11 +371,6 @@ export function errorCardActions(surface: ErrorSurface | null | undefined): Erro
 
   if (byCode) {
     return byCode
-  }
-
-  // Signing in is free and lifts the refusal; a transient one (rate limit) can also just be retried.
-  if (isFreeTierSurface(surface)) {
-    return surface.retryable ? { primary: 'sign_in_free_tier', secondary: 'retry' } : { primary: 'sign_in_free_tier' }
   }
 
   if (
@@ -531,10 +407,6 @@ export type ErrorCardSeverity = 'blocking' | 'degraded'
 const DEGRADED_ACTIONS: ReadonlySet<ErrorActionId> = new Set(['retry', 'retry_at_reset', 'continue'])
 
 export function errorCardSeverity(surface: ErrorSurface | null | undefined): ErrorCardSeverity {
-  if (surface?.code === 'free_tier_model_not_free') {
-    return 'degraded'
-  }
-
   if (surface?.code === 'agent_init_failed') {
     return 'blocking'
   }

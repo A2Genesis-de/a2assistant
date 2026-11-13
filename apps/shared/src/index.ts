@@ -1,43 +1,8 @@
 export { hasAnsi, sanitizeAnsiForRender, stripAnsi } from './ansi'
 export { backendScopeKey, backendScopePrefix, LOCAL_CONNECTION_ID, registryBackendScopeKey } from './backend-scope'
-export {
-  BILLING_REFUSAL_POLICY,
-  type BillingRecovery,
-  type BillingRefusalPolicy,
-  refusalPolicy
-} from './billing-policy'
-export type {
-  BillingAutoReload,
-  BillingCardInfo,
-  BillingChargeResponse,
-  BillingChargeStatusResponse,
-  BillingErrorPayload,
-  BillingMonthlyCap,
-  BillingMutationResponse,
-  BillingPaymentMethod,
-  BillingRefusalCode,
-  BillingStateResponse,
-  ChargeFailureReason,
-  KnownBillingRefusalCode,
-  KnownChargeFailureReason,
-  SubscriptionPreviewResponse,
-  SubscriptionStateResponse,
-  SubscriptionTierOption,
-  SubscriptionUpgradeResponse,
-  UsageBarData,
-  UsageModelData
-} from './billing-types'
 export { groupCatalogPlugins, PLUGIN_CATEGORIES, PLUGIN_CATEGORY_ORDER, sortCatalogPlugins } from './catalog-browse'
 export { type FeaturedCandidate, featuredPicks, isOfficialSkillSource, OFFICIAL_SKILL_SOURCES, pickFeatured } from './catalog-featured'
 export { pluginCatalogInstallUrl, skillCatalogInstallIdentifier, skillCatalogInstallUrl } from './catalog-install'
-export {
-  driveChargeSettlement,
-  SETTLEMENT_MAX_RETRY_AFTER_MS,
-  SETTLEMENT_POLL_CAP_MS,
-  SETTLEMENT_POLL_INTERVAL_MS,
-  type SettlementDeps,
-  type SettlementOutcome
-} from './charge-settlement'
 export {
   contrastRatio,
   darken,

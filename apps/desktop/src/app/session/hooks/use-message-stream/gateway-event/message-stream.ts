@@ -8,10 +8,9 @@ import { coerceGatewayText, coerceThinkingText } from '@/lib/chat-runtime'
 import { playCompletionSound } from '@/lib/completion-sound'
 import { parseErrorSurface } from '@/lib/error-surface'
 import { triggerHaptic } from '@/lib/haptics'
-import { billingCtaLabel, clearBillingBlock, runBillingRecovery, setBillingBlock } from '@/store/billing-block'
+import { clearBillingBlock, runBillingRecovery, setBillingBlock } from '@/store/billing-block'
 import { clearSettledClarifyRequest } from '@/store/clarify'
 import { setSessionCompacting } from '@/store/compaction'
-import { noteFreeTierTurnComplete } from '@/store/free-tier-sign-in'
 import { notify } from '@/store/notifications'
 import { flashPetActivity, markPetUnread, setPetActivity } from '@/store/pet'
 import { clearAllPrompts } from '@/store/prompts'
@@ -37,8 +36,8 @@ function firstBillingLine(text: string): string {
  * gateway forwards the structured descriptor built by `agent/billing_links.py`;
  * we cache it per-session, which drives the out-of-credits banner above the
  * composer. A wall in a session that is NOT on screen also raises one sticky,
- * billing-specific toast — never the generic "Hermes error" — with a smart CTA
- * (Nous → in-app Settings → Billing, other providers → their billing page); on
+ * billing-specific toast — never the generic "Hermes error" — linking to the
+ * provider's billing page when it has one; on
  * screen the banner and the turn's card carry it, so no toast repeats them.
  */
 function surfaceBillingBlock(sessionId: string, raw: unknown, toast: boolean): void {
@@ -58,23 +57,18 @@ function surfaceBillingBlock(sessionId: string, raw: unknown, toast: boolean): v
     return
   }
 
-  const ctaCopy = {
-    addCredits: translateNow('billingBlock.addCredits'),
-    openBilling: translateNow('billingBlock.openBilling')
-  }
-
   notify({
     // Collapse repeat walls from the same provider into one toast.
     id: `billing-block:${block.provider}`,
     kind: 'warning',
     icon: 'credit-card',
-    title: block.is_nous
-      ? translateNow('billingBlock.titleNous')
-      : translateNow('billingBlock.titleProvider', block.provider_label),
+    title: translateNow('billingBlock.titleProvider', block.provider_label),
     message: firstBillingLine(block.message) || translateNow('billingBlock.fallbackMessage'),
     // Sticky: a credit wall blocks every turn until resolved.
     durationMs: 0,
-    action: { label: billingCtaLabel(block, ctaCopy), onClick: () => runBillingRecovery(block) }
+    ...(block.billing_url
+      ? { action: { label: translateNow('billingBlock.addCredits'), onClick: () => runBillingRecovery(block) } }
+      : {})
   })
 }
 
@@ -240,7 +234,6 @@ function handleMessageStart(ctx: GatewayEventContext): boolean {
   return true
 }
 
-// health: allow CC -- usage-window limit: one guard so the error card, not a second billing toast, says it; this event switch was over target on main
 export function handleMessageStreamEvent(ctx: GatewayEventContext): boolean {
   const { deps, event, payload, sessionId, isActiveEvent, occurredAt } = ctx
 
@@ -438,17 +431,9 @@ export function handleMessageStreamEvent(ctx: GatewayEventContext): boolean {
       typeof payload?.failure_reason === 'string' ? payload.failure_reason : undefined
     )
 
-    if (payload?.status === 'complete') {
-      noteFreeTierTurnComplete()
-    }
-
     // Structured billing wall forwarded by the gateway (out of credits /
-    // payment required) — cache it for the banner (toast only off screen). A window
-    // plan's limit is said once, by the turn's error card (its buttons are the
-    // ways on); a toast and banner would only repeat it.
-    const usageWindowWall = parseErrorSurface(payload?.error_surface)?.code === 'usage_window'
-
-    if (payload?.billing && !usageWindowWall) {
+    // payment required) — cache it for the banner (toast only off screen).
+    if (payload?.billing) {
       surfaceBillingBlock(sessionId, payload.billing, !isActiveEvent)
     }
 

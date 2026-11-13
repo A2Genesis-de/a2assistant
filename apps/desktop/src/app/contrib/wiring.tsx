@@ -19,7 +19,6 @@ import { ConfirmHost } from '@/components/confirm-host'
 import { DesktopInstallOverlay } from '@/components/desktop-install-overlay'
 import { ExternalOpenFailedDialog } from '@/components/external-open-failed-dialog'
 import { FindBar } from '@/components/find-bar'
-import { FreeTierSignInDialog } from '@/components/free-tier/sign-in-dialog'
 import { GatewayConnectingOverlay } from '@/components/gateway-connecting-overlay'
 import { NotificationStack } from '@/components/notifications'
 import { DesktopOnboardingOverlay } from '@/components/onboarding'
@@ -37,7 +36,6 @@ import { type ChatMessage, chatMessageText } from '@/lib/chat-messages'
 import { isMessagingSource } from '@/lib/session-source'
 import { activateWakeIndicator } from '@/lib/wake-indicator'
 import { playWakeSound } from '@/lib/wake-sound'
-import { $billingSettingsRequest } from '@/store/billing-block'
 import { $desktopBoot } from '@/store/boot'
 import { requestVoiceConversationStart } from '@/store/composer'
 import { $activeConnectionId } from '@/store/connections'
@@ -177,7 +175,6 @@ import { type AmbientGatewayRequest, createSessionRpcDispatcher } from './sessio
 import { ChatRoutesSurface, SidebarSurface, StatusbarSurface, TerminalSurface } from './surfaces'
 import type { WiringActions, WiringApi } from './types'
 import {
-  useCreditsNoticeDemo,
   useFreshSessionRequest,
   useGatewayScopeRefresh,
   useOpenKeybindsListener,
@@ -240,16 +237,14 @@ function useFirstRunOnboarding(request: OnboardingRequest, open: OnboardingResum
   }, [open])
 }
 
-// Recovery actions raised by toast buttons (Restart Hermes, Open Billing, cron
+// Recovery actions raised by toast buttons (Restart Hermes, cron
 // review) fire from stores with no router context. Each counter is
 // consumed here: the ref skips the initial mount value, and only a fresh
 // request navigates or recycles the backend.
 function useRecoveryRequestToasts(): void {
   const navigate = useNavigate()
-  const billingSettingsRequest = useStore($billingSettingsRequest)
   const backendRestartRequest = useStore($backendRestartRequest)
   const cronReviewRequest = useStore($cronReviewRequest)
-  const billingSettingsSeenRef = useRef(0)
   const backendRestartSeenRef = useRef(0)
   const cronReviewSeenRef = useRef(0)
 
@@ -273,19 +268,6 @@ function useRecoveryRequestToasts(): void {
         .catch(err => notifyError(err, translateNow('notifications.errors.restartHermesFailed')))
     }
   }, [backendRestartRequest])
-
-  // eslint-disable-next-line no-restricted-syntax -- one-shot request-seen sentinel, not an atom mirror
-  useEffect(() => {
-    if (billingSettingsRequest === billingSettingsSeenRef.current) {
-      return
-    }
-
-    billingSettingsSeenRef.current = billingSettingsRequest
-
-    if (billingSettingsRequest > 0) {
-      navigate(`${SETTINGS_ROUTE}?tab=billing`)
-    }
-  }, [billingSettingsRequest, navigate])
 
   // eslint-disable-next-line no-restricted-syntax -- one-shot request-seen sentinel, not an atom mirror
   useEffect(() => {
@@ -462,7 +444,6 @@ export function ContribWiring({ children }: { children: ReactNode }) {
   const openProviderSettings = useCallback(() => navigate(`${SETTINGS_ROUTE}?tab=providers`), [navigate])
 
   useOpenKeybindsListener(navigate)
-  useCreditsNoticeDemo()
 
   // Post-turn rehydrate from stored history (same behavior as DesktopController,
   // including finished-todos restoration).
@@ -1292,10 +1273,6 @@ export function ContribWiring({ children }: { children: ReactNode }) {
         />
       )}
       {!isAuxiliaryWindow() && <OnboardingEnd />}
-      {/* One host for every free-tier sign-in entry point (Settings › Billing,
-          the statusbar chip, the first-launch intro). It owns the flow; the
-          entry points only record the intent. */}
-      {!isAuxiliaryWindow() && <FreeTierSignInDialog onSelectModel={selectModel} />}
       <ModelPickerOverlay
         gateway={gateway || undefined}
         onSelect={selectModel}

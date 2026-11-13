@@ -43,7 +43,6 @@ import type { SharedMetricsRequester } from './shared-metrics'
 /** Settings views (SETTINGS_VIEWS in app/settings/index.tsx) → area. */
 const SETTINGS_AREAS: Record<string, DesktopFeatureArea> = {
   about: 'settings_about',
-  billing: 'settings_billing',
   'config:advanced': 'settings_config_advanced',
   'config:appearance': 'settings_config_appearance',
   'config:browser': 'settings_config_browser',
@@ -88,7 +87,6 @@ export type DesktopFeatureArea =
   | 'session_search'
   | 'session_switcher'
   | 'settings_about'
-  | 'settings_billing'
   | 'settings_config_advanced'
   | 'settings_config_appearance'
   | 'settings_config_browser'
@@ -178,7 +176,6 @@ export type DesktopNoticeId =
   | 'client_behind'
   | 'composer_queue_stuck'
   | 'credits'
-  | 'free_tier_notice'
   | 'gateway_error'
   | 'gui_skew'
   | 'install_method'
@@ -250,7 +247,6 @@ export type DesktopOnboardingStep =
   | 'choose_later'
   | 'consent'
   | 'first_message'
-  | 'free_tier_ready'
   | 'guide'
   | 'guide_skip'
   | 'model_pick'
@@ -258,7 +254,6 @@ export type DesktopOnboardingStep =
   | 'provider_local'
   | 'provider_oauth'
   | 'provider_setup'
-  | 'sign_in'
 
 export type DesktopOnboardingEvent = 'abandoned' | 'completed' | 'reached'
 
@@ -288,7 +283,6 @@ export type DesktopDislikeSignal =
 
 export type DesktopFlowId =
   | 'command_palette'
-  | 'free_tier_sign_in'
   | 'keybind_capture'
   | 'model_picker'
   | 'project_create'
