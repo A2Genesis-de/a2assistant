@@ -1,8 +1,5 @@
 """Tests for setup.py configuration flows."""
 import sys
-import os
-import json
-import types
 
 import pytest
 
@@ -27,18 +24,6 @@ def _clear_provider_env(monkeypatch):
         "OPENAI_BASE_URL",
         "OPENAI_API_KEY",
         "LLM_MODEL",
-    ):
-        monkeypatch.delenv(key, raising=False)
-
-
-def _clear_vercel_env(monkeypatch):
-    for key in (
-        "TERMINAL_VERCEL_RUNTIME",
-        "TERMINAL_VERCEL_IMAGE",
-        "VERCEL_OIDC_TOKEN",
-        "VERCEL_TOKEN",
-        "VERCEL_PROJECT_ID",
-        "VERCEL_TEAM_ID",
     ):
         monkeypatch.delenv(key, raising=False)
 
@@ -90,10 +75,6 @@ def test_setup_delegates_to_select_provider_and_model(tmp_path, monkeypatch):
     assert reloaded["model"]["default"] == "qwen3.5:32b"
 
 
-
-
-
-
 def test_select_provider_and_model_warns_if_named_custom_provider_disappears(
     tmp_path, monkeypatch, capsys
 ):
@@ -126,141 +107,15 @@ def test_select_provider_and_model_warns_if_named_custom_provider_disappears(
     assert "selected saved custom provider is no longer available" in out
 
 
-
-
-
-
-
-
-def test_modal_setup_persists_direct_mode_when_user_chooses_their_own_account(tmp_path, monkeypatch):
-    monkeypatch.setattr("tools.tool_backend_helpers.managed_nous_tools_enabled", lambda: True)
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-    monkeypatch.delenv("MODAL_TOKEN_ID", raising=False)
-    monkeypatch.delenv("MODAL_TOKEN_SECRET", raising=False)
-    config = load_config()
-
-    def fake_prompt_choice(question, choices, default=0):
-        if question == "Select terminal backend:":
-            return 2
-        if question == "Select how Modal execution should be billed:":
-            return 1
-        raise AssertionError(f"Unexpected prompt_choice call: {question}")
-
-    prompt_values = iter(["token-id", "token-secret", ""])
-
-    monkeypatch.setattr("hermes_cli.setup.prompt_choice", fake_prompt_choice)
-    monkeypatch.setattr("hermes_cli.setup.prompt", lambda *args, **kwargs: next(prompt_values))
-    monkeypatch.setattr(
-        "hermes_cli.nous_subscription.get_nous_subscription_features",
-        lambda config: type("Features", (), {"nous_auth_present": True})(),
-    )
-    monkeypatch.setitem(
-        sys.modules,
-        "tools.managed_tool_gateway",
-        types.SimpleNamespace(
-            is_managed_tool_gateway_ready=lambda vendor: vendor == "modal",
-            resolve_managed_tool_gateway=lambda vendor: None,
-        ),
-    )
-    monkeypatch.setitem(sys.modules, "swe_rex", object())
-    monkeypatch.setitem(sys.modules, "modal", types.ModuleType("modal"))
-
-    from hermes_cli.setup import setup_terminal_backend
-
-    setup_terminal_backend(config)
-
-    assert config["terminal"]["backend"] == "modal"
-    assert config["terminal"]["modal_mode"] == "direct"
-
-
 # test_setup_slack_* moved to tests/gateway/test_slack_plugin_setup.py — the
 # _setup_slack wizard migrated to the slack plugin's interactive_setup (#41112).
 
 
-def test_vercel_setup_configures_access_token_auth(tmp_path, monkeypatch):
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-    _clear_vercel_env(monkeypatch)
-    monkeypatch.setenv("VERCEL_OIDC_TOKEN", "old-oidc")
-    monkeypatch.setitem(sys.modules, "vercel", types.ModuleType("vercel"))
-    config = load_config()
-
-    def fake_prompt_choice(question, choices, default=0):
-        if question == "Select terminal backend:":
-            return 5
-        raise AssertionError(f"Unexpected prompt_choice call: {question}")
-
-    prompt_values = iter(["vercel/sandbox/python:3.14", "yes", "2", "4096", "token", "project", "team"])
-
-    monkeypatch.setattr("hermes_cli.setup.prompt_choice", fake_prompt_choice)
-    monkeypatch.setattr("hermes_cli.setup.prompt", lambda *args, **kwargs: next(prompt_values))
-
-    from hermes_cli.setup import setup_terminal_backend
-
-    setup_terminal_backend(config)
-
-    assert config["terminal"]["backend"] == "vercel_sandbox"
-    assert config["terminal"]["vercel_image"] == "vercel/sandbox/python:3.14"
-    assert config["terminal"]["container_disk"] == 51200
-    assert os.environ["TERMINAL_VERCEL_IMAGE"] == "vercel/sandbox/python:3.14"
-    assert "VERCEL_OIDC_TOKEN" not in os.environ
-    assert os.environ["VERCEL_TOKEN"] == "token"
-    assert os.environ["VERCEL_PROJECT_ID"] == "project"
-    assert os.environ["VERCEL_TEAM_ID"] == "team"
-
-
-def test_vercel_setup_prefills_project_and_team_from_link_file(tmp_path, monkeypatch):
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-    _clear_vercel_env(monkeypatch)
-    project_root = tmp_path / "project"
-    nested = project_root / "app" / "src"
-    nested.mkdir(parents=True)
-    vercel_dir = project_root / ".vercel"
-    vercel_dir.mkdir()
-    (vercel_dir / "project.json").write_text(
-        json.dumps({"projectId": "linked-project", "orgId": "linked-team"}),
-        encoding="utf-8",
-    )
-    monkeypatch.chdir(nested)
-    monkeypatch.setitem(sys.modules, "vercel", types.ModuleType("vercel"))
-    config = load_config()
-    config["terminal"]["container_disk"] = 999
-
-    def fake_prompt_choice(question, choices, default=0):
-        if question == "Select terminal backend:":
-            return 5
-        raise AssertionError(f"Unexpected prompt_choice call: {question}")
-
-    prompt_values = iter(["", "no", "1", "5120", "token", "", ""])
-    defaults = {}
-
-    def fake_prompt(message, default="", **kwargs):
-        defaults[message] = default
-        value = next(prompt_values)
-        return value or default
-
-    monkeypatch.setattr("hermes_cli.setup.prompt_choice", fake_prompt_choice)
-    monkeypatch.setattr("hermes_cli.setup.prompt", fake_prompt)
-
-    from hermes_cli.setup import setup_terminal_backend
-
-    setup_terminal_backend(config)
-
-    assert config["terminal"]["backend"] == "vercel_sandbox"
-    assert config["terminal"]["container_persistent"] is False
-    assert config["terminal"]["container_disk"] == 51200
-    assert "VERCEL_OIDC_TOKEN" not in os.environ
-    assert os.environ["VERCEL_TOKEN"] == "token"
-    assert os.environ["VERCEL_PROJECT_ID"] == "linked-project"
-    assert os.environ["VERCEL_TEAM_ID"] == "linked-team"
-    assert defaults["    Vercel project ID"] == "linked-project"
-    assert defaults["    Vercel team ID"] == "linked-team"
-
-
-@pytest.mark.parametrize("extra", ["neutts", "kittentts", "modal", "daytona", "vercel"])
+@pytest.mark.parametrize("extra", ["neutts", "kittentts"])
 @pytest.mark.parametrize("succeeds", [True, False])
 def test_python_setup_uses_declared_extras_and_reports_restart(extra, succeeds, monkeypatch, capsys):
     import pm
-    from hermes_cli import setup_terminal, setup_tts
+    from hermes_cli import setup_tts
 
     calls = []
     def sync(extras, *, explicit):
@@ -272,10 +127,7 @@ def test_python_setup_uses_declared_extras_and_reports_restart(extra, succeeds, 
     monkeypatch.setattr("pm.extras.extra_supported", lambda name: True)
     monkeypatch.setitem(sys.modules, extra, None)
     monkeypatch.setattr(setup_tts.shutil, "which", lambda name: "/usr/bin/espeak-ng")
-    if extra in {"neutts", "kittentts"}:
-        assert getattr(setup_tts, f"_install_{extra}_deps")() is succeeds
-    else:
-        setup_terminal._ensure_sdk(extra)
+    assert getattr(setup_tts, f"_install_{extra}_deps")() is succeeds
     assert calls == [([extra], True)]
     output = capsys.readouterr().out
     if succeeds:

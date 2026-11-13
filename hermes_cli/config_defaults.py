@@ -6,16 +6,13 @@ docs of config.yaml.
 
 from hermes_cli.config_defaults_auxiliary import _aux
 
-#: Image every container terminal backend (docker/modal/daytona, the singularity plugin) uses unless the
+#: Image every container terminal backend (docker, the singularity plugin) uses unless the
 #: user pins one. LEGACY_SANDBOX_IMAGES are the plain defaults that preceded the desktop stack
 #: (the 3.14 pin shipped between the two without a migration); a saved config still holding one
 #: is the template copied, and the config migration unsets it, never a user's own pin.
 DEFAULT_SANDBOX_IMAGE = "nousresearch/hermes-sandbox:desktop"
 LEGACY_SANDBOX_IMAGES = ("nikolaik/python-nodejs:python3.11-nodejs20", "nikolaik/python-nodejs:python3.14-nodejs22")
 LEGACY_SANDBOX_IMAGE = LEGACY_SANDBOX_IMAGES[0]
-# Vercel Sandbox managed image (Vercel deprecated its `runtime` presets in Aug 2026).
-DEFAULT_VERCEL_IMAGE = "vercel/sandbox/universal:latest"
-LEGACY_VERCEL_RUNTIME = "node24"  # the seeded pre-49 default, never a user choice
 
 
 DEFAULT_CONFIG = {
@@ -176,7 +173,7 @@ DEFAULT_CONFIG = {
         "parallel_tool_call_guidance": True,
         # Toolchain probe: surfaces Python/pip/uv/PEP-668 state in the system prompt only when
         # something non-default is detected (no pip module, pip/python mismatch, PEP 668 without
-        # uv); zero tokens when clean. Skipped for docker/modal/ssh backends (own probe).
+        # uv); zero tokens when clean. Skipped for docker/ssh backends (own probe).
         "environment_probe": True,
         # Bot Mode teammate-messaging protocol section (silent unless desktop Bot Mode manages it).
         "bot_mode_protocol": True,
@@ -283,7 +280,6 @@ DEFAULT_CONFIG = {
 
     "terminal": {
         "backend": "local",
-        "modal_mode": "auto",
         # Remote-backend connection-class failures (SSH host unreachable, Docker daemon down):
         # "warn" = structured degraded tool result with reason + retry hint; "fail" = raise error +
         # traceback.
@@ -340,11 +336,7 @@ DEFAULT_CONFIG = {
         # reads host values) — useful under systemd without the user's shell env. Example:
         # {"SSH_AUTH_SOCK": "/run/user/1000/ssh-agent.sock"}
         "docker_env": {},
-        "modal_image": DEFAULT_SANDBOX_IMAGE,
-        "daytona_image": DEFAULT_SANDBOX_IMAGE,
-        "vercel_image": DEFAULT_VERCEL_IMAGE,  # vercel_sandbox backend only: a Vercel-managed or VCR image
-        "vercel_runtime": "",  # deprecated by Vercel; a legacy runtime pin (node24 | node22 | python3.13) overrides vercel_image
-        # Container limits (docker, modal, daytona, vercel_sandbox, container plugin backends; not local/ssh).
+        # Container limits (docker, container plugin backends; not local/ssh).
         "container_cpu": 1,
         "container_memory": 5120,       # MB (default 5GB)
         "container_disk": 51200,        # MB (default 50GB)
@@ -2512,8 +2504,8 @@ DEFAULT_CONFIG = {
         # Where the screen (and with it computer_use and the bot's browser) runs.
         #   auto      follow the terminal backend: inside the docker / ssh / streaming plugin sandbox when one is
         #             configured, on the gateway host when terminal.backend is local. A sandbox backend that
-        #             cannot host a screen (modal, daytona, vercel) REFUSES rather than quietly running the
-        #             desktop on the host beside the sandbox you chose for the agent.
+        #             cannot host a screen REFUSES rather than quietly running the desktop on the host
+        #             beside the sandbox you chose for the agent.
         #   terminal  always inside the terminal backend (error when it cannot host one).
         #   gateway   always on the gateway host, even with a sandbox terminal: the agent's screen, browser
         #             and computer_use then act OUTSIDE the terminal sandbox. Explicit opt-in.

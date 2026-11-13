@@ -93,34 +93,10 @@ def _probe_ssh_backend(terminal_cfg: dict) -> tuple:
     return ("ready", f"{user}@{host}")
 
 
-def _probe_modal_backend(_cfg) -> tuple:
-    try:
-        from tools.tool_backend_helpers import has_direct_modal_credentials
-
-        if has_direct_modal_credentials():
-            return ("ready", "")
-    except Exception:
-        pass
-    if _env_value("MODAL_TOKEN_ID") and _env_value("MODAL_TOKEN_SECRET"):
-        return ("ready", "")
-    return (
-        "needs_setup",
-        "Modal credentials not found — set MODAL_TOKEN_ID and MODAL_TOKEN_SECRET (or run `modal setup`).",
-    )
-
-
-def _probe_daytona_backend(_cfg) -> tuple:
-    if _env_value("DAYTONA_API_KEY"):
-        return ("ready", "")
-    return ("needs_setup", "Set DAYTONA_API_KEY to use the Daytona backend.")
-
-
 _BACKEND_PROBES = {
     "local": lambda _cfg: ("ready", ""),
     "docker": _probe_docker_backend,
     "ssh": _probe_ssh_backend,
-    "modal": _probe_modal_backend,
-    "daytona": _probe_daytona_backend,
 }
 
 

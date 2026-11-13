@@ -121,7 +121,6 @@
   "terminal.daemon_term_grace_seconds",
   "terminal.degraded_mode",
   "terminal.docker_shm_size",
-  "terminal.modal_mode",
   "tts.deepinfra.model",
   "tts.deepinfra.voice",
   "updates.refresh_cua_driver",

@@ -2,7 +2,6 @@
 resolved through the module object so test patches on ``hermes_cli.setup.<name>`` take effect."""
 
 import logging
-from tools import tool_backend_helpers
 
 logger = logging.getLogger("hermes_cli.setup")
 
@@ -153,18 +152,6 @@ def _stt_row(config, feats):
     return _voice_provider_status("Speech-to-Text", provider, _STT_SUMMARY_ROWS, _STT_SUMMARY_DEFAULT)
 
 
-def _modal_row(config, feats):
-    if feats.modal.managed_by_nous:
-        return ("Modal Execution (Nous subscription)", True, None)
-    if _setup.cfg_get(config, "terminal", "backend") == "modal":
-        if feats.modal.direct_override:
-            return ("Modal Execution (direct Modal)", True, None)
-        return ("Modal Execution", False, "run 'hermes setup terminal'")
-    if tool_backend_helpers.managed_nous_tools_enabled() and feats.nous_auth_present:
-        return ("Modal Execution (optional via Nous subscription)", True, None)
-    return None
-
-
 def _skills_hub_row(config, feats):
     ok = bool(_setup.get_env_value("GITHUB_TOKEN"))
     return ("Skills Hub (GitHub)", ok, None if ok else "GITHUB_TOKEN")
@@ -178,7 +165,7 @@ def _always_on_rows(config, feats):
 
 _TOOL_ROW_BUILDERS = (
     _vision_row, _web_row, _browser_row, _image_gen_row, _video_gen_row, _tts_row, _stt_row,
-    _modal_row, _skills_hub_row, _always_on_rows)
+    _skills_hub_row, _always_on_rows)
 
 
 def _print_cmd_rows(rows):

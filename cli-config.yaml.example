@@ -522,34 +522,8 @@ terminal:
 #   lifetime_seconds: 300
 #   singularity_image: "docker://nousresearch/hermes-sandbox:desktop"
 
-# -----------------------------------------------------------------------------
-# OPTION 5: Modal cloud execution
-# Commands run on Modal's cloud infrastructure
-# Great for: GPU access, scalable compute, serverless execution
-# -----------------------------------------------------------------------------
-# terminal:
-#   backend: "modal"
-#   cwd: "/workspace"  # Path INSIDE the sandbox (default: /root)
-#   timeout: 180
-#   lifetime_seconds: 300
-#   modal_image: "nousresearch/hermes-sandbox:desktop"
-
-# -----------------------------------------------------------------------------
-# OPTION 6: Daytona cloud execution
-# Commands run in Daytona cloud sandboxes
-# Great for: Cloud dev environments, persistent workspaces, team collaboration
-# Requires: pip install daytona, DAYTONA_API_KEY env var
-# -----------------------------------------------------------------------------
-# terminal:
-#   backend: "daytona"
-#   cwd: "~"
-#   timeout: 180
-#   lifetime_seconds: 300
-#   daytona_image: "nousresearch/hermes-sandbox:desktop"
-#   container_disk: 10240          # Daytona max is 10GB per sandbox
-
 #
-# --- Container resource limits (docker, modal, daytona, container plugin backends -- ignored for local/ssh) ---
+# --- Container resource limits (docker, container plugin backends -- ignored for local/ssh) ---
 # These settings apply to all container backends. They control the resources
 # allocated to the sandbox and whether its filesystem persists across sessions.
   container_cpu: 1              # CPU cores

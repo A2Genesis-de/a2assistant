@@ -309,14 +309,8 @@ class TestDoctorToolAvailabilityOverrides:
 
 
 
-def test_doctor_reports_vercel_backend_diagnostics(monkeypatch, tmp_path):
-    monkeypatch.setenv("TERMINAL_ENV", "vercel_sandbox")
-    monkeypatch.setenv("TERMINAL_VERCEL_RUNTIME", "python3.13")
-    monkeypatch.setenv("TERMINAL_CONTAINER_DISK", "2048")
-    monkeypatch.setenv("VERCEL_TOKEN", "super-secret-value")
-    monkeypatch.delenv("VERCEL_PROJECT_ID", raising=False)
-    monkeypatch.setenv("VERCEL_TEAM_ID", "team")
-    monkeypatch.setattr(importlib.util, "find_spec", lambda name: object() if name == "vercel" else None)
+def test_doctor_reports_removed_cloud_backend_as_unknown(monkeypatch, tmp_path):
+    monkeypatch.setenv("TERMINAL_ENV", "modal")
 
     fake_model_tools = types.SimpleNamespace(
         check_tool_availability=lambda *a, **kw: ([], []),
@@ -329,8 +323,7 @@ def test_doctor_reports_vercel_backend_diagnostics(monkeypatch, tmp_path):
         doctor_mod.run_doctor(Namespace(fix=False))
 
     out = buf.getvalue()
-    assert "VERCEL_PROJECT_ID" in out  # names the missing auth var
-    assert "super-secret-value" not in out  # never echoes the token value
+    assert "Unknown terminal backend 'modal'" in out
 
 
 # ── Memory provider section (doctor should only check the *active* provider) ──

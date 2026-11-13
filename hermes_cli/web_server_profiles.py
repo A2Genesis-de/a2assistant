@@ -329,7 +329,7 @@ def _config_profile_scope(profile: Optional[str]):
 
 # --------------------------------------------------------------------------- Terminal execution backend
 # picker — the GUI counterpart of terminal.backend in config.yaml. Each row carries a fast, defensive health
-# probe (Docker daemon reachable, SSH host configured, Modal/Daytona credentials present) so the
+# probe (Docker daemon reachable, SSH host configured) so the
 # Capabilities panel can render Ready / Needs setup guidance instead of a bare enum (issues #57738 /
 # #63783). Probes must never raise — a probe failure renders as a status, not a 500.
 # ---------------------------------------------------------------------------
@@ -338,8 +338,6 @@ _TERMINAL_BACKENDS: list[dict[str, str]] = [
         ("local", "Local", "Run commands directly on this machine. No isolation."),
         ("docker", "Docker / Podman",
          "Run commands in an isolated Docker or Podman container with a persistent workspace."),
-        ("modal", "Modal", "Run commands in a Modal cloud sandbox."),
-        ("daytona", "Daytona", "Run commands in a Daytona cloud sandbox."),
         ("ssh", "SSH", "Run commands on a remote host over SSH."))]
 
 

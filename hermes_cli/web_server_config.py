@@ -82,22 +82,13 @@ _SCHEMA_OVERRIDES: dict[str, dict[str, Any]] = {
     },
     "terminal.backend": _select(
         "Terminal execution backend",
-        "local", "docker", "ssh", "modal", "daytona", "vercel_sandbox",
+        "local", "docker", "ssh",
     ),
-    # sync with _SUPPORTED_VERCEL_RUNTIMES in terminal_tool.py
-    "terminal.vercel_image": {
-        "type": "string",
-        "description": "Vercel Sandbox image: a Vercel managed image (vercel/sandbox/universal:latest) or a VCR repository[:tag]",
-    },
-    "terminal.vercel_runtime": _select(
-        "Legacy Vercel Sandbox runtime (deprecated by Vercel; a pinned runtime overrides the image; clear to use the image)",
-        "node24", "node22", "python3.13", clearable=True),
-    "terminal.modal_mode": _select("Modal sandbox mode", "sandbox", "function"),
     "proxy.enabled": {
         "type": "boolean",
         "description": (
             "Docker-only egress credential firewall. Requires `hermes egress setup` "
-            "and `hermes egress start`; Modal/SSH/Daytona are not wired yet."
+            "and `hermes egress start`; SSH is not wired yet."
         ),
         "category": "security",
     },
