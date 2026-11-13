@@ -102,7 +102,6 @@ def _print_curator_first_run_notice() -> None:
     )
     print("  Preview now:  hermes curator run --dry-run")
     print("  Pause it:     hermes curator pause")
-    print("  Docs:         https://hermes-agent.nousresearch.com/docs/user-guide/features/curator")
 
 
 def _print_fts_optimize_available_notice() -> None:
@@ -1035,11 +1034,6 @@ def _run_post_update_maintenance(
         from hermes_cli.git_commit_graph import spawn_commit_graph_refresh
         spawn_commit_graph_refresh(Path(_m().PROJECT_ROOT))
 
-    # Seed the model-catalog cache from the checkout instead of a bot-gated, flaky fetch.
-    with _best_effort('Model catalog seed during update failed: %s'):
-        from hermes_cli.model_catalog import seed_cache_from_checkout
-        if seed_cache_from_checkout(_m().PROJECT_ROOT):
-            print("  ✓ Model catalog cache refreshed from checkout")
 
     # Drop the cached live plugin catalog under every profile: the checkout is shared, so a
     # pre-update snapshot must not out-vote the pins/entries this update just installed for the

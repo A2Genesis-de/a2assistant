@@ -459,15 +459,7 @@ def get_nous_recommended_aux_model(
 
 
 def get_preferred_silent_default_model(provider: str = "openrouter") -> str:
-    """Silent-default model id: the cached remote catalog's ``"default": true`` label (never hits the
-    network — safe on hot paths), else :data:`PREFERRED_SILENT_DEFAULT_MODEL`."""
-    try:
-        from hermes_cli.model_catalog import get_default_model_from_cache
-        labeled = get_default_model_from_cache(provider)
-        if labeled:
-            return labeled
-    except Exception:
-        pass
+    """Silent-default model id: :data:`PREFERRED_SILENT_DEFAULT_MODEL` for every provider."""
     return PREFERRED_SILENT_DEFAULT_MODEL
 
 
@@ -655,8 +647,7 @@ def fetch_openrouter_models(
     """Return the curated OpenRouter picker list, refreshed from the live catalog when possible.
 
     ``cache_only`` never opens a socket: memory, then disk (stale accepted), then the in-repo snapshot."""
-    # The curated list is filtered from this profile's manifest (``model_catalog.*`` config, its
-    # ``<home>/cache`` copy), so a routed profile keeps its own slot instead of the module one.
+    # A routed profile keeps its own slot (its ``<home>/cache`` copy) instead of the module one.
     from hermes_cli.models_profile_cache import profile_slot_get, profile_slot_set
     _me = sys.modules[__name__]
     cached = profile_slot_get(_me, "_openrouter_catalog_cache")
@@ -675,14 +666,8 @@ def fetch_openrouter_models(
     if cache_only:
         return list(OPENROUTER_MODELS)
 
-    # Remote catalog manifest first, in-repo snapshot when unreachable; the live /v1/models filter
-    # (tool support, free pricing) is applied on top either way.
-    try:
-        from hermes_cli.model_catalog import get_curated_openrouter_models
-        remote = get_curated_openrouter_models()
-    except Exception:
-        remote = None
-    fallback = list(remote) if remote else list(OPENROUTER_MODELS)
+    # The in-repo curated list, filtered by the live /v1/models catalog (tool support, free pricing).
+    fallback = list(OPENROUTER_MODELS)
 
     live = _fetch_live_catalog_index(_OPENROUTER_CATALOG_URL, timeout, _urlopen_model_catalog_request)
     if live is None:
@@ -726,14 +711,8 @@ def model_ids(*, force_refresh: bool = False) -> list[str]:
 
 
 def get_curated_nous_model_ids() -> list[str]:
-    """Curated Nous Portal model ids: the remote catalog manifest, else the in-repo
-    ``_PROVIDER_MODELS["nous"]`` snapshot. Always a list."""
-    try:
-        from hermes_cli.model_catalog import get_curated_nous_models
-        remote = get_curated_nous_models()
-    except Exception:
-        remote = None
-    return list(remote or _PROVIDER_MODELS.get("nous", []))
+    """Curated Nous Portal model ids: the in-repo ``_PROVIDER_MODELS["nous"]`` list. Always a list."""
+    return list(_PROVIDER_MODELS.get("nous", []))
 
 
 def _ai_gateway_model_is_free(pricing: Any) -> bool:
@@ -2067,8 +2046,6 @@ def clear_provider_models_cache(provider: Optional[str] = None) -> None:
     """Drop one provider's cache entry, or wipe the whole cache (``provider=None``). Used by
     ``/model --refresh`` and ``hermes model --refresh``."""
     try:
-        from hermes_cli.model_catalog import clear_fetch_backoff
-        clear_fetch_backoff()  # a recovered catalog is fetched now, not after the offline backoff
         # Native Ollama tags are keyed by root URL, not provider slug: clear them on every refresh.
         _OLLAMA_LOCAL_MODELS_CACHE.clear()
         _OLLAMA_LOCAL_PROBE_FAILURE_CACHE.clear()

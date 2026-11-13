@@ -82,7 +82,6 @@ def test_a_portal_the_mirror_cannot_serve_is_asked_directly(server, monkeypatch,
 def test_gateway_refresh_fetches_recommendations_only_for_a_nous_account(server, monkeypatch, auth_store, env_key, host):
     from hermes_cli import model_catalog, models
 
-    monkeypatch.setattr(model_catalog, "get_catalog", lambda **_kw: {})
     monkeypatch.setattr(models, "fetch_openrouter_models", lambda **_kw: [])
     if auth_store is not None:
         (get_hermes_home() / "auth.json").write_text(json.dumps(auth_store), encoding="utf-8")
