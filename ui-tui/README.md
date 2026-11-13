@@ -119,10 +119,8 @@ No model tool schema or prompt-caching behavior changes.
 ### Slash command subsystem (`src/app/slash/`)
 
 - `types.ts` — `SlashCommand` interface and `SlashRunCtx` execution context (gateway rpc, transcript helpers, session refs, stale-guard)
-- `registry.ts` — assembles `SLASH_COMMANDS` from all command files in registration order (core → billing → credits → session → ops → setup → debug) and exposes `findSlashCommand(name)` for case-insensitive lookup
+- `registry.ts` — assembles `SLASH_COMMANDS` from all command files in registration order (core → session → ops → wake → setup → debug) and exposes `findSlashCommand(name)` for case-insensitive lookup
 - `commands/core.ts` — general TUI commands
-- `commands/billing.ts` — `/billing`: manage Nous remote spending — buy credits, auto-reload, limits
-- `commands/credits.ts` — `/credits`
 - `commands/session.ts` — session and agent commands
 - `commands/ops.ts` — operations commands
 - `commands/setup.ts` — `/setup`
@@ -261,9 +259,6 @@ The following commands are handled directly by the TUI client. Unrecognized comm
 `/save`, `/undo`, `/retry`, `/steer`, `/mouse` (alias `/scroll`),
 `/status`, `/title`, `/fortune`, `/redraw`, `/terminal-setup`
 
-### Billing (`billing.ts`)
-`/billing` — manage Nous remote spending — buy credits, auto-reload, limits
-
 ### Session (`session.ts`)
 `/model`, `/sessions` (aliases `/switch`, `/session`, `/resume`),
 `/bg`, `/btw`, `/image`, `/personality`,
@@ -274,9 +269,6 @@ The following commands are handled directly by the TUI client. Unrecognized comm
 `/stop`, `/reload-mcp` (alias `/reload_mcp`), `/reload`, `/browser`,
 `/rollback`, `/agents` (alias `/tasks`), `/replay`, `/replay-diff`,
 `/skills`, `/reload-skills` (alias `/reload_skills`), `/plugins`, `/tools`
-
-### Credits (`credits.ts`)
-`/credits` — Nous credit balance and browser top-up
 
 ### Setup (`setup.ts`)
 `/setup` — launches external `hermes setup` wizard, suspends Ink while it runs
@@ -317,7 +309,6 @@ Primary event types the client handles today:
 | `tool.complete`            | `{ tool_id, name, error?, summary?, duration_s?, inline_diff?, todos? }`    |
 | `request.cancel`           | `{ id, method, reason }` clears the withdrawn server→client request         |
 | `background.complete`      | `{ task_id, text }`                                                         |
-| `billing.step_up.verification` | `{ verification_url, user_code }`                                       |
 | `review.summary`           | `{ text }`                                                                  |
 | `browser.progress`         | `{ message }`                                                               |
 | `voice.status`             | `{ state }`                                                                 |
@@ -393,9 +384,7 @@ ui-tui/
         types.ts                    SlashCommand interface and SlashRunCtx execution context
         registry.ts                 SLASH_COMMANDS assembly and findSlashCommand lookup
         commands/
-          billing.ts                /billing — manage Nous remote spending
           core.ts                   general TUI commands
-          credits.ts                /credits
           debug.ts                  /heapdump, /mem
           ops.ts                    operations commands
           session.ts                session and agent commands
@@ -407,7 +396,6 @@ ui-tui/
       appChrome.tsx              status bar, input row, completions
       appLayout.tsx              top-level layout composition
       appOverlays.tsx            overlay routing (pickers, prompts)
-      billingOverlay.tsx         billing overlay
       branding.tsx               banner + session summary
       fpsOverlay.tsx             FPS debug overlay
       helpHint.tsx               contextual help hint

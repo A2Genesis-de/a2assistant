@@ -102,12 +102,3 @@ Follow [the group contract](../docs/canonical-groups.md): offer a control only w
 its method, send only what the generated contract declares, never fall back to classic execution,
 and give a Send's words back only on the gateway's `admitted: false` proof.
 
-## Free tier surfaces (`src/store/free-tier*.ts`, Billing, statusbar chip, onboarding ready screen)
-
-`$freeTierStatus` mirrors `free_tier.status` (pull; refreshed with the status snapshot and after a
-sign-in). `deriveBillingView` branches on `billing.free_tier_account` BEFORE `logged_in` (status
-`free_tier`: notice + one Sign in, Plan/Model/Connectors summary, no payment or usage rows); the
-`logged_out` notice's Sign in opens the same dialog, never a portal link (a link writes no
-credential). The sign-in dialog is a single claimed owner (first mount wins, like the
-real-profile consent prompt); its states map 1:1 to the poll route's `status` + `reason`. Copy is the ruled free-tier copy: never
-"guest", "anonymous", "claim" or "Nous Portal" in user-facing text.

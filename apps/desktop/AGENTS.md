@@ -163,9 +163,3 @@ actually run rather than inventing a command; when in doubt, read the scripts.
 
 If any answer is "not sure," that's the part to go verify.
 
-## Nous free tier: state is pulled, never latched in the renderer
-
-`free_tier.status` / `free_tier.ack_notice` are the only source: the ready screen and the own-key
-strip render the same `notice_pending` state, with no localStorage latch, and every entry point
-opens the one sign-in dialog. Branch on `free_tier_row` / `free_tier`, never on provider display
-names. Long form: `ENGINEERING.md`.
