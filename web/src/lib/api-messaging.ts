@@ -40,11 +40,6 @@ export interface MessagingPlatform {
   relay_fronted?: boolean;
   /** The relay owns this platform outright, so a direct bot would be switched off at every start. */
   relay_exclusive?: boolean;
-  whatsapp_setup?: {
-    mode?: string;
-    allowed_users_set?: boolean;
-    home_channel_set?: boolean;
-  } | null;
   env_vars: MessagingPlatformEnvVar[];
 }
 

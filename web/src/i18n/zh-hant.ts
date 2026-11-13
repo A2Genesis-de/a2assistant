@@ -293,9 +293,6 @@ export const zhHant: Translations = {
     delivery: {
       local: "本機",
       telegram: "Telegram",
-      discord: "Discord",
-      slack: "Slack",
-      email: "Email",
     },
   },
 
@@ -436,7 +433,6 @@ export const zhHant: Translations = {
       tts: "文字轉語音",
       stt: "語音轉文字",
       logging: "日誌",
-      discord: "Discord",
       auxiliary: "輔助",
     },
   },

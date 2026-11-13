@@ -56,15 +56,15 @@ describe('statusBarGatewayHealth', () => {
     expect(`${quiet.label} ${quiet.detail}`).toBe(`${copy.backend} ${copy.ready}`)
     expect(quiet.degraded).toBe(false)
 
-    const discordDown = statusBarGatewayHealth({
+    const telegramDown = statusBarGatewayHealth({
       ...openReady,
       messagingRunning: true,
       messagingState: 'running',
-      platforms: { discord: { state: 'fatal' } }
+      platforms: { telegram: { state: 'fatal' } }
     })
 
-    expect(discordDown.detail).toBe(copy.messagingDegraded('discord'))
-    expect(discordDown.degraded).toBe(true)
+    expect(telegramDown.detail).toBe(copy.messagingDegraded('telegram'))
+    expect(telegramDown.degraded).toBe(true)
   })
 
   it("names the owning profile when another profile's platform is the one down", () => {
@@ -72,9 +72,9 @@ describe('statusBarGatewayHealth', () => {
       ...openReady,
       messagingRunning: true,
       messagingState: 'running',
-      platforms: { telegram: { state: 'connected' }, 'workhorse:whatsapp': { state: 'fatal' } }
+      platforms: { telegram: { state: 'connected' }, 'workhorse:telegram': { state: 'fatal' } }
     })
 
-    expect(pill.detail).toBe(copy.messagingDegraded('workhorse:whatsapp'))
+    expect(pill.detail).toBe(copy.messagingDegraded('workhorse:telegram'))
   })
 })

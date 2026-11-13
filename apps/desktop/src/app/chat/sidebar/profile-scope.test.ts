@@ -7,7 +7,7 @@ import { filterSessionsByProfileScope } from './profile-scope'
 
 /** Build the smallest session row needed by the profile-scope tests. */
 const row = (id: string, profile?: string): SessionInfo =>
-  ({ id, message_count: 1, profile, source: 'signal', started_at: 0, title: id }) as SessionInfo
+  ({ id, message_count: 1, profile, source: 'telegram', started_at: 0, title: id }) as SessionInfo
 
 describe('filterSessionsByProfileScope', () => {
   it('keeps only rows from the selected profile', () => {

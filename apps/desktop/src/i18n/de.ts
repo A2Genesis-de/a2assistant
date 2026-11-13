@@ -2794,7 +2794,7 @@ const deBaseOverrides = {
       },
       messaging: {
         title: 'Kanäle',
-        detail: 'Telegram, Slack, Discord und mehr einrichten'
+        detail: 'Telegram einrichten'
       },
       artifacts: {
         title: 'Ergebnisse',
@@ -3069,114 +3069,6 @@ const deBaseOverrides = {
       TELEGRAM_PROXY: {
         label: 'Proxy-URL',
         help: 'Nur auf Netzwerken nötig, wo Telegram blockiert ist.'
-      },
-      DISCORD_BOT_TOKEN: {
-        label: 'Bot-Token',
-        help: 'Erstellen Sie im Discord Developer Portal eine Anwendung, fügen Sie einen Bot hinzu und fügen Sie sein Token ein.'
-      },
-      DISCORD_ALLOWED_USERS: {
-        label: 'Erlaubte Discord-Benutzer-IDs',
-        help: 'Empfohlen. Discord-Benutzer-IDs, eine pro Feld.'
-      },
-      DISCORD_REPLY_TO_MODE: {
-        label: 'Antwortstil',
-        help: 'first, all oder off.'
-      },
-      DISCORD_ALLOW_ALL_USERS: {
-        label: 'Alle Discord-Benutzer zulassen',
-        help: 'Nur für die Entwicklung. Bei true kann jeder Benutzer dem Bot per DM schreiben, ohne Allowlist.'
-      },
-      DISCORD_HOME_CHANNEL: {
-        label: 'Home-Kanal-ID',
-        help: 'Kanal, in den der Bot proaktive Messages sendet (Cron-Ausgabe, Erinnerungen).'
-      },
-      DISCORD_HOME_CHANNEL_NAME: {
-        label: 'Name des Home-Kanals',
-        help: 'Anzeigename des Home-Kanals in Logs und Status-Ausgabe.'
-      },
-      BLUEBUBBLES_ALLOW_ALL_USERS: {
-        label: 'Alle iMessage-Benutzer zulassen',
-        help: 'Bei true wird die BlueBubbles-Allowlist übersprungen.'
-      },
-      MATTERMOST_ALLOW_ALL_USERS: {
-        label: 'Alle Mattermost-Benutzer zulassen'
-      },
-      MATTERMOST_HOME_CHANNEL: {
-        label: 'Home-Kanal'
-      },
-      QQ_ALLOW_ALL_USERS: {
-        label: 'Alle QQ-Benutzer zulassen'
-      },
-      QQBOT_HOME_CHANNEL: {
-        label: 'QQ-Home-Kanal',
-        help: 'Standard-Kanal oder -Gruppe für die Cron-Zustellung.'
-      },
-      QQBOT_HOME_CHANNEL_NAME: {
-        label: 'Name des QQ-Home-Kanals'
-      },
-      SLACK_BOT_TOKEN: {
-        label: 'Slack-Bot-Token',
-        help: 'Verwenden Sie das Bot-Token aus OAuth & Permissions, nachdem Sie Ihre Slack-App installiert haben.',
-        placeholder: 'Slack-Bot-Token einfügen'
-      },
-      SLACK_APP_TOKEN: {
-        label: 'Slack-App-Token',
-        help: 'Verwenden Sie das App-Level-Token, das für den Socket Mode erforderlich ist.',
-        placeholder: 'Slack-App-Token einfügen'
-      },
-      SLACK_ALLOWED_USERS: {
-        label: 'Erlaubte Slack-Benutzer-IDs',
-        help: 'Empfohlen. Slack-Benutzer-IDs, eine pro Feld.'
-      },
-      MATTERMOST_URL: {
-        label: 'Server-URL',
-        placeholder: 'https://mattermost.example.com'
-      },
-      MATTERMOST_TOKEN: {
-        label: 'Bot-Token'
-      },
-      MATTERMOST_ALLOWED_USERS: {
-        label: 'Erlaubte Benutzer-IDs',
-        help: 'Empfohlen. Mattermost-Benutzer-IDs, eine pro Feld.'
-      },
-      MATRIX_HOMESERVER: {
-        label: 'Homeserver-URL',
-        placeholder: 'https://matrix.org'
-      },
-      MATRIX_ACCESS_TOKEN: {
-        label: 'Zugriffs-Token'
-      },
-      MATRIX_USER_ID: {
-        label: 'Bot-Benutzer-ID',
-        placeholder: '@hermes:example.org'
-      },
-      MATRIX_ALLOWED_USERS: {
-        label: 'Erlaubte Matrix-Benutzer-IDs',
-        help: 'Empfohlen. Benutzer-IDs im Format @benutzer:server, eine pro Feld.'
-      },
-      SIGNAL_HTTP_URL: {
-        label: 'Signal-Bridge-URL',
-        placeholder: 'http://127.0.0.1:8080',
-        help: 'URL einer laufenden signal-cli-REST-Bridge.'
-      },
-      SIGNAL_ACCOUNT: {
-        label: 'Telefonnummer',
-        help: 'Die Nummer, die bei Ihrer signal-cli-Bridge registriert ist.'
-      },
-      SIGNAL_ALLOWED_USERS: {
-        label: 'Erlaubte Signal-Benutzer',
-        help: 'Empfohlen. Signal-Kennungen, eine pro Feld.'
-      },
-      WHATSAPP_ENABLED: {
-        label: 'WhatsApp-Bridge aktivieren',
-        help: 'Wird automatisch über den Schalter unten gesetzt. Lassen Sie es unverändert, sofern Sie es nicht ausdrücklich benötigen.'
-      },
-      WHATSAPP_MODE: {
-        label: 'Bridge-Modus'
-      },
-      WHATSAPP_ALLOWED_USERS: {
-        label: 'Erlaubte WhatsApp-Benutzer',
-        help: 'Empfohlen. Telefonnummern oder WhatsApp-IDs, eine pro Feld.'
       }
     },
     platformIntro: {}
@@ -3190,7 +3082,7 @@ const deBaseOverrides = {
     empty: 'Noch keine Webhook-Abonnements vorhanden.',
     disabledTitle: 'Webhook-Empfänger deaktiviert',
     disabledBody:
-      'Webhooks sind eine eigene Gateway-Plattform. Aktivieren Sie sie hier, um eingehende HTTP-Events anzunehmen; Chat-Kanäle werden nur benötigt, wenn ein Abonnement an Telegram, Discord, Slack oder einen anderen Kanal zustellt.',
+      'Webhooks sind eine eigene Gateway-Plattform. Aktivieren Sie sie hier, um eingehende HTTP-Events anzunehmen; Chat-Kanäle werden nur benötigt, wenn ein Abonnement an Telegram zustellt.',
     enable: 'Webhooks aktivieren',
     enabling: 'Wird aktiviert …',
     enabled: (name: string) => `Aktiviert: „${name}“`,
@@ -3242,9 +3134,6 @@ const deBaseOverrides = {
     deliverOptions: {
       log: 'Log',
       telegram: 'Telegram',
-      discord: 'Discord',
-      slack: 'Slack',
-      email: 'E-Mail',
       github_comment: 'GitHub-Kommentar'
     }
   },
@@ -3433,10 +3322,7 @@ const deBaseOverrides = {
     runAgain: 'Erneut ausführen',
     deliveryLabels: {
       local: 'Dieser Desktop',
-      telegram: 'Telegram',
-      discord: 'Discord',
-      slack: 'Slack',
-      email: 'E-Mail'
+      telegram: 'Telegram'
     },
     scheduleLabels: {
       daily: 'Täglich',
@@ -5546,7 +5432,7 @@ const deBaseOverrides = {
       },
       messaging: {
         title: 'A2Assistant abseits Ihres Schreibtischs',
-        text: 'Verbinden Sie Telegram, Discord, Slack und mehr – derselbe Agent, dasselbe Gedächtnis.'
+        text: 'Verbinden Sie Telegram – derselbe Agent, dasselbe Gedächtnis.'
       },
       artifacts: {
         title: 'Alles, was A2Assistant gemacht hat',

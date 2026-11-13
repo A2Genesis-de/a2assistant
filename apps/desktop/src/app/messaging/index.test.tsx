@@ -88,15 +88,15 @@ function platform(patch: Partial<MessagingPlatformInfo> = {}): MessagingPlatform
     enabled: false,
     env_vars: [],
     gateway_running: true,
-    id: 'teams',
-    name: 'Microsoft Teams',
+    id: 'webhook',
+    name: 'Webhooks',
     state: 'disabled',
     ...patch
   }
 }
 
 beforeEach(() => {
-  updateMessagingPlatform.mockResolvedValue({ ok: true, platform: 'teams' })
+  updateMessagingPlatform.mockResolvedValue({ ok: true, platform: 'webhook' })
   getPairing.mockResolvedValue({ approved: [], pending: [] })
   runGatewayRestart.mockResolvedValue(true)
   watchGatewayRestartOutcome.mockResolvedValue(true)
@@ -149,9 +149,9 @@ describe('MessagingView status filter', () => {
   it('offers a tab only for tones some platform is in, and narrows the list to that tone', async () => {
     getMessagingPlatforms.mockResolvedValue({
       platforms: [
-        platform({ enabled: true, id: 'discord', name: 'Discord', state: 'connected' }),
-        platform({ enabled: true, id: 'slack', name: 'Slack', state: 'retrying' }),
-        platform({ id: 'teams', name: 'Microsoft Teams' })
+        platform({ enabled: true, id: 'api_server', name: 'API Server', state: 'connected' }),
+        platform({ enabled: true, id: 'telegram', name: 'Telegram', state: 'retrying' }),
+        platform({ id: 'webhook', name: 'Webhooks' })
       ]
     })
 
@@ -162,7 +162,7 @@ describe('MessagingView status filter', () => {
 
     fireEvent.click(screen.getAllByRole('button', { name: 'Needs attention' })[0])
 
-    expect(rowNames(container)).toEqual(['Slack'])
+    expect(rowNames(container)).toEqual(['Telegram'])
   })
 })
 
@@ -172,7 +172,7 @@ describe('MessagingView enable switch', () => {
 
     await renderMessaging()
 
-    const toggle = await screen.findByRole('switch', { name: 'Disable Microsoft Teams' })
+    const toggle = await screen.findByRole('switch', { name: 'Disable Webhooks' })
     expect(toggle.closest('label')?.textContent).toBe('Enabled')
   })
 
@@ -299,20 +299,16 @@ describe('MessagingView enable switch', () => {
 
 describe('MessagingView setup-guide link', () => {
   it('hides the setup-guide button for a plugin platform with no docs URL', async () => {
-    // Teams (and other plugin platforms) ship an empty docs_url. Rendering an
-    // anchor with href="" let Electron resolve it to the app's own packaged
-    // index.html and fail with an OS "file not found" dialog. The button must
-    // simply not appear when there is no guide to open.
     getMessagingPlatforms.mockResolvedValue({ platforms: [platform({ docs_url: '' })] })
 
     await renderMessaging()
 
-    expect((await screen.findAllByText('Microsoft Teams')).length).toBeGreaterThan(0)
+    expect((await screen.findAllByText('Webhooks')).length).toBeGreaterThan(0)
     expect(screen.queryByText('Open setup guide')).toBeNull()
   })
 
   it('opens a real docs URL through the validated external opener', async () => {
-    const docsUrl = 'https://hermes-agent.nousresearch.com/docs/user-guide/messaging/teams'
+    const docsUrl = 'https://hermes-agent.nousresearch.com/docs/user-guide/messaging/webhooks'
     getMessagingPlatforms.mockResolvedValue({ platforms: [platform({ docs_url: docsUrl })] })
 
     await renderMessaging()
@@ -329,7 +325,7 @@ describe('MessagingView setup-guide link', () => {
 describe('MessagingView pairing', () => {
   const pendingUser = {
     age_minutes: 3,
-    platform: 'teams',
+    platform: 'webhook',
     request_id: 'a1b2c3d4e5f60718',
     user_id: '7712345',
     user_name: 'Bee'
@@ -350,7 +346,7 @@ describe('MessagingView pairing', () => {
       fireEvent.click(approve)
     })
 
-    await waitFor(() => expect(approvePairing).toHaveBeenCalledWith('teams', 'a1b2c3d4e5f60718', 'default'))
+    await waitFor(() => expect(approvePairing).toHaveBeenCalledWith('webhook', 'a1b2c3d4e5f60718', 'default'))
   })
 
   it('restores the pending row when approval fails', async () => {
@@ -377,7 +373,7 @@ describe('MessagingView pairing', () => {
 
     await renderMessaging()
 
-    expect((await screen.findAllByText('Microsoft Teams')).length).toBeGreaterThan(0)
+    expect((await screen.findAllByText('Webhooks')).length).toBeGreaterThan(0)
     expect(screen.queryByRole('button', { name: 'Approve' })).toBeNull()
   })
 
@@ -419,7 +415,7 @@ describe('MessagingView restart banner', () => {
     description: 'Bot token',
     is_password: true,
     is_set: false,
-    key: 'TEAMS_TOKEN',
+    key: 'WEBHOOK_TOKEN',
     prompt: 'Token',
     redacted_value: null,
     required: true,
@@ -464,7 +460,7 @@ describe('MessagingView allowlist editor', () => {
     is_list: true,
     is_password: false,
     is_set: true,
-    key: 'TEAMS_ALLOWED_USERS',
+    key: 'WEBHOOK_ALLOWED_USERS',
     prompt: 'Allowed users',
     redacted_value: '«redacted:111...222»',
     required: false,
@@ -500,8 +496,8 @@ describe('MessagingView allowlist editor', () => {
 
     await save()
     expect(updateMessagingPlatform).toHaveBeenCalledWith(
-      'teams',
-      { env: { TEAMS_ALLOWED_USERS: '222,333,444' } },
+      'webhook',
+      { env: { WEBHOOK_ALLOWED_USERS: '222,333,444' } },
       'default'
     )
   })
@@ -516,8 +512,8 @@ describe('MessagingView allowlist editor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }))
     await save()
     expect(updateMessagingPlatform).toHaveBeenCalledWith(
-      'teams',
-      { clear_env: ['TEAMS_ALLOWED_USERS'], env: {} },
+      'webhook',
+      { clear_env: ['WEBHOOK_ALLOWED_USERS'], env: {} },
       'default'
     )
   })

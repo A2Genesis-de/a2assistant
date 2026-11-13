@@ -302,9 +302,6 @@ export const ga: Translations = {
     delivery: {
       local: "Áitiúil",
       telegram: "Telegram",
-      discord: "Discord",
-      slack: "Slack",
-      email: "Email",
     },
   },
 
@@ -445,7 +442,6 @@ export const ga: Translations = {
       tts: "Téacs go Caint",
       stt: "Caint go Téacs",
       logging: "Logáil",
-      discord: "Discord",
       auxiliary: "Cúntach",
     },
   },

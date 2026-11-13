@@ -226,7 +226,7 @@ describe('normalizeAgentPluginRow', () => {
 
 describe('isDesktopRelevantPlugin (#98861)', () => {
   it('hides ordinary built-ins but always lists user installs', () => {
-    expect(isDesktopRelevantPlugin(row({ key: 'platforms/discord', source: 'bundled' }))).toBe(false)
+    expect(isDesktopRelevantPlugin(row({ key: 'platforms/telegram', source: 'bundled' }))).toBe(false)
 
     // User installs are unaffected either way.
     expect(isDesktopRelevantPlugin(row({ key: 'my-plugin', source: 'user' }))).toBe(true)

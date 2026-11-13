@@ -294,9 +294,6 @@ export const ru: Translations = {
     delivery: {
       local: "Локально",
       telegram: "Telegram",
-      discord: "Discord",
-      slack: "Slack",
-      email: "Email",
     },
   },
 
@@ -437,7 +434,6 @@ export const ru: Translations = {
       tts: "Синтез речи",
       stt: "Распознавание речи",
       logging: "Журналирование",
-      discord: "Discord",
       auxiliary: "Вспомогательные",
     },
   },

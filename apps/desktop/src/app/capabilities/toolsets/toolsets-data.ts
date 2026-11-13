@@ -49,7 +49,7 @@ export const TOOLSET_THEMES: ReadonlyArray<{ id: Exclude<ToolsetThemeId, 'more'>
   },
   {
     id: 'connect',
-    names: ['connections', 'a2a', 'homeassistant', 'x_search', 'messaging', 'spotify']
+    names: ['connections', 'homeassistant', 'x_search', 'messaging', 'spotify']
   }
 ]
 

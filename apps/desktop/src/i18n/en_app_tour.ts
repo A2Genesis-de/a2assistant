@@ -7,6 +7,6 @@ export const enAppTour: Translations['appTour'] = {
   model: { title: 'Model picker', text: 'Chooses which model answers you.' },
   modelLocal: 'This computer can run one locally: Settings > Providers > Local Models.',
   capabilities: { title: 'Capabilities', text: 'Skills, tools and plugins A2Assistant can use. Add more here.' },
-  messaging: { title: 'Messaging', text: 'Reach A2Assistant from Telegram, Slack, Discord and more.' },
+  messaging: { title: 'Messaging', text: 'Reach A2Assistant from Telegram.' },
   rightPane: { title: 'The working pane', text: 'Opens files, terminal, review and the in-app browser on the right.' }
 }

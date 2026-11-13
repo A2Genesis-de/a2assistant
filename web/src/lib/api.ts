@@ -16,17 +16,6 @@ import type {
   PluginProvidersPutRequest,
 } from "./api-plugins";
 import type {
-  WhatsAppOnboardingApplyResponse,
-  WhatsAppOnboardingStartRequest,
-  WhatsAppOnboardingStartResponse,
-  WhatsAppOnboardingStatusResponse,
-} from "./api-whatsapp";
-export type {
-  WhatsAppOnboardingApplyResponse,
-  WhatsAppOnboardingStartResponse,
-  WhatsAppOnboardingStatusResponse,
-} from "./api-whatsapp";
-import type {
   MessagingPlatform,
   RelayLinkCode,
   RelayLinkCodeState,
@@ -137,7 +126,6 @@ const PROFILE_SCOPED_PREFIXES = [
   "/api/mcp",
   "/api/messaging/platforms",
   "/api/messaging/telegram/onboarding",
-  "/api/messaging/whatsapp/onboarding",
   // OAuth/account state is profile-owned too: status, login sessions, polling,
   // cancellation, and disconnect must all follow the selected management
   // profile rather than silently targeting the dashboard process's profile.
@@ -1045,36 +1033,6 @@ export const api = {
   cancelTelegramOnboarding: (pairingId: string) =>
     fetchJSON<{ ok: boolean }>(
       `/api/messaging/telegram/onboarding/${encodeURIComponent(pairingId)}`,
-      { method: "DELETE" },
-    ),
-  startWhatsAppOnboarding: (body: WhatsAppOnboardingStartRequest) =>
-    fetchJSON<WhatsAppOnboardingStartResponse>(
-      "/api/messaging/whatsapp/onboarding/start",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      },
-    ),
-  getWhatsAppOnboardingStatus: (pairingId: string) =>
-    fetchJSON<WhatsAppOnboardingStatusResponse>(
-      `/api/messaging/whatsapp/onboarding/${encodeURIComponent(pairingId)}`,
-    ),
-  applyWhatsAppOnboarding: (
-    pairingId: string,
-    body: { mode?: "bot" | "self-chat"; allowed_users?: string; profile?: string },
-  ) =>
-    fetchJSON<WhatsAppOnboardingApplyResponse>(
-      `/api/messaging/whatsapp/onboarding/${encodeURIComponent(pairingId)}/apply`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      },
-    ),
-  cancelWhatsAppOnboarding: (pairingId: string) =>
-    fetchJSON<{ ok: boolean }>(
-      `/api/messaging/whatsapp/onboarding/${encodeURIComponent(pairingId)}`,
       { method: "DELETE" },
     ),
 

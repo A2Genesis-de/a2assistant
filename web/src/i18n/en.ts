@@ -344,9 +344,6 @@ export const en: Translations = {
     delivery: {
       local: "Local",
       telegram: "Telegram",
-      discord: "Discord",
-      slack: "Slack",
-      email: "Email",
       needsHomeChannel: "set a home channel first",
       noneConfigured:
         "No messaging platforms configured. Set one up under Channels to deliver reports.",
@@ -551,7 +548,6 @@ export const en: Translations = {
       tts: "Text-to-Speech",
       stt: "Speech-to-Text",
       logging: "Logging",
-      discord: "Discord",
       auxiliary: "Auxiliary",
     },
   },

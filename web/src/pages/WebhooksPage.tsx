@@ -409,9 +409,6 @@ export default function WebhooksPage() {
                     >
                       <SelectOption value="log">Log</SelectOption>
                       <SelectOption value="telegram">Telegram</SelectOption>
-                      <SelectOption value="discord">Discord</SelectOption>
-                      <SelectOption value="slack">Slack</SelectOption>
-                      <SelectOption value="email">Email</SelectOption>
                       <SelectOption value="github_comment">
                         GitHub comment
                       </SelectOption>
@@ -469,9 +466,8 @@ export default function WebhooksPage() {
                 <span className="font-medium">Webhook receiver disabled</span>
                 <span className="text-muted-foreground">
                   Webhooks are their own gateway platform. Enable them here to
-                  accept incoming HTTP events; chat channels are only needed
-                  when a subscription delivers to Telegram, Discord, Slack, or
-                  another channel.
+                  accept incoming HTTP events; Telegram is only needed when a
+                  subscription delivers there.
                 </span>
               </div>
             </div>

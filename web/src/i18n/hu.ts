@@ -294,9 +294,6 @@ export const hu: Translations = {
     delivery: {
       local: "Helyi",
       telegram: "Telegram",
-      discord: "Discord",
-      slack: "Slack",
-      email: "Email",
     },
   },
 
@@ -437,7 +434,6 @@ export const hu: Translations = {
       tts: "Szövegfelolvasás",
       stt: "Beszédfelismerés",
       logging: "Naplózás",
-      discord: "Discord",
       auxiliary: "Kiegészítő",
     },
   },

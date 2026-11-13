@@ -294,9 +294,6 @@ export const de: Translations = {
     delivery: {
       local: "Lokal",
       telegram: "Telegram",
-      discord: "Discord",
-      slack: "Slack",
-      email: "Email",
     },
   },
 
@@ -437,7 +434,6 @@ export const de: Translations = {
       tts: "Text-zu-Sprache",
       stt: "Sprache-zu-Text",
       logging: "Protokollierung",
-      discord: "Discord",
       auxiliary: "Hilfs",
     },
   },

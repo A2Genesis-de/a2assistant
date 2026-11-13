@@ -2409,7 +2409,7 @@ export const en: Translations = {
       newChat: { title: 'New session', detail: 'Start a fresh session' },
       settings: { title: 'Settings', detail: 'Configure A2Assistant desktop' },
       capabilities: { title: 'Capabilities', detail: 'Skills, tools, MCP servers, and plugins' },
-      messaging: { title: 'Messaging', detail: 'Set up Telegram, Slack, Discord, and more' },
+      messaging: { title: 'Messaging', detail: 'Set up Telegram' },
       artifacts: { title: 'Artifacts', detail: 'Browse generated outputs' }
     },
     sectionEntries: {
@@ -2662,77 +2662,7 @@ export const en: Translations = {
         label: 'Allowed Telegram user IDs',
         help: 'Recommended. Numeric IDs from @userinfobot, one per box. Without this, anyone can DM your bot.'
       },
-      TELEGRAM_PROXY: { label: 'Proxy URL', help: 'Only needed on networks where Telegram is blocked.' },
-      DISCORD_BOT_TOKEN: {
-        label: 'Bot token',
-        help: 'Create an application in the Discord Developer Portal, add a bot, then paste its token.'
-      },
-      DISCORD_ALLOWED_USERS: {
-        label: 'Allowed Discord user IDs',
-        help: 'Recommended. Discord user IDs, one per box.'
-      },
-      DISCORD_REPLY_TO_MODE: { label: 'Reply style', help: 'first, all, or off.' },
-      DISCORD_ALLOW_ALL_USERS: {
-        label: 'Allow all Discord users',
-        help: 'Development only. When true, anyone can DM the bot without an allowlist.'
-      },
-      DISCORD_HOME_CHANNEL: {
-        label: 'Home channel ID',
-        help: 'Channel where the bot sends proactive messages (cron output, reminders).'
-      },
-      DISCORD_HOME_CHANNEL_NAME: {
-        label: 'Home channel name',
-        help: 'Display name for the home channel in logs and status output.'
-      },
-      BLUEBUBBLES_ALLOW_ALL_USERS: {
-        label: 'Allow all iMessage users',
-        help: 'When true, skip the BlueBubbles allowlist.'
-      },
-      MATTERMOST_ALLOW_ALL_USERS: { label: 'Allow all Mattermost users' },
-      MATTERMOST_HOME_CHANNEL: { label: 'Home channel' },
-      QQ_ALLOW_ALL_USERS: { label: 'Allow all QQ users' },
-      QQBOT_HOME_CHANNEL: { label: 'QQ home channel', help: 'Default channel or group for cron delivery.' },
-      QQBOT_HOME_CHANNEL_NAME: { label: 'QQ home channel name' },
-      SLACK_BOT_TOKEN: {
-        label: 'Slack bot token',
-        help: 'Use the bot token from OAuth & Permissions after installing your Slack app.',
-        placeholder: 'Paste Slack bot token'
-      },
-      SLACK_APP_TOKEN: {
-        label: 'Slack app token',
-        help: 'Use the app-level token required for Socket Mode.',
-        placeholder: 'Paste Slack app token'
-      },
-      SLACK_ALLOWED_USERS: { label: 'Allowed Slack user IDs', help: 'Recommended. Slack user IDs, one per box.' },
-      MATTERMOST_URL: { label: 'Server URL', placeholder: 'https://mattermost.example.com' },
-      MATTERMOST_TOKEN: { label: 'Bot token' },
-      MATTERMOST_ALLOWED_USERS: {
-        label: 'Allowed user IDs',
-        help: 'Recommended. Mattermost user IDs, one per box.'
-      },
-      MATRIX_HOMESERVER: { label: 'Homeserver URL', placeholder: 'https://matrix.org' },
-      MATRIX_ACCESS_TOKEN: { label: 'Access token' },
-      MATRIX_USER_ID: { label: 'Bot user ID', placeholder: '@hermes:example.org' },
-      MATRIX_ALLOWED_USERS: {
-        label: 'Allowed Matrix user IDs',
-        help: 'Recommended. User IDs in @user:server format, one per box.'
-      },
-      SIGNAL_HTTP_URL: {
-        label: 'Signal bridge URL',
-        placeholder: 'http://127.0.0.1:8080',
-        help: 'URL of a running signal-cli REST bridge.'
-      },
-      SIGNAL_ACCOUNT: { label: 'Phone number', help: 'The number registered with your signal-cli bridge.' },
-      SIGNAL_ALLOWED_USERS: { label: 'Allowed Signal users', help: 'Recommended. Signal identifiers, one per box.' },
-      WHATSAPP_ENABLED: {
-        label: 'Enable WhatsApp bridge',
-        help: 'Set automatically by the toggle below. Leave alone unless you know you need it.'
-      },
-      WHATSAPP_MODE: { label: 'Bridge mode' },
-      WHATSAPP_ALLOWED_USERS: {
-        label: 'Allowed WhatsApp users',
-        help: 'Recommended. Phone numbers or WhatsApp IDs, one per box.'
-      }
+      TELEGRAM_PROXY: { label: 'Proxy URL', help: 'Only needed on networks where Telegram is blocked.' }
     },
     platformIntro: {}
   },
@@ -2746,7 +2676,7 @@ export const en: Translations = {
     empty: 'No webhook subscriptions yet.',
     disabledTitle: 'Webhook receiver disabled',
     disabledBody:
-      'Webhooks are their own gateway platform. Enable them here to accept incoming HTTP events; chat channels are only needed when a subscription delivers to Telegram, Discord, Slack, or another channel.',
+      'Webhooks are their own gateway platform. Enable them here to accept incoming HTTP events; chat channels are only needed when a subscription delivers to Telegram.',
     enable: 'Enable webhooks',
     enabling: 'Enabling...',
     enabled: (name: string) => `Enabled: "${name}"`,
@@ -2796,9 +2726,6 @@ export const en: Translations = {
     deliverOptions: {
       log: 'Log',
       telegram: 'Telegram',
-      discord: 'Discord',
-      slack: 'Slack',
-      email: 'Email',
       github_comment: 'GitHub comment'
     }
   },
@@ -2986,10 +2913,7 @@ export const en: Translations = {
     runAgain: 'Run again',
     deliveryLabels: {
       local: 'This desktop',
-      telegram: 'Telegram',
-      discord: 'Discord',
-      slack: 'Slack',
-      email: 'Email'
+      telegram: 'Telegram'
     },
     scheduleLabels: {
       daily: 'Daily',
@@ -4866,7 +4790,7 @@ export const en: Translations = {
       },
       messaging: {
         title: 'A2Assistant away from your desk',
-        text: 'Connect Telegram, Discord, Slack and more — same agent, same memory.'
+        text: 'Connect Telegram — same agent, same memory.'
       },
       artifacts: {
         title: 'Everything A2Assistant made',

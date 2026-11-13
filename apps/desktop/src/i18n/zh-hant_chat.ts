@@ -518,7 +518,7 @@ export const zhHantChat = {
       },
       messaging: {
         title: '離開電腦也能用',
-        text: '接上 Telegram、Discord、Slack 等 — 同一個代理，同一份記憶。'
+        text: '接上 Telegram — 同一個代理，同一份記憶。'
       },
       artifacts: {
         title: 'A2Assistant 做過的一切',

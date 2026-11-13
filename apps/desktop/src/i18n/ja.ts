@@ -1539,7 +1539,7 @@ export const jaOverrides = {
       newChat: { title: '新しいセッション', detail: '新しいセッションを開始' },
       settings: { title: '設定', detail: 'A2Assistant デスクトップを設定' },
       capabilities: { title: 'スキルとツール', detail: 'スキル、ツールセット、プロバイダーを有効化' },
-      messaging: { title: 'メッセージング', detail: 'Telegram、Slack、Discord などを設定' },
+      messaging: { title: 'メッセージング', detail: 'Telegram を設定' },
       artifacts: { title: 'アーティファクト', detail: '生成された出力を閲覧' }
     },
     sectionEntries: {
@@ -1729,83 +1729,7 @@ export const jaOverrides = {
         label: '許可する Telegram ユーザー ID',
         help: '推奨。@userinfobot の数値 ID（1 欄に 1 件）。設定しないと誰でもボットに DM できます。'
       },
-      TELEGRAM_PROXY: { label: 'プロキシ URL', help: 'Telegram がブロックされているネットワークでのみ必要です。' },
-      DISCORD_BOT_TOKEN: {
-        label: 'ボットトークン',
-        help: 'Discord Developer Portal でアプリケーションを作成し、ボットを追加してからトークンを貼り付けてください。'
-      },
-      DISCORD_ALLOWED_USERS: {
-        label: '許可する Discord ユーザー ID',
-        help: '推奨。Discord ユーザー ID（1 欄に 1 件）。'
-      },
-      DISCORD_REPLY_TO_MODE: { label: '返信スタイル', help: 'first、all、または off。' },
-      DISCORD_ALLOW_ALL_USERS: {
-        label: 'すべての Discord ユーザーを許可',
-        help: '開発用のみ。true にすると、許可リストなしで誰でもボットに DM できます。'
-      },
-      DISCORD_HOME_CHANNEL: {
-        label: 'ホームチャンネル ID',
-        help: 'ボットがプロアクティブなメッセージを送信するチャンネル（Cron 出力、リマインダー）。'
-      },
-      DISCORD_HOME_CHANNEL_NAME: {
-        label: 'ホームチャンネル名',
-        help: 'ログやステータス出力でのホームチャンネルの表示名。'
-      },
-      BLUEBUBBLES_ALLOW_ALL_USERS: {
-        label: 'すべての iMessage ユーザーを許可',
-        help: 'true にすると BlueBubbles の許可リストをスキップします。'
-      },
-      MATTERMOST_ALLOW_ALL_USERS: { label: 'すべての Mattermost ユーザーを許可' },
-      MATTERMOST_HOME_CHANNEL: { label: 'ホームチャンネル' },
-      QQ_ALLOW_ALL_USERS: { label: 'すべての QQ ユーザーを許可' },
-      QQBOT_HOME_CHANNEL: { label: 'QQ ホームチャンネル', help: 'Cron 配信のデフォルトチャンネルまたはグループ。' },
-      QQBOT_HOME_CHANNEL_NAME: { label: 'QQ ホームチャンネル名' },
-      SLACK_BOT_TOKEN: {
-        label: 'Slack ボットトークン',
-        help: 'Slack アプリをインストール後、OAuth & Permissions のボットトークンを使用してください。',
-        placeholder: 'Slack ボットトークンを貼り付け'
-      },
-      SLACK_APP_TOKEN: {
-        label: 'Slack アプリトークン',
-        help: 'Socket Mode に必要なアプリレベルのトークンを使用してください。',
-        placeholder: 'Slack アプリトークンを貼り付け'
-      },
-      SLACK_ALLOWED_USERS: {
-        label: '許可する Slack ユーザー ID',
-        help: '推奨。Slack ユーザー ID（1 欄に 1 件）。'
-      },
-      MATTERMOST_URL: { label: 'サーバー URL', placeholder: 'https://mattermost.example.com' },
-      MATTERMOST_TOKEN: { label: 'ボットトークン' },
-      MATTERMOST_ALLOWED_USERS: {
-        label: '許可するユーザー ID',
-        help: '推奨。Mattermost ユーザー ID（1 欄に 1 件）。'
-      },
-      MATRIX_HOMESERVER: { label: 'ホームサーバー URL', placeholder: 'https://matrix.org' },
-      MATRIX_ACCESS_TOKEN: { label: 'アクセストークン' },
-      MATRIX_USER_ID: { label: 'ボットユーザー ID', placeholder: '@hermes:example.org' },
-      MATRIX_ALLOWED_USERS: {
-        label: '許可する Matrix ユーザー ID',
-        help: '推奨。@user:server 形式のユーザー ID（1 欄に 1 件）。'
-      },
-      SIGNAL_HTTP_URL: {
-        label: 'Signal ブリッジ URL',
-        placeholder: 'http://127.0.0.1:8080',
-        help: '実行中の signal-cli REST ブリッジの URL。'
-      },
-      SIGNAL_ACCOUNT: { label: '電話番号', help: 'signal-cli ブリッジに登録した番号。' },
-      SIGNAL_ALLOWED_USERS: {
-        label: '許可する Signal ユーザー',
-        help: '推奨。Signal 識別子（1 欄に 1 件）。'
-      },
-      WHATSAPP_ENABLED: {
-        label: 'WhatsApp ブリッジを有効にする',
-        help: '以下のトグルで自動的に設定されます。必要な場合を除いてそのままにしてください。'
-      },
-      WHATSAPP_MODE: { label: 'ブリッジモード' },
-      WHATSAPP_ALLOWED_USERS: {
-        label: '許可する WhatsApp ユーザー',
-        help: '推奨。電話番号または WhatsApp ID（1 欄に 1 件）。'
-      }
+      TELEGRAM_PROXY: { label: 'プロキシ URL', help: 'Telegram がブロックされているネットワークでのみ必要です。' }
     },
     platformIntro: {}
   },
@@ -1977,10 +1901,7 @@ export const jaOverrides = {
     },
     deliveryLabels: {
       local: 'このデスクトップ',
-      telegram: 'Telegram',
-      discord: 'Discord',
-      slack: 'Slack',
-      email: 'メール'
+      telegram: 'Telegram'
     },
     scheduleLabels: {
       daily: '毎日',
@@ -3762,7 +3683,7 @@ export const jaOverrides = {
       },
       messaging: {
         title: 'デスクを離れても A2Assistant',
-        text: 'Telegram、Discord、Slack などに接続。同じエージェント、同じ記憶のままです。'
+        text: 'Telegram に接続。同じエージェント、同じ記憶のままです。'
       },
       artifacts: {
         title: 'A2Assistant が作ったものすべて',

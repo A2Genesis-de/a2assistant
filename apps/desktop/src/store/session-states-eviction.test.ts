@@ -57,12 +57,12 @@ describe('publish-time eviction', () => {
   })
 
   it('does not mark an external messaging completion unread', () => {
-    $messagingSessions.set([makeSessionInfo({ id: 'wechat-1', source: 'weixin' })])
+    $messagingSessions.set([makeSessionInfo({ id: 'telegram-1', source: 'telegram' })])
 
-    publishSessionState('rt-wechat', state('wechat-1', { busy: true }))
-    publishSessionState('rt-wechat', state('wechat-1', { busy: false }))
+    publishSessionState('rt-telegram', state('telegram-1', { busy: true }))
+    publishSessionState('rt-telegram', state('telegram-1', { busy: false }))
 
-    expect($unreadFinishedSessionIds.get()).not.toContain('wechat-1')
+    expect($unreadFinishedSessionIds.get()).not.toContain('telegram-1')
   })
 
   it('marks a background profile local completion unread when another profile holds a messaging row of that id', () => {

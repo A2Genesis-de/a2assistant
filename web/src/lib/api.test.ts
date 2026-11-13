@@ -114,16 +114,16 @@ describe("api.getModelOptions", () => {
 });
 
 describe("management profile scope", () => {
-  it("sends explicit WhatsApp re-pair consent to the selected profile", async () => {
-    const fetchMock = jsonFetchMock({ pairing_id: "fresh", status: "starting" });
+  it("sends Telegram onboarding to the selected profile", async () => {
+    const fetchMock = jsonFetchMock({ pairing_id: "fresh", status: "waiting" });
     vi.stubGlobal("fetch", fetchMock);
     setManagementProfile("worker");
 
-    await api.startWhatsAppOnboarding({ mode: "bot", reset_session: true });
+    await api.startTelegramOnboarding({ bot_name: "A2Assistant" });
 
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("/api/messaging/whatsapp/onboarding/start?profile=worker");
-    expect(JSON.parse(String(init?.body))).toEqual({ mode: "bot", reset_session: true });
+    expect(url).toBe("/api/messaging/telegram/onboarding/start?profile=worker");
+    expect(JSON.parse(String(init?.body))).toEqual({ bot_name: "A2Assistant" });
   });
 
   // Every family whose routes write into a named profile's home must carry the
