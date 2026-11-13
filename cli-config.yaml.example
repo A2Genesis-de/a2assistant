@@ -609,7 +609,7 @@ browser:
   # user_data_dir: ""
   # chromium_args: ["--lang=de"]
 
-  # With a cloud provider (Browserbase, Browser Use, ...), LAN/localhost URLs
+  # With a cloud browser plugin (browser.cloud_provider), LAN/localhost URLs
   # open in a local Chromium sidecar on this host instead. The sidecar ignores
   # security.allow_private_urls (like the plain local Chromium, it reaches what
   # the terminal reaches); set false to refuse private URLs instead.

@@ -40,8 +40,6 @@ _SHOW_CONFIG_API_KEYS = (
     ("FIRECRAWL_API_KEY", "Firecrawl"),
     ("TAVILY_API_KEY", "Tavily"),
     ("PERPLEXITY_API_KEY", "Perplexity"),
-    ("BROWSERBASE_API_KEY", "Browserbase"),
-    ("BROWSER_USE_API_KEY", "Browser Use"),
     ("FAL_KEY", "FAL"))
 
 

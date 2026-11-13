@@ -335,9 +335,9 @@ TOOL_CATEGORIES = {
     },
     "browser": {
         "name": "Browser Automation", "icon": "🌐",
-        # Cloud provider rows (Browserbase, Browser Use, Firecrawl) come from plugins.browser.<vendor> via
-        # _plugin_browser_providers(); only non-provider setup-flow rows live here. "Local Browser" MUST stay
-        # first so a fresh install's Enter lands on the free local backend (index 0), never on the paid Nous row.
+        # Cloud provider rows come from browser provider plugins via _plugin_browser_providers(); only
+        # non-provider setup-flow rows live here. "Local Browser" MUST stay first so a fresh install's Enter
+        # lands on the free local backend (index 0).
         # Lightpanda is local too (cloud_provider: local, browser.engine: lightpanda — browser_exec spawns
         # ``lightpanda serve``; no Chromium).
         "providers": [
@@ -345,11 +345,6 @@ TOOL_CATEGORIES = {
                  browser_engine="auto", post_setup="chromium"),
             _row("Lightpanda", "free · local · no Chromium", "Zig headless browser spawned by A2Assistant, text-only (no screenshots)",
                  browser_provider="local", browser_engine="lightpanda", post_setup="lightpanda"),
-            # Browser Use hosts its own Chromium, so the local-Chromium install and readiness gate must not
-            # apply (with "chromium" this row read "needs setup" forever on machines without a local build).
-            _row("Nous Subscription (Browser Use cloud)", "subscription", "Managed Browser Use billed to your subscription",
-                 browser_provider="browser-use", **_NOUS, managed_nous_feature="browser",
-                 override_env_vars=["BROWSER_USE_API_KEY"], post_setup="browserbase"),
         ],
     },
     "computer_use": {
@@ -1083,7 +1078,7 @@ def _first_install_flow(config: dict, enabled_platforms: list[str]) -> None:
             label = next((l for k, l, _ in CONFIGURABLE_TOOLSETS if k == ts_key), ts_key)
             print(color(f"  ✓ {label}: using your Nous subscription defaults", Colors.GREEN))
         # Walk through ALL selected tools with provider options or key requirements, so browser (Local vs
-        # Browserbase), TTS (Edge vs OpenAI vs ElevenLabs), etc. are shown even when a free provider exists.
+        # Lightpanda), TTS (Edge vs OpenAI vs ElevenLabs), etc. are shown even when a free provider exists.
         _configure_list(
             [ts for ts in sorted(new_enabled) if _is_configurable(ts) and ts not in auto_configured],
             config, selected=False)

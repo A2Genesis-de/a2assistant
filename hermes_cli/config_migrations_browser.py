@@ -86,7 +86,7 @@ _BACKEND_REASONS = {
     "camofox": "Camofox is now the camofox plugin (`hermes plugins install camofox`)",
     "local": "browser_exec launches A2Assistant's packaged Chromium itself (browser.cloud_provider: local)",
     **dict.fromkeys(("browserbase", "firecrawl", "nous"),
-                    "a cloud browser is chosen with browser.cloud_provider (`hermes tools` → Browser Automation)"),
+                    "the bundled cloud browsers were removed; browser_exec launches the local Chromium"),
 }
 
 

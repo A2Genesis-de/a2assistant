@@ -283,9 +283,6 @@ def test_first_install_nous_auto_configures_video_gen(monkeypatch):
         "KEENABLE_API_KEY",
         "TAVILY_API_KEY",
         "PARALLEL_API_KEY",
-        "BROWSERBASE_API_KEY",
-        "BROWSERBASE_PROJECT_ID",
-        "BROWSER_USE_API_KEY",
         "FAL_KEY",
     ):
         monkeypatch.delenv(env_var, raising=False)
