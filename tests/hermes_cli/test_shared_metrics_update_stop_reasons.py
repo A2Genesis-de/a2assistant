@@ -269,7 +269,7 @@ def test_an_exception_before_the_apply_names_its_exit_through_the_command_bounda
     monkeypatch.setattr(main, "_desktop_packaged_executable", lambda d: None)
     monkeypatch.setattr(main, "_desktop_dist_exists", lambda d: False)
     monkeypatch.setattr(main, "_installed_desktop_apps", list)
-    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (False, ["git"], False))
+    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (False, ["git"]))
     monkeypatch.setattr(update_cmd, "_source_completion_request", lambda *a: {"home": str(rows.home)})
     monkeypatch.setattr(main, "_resolve_update_branch", lambda args: "main")
     monkeypatch.setattr(update_cmd, "_source_update_channel", boom if site == "channel" else lambda args: "main")

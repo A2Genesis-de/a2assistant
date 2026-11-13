@@ -18,7 +18,8 @@ import urllib.error
 import urllib.request
 
 from hermes_constants import get_hermes_home
-from hermes_cli.source_releases import OFFICIAL_REPOSITORY, _GITHUB_ORIGIN, resolve_source_target
+from hermes_cli.repository import REPOSITORY, REPOSITORY_GIT_URL
+from hermes_cli.source_releases import _GITHUB_ORIGIN, resolve_source_target
 
 logger = logging.getLogger(__name__)
 UPDATE_AVAILABLE_NO_COUNT = -1
@@ -97,7 +98,7 @@ def _is_full_sha(value: Optional[str]) -> bool:
     return isinstance(value, str) and len(value) == 40 and all(c in "0123456789abcdefABCDEF" for c in value)
 
 
-def _github_compare(current_rev: str, target_rev: str, repository: str = OFFICIAL_REPOSITORY) -> Optional[dict]:
+def _github_compare(current_rev: str, target_rev: str, repository: str = REPOSITORY) -> Optional[dict]:
     # Do not memoize this separately: force must bypass failed AND successful network results.
     if not (_is_full_sha(current_rev) and _is_full_sha(target_rev)):
         return None
@@ -106,7 +107,7 @@ def _github_compare(current_rev: str, target_rev: str, repository: str = OFFICIA
     return payload if isinstance(payload, dict) else None
 
 
-def _github_compare_behind(current_rev: str, target_rev: str, repository: str = OFFICIAL_REPOSITORY) -> Optional[int]:
+def _github_compare_behind(current_rev: str, target_rev: str, repository: str = REPOSITORY) -> Optional[int]:
     payload = _github_compare(current_rev, target_rev, repository)
     ahead = payload.get("ahead_by") if payload else None
     return ahead if isinstance(ahead, int) and not isinstance(ahead, bool) and ahead >= 0 else None
@@ -247,12 +248,12 @@ def _installed_git(git: str) -> str:
 
 
 def _read_checkout(root: Path, git: str, embedded: Optional[str]) -> _Checkout:
-    # An embedded revision has no checkout to ask: it always tracks the official repository.
+    # An embedded revision has no checkout to ask: it always tracks the A2Assistant repository.
     head = embedded or _git_stdout(["rev-parse", "HEAD"], cwd=root, git=git)
     current_branch = None if embedded else _git_stdout(["rev-parse", "--abbrev-ref", "HEAD"], cwd=root, git=git)
     origin = "" if embedded else (_git_stdout(["remote", "get-url", "origin"], cwd=root, git=git) or "")
     match = _GITHUB_ORIGIN.fullmatch(origin)
-    repository = OFFICIAL_REPOSITORY if embedded else (match[1] if match else None)
+    repository = REPOSITORY if embedded else (match[1] if match else None)
     dirty = False if embedded else bool(_git_stdout(["status", "--porcelain"], cwd=root, git=git))
     return _Checkout(root, git, embedded, head, current_branch, origin, repository, dirty)
 
@@ -417,7 +418,7 @@ def _update_refuses(co: _Checkout, target: str, home: Path) -> bool:
         return -1 if result is None else result.returncode
 
     def remote(sha: str) -> Optional[bool]:
-        return _github_predates_runtime(co.repository or OFFICIAL_REPOSITORY, sha,
+        return _github_predates_runtime(co.repository or REPOSITORY, sha,
                                         home / "source-checks" / "release-runtime.json")
     return would_refuse(co.root, target, home, git=git, remote=remote)
 
@@ -439,7 +440,7 @@ def _resolve_channel(result: dict, channel: str, co: _Checkout, *, forward_only:
     """
     try:
         source_target = resolve_source_target(channel, [co.git] if not co.embedded else None, co.root,
-                                              repository=co.repository or OFFICIAL_REPOSITORY,
+                                              repository=co.repository or REPOSITORY,
                                               forward_only=forward_only)
     except (OSError, ValueError, subprocess.SubprocessError) as exc:
         result.update(error="release-unavailable", message=f"Could not resolve the {channel} source channel: {exc}")
@@ -449,7 +450,7 @@ def _resolve_channel(result: dict, channel: str, co: _Checkout, *, forward_only:
         result.pop("branch", None)
         result.update(channel=channel, targetSha=target, updateAvailable=co.head != target,
                       behind=0 if co.head == target else UPDATE_AVAILABLE_NO_COUNT,
-                      sourceVersion=source_target.version, buildId=source_target.build_id)
+                      sourceVersion=source_target.version)
         # Forward-only pins the target to this checkout's own HEAD, newer than the release.
         # Always present: Desktop names the release only on an explicit False.
         result["aheadOfRelease"] = bool(getattr(source_target, "ahead", False))
@@ -457,18 +458,15 @@ def _resolve_channel(result: dict, channel: str, co: _Checkout, *, forward_only:
         # not a new update. Local ancestry only; an unknown relation stays an update.
         result["rollback"] = bool(co.head and co.head != target and not co.embedded and _git_ok(
             ["merge-base", "--is-ancestor", target, co.head], cwd=co.root, git=co.git))
-        if source_target.retired:
-            result["retirement"] = {"destination": source_target.channel, "sourceOnly": True}
     return source_target
 
 
 def _branch_remote(co: _Checkout, selected_branch: str) -> str:
-    official_ssh = (co.repository and co.repository.lower() == OFFICIAL_REPOSITORY.lower()
-                    and co.origin.lower().startswith(("git@", "ssh://")))
-    # The public official repo does not require the user's SSH credentials.
-    # Forks must keep their own origin, including its authentication.
-    return (f"https://github.com/{OFFICIAL_REPOSITORY}.git"
-            if co.embedded or (official_ssh and selected_branch != "main") else "origin")
+    own_ssh = (co.repository and co.repository.lower() == REPOSITORY.lower()
+               and co.origin.lower().startswith(("git@", "ssh://")))
+    # The public repository does not require the user's SSH credentials.
+    # Other origins keep their own authentication.
+    return REPOSITORY_GIT_URL if co.embedded or (own_ssh and selected_branch != "main") else "origin"
 
 
 def _heal_deleted_branch(branch_config_path: Path, desktop_config: dict) -> None:
@@ -581,7 +579,7 @@ def check_for_updates(*, install_root: Path | None = None, home: Path | None = N
     else:
         result["branch"] = selected_branch
     identity = {"root": str(root), "home": str(home), "head": co.head, "origin": co.origin, "branch": selected_branch,
-                "channel": channel, "embedded": embedded, "branchOverride": branch is not None, "channelProtocol": 3,
+                "channel": channel, "embedded": embedded, "branchOverride": branch is not None, "channelProtocol": 4,
                 "forwardOnly": forward_only}
     cache_file = Path(cache_path) if cache_path is not None else home / "source-checks" / f"{install_id(root)}.json"
     now = time.time()

@@ -83,7 +83,7 @@ def test_up_to_date_checkout_never_offers_to_delete(tmp_path, monkeypatch):
     monkeypatch.setattr("builtins.input", refuse)
 
     plan = update_cmd._prepare_checkout_for_update(
-        ["git"], "main", "main", is_fork=False, assume_yes=False, gateway_mode=False,
+        ["git"], "main", "main", assume_yes=False, gateway_mode=False,
         gw_input_fn=None, switch_branch=False, _windows_gateway_resume=None)
 
     assert plan.commit_count == 0

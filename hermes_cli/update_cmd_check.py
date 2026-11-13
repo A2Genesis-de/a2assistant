@@ -104,8 +104,6 @@ def channel_compare_branch(selected_channel: str, git_cmd: list[str], root: Path
         sys.exit(1)
     if not target.commit:
         return target.branch
-    if target.retired:
-        print(f"→ {selected_channel} retired; source destination: {target.channel}")
     if target.ahead:
         print(f"✓ No newer release: {target.label}.")
     elif _uc()._capture_head_sha(git_cmd, root) == target.commit:
@@ -139,26 +137,13 @@ def tracking_refspec(remote: str, branch: str) -> str:
     return f"+refs/heads/{branch}:refs/remotes/{remote}/{branch}"
 
 
-def _fetch(git_cmd: list[str], root: Path, depth_args: list[str], remote: str, branch: str):
-    print(f"→ Fetching from {remote}...")
-    return _git(
-        git_cmd, root, ["fetch", *depth_args, remote, tracking_refspec(remote, branch)],
-        **_uc()._no_prompt_git_kwargs())
-
 
 def fetch_compare_branch(git_cmd: list[str], root: Path, branch: str, depth_args: list[str]):
     """Fetch only ``branch`` and return ``(fetch_result, compare_ref)``.
 
     A bare ``git fetch <remote>`` pulls every ref, and this repo has thousands of auto-generated
-    branches. ``main`` prefers upstream as the canonical reference; other branches go straight
-    to origin, because a fork's branch usually has no upstream counterpart.
+    branches; origin is the only update source.
     """
-    if branch == "main":
-        # A local probe (~6 ms) spares non-fork installs a failed network fetch (~0.3-1 s).
-        if _git(git_cmd, root, ["remote", "get-url", "upstream"]).returncode == 0:
-            fetch_result = _fetch(git_cmd, root, depth_args, "upstream", branch)
-            if fetch_result.returncode == 0:
-                return fetch_result, f"upstream/{branch}"
     from hermes_cli.gitlock import fetch_with_partial_clone_recovery
     # Marking the unmarked packs clears the git 2.53+ partial-clone pack-objects crash (#124272).
     print("→ Fetching from origin...")
@@ -238,7 +223,6 @@ def select_apply_target(args, branch: str, request: dict, *, git_cmd, stop) -> t
     from copy import deepcopy
 
     from hermes_cli.config import require_readable_config_before_write
-    from hermes_cli.release_channels import retrying_reads
     from hermes_cli.source_releases import resolve_source_target
     from hermes_cli.update_channel import channel_record, rides_default_channel
     from hermes_cli.update_cmd_common import _record_stop
@@ -251,18 +235,13 @@ def select_apply_target(args, branch: str, request: dict, *, git_cmd, stop) -> t
         Path(request["home"]) / "config.yaml"), root))
     print(f"→ Update channel: {selected}")
     try:
-        with retrying_reads():
-            target = resolve_source_target(selected, git_cmd, root,
-                                           forward_only=rides_default_channel(original, selected, root))
+        target = resolve_source_target(selected, git_cmd, root,
+                                       forward_only=rides_default_channel(original, selected, root))
     except (OSError, ValueError, subprocess.SubprocessError) as exc:
         print(f"✗ Could not resolve the {selected} source channel: {exc}. No update was applied.")
         stop()
         _record_stop("channel_unresolved")
         sys.exit(1)
-    if target.retired:
-        print(f"→ {selected} retired; source destination: {target.channel}")
-        if not getattr(args, "channel", None) and original.get("channel", "main") == selected:
-            request["channel_retirement"] = {"original": original, "destination": target.channel}
     if target.commit:
         print(f"→ {'Release' if target.ahead else 'Latest release'}: {target.label}")
         request["expected_sha"] = target.commit

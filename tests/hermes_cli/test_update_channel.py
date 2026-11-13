@@ -53,9 +53,12 @@ def test_dynamic_channel_parser_and_per_install_round_trip(tmp_path, monkeypatch
     root.mkdir()
     name = "new-preview-493"
     args = parser.parse_args(["update", "--set-channel", name])
-    set_install_channel(args.set_channel, root)
+    with pytest.raises(ValueError, match="main or stable"):
+        set_install_channel(args.set_channel, root)
+    set_install_channel("stable", root)
     saved = yaml.safe_load((tmp_path / "home/config.yaml").read_text())
-    assert resolve_update_channel(saved, root) == name
+    assert resolve_update_channel(saved, root) == "stable"
+    assert resolve_update_channel(_config_for(root, name), root) == name
     assert parser.parse_args(["update", "--channel", name]).channel == name
     assert resolve_update_channel(saved, tmp_path / "other") == "main"
     for invalid in (" New-preview", "PREVIEW", "preview/other", "preview--other", ""):
@@ -154,7 +157,7 @@ class TestSetChannel:
         monkeypatch.setenv("HERMES_HOME", str(home))
         return home
 
-    @pytest.mark.parametrize("channel", ["stable", "canary", "main"])
+    @pytest.mark.parametrize("channel", ["stable", "main"])
     def test_set_resolve_round_trip(self, tmp_path, monkeypatch, channel):
         import hermes_yaml as yaml
 
@@ -170,6 +173,14 @@ class TestSetChannel:
         assert record["channel"] == channel
         assert record["path"] == str(root)
         assert resolve_update_channel(written, root) == channel
+
+    def test_source_install_refuses_release_only_channels(self, tmp_path, monkeypatch):
+        home = self._home(tmp_path, monkeypatch)
+        root = tmp_path / "install"
+        _stamp(root, "self")
+        with pytest.raises(ValueError, match="main or stable"):
+            set_install_channel("canary", root)
+        assert not (home / "config.yaml").exists()
 
 
 
@@ -306,16 +317,16 @@ class TestSetChannelCLI:
 
         monkeypatch.setattr(utils, "atomic_roundtrip_yaml_update", write)
         with pytest.raises(SystemExit) as exc:
-            main.cmd_update(self._args(set_channel="canary"))
+            main.cmd_update(self._args(set_channel="stable"))
         assert exc.value.code == 0
         assert writes == [(cfg, f"update.installs.{install_id(root)}")]
         expected = initial
-        expected["update"]["installs"][install_id(root)] = {"path": str(root), "channel": "canary"}
+        expected["update"]["installs"][install_id(root)] = {"path": str(root), "channel": "stable"}
         assert yaml.safe_load(cfg.read_text(encoding="utf-8")) == expected
         assert cfg.read_text(encoding="utf-8").startswith("# retain user comment\n")
         output = capsys.readouterr().out
-        assert f"Update channel for {install_id(root)}: canary" in output
-        assert "forward-incompatible" in output
+        assert f"Update channel for {install_id(root)}: stable" in output
+        assert "Back up your data" in output
         assert not (home / "logs" / "update_receipts").exists()
 
     def test_metadata_refusals_leave_config_unchanged(self, tmp_path, monkeypatch, capsys):

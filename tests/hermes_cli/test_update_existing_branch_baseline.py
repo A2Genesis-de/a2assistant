@@ -32,10 +32,10 @@ def checkout(tmp_path, monkeypatch):
     return root, old, tip
 
 
-def prepare(root, *, is_fork=False):
+def prepare(root):
     return update_cmd._prepare_checkout_for_update(
         ["git"], "main", update_cmd._current_branch_name(["git"], check=True),
-        is_fork=is_fork, assume_yes=True, gateway_mode=False, gw_input_fn=None,
+        assume_yes=True, gateway_mode=False, gw_input_fn=None,
         switch_branch=False, _windows_gateway_resume=None,
     )
 
@@ -167,60 +167,6 @@ def test_stale_local_main_can_catch_up_to_original_detached_tip(checkout):
     assert git(root, "rev-parse", "main") == tip
 
 
-@pytest.mark.parametrize("upstream_result", ["original", "unchanged", "wrong-branch", "reverted"])
-def test_fork_sync_after_stale_branch_repair(checkout, monkeypatch, upstream_result):
-    root, old, tip = checkout
-    git(root, "checkout", "-q", "main")
-    git(root, "commit", "--allow-empty", "-qm", "upstream")
-    upstream_tip = git(root, "rev-parse", "HEAD")
-    git(root, "checkout", "-q", "--detach", upstream_tip)
-    git(root, "branch", "-f", "main", old)
-    plan = prepare(root)
-
-    def sync(*args, **kwargs):
-        assert git(root, "rev-parse", "HEAD") == tip
-        if upstream_result == "original":
-            git(root, "merge", "--ff-only", upstream_tip)
-        elif upstream_result == "wrong-branch":
-            git(root, "checkout", "-qb", "wrong")
-        elif upstream_result == "reverted":
-            git(root, "reset", "--hard", old)
-        return True
-
-    monkeypatch.setattr(update_cmd._m(), "_sync_with_upstream_if_needed", sync)
-    if upstream_result in {"wrong-branch", "reverted"}:
-        with pytest.raises(SystemExit) as exc:
-            pull(plan, sync_upstream=True)
-        assert exc.value.code == 1
-    else:
-        request = complete(plan, pull(plan, sync_upstream=True), monkeypatch)
-        assert request["expected_sha"] == (upstream_tip if upstream_result == "original" else tip)
-        assert git(root, "rev-parse", "main") == (upstream_tip if upstream_result == "original" else tip)
-        assert git(root, "rev-parse", "--abbrev-ref", "HEAD") == "main"
-
-
-def test_early_fork_sync_without_push_still_completes(checkout, monkeypatch):
-    root, _old, tip = checkout
-    git(root, "checkout", "-q", "main")
-    git(root, "commit", "--allow-empty", "-qm", "upstream")
-    upstream_tip = git(root, "rev-parse", "HEAD")
-    git(root, "checkout", "-q", "--detach", tip)
-    git(root, "branch", "-f", "main", tip)
-
-    def sync(*args, **kwargs):
-        git(root, "merge", "--ff-only", upstream_tip)
-        # Successful local sync need not push the new SHA to origin.
-        return True
-
-    monkeypatch.setattr(update_cmd._m(), "_sync_with_upstream_if_needed", sync)
-    plan = prepare(root, is_fork=True)
-    assert plan.upstream_checked
-    assert git(root, "rev-parse", "HEAD") == upstream_tip
-    assert git(root, "rev-parse", "origin/main") == tip
-    request = complete(plan, pull(plan, sync_upstream=True), monkeypatch)
-    assert request["expected_sha"] == upstream_tip
-
-
 def test_command_hands_off_after_existing_main_switch(update_tree, monkeypatch, capsys):
     t = update_tree
     monkeypatch.setattr("hermes_cli.update_owning_install.retarget_to_owning_install", lambda *_: None)
@@ -236,46 +182,10 @@ def test_command_hands_off_after_existing_main_switch(update_tree, monkeypatch, 
     git(t.clone, "branch", "-f", "main", "origin/main")
     git(t.clone, "checkout", "-q", "--detach", t.base)
     t.args.channel = "main"
-    monkeypatch.setattr(update_cmd._m(), "_sync_with_upstream_if_needed", lambda *a, **k: True)
     update_cmd._m().cmd_update(t.args)
     assert git(t.clone, "rev-parse", "HEAD") == t.newer
     assert len(t.requests) == 1
     assert "Already up to date" not in capsys.readouterr().out
-
-
-def test_fork_sync_round_trip_is_not_misclassified_as_noop(tmp_path, monkeypatch):
-    """origin/main moves first, then the upstream sync returns HEAD to the SHA that was
-    running before the update: still a successful branch repair, not a no-op."""
-    root = tmp_path / "fork"
-    init_repo(root, monkeypatch)
-
-    def commit(value):
-        (root / "state.txt").write_text(value + "\n", encoding="utf-8")
-        git(root, "add", "state.txt")
-        git(root, "commit", "-qm", value)
-        return git(root, "rev-parse", "HEAD")
-
-    old, fork_tip, upstream_tip = commit("old"), commit("fork"), commit("upstream")
-    git(root, "checkout", "-q", "--detach", upstream_tip)
-    git(root, "branch", "-f", "main", old)
-    git(root, "update-ref", "refs/remotes/origin/main", fork_tip)
-    git(root, "update-ref", "refs/remotes/upstream/main", upstream_tip)
-
-    plan = prepare(root, is_fork=True)
-    assert plan.commit_count != 0
-    assert plan.pre_sync_sha == upstream_tip
-    assert git(root, "rev-parse", "HEAD") == old
-
-    def sync_upstream(*_args, **_kwargs):
-        git(root, "merge", "--ff-only", "refs/remotes/upstream/main")
-        return True
-
-    monkeypatch.setattr(update_cmd._m(), "_sync_with_upstream_if_needed", sync_upstream)
-    pull(plan, sync_upstream=True)
-
-    assert git(root, "rev-parse", "HEAD") == upstream_tip
-    assert git(root, "rev-parse", "main") == upstream_tip
-    assert git(root, "rev-parse", "--abbrev-ref", "HEAD") == "main"
 
 
 def test_a_refused_branch_switch_prints_the_refusal_not_a_missing_branch(checkout, capsys):

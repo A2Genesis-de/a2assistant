@@ -38,9 +38,8 @@ def releases(tmp_path, monkeypatch, request):
         git(origin, "add", ".")
         git(origin, "commit", "-m", label)
         commits.append(git(origin, "rev-parse", "HEAD"))
-    tags = {"stable": "v1.2.3", "canary": "v1.2.3+canary.20260911T125822Z"}
+    tags = {"stable": "v1.2.3"}
     git(origin, "tag", "-a", tags["stable"], commits[1], "-m", "stable")
-    git(origin, "tag", "-a", tags["canary"], commits[2], "-m", "canary")
     git(origin, "tag", "v99.0.0", commits[3])
     git(origin, "tag", "v99.0.1+canary.20260912T125822Z", commits[3])
     checkout = tmp_path / "checkout"
@@ -55,21 +54,9 @@ def releases(tmp_path, monkeypatch, request):
 
     responses = {}
     requests = []
-    for channel, tag in tags.items():
-        responses[f"/releases/{channel}/index.html"] = (
-            f'<meta name="hermes-build" content="{tag}">'
-        )
-        responses[f"/repos/NousResearch/hermes-agent/releases/tags/{tag}"] = {
-            "tag_name": tag, "draft": False, "prerelease": channel == "canary",
-        }
-        responses[f"/repos/NousResearch/hermes-agent/commits/{tag}"] = {
-            "sha": commits[1 if channel == "stable" else 2],
-        }
-    responses["/repos/NousResearch/hermes-agent/releases/latest"] = {
+    responses[f"/repos/A2Genesis-de/a2assistant/commits/{tags['stable']}"] = {"sha": commits[1]}
+    responses["/repos/A2Genesis-de/a2assistant/releases/latest"] = {
         "tag_name": tags["stable"], "draft": False, "prerelease": False,
-    }
-    responses["/releases/stable/release-candidates.json"] = {
-        "tag": tags["stable"], "commit": commits[1],
     }
 
     class Handler(BaseHTTPRequestHandler):
@@ -96,20 +83,6 @@ def releases(tmp_path, monkeypatch, request):
                         + (f"?{parsed.query}" if parsed.query else ""), *args, **kwargs)
 
     monkeypatch.setattr(urllib.request, "urlopen", local_urlopen)
-    # Legacy pointer tests below retain their HTTP/tag boundary. New CLI callers
-    # consume the protocol reader, whose complete schema is tested independently.
-    from hermes_cli import source_releases
-    def resolve_channel(name, repository):
-        record = {"name": name, "repository": repository, "state": "active",
-                  "policy": "source-branch" if name == "main" else "preview"}
-        manifest = None
-        if name == "main":
-            record["delivery"] = {"kind": "source-branch", "branch": "main"}
-        else:
-            manifest = {"request": {"commit": commits[1 if name == "stable" else 2],
-                "sourceVersion": tags[name].removeprefix("v"), "buildId": "legacy-fixture"}}
-        return SimpleNamespace(requested=record, terminal=record, manifest=manifest)
-    monkeypatch.setattr(source_releases, "_resolve_channel", resolve_channel)
     yield SimpleNamespace(root=checkout, origin=origin, commits=commits,
                           tags=tags, responses=responses, requests=requests)
     server.shutdown()
@@ -118,16 +91,16 @@ def releases(tmp_path, monkeypatch, request):
 
 
 @pytest.mark.parametrize("git_cmd", [["git"], None], ids=["git", "no-git"])
-def test_stable_resolution_uses_promoted_pointer_not_highest_tag(releases, git_cmd):
+def test_stable_resolution_uses_latest_published_release_not_highest_tag(releases, git_cmd):
     assert resolve_source_release("stable", git_cmd, releases.root) == (
         releases.tags["stable"], releases.commits[1],
     )
     assert releases.requests
 
 
-@pytest.mark.parametrize("channel", ["stable", "canary"])
 @pytest.mark.parametrize("start", ["old", "ahead", "local"])
-def test_source_check_and_apply_land_on_selected_release(releases, monkeypatch, capsys, channel, start):
+def test_source_check_and_apply_land_on_selected_release(releases, monkeypatch, capsys, start):
+    channel = "stable"
     if start != "old":
         git(releases.root, "checkout", "-b", "my-work", releases.commits[3])
     if start == "local":
@@ -152,12 +125,12 @@ def test_source_check_and_apply_land_on_selected_release(releases, monkeypatch, 
     monkeypatch.setattr(update_cmd, "_begin_update_receipt_and_plan", lambda *_: None)
     monkeypatch.setattr(main, "_run_pre_update_backup", lambda *_: None)
     monkeypatch.setattr(main, "_pause_windows_gateways_for_update", lambda: None)
-    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (False, ["git"], False))
+    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (False, ["git"]))
     applied = []
     monkeypatch.setattr(update_cmd, "_complete_source_update", lambda request: applied.append(request))
     args = SimpleNamespace(branch=None, channel=None, force_venv=True)
     update_cmd._cmd_update_impl(args, False)
-    expected = releases.commits[1 if channel == "stable" else 2]
+    expected = releases.commits[1]
     assert len(applied) == 1
     assert applied[0]["expected_sha"] == expected
     assert applied[0]["source"] == str(releases.root.resolve())
@@ -172,14 +145,15 @@ def test_source_check_and_apply_land_on_selected_release(releases, monkeypatch, 
 
 def test_source_check_honors_transient_channel_without_rewriting_record(releases, capsys):
     set_install_channel("stable", releases.root)
-    args = SimpleNamespace(branch=None, channel="canary", check=True)
+    args = SimpleNamespace(branch=None, channel="main", check=True)
     main.cmd_update(args)
-    assert releases.tags["canary"] in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "origin/main" in out and releases.tags["stable"] not in out
     update_cmd._cmd_update_check()
     assert releases.tags["stable"] in capsys.readouterr().out
 
 
-def test_fork_origin_uses_its_own_published_release_not_the_official_pointer(releases):
+def test_fork_origin_uses_its_own_published_release(releases):
     url = "https://github.com/Fixture/hermes-agent.git"
     git(releases.root, "config", "remote.origin.url", url)
     git(releases.root, "config", f"url.{releases.origin}.insteadOf", url)
@@ -214,7 +188,7 @@ def test_zip_fallback_keeps_selected_repository_and_commit(releases, monkeypatch
 
 @pytest.mark.parametrize("git_cmd", [["git"], None], ids=["git", "no-git"])
 def test_selected_draft_never_falls_back_to_other_tags(releases, git_cmd):
-    releases.responses[f"/repos/NousResearch/hermes-agent/releases/tags/{releases.tags['stable']}"]["draft"] = True
+    releases.responses["/repos/A2Genesis-de/a2assistant/releases/latest"]["draft"] = True
     assert resolve_source_release("stable", git_cmd, releases.root) == (None, None)
     assert not any("/tags?" in path for path in releases.requests)
 
@@ -226,79 +200,16 @@ def test_main_check_still_uses_branch_without_release_requests(releases, capsys)
     assert releases.requests == []
 
 
-@pytest.mark.parametrize("channel", ["stable", "canary"])
-def test_origin_tag_cannot_substitute_a_fork_commit(releases, channel):
-    git(releases.origin, "tag", "-f", releases.tags[channel], releases.commits[3])
-    assert resolve_source_release(channel, ["git"], releases.root) == (None, None)
-    # Without git, the same selection remains pinned to the official commit.
-    assert resolve_source_release(channel) == (
-        releases.tags[channel], releases.commits[1 if channel == "stable" else 2],
-    )
+def test_origin_tag_cannot_substitute_a_fork_commit(releases):
+    git(releases.origin, "tag", "-f", releases.tags["stable"], releases.commits[3])
+    assert resolve_source_release("stable", ["git"], releases.root) == (None, None)
+    # Without git, the same selection remains pinned to the published commit.
+    assert resolve_source_release("stable") == (releases.tags["stable"], releases.commits[1])
 
 
-@pytest.mark.parametrize("channel", ["stable", "canary"])
-def test_missing_pointers_fall_back_only_to_published_releases(releases, channel):
-    releases.responses.pop("/releases/stable/release-candidates.json")
-    releases.responses.pop(f"/releases/{channel}/index.html")
-    published = releases.responses[f"/repos/NousResearch/hermes-agent/releases/tags/{releases.tags[channel]}"]
-    releases.responses["/repos/NousResearch/hermes-agent/releases/latest"] = published
-    releases.responses["/repos/NousResearch/hermes-agent/releases?per_page=100&page=1"] = [
-        {"tag_name": "v99.0.1+canary.20260912T125822Z", "draft": True, "prerelease": True},
-        published,
-    ]
-    assert resolve_source_release(channel, ["git"], releases.root) == (
-        releases.tags[channel], releases.commits[1 if channel == "stable" else 2],
-    )
-    assert not any("/tags?" in path for path in releases.requests)
-    assert f"/repos/NousResearch/hermes-agent/releases/tags/{releases.tags[channel]}" not in releases.requests
-
-
-def _track_official_origin(releases):
-    official = "https://github.com/NousResearch/hermes-agent.git"
-    git(releases.root, "remote", "set-url", "origin", official)
-    git(releases.root, "config", f"url.{releases.origin.as_uri()}.insteadOf", official)
-
-
-def test_stable_is_the_latest_published_github_release_without_r2(releases):
-    """Publishing a GitHub release is the only promotion stable needs: no R2 record or pointer."""
-    from hermes_cli import source_releases
-
-    def no_r2(name, repository):
-        raise AssertionError("stable must not read an R2 channel record")
-
-    source_releases._resolve_channel = no_r2
-    # A pointer naming a different build must not outrank the published release.
-    releases.responses["/releases/stable/release-candidates.json"] = {
-        "tag": "v99.0.0", "commit": releases.commits[3]}
-    target = source_releases.resolve_source_target("stable", ["git"], releases.root)
-    assert (target.commit, target.version) == (releases.commits[1], "1.2.3")
-    assert not any(path.startswith("/releases/") for path in releases.requests)
-
-
-@pytest.mark.parametrize("start,expected", [(0, 1), (3, 3)], ids=["behind-release", "newer-than-release"])
-def test_default_stable_only_moves_forward_until_the_channel_is_chosen(releases, monkeypatch, capsys,
-                                                                       start, expected):
+def test_unconfigured_checkout_of_the_own_repository_follows_main(releases):
     from hermes_cli.update_channel import default_channel
 
-    _track_official_origin(releases)
-    git(releases.root, "checkout", "--detach", releases.commits[start])
-    assert default_channel(releases.root) == "stable"
-    opts = update_cmd._UpdateOptions(
-        pre_update_version=None, gw_input_fn=None,
-        assume_yes=True, keep_stash=False, switch_branch=False, discard_local_changes=False,
-    )
-    monkeypatch.setattr(update_cmd, "_resolve_update_options", lambda *_: opts)
-    monkeypatch.setattr(update_cmd, "_begin_update_receipt_and_plan", lambda *_: None)
-    monkeypatch.setattr(main, "_run_pre_update_backup", lambda *_: None)
-    monkeypatch.setattr(main, "_pause_windows_gateways_for_update", lambda: None)
-    monkeypatch.setattr(update_cmd, "_prepare_git_command", lambda **_: (False, ["git"], False))
-    monkeypatch.setattr(update_cmd, "_complete_source_update", lambda request: None)
-    # The Desktop passes the channel its check reported; naming the default is not a choice.
-    update_cmd._cmd_update_impl(SimpleNamespace(branch=None, channel="stable", force_venv=True), False)
-    assert git(releases.root, "rev-parse", "HEAD") == releases.commits[expected]
-    update_cmd._cmd_update_check()
-    assert ("No newer release" if start > 1 else "Up to date with") in capsys.readouterr().out
-    # Persisting the channel is consent to land exactly on the release.
-    set_install_channel("stable", releases.root)
-    update_cmd._cmd_update_impl(SimpleNamespace(branch=None, channel=None, force_venv=True), False)
-    assert git(releases.root, "rev-parse", "HEAD") == releases.commits[1]
+    own = "https://github.com/A2Genesis-de/a2assistant.git"
+    git(releases.root, "remote", "set-url", "origin", own)
+    assert default_channel(releases.root) == "main"

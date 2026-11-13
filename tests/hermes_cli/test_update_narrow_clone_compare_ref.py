@@ -100,7 +100,7 @@ def test_detached_narrow_clone_counts_from_the_pre_checkout_head(narrow_clone: P
         fetch_result, _ = update_cmd_check.fetch_compare_branch(git_cmd, narrow_clone, "main", ["--depth", "1"])
         assert fetch_result.returncode == 0, fetch_result.stderr
         return update_cmd._prepare_checkout_for_update(
-            git_cmd, "main", update_cmd._current_branch_name(git_cmd, check=True), is_fork=False,
+            git_cmd, "main", update_cmd._current_branch_name(git_cmd, check=True), 
             assume_yes=True, gateway_mode=False, gw_input_fn=None, switch_branch=False,
             _windows_gateway_resume=None)
 

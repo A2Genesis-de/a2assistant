@@ -40,8 +40,8 @@ STEWARD_UPDATE_MESSAGES = {
         "✗ This A2Assistant runs from inside the desktop app bundle.\n"
         "\n"
         "Manage updates from within the desktop app.\n"
-        "Prefer a self-managed source install? See:\n"
-        "  https://hermes-agent.nousresearch.com/docs/user-guide/switching-to-source"
+        "Prefer a self-managed source install? Clone the repository:\n"
+        "  git clone https://github.com/A2Genesis-de/a2assistant.git"
     ),
     STEWARD_NIX: (
         "✗ This A2Assistant runs from the Nix store.\n"

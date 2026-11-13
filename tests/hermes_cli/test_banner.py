@@ -64,7 +64,6 @@ def test_build_welcome_banner_does_not_center_pad_hero_art():
         patch.object(model_tools, "check_tool_availability", return_value=([], [])),
         patch.object(banner, "get_available_skills", return_value={}),
         patch.object(banner, "get_update_result", return_value=None),
-        patch.object(banner, "get_latest_release_tag", return_value=None),
         patch.object(tools.mcp_tool_discovery, "get_mcp_status", return_value=[]),
         patch.object(banner, "_active_skin", return_value=skin),
     ):

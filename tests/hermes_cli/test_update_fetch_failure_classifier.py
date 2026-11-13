@@ -80,7 +80,7 @@ class TestClassifyFetchFailure:
             "fatal: Could not read from remote repository."
         )
         assert "SSH authentication failed" in msg
-        assert "https://github.com/NousResearch/hermes-agent.git" in msg
+        assert "https://github.com/A2Genesis-de/a2assistant.git" in msg
 
     def test_only_a_checkout_git_rejects_gets_the_installer_repair(self, tmp_path, capsys):
         # The updater fetches only when .git exists; git rejecting the checkout itself (here an
@@ -95,7 +95,7 @@ class TestClassifyFetchFailure:
         (damaged / ".git").mkdir(parents=True)
         update_cmd_git._print_fetch_failure(fetch(damaged, "origin"), git_cmd=["git"], root=damaged)
         out = capsys.readouterr().out
-        assert "damaged" in out and "hermes-agent.nousresearch.com/install." in out
+        assert "damaged" in out and "git clone https://github.com/A2Genesis-de/a2assistant.git" in out
         assert str(damaged) in out  # the repair targets THIS checkout, not the default directory
 
         healthy, remote = tmp_path / "healthy", tmp_path / "remote"
@@ -163,10 +163,10 @@ def test_update_network_git_calls_never_prompt_for_credentials():
     assert "GIT_CONFIG_COUNT" not in kw["env"] or kw["env"]["GIT_CONFIG_COUNT"] == os.environ.get("GIT_CONFIG_COUNT")
 
 
-def test_update_and_upstream_network_calls_disable_terminal_prompts(monkeypatch, tmp_path):
-    """Exercise origin fetch and fork fetch/merge/push, not their source spelling."""
+def test_update_network_calls_disable_terminal_prompts(monkeypatch, tmp_path):
+    """Exercise the origin fetch, not its source spelling."""
     import subprocess
-    from hermes_cli import update_cmd_git
+    from hermes_cli.update_custody import git_subcommand
 
     monkeypatch.setenv("GIT_TERMINAL_PROMPT", "1")
     monkeypatch.setenv("GCM_INTERACTIVE", "Always")
@@ -174,29 +174,17 @@ def test_update_and_upstream_network_calls_disable_terminal_prompts(monkeypatch,
     monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
     monkeypatch.setenv("GIT_CONFIG_KEY_0", "credential.helper")
     monkeypatch.setenv("GIT_CONFIG_VALUE_0", "fixture-helper")
-    monkeypatch.setattr(update_cmd, "_has_upstream_remote", lambda *a: True)
-    upstream = "c" * 40
-    monkeypatch.setattr(update_cmd, "_count_commits_between",
-                        lambda git, cwd, base, head: 2 if head == upstream else 0)
     calls = []
 
     def run(cmd, **kwargs):
         calls.append((cmd[1:], kwargs))
-        return subprocess.CompletedProcess(cmd, 0, upstream if "rev-parse" in cmd else "", "")
+        return subprocess.CompletedProcess(cmd, 0, "", "")
 
     monkeypatch.setattr(subprocess, "run", run)
-    (tmp_path / ".git").mkdir()  # the fork ff's recovery marker lives there: no marker, no move
+    (tmp_path / ".git").mkdir()
     update_cmd._git_run(["git"], ["fetch", "origin", "main"], cwd=tmp_path, network=True, check=True)
-    assert update_cmd_git._sync_with_upstream_if_needed(["git"], tmp_path, assume_yes=True)
-    from hermes_cli.update_custody import git_subcommand
-
-    # The fork push runs only after the update is validated (_push_synced_fork), never inside the sync.
-    update_cmd_git._sync_fork_with_upstream(["git"], tmp_path)
-    # The fork's fast-forward is local (`merge --ff-only` after the fetch): no credential helper ever
-    # runs under the checkout lock fd a mutator inherits (R2).
-    network = [(args, kwargs) for args, kwargs in calls if git_subcommand(args) in {"fetch", "pull", "push", "merge"}]
-    assert [git_subcommand(args) for args, _ in network] == ["fetch", "fetch", "merge", "push"]
-    assert network[2][0][-1] == upstream  # the counted commit, not a name a local branch can shadow
+    network = [(args, kwargs) for args, kwargs in calls if git_subcommand(args) == "fetch"]
+    assert len(network) == 1
     for args, kwargs in network:
         assert kwargs["stdin"] is subprocess.DEVNULL, args
         env = kwargs["env"]

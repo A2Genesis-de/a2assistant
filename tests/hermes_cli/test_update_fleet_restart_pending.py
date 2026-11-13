@@ -115,7 +115,6 @@ def _patch_update_deps(monkeypatch, tmp_path, run_side_effect):
         "_get_origin_url",
         lambda *a, **k: "https://github.com/NousResearch/hermes-agent.git",
     )
-    monkeypatch.setattr(update_cmd, "_is_fork", lambda *a, **k: False)
     monkeypatch.setattr(
         hermes_main, "_stash_local_changes_if_needed", lambda *a, **k: None
     )
@@ -1154,7 +1153,6 @@ def test_completion_arms_obligation_with_checkout_sha_when_head_capture_empty(mo
     monkeypatch.setattr(update_cmd, "_write_fleet_restart_pending_marker", lambda **kw: armed.append(kw["expected_sha"]))
     monkeypatch.setattr(update_cmd, "run_completion", lambda request: {"exit_code": 0})
     monkeypatch.setattr(update_cmd, "_accept_completion_pm_receipt", lambda *a: None)
-    monkeypatch.setattr(update_cmd, "adopt_retired_channel", lambda request: False)
 
     update_cmd._complete_source_update(
         {"expected_sha": "", "receipt": {"update_id": "u1"}, "windows_resume": None})

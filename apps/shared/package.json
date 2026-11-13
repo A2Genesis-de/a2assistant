@@ -28,6 +28,7 @@
     "./plan-usage": "./src/plan-usage.ts",
     "./prompt-history": "./src/node/prompt-history.ts",
     "./provider-names": "./src/provider-names.ts",
+    "./repository": "./src/repository.ts",
     "./reasoning-effort": "./src/reasoning-effort.ts",
     "./reconnect-backoff": "./src/reconnect-backoff.ts",
     "./skin": "./src/skin.ts",

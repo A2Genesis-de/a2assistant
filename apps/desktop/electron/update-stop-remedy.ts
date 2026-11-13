@@ -3,10 +3,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { README_URL } from '../../shared/src/repository'
+
 /** The closed token set `hermes_cli.update_receipt.record_stop_reason` records. */
 const STOP_CLASS_TOKEN = /^[a-z][a-z0-9_]{0,39}$/
 
-const UPDATES_GUIDE = 'https://hermes-agent.nousresearch.com/docs/getting-started/updating'
+const UPDATES_GUIDE = README_URL
 
 export interface UpdateStop {
   stopClass: string
