@@ -2,7 +2,7 @@
  "counts": {
   "http": {
    "keep-host-wide": 1,
-   "undecided": 336
+   "undecided": 335
   },
   "rpc": {
    "authority": 108,
@@ -211,7 +211,6 @@
   {"current_path": "hermes_cli.web_routers.files:upload_chat_image", "decision": "undecided", "handler": "POST /api/chat/image-upload", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.ops:add_credential_pool_entry", "decision": "undecided", "handler": "POST /api/credentials/pool", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.cron:instantiate_blueprint", "decision": "undecided", "handler": "POST /api/cron/blueprints/instantiate", "kind": "http", "ref": ""},
-  {"current_path": "hermes_cli.web_routers.cron:cron_fire_webhook", "decision": "undecided", "handler": "POST /api/cron/fire", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.cron:create_cron_job", "decision": "undecided", "handler": "POST /api/cron/jobs", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.cron:cancel_cron_job", "decision": "undecided", "handler": "POST /api/cron/jobs/{job_id}/cancel", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.cron:pause_cron_job", "decision": "undecided", "handler": "POST /api/cron/jobs/{job_id}/pause", "kind": "http", "ref": ""},

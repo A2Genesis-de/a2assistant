@@ -58,8 +58,6 @@ class TestCronProfileGate:
 
 def test_gateway_passes_a_profile_gate_to_the_cron_ticker(tmp_path, monkeypatch):
     """Wiring: an unpassed gate gates nothing. Capture what the gateway hands the ticker."""
-    from cron import scheduler_provider
-
     home_b = tmp_path / "home-b"
     home_b.mkdir()
     captured: dict = {}
@@ -73,9 +71,6 @@ def test_gateway_passes_a_profile_gate_to_the_cron_ticker(tmp_path, monkeypatch)
 
     monkeypatch.setattr(
         gw_run, "_cron_tick_profile_homes", lambda _cfg: [("default", tmp_path), ("b", home_b)])
-    monkeypatch.setattr(
-        scheduler_provider, "scheduler_for_profile_mode",
-        lambda _p, multiplex_profiles=False: scheduler_provider.InProcessCronScheduler())
     from cron import scheduler_thread
 
     monkeypatch.setattr(scheduler_thread, "SupervisedTickerThread", _Thread)

@@ -317,7 +317,7 @@ def test_unwritable_store_is_shown_in_cron_status_and_announced_once(cron_store,
 
     save_jobs([_due_job()])
     cron_dir = cron_store / "cron"
-    monkeypatch.setattr(cron_cli, "_active_cron_provider_name", lambda: "chronos")
+    monkeypatch.setattr(cron_cli, "_print_ticker_health", lambda *a, **k: None)
     monkeypatch.setattr(scheduler, "_should_yield_tick_to_fresh_gateway", lambda: None)
     monkeypatch.setattr(scheduler, "_sweep_mcp_orphans", lambda: None)
     def read_only_lock(_path):

@@ -2,7 +2,6 @@
 gateway forwarding.
 """
 
-import asyncio
 import contextlib
 import logging
 import inspect
@@ -10,7 +9,6 @@ import re
 from fastapi import HTTPException
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from hermes_cli.config import cfg_get
 from hermes_cli.web_models import CronJobCreate
 
 # Same logger the code used before extraction (record parity).
@@ -160,54 +158,12 @@ def _call_cron_for_profile(target_profile: Optional[str], func_name: str, *args,
     """Run a cron.jobs helper against the selected profile's cron directory."""
     profile_name, home = _cron_profile_home(target_profile)
     with _cron_store_scope(home) as cron_jobs:
-        if func_name == "create_job":
-            from cron.scheduler import create_job_with_scheduler_registration
-            result = create_job_with_scheduler_registration(*args, **kwargs)
-        else:
-            result = getattr(cron_jobs, func_name)(*args, **kwargs)
+        result = getattr(cron_jobs, func_name)(*args, **kwargs)
         heartbeat_age = cron_jobs.get_ticker_heartbeat_age()
     if isinstance(result, list):
         return [_annotate_cron_job(j, profile_name, home, heartbeat_age) for j in result]
     if isinstance(result, dict):
         return _annotate_cron_job(result, profile_name, home, heartbeat_age)
-    return result
-
-
-def _notify_cron_provider_for_profile(target_profile: Optional[str]) -> None:
-    """Best-effort provider reconcile against one profile's job store.
-
-    Fail-closed for external providers on a multi-profile dashboard: an external ``reconcile``
-    converges its REMOTE (non-profile-scoped) registry toward one profile's jobs.json and cancels
-    every remote entry absent from it, so reconciling profile B would disarm profile A's one-shots.
-    Until the provider contract carries a profile identity, skip unscoped external reconciles; the
-    affected profile re-arms on its next fire/start (idempotent via dedup_key). The built-in
-    provider re-reads jobs.json each tick and stays a no-op here.
-    """
-    try:
-        _profile_name, home = _cron_profile_home(target_profile)
-        from cron.scheduler_provider import InProcessCronScheduler, resolve_cron_scheduler
-        with _cron_store_scope(home):
-            provider = resolve_cron_scheduler()
-            external = not isinstance(provider, InProcessCronScheduler)
-            if external and sum(1 for p in _cron_profile_dicts() if p.get("name")) > 1:
-                _log.warning(
-                    "Skipping cron provider reconcile for profile %s: "
-                    "external provider '%s' reconcile is not "
-                    "profile-scoped and would disarm other profiles' "
-                    "armed one-shots. The mutated profile re-arms "
-                    "idempotently on its next fire/start.", target_profile, provider.name,
-                )
-                return
-            provider.on_jobs_changed()
-    except Exception:
-        _log.debug("Cron provider reconciliation failed for profile %s", target_profile, exc_info=True)
-
-
-def _mutate_cron_for_profile(target_profile: Optional[str], func_name: str, *args, **kwargs):
-    """Apply a cron store mutation and reconcile its scheduler provider."""
-    result = _call_cron_for_profile(target_profile, func_name, *args, **kwargs)
-    if result:
-        _notify_cron_provider_for_profile(target_profile)
     return result
 
 
@@ -233,14 +189,6 @@ async def _run_cron_dashboard_io(func, *args, **kwargs):
     return result
 
 
-def _raise_if_cron_registration_error(e: Exception) -> None:
-    """Re-raise a cron partial failure (job saved, external scheduler registration failed) as
-    HTTP 424 with the structured envelope. Shared by every dashboard cron-create surface."""
-    from cron.scheduler import CronSchedulerRegistrationError
-    if isinstance(e, CronSchedulerRegistrationError):
-        raise HTTPException(status_code=424, detail=e.to_dict()) from e
-
-
 def _create_cron_job_sync(body: CronJobCreate, profile: Optional[str] = None):
     try:
         profile_name, profile_home = _cron_profile_home(profile)
@@ -262,7 +210,7 @@ def _create_cron_job_sync(body: CronJobCreate, profile: Optional[str] = None):
             repeat = normalize_repeat_value(repeat)
         _validate_dashboard_cron_effective_job(
             {"prompt": body.prompt, "skills": skills, "script": script, "no_agent": no_agent})
-        return _mutate_cron_for_profile(
+        return _call_cron_for_profile(
             profile_name,
             "create_job",
             prompt=body.prompt or "",
@@ -286,151 +234,19 @@ def _create_cron_job_sync(body: CronJobCreate, profile: Optional[str] = None):
     except HTTPException:
         raise
     except Exception as e:
-        _raise_if_cron_registration_error(e)
         _log.exception("POST /api/cron/jobs failed")
         raise HTTPException(status_code=400, detail=str(e))
 
 
 def _fire_cron_job_for_profile(profile: str, job_id: str, *, force: bool = False) -> bool:
-    """Run ONE due cron job for ``profile`` via the scheduler provider's ``fire_due``.
-
-    DEPRECATED for NAS webhook fires — superseded by :func:`_forward_cron_fire_to_gateway`, since
-    fires must run in the GATEWAY process (it owns the live adapters; the standalone path here
-    cannot serve relay-fronted platforms or E2EE rooms). Retained for the dashboard trigger path
-    and external callers on the web_deps late-binding seam; do not add new uses.
-    """
+    """Run ONE cron job for ``profile`` now (dashboard trigger). ``force`` resumes + claims a paused
+    job atomically; otherwise the off-tick run never stamps next_run_at as the occurrence (#104790)."""
     _profile_name, home = _cron_profile_home(profile)
-    from cron.scheduler_provider import provider_fire_due_accepts, provider_supports_force_fire, resolve_cron_scheduler
+    from cron.scheduler_provider import InProcessCronScheduler
     with _cron_store_scope(home):
-        provider = resolve_cron_scheduler()
+        scheduler = InProcessCronScheduler()
         if force:
-            if not provider_supports_force_fire(provider):
-                raise HTTPException(
-                    status_code=409,
-                    detail=(
-                        f"Cron provider '{getattr(provider, 'name', 'custom')}' "
-                        "does not support atomic forced firing of paused jobs"))
-            return bool(provider.fire_due(job_id, adapters=None, loop=None, force=True))
-        # Off-tick run-now: never stamp next_run_at as the occurrence (#104790); third-party
-        # providers without the kwarg keep the legacy call.
-        if provider_fire_due_accepts(provider, "manual"):
-            return bool(provider.fire_due(job_id, adapters=None, loop=None, manual=True))
-        return bool(provider.fire_due(job_id, adapters=None, loop=None))
+            return bool(scheduler.fire_due(job_id, force=True))
+        return bool(scheduler.fire_due(job_id, manual=True))
 
 
-def _profile_env_value(home: Path, key: str) -> str:
-    """One value from a profile's .env (``""`` when absent/unreadable)."""
-    from agent.secret_scope import load_env_file
-
-    return load_env_file(home / ".env").get(key, "")
-
-
-def _gateway_fire_endpoint(profile: str, home: Path) -> str:
-    """Loopback URL of the gateway api_server's cron-fire route.
-
-    Port resolution mirrors gateway/config.py's api_server load order for the LISTENER-OWNER
-    profile: ``platforms.api_server.extra.port`` in its config.yaml, then ``API_SERVER_PORT``
-    (process env for the active profile, the profile's own .env otherwise), then 8642. Loopback
-    is safe: dashboard and gateway share a network namespace in every supported deployment.
-
-    In multiplex mode only the DEFAULT profile's api_server is bound and exposes per-profile
-    mirrors under ``/p/<profile>/…``, so a non-default profile's port must be read from the
-    default home (a secondary's own API_SERVER_PORT is a port nothing listens on).
-    """
-    from hermes_cli.config import load_config
-    import os as _os
-    multiplex = False
-    try:
-        # The live default gateway's own record, else the explicit flag — never the merged default:
-        # an unset gateway.multiplex_profiles is settled by the gateway at boot, not by this process.
-        from hermes_cli.gateway_multiplex_mode import default_gateway_multiplexes
-        multiplex = default_gateway_multiplexes()
-    except Exception:
-        _log.debug("cron fire: multiplex detection failed; assuming single-profile", exc_info=True)
-
-    listener_profile, listener_home = profile, home
-    if multiplex and profile != "default":
-        from hermes_constants import get_default_hermes_root
-        listener_profile, listener_home = "default", get_default_hermes_root()
-        _log.info(
-            "cron fire: multiplex gateway — resolving api_server port for %s "
-            "from the default profile's listener (%s)", profile, listener_home,
-        )
-
-    port = 0
-    try:
-        # Profile-scoped read through the CANONICAL loader (managed-scope overlay, ${ENV_VAR}
-        # expansion) — never a raw yaml.safe_load (tests/hermes_cli/test_config_read_guard.py).
-        from hermes_constants import reset_hermes_home_override, set_hermes_home_override
-        token = set_hermes_home_override(str(listener_home))
-        try:
-            profile_cfg = load_config()
-        finally:
-            reset_hermes_home_override(token)
-        raw = cfg_get(profile_cfg, "platforms", "api_server", "extra", "port", default=None)
-        if raw:
-            port = int(raw)
-    except Exception:
-        port = 0
-    if not port:
-        raw = (
-            _os.getenv("API_SERVER_PORT", "")
-            if listener_profile == _cron_default_profile()
-            else _profile_env_value(listener_home, "API_SERVER_PORT"))
-        try:
-            port = int(raw) if raw else 0
-        except ValueError:
-            port = 0
-    port = port or 8642
-    if multiplex and profile != "default":
-        return f"http://127.0.0.1:{port}/p/{profile}/api/cron/fire"
-    return f"http://127.0.0.1:{port}/api/cron/fire"
-
-
-async def _forward_cron_fire_to_gateway(
-    profile: str, job_id: str, authorization: str) -> Optional[tuple[int, dict[str, Any]]]:
-    """Forward a Chronos fire callback byte-preserved to the gateway api_server on loopback.
-
-    The dashboard is the hosted deployment's only public HTTP door, but cron execution belongs to
-    the GATEWAY process (live adapters → relay-fronted platforms and E2EE rooms work). Same job_id
-    and NAS bearer; the gateway re-verifies the JWT itself.
-
-    Returns ``(status_code, body)``, or ``None`` when the gateway is unreachable (scale-to-zero
-    wake, restart, api_server disabled). The caller maps None to 503 so NAS retries (store CAS
-    de-dupes a double fire) — unless :func:`_gateway_intentionally_stopped`, in which case it
-    drops the fire with 200: retrying into an operator-stopped gateway can never succeed.
-    """
-    _profile_name, home = _cron_profile_home(profile)
-    url = await asyncio.to_thread(_gateway_fire_endpoint, _profile_name, home)
-    import httpx
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(url, json={"job_id": job_id}, headers={"Authorization": authorization})
-    except Exception as exc:
-        _log.warning("cron fire forward to %s failed (%s: %s); returning 503 for NAS retry", url, type(exc).__name__, exc)
-        return None
-    try:
-        body = resp.json()
-    except Exception:
-        body = {"raw": (resp.text or "")[:500]}
-    if not isinstance(body, dict):
-        body = {"raw": body}
-    return resp.status_code, body
-
-
-def _gateway_intentionally_stopped(profile: Optional[str]) -> bool:
-    """True when the profile's gateway is stopped BY OPERATOR INTENT.
-
-    Reads the durable ``desired_state`` of gateway_state.json, written only by the s6 lifecycle
-    commands (``gateway stop`` persists "stopped"; start/restart persist "running") and never
-    during transient windows (crash loops, drains, wakes) — so it splits "retry will eventually
-    succeed" from "retry can never succeed". Deliberately does NOT fall back to the volatile
-    ``gateway_state`` runtime field: a legacy/crashed file must stay on the retryable-503 path.
-    Any resolution or parse failure returns False (fail open toward retry).
-    """
-    import json as _json
-    try:
-        data = _json.loads((_cron_profile_home(profile)[1] / "gateway_state.json").read_text(encoding="utf-8-sig"))
-        return isinstance(data, dict) and data.get("desired_state") == "stopped"
-    except Exception:
-        return False

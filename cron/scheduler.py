@@ -2801,13 +2801,12 @@ def run_one_job(
     job: dict, *, adapters=None, loop=None, verbose: bool = False,
     extra_prompt: Optional[str] = None, cancel_event: Optional[_CancelEventLike] = None,
 ) -> bool:
-    """Run ONE due job end-to-end: execute → save output → deliver → mark. Shared by the built-in
-    ticker and external providers' ``fire_due``; does NOT decide due-ness or acquire the initial
+    """Run ONE due job end-to-end: execute → save output → deliver → mark. Shared by the ticker
+    and ``InProcessCronScheduler.fire_due``; does NOT decide due-ness or acquire the initial
     claim (callers use the store CAS) but keeps it alive. True if processed (a job failure is
     recorded via ``mark_job_run``), False only if processing raised. ``cancel_event``: optional
     transport-level cancel (dashboard drain)."""
-    # Every gateway path (built-in scheduler, external providers, and direct
-    # API fires) crosses this seam.  Ensure the detached worker has a durable
+    # Every gateway path (ticker and direct fires) crosses this seam.  Ensure the detached worker has a durable
     # attempt to adopt before any launch can occur.
     if not job.get("execution_id"):
         execution = create_execution(
@@ -3305,8 +3304,8 @@ def _run_one_job_body(
         _fire_scope_tokens = _install_fire_secret_scope()
         # Commit a finite one-shot's dispatch BEFORE its side effect so a tick dying mid-run cannot
         # re-fire it forever on restart. No-op for recurring/infinite jobs (at-most-times).
-        # This lives here in the shared body so BOTH the built-in ticker and the external provider (Chronos
-        # fire_due) get at-most-times semantics. See #38758.
+        # This lives here in the shared body so both the ticker and ``fire_due`` get at-most-times
+        # semantics. See #38758.
         if not claim_dispatch(job["id"]):
             logger.info(
                 "Job '%s': one-shot dispatch limit reached — skipping",
@@ -3955,63 +3954,6 @@ def _run_external_worker_payload(payload_path: Path, ack_path: Path) -> bool:
         set_multiplex_active(previous_multiplex)
         if home_token is not None:
             reset_hermes_home_override(home_token)
-
-
-def _notify_provider_jobs_changed() -> None:
-    """Best-effort: tell the active scheduler provider the job set changed. Call AFTER a successful
-    store mutation so an external provider can re-provision/cancel the one-shot; no-op for the
-    built-in. Kept out of cron/jobs.py (import cycle). Never raises."""
-    try:
-        from cron.scheduler_provider import resolve_cron_scheduler
-        resolve_cron_scheduler().on_jobs_changed()
-    except Exception as e:
-        logger.debug("on_jobs_changed notify failed: %s", e)
-
-
-class CronSchedulerRegistrationError(RuntimeError):
-    """A job was persisted but its first external trigger was not registered."""
-
-    def __init__(self, job: dict, cause: Exception) -> None:
-        self.job = job
-        self.cause = cause
-        super().__init__(
-            f"Cron job '{job['id']}' was saved, but its first scheduler "
-            f"registration failed ({type(cause).__name__}). Do not create a "
-            "duplicate. Pause/resume or update the job to retry registration."
-        )
-
-    def user_message(self) -> str:
-        """Human-facing variant for chat/CLI surfaces (no exception class name)."""
-        label = self.job.get("name") or self.job["id"]
-        return (
-            f"Saved cron job '{label}', but couldn't register it with the "
-            "external scheduler yet. The job is kept — don't re-create it; "
-            "pause/resume or edit it (e.g. via /cron) to retry registration."
-        )
-
-    def to_dict(self) -> dict:
-        """Return the public partial-failure contract without provider details."""
-        return {
-            "error": str(self),
-            "job_id": self.job["id"],
-            "job_saved": True,
-            "scheduler_registered": False,
-            "retry_create": False}
-
-
-def create_job_with_scheduler_registration(**kwargs) -> dict:
-    """Persist one job and register its first trigger with the active provider."""
-    from cron.jobs import create_job
-    from cron.scheduler_provider import resolve_cron_scheduler
-
-    job = create_job(**kwargs)
-    if not job.get("enabled", True):
-        return job
-    try:
-        resolve_cron_scheduler().register_job(job)
-    except Exception as exc:
-        raise CronSchedulerRegistrationError(job, exc) from exc
-    return job
 
 
 # Dead-owner reap is throttled (opens the executions ledger). Tests may reset

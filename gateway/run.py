@@ -4273,15 +4273,6 @@ def _housekeeping_channel_directory(adapters, loop) -> None:
             fut.result(timeout=30)
 
 
-def _housekeeping_misfire_catch_up(cron_provider, adapters, loop) -> None:
-    """External cron providers only: fire jobs whose time passed with no external fire delivered (dead
-    loopback hop). No-op for the built-in ticker; enforces misfire_grace_minutes; CAS claim de-dupes."""
-    from cron.scheduler_provider import fire_overdue_jobs
-    caught_up = fire_overdue_jobs(cron_provider, adapters=adapters, loop=loop)
-    if caught_up:
-        logger.info("Misfire catch-up: fired %d overdue job(s)", caught_up)
-
-
 def _housekeeping_curator() -> None:
     """maybe_run_curator() is gated by config.interval_hours (7 days default); this is the poll."""
     from agent.curator import maybe_run_curator
@@ -4413,11 +4404,10 @@ def _drain_restart_safe_cron_deliveries(adapters, loop, runner=None) -> None:
 
 
 def _start_gateway_housekeeping(
-    stop_event: threading.Event, adapters=None, loop=None, interval: int = 60, cron_provider=None, runner=None,
+    stop_event: threading.Event, adapters=None, loop=None, interval: int = 60, runner=None,
     cron_thread=None,
 ):
-    """Background thread for gateway-only periodic chores (NOT cron). Separate from the cron trigger
-    so chores run under any ``CronScheduler`` provider (external scale-to-zero has no 60s loop).
+    """Background thread for gateway-only periodic chores (NOT cron), separate from the cron ticker.
     Cadences are ticks of ``interval``; inner gates own the real cadence."""
     from gateway.run_delivery_queue_watch import DRAIN_LABEL, DeliveryQueueWatch, wait_for_next_tick
     from gateway.run_profile_reconcile import _mcp_config_reconciler, profile_scoped_chore
@@ -4430,15 +4420,13 @@ def _start_gateway_housekeeping(
         (1, "Runtime heartbeat", _write_runtime_status_quiet)]
     if adapters is not None or runner is not None:
         # Restart-safe cron workers run outside the gateway cgroup and queue their final send for
-        # whichever gateway is live; drained here (not the scheduler tick) so external providers get it too.
+        # whichever gateway is live; drained here, not in the scheduler tick.
         chores.append((1, DRAIN_LABEL, lambda: _drain_restart_safe_cron_deliveries(adapters, loop, runner)))
     chores += [
         (5, "Channel directory refresh", lambda: adapters and _housekeeping_channel_directory(adapters, loop)),
         (60, "Media cache cleanup", housekeeping_media_caches)]
     # Low disk + auto-prune undecided: ask on the home channel (two syscalls; snoozed per post).
     chores.append((1, "Auto-prune low-disk prompt", lambda: maybe_post_auto_prune_prompt(runner, loop)))
-    if cron_provider is not None:
-        chores.append((5, "Misfire catch-up sweep", lambda: _housekeeping_misfire_catch_up(cron_provider, adapters, loop)))
     if cron_thread is not None:
         # The ticker's own guards keep its loop alive; this is the outer layer for a thread that has
         # already ended (#111010). Runs every tick so the outage is bounded by one housekeeping interval.
@@ -4484,21 +4472,9 @@ def _start_gateway_housekeeping(
 
 
 def _start_cron_ticker(stop_event: threading.Event, adapters=None, loop=None, interval: int = 60):
-    """DEPRECATED shim — runs ONLY the built-in in-process cron tick loop; the trigger now lives behind
-    the ``CronScheduler`` provider and housekeeping in ``_start_gateway_housekeeping``."""
+    """Run the in-process cron tick loop until ``stop_event`` is set."""
     from cron.scheduler_provider import InProcessCronScheduler
     InProcessCronScheduler().start(stop_event, adapters=adapters, loop=loop, interval=interval)
-
-
-def _stop_cron_provider(provider) -> None:
-    """Stop a cron provider without letting it choose the gateway exit code."""
-    try:
-        provider.stop()
-    except SystemExit as exc:
-        logger.warning(
-            "Cron provider stop() attempted to exit the gateway with code %s; ignoring", exc.code)
-    except Exception as exc:
-        logger.debug("Cron provider stop() error: %s", exc)
 
 
 # Cron thread blocks on future.result(timeout=60) (cron/scheduler.py::_deliver_result) + margin.

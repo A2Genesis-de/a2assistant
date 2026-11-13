@@ -42,8 +42,6 @@ def test_standalone_jobs_remain_discoverable_for_dashboard_management(isolated_p
     assert _web_server_cron._find_cron_job_profile(job["id"]) == "worker_alpha"
 
 
-
-
 def test_fire_cron_job_scopes_store_and_runtime_home_together(
     isolated_profiles,
     monkeypatch,
@@ -63,15 +61,15 @@ def test_fire_cron_job_scopes_store_and_runtime_home_together(
     captured = {}
 
     class RecordingProvider:
-        def fire_due(self, job_id, *, adapters=None, loop=None):
+        def fire_due(self, job_id, **_kwargs):
             captured["job_id"] = job_id
             captured["runtime_home"] = scheduler._get_hermes_home()
             captured["jobs_file"] = cron_jobs._current_cron_store().jobs_file
             return True
 
     monkeypatch.setattr(
-        "cron.scheduler_provider.resolve_cron_scheduler",
-        lambda: RecordingProvider(),
+        "cron.scheduler_provider.InProcessCronScheduler",
+        RecordingProvider,
     )
 
     outer_token = set_hermes_home_override(default_home)
@@ -85,254 +83,6 @@ def test_fire_cron_job_scopes_store_and_runtime_home_together(
         assert scheduler._get_hermes_home() == default_home
     finally:
         reset_hermes_home_override(outer_token)
-
-
-def test_create_registers_scheduler_inside_target_profile(
-    isolated_profiles,
-    monkeypatch,
-):
-    """Dashboard create must resolve and register under the selected profile."""
-    from cron import jobs as cron_jobs
-    from cron.scheduler_provider import CronScheduler
-    from hermes_constants import get_hermes_home
-
-    worker_home = isolated_profiles["worker_alpha"]
-    captured = {}
-
-    class RecordingProvider(CronScheduler):
-        @property
-        def name(self):
-            return "recording"
-
-        def start(self, stop_event, **kw):
-            pass
-
-        def register_job(self, job):
-            captured["job"] = job
-            captured["runtime_home"] = get_hermes_home()
-            captured["jobs_file"] = cron_jobs._current_cron_store().jobs_file
-
-    monkeypatch.setattr(
-        "cron.scheduler_provider.resolve_cron_scheduler",
-        lambda: RecordingProvider(),
-    )
-
-    job = _web_server_cron._call_cron_for_profile(
-        "worker_alpha",
-        "create_job",
-        prompt="managed by named profile",
-        schedule="every 1h",
-        name="named-profile-job",
-    )
-
-    assert captured["job"]["id"] == job["id"]
-    assert captured["runtime_home"] == worker_home
-    assert captured["jobs_file"] == worker_home / "cron" / "jobs.json"
-    assert job["profile"] == "worker_alpha"
-
-
-def test_dashboard_create_reports_saved_but_unregistered(
-    isolated_profiles,
-    monkeypatch,
-):
-    """Dashboard callers can distinguish persistence from remote registration."""
-    from cron.scheduler import CronSchedulerRegistrationError
-
-    job = {"id": "saved-job", "name": "saved job"}
-    failure = CronSchedulerRegistrationError(
-        job,
-        RuntimeError("private callback URL and token"),
-    )
-
-    def fail_create(*args, **kwargs):
-        raise failure
-
-    monkeypatch.setattr(_web_server_cron, "_call_cron_for_profile", fail_create)
-
-    with pytest.raises(HTTPException) as exc_info:
-        _web_server_cron._create_cron_job_sync(
-            _web_models.CronJobCreate(
-                prompt="managed by named profile",
-                schedule="every 1h",
-                name="named-profile-job",
-            ),
-            profile="worker_alpha",
-        )
-
-    assert exc_info.value.status_code == 424
-    assert exc_info.value.detail == {
-        "error": str(failure),
-        "job_id": "saved-job",
-        "job_saved": True,
-        "scheduler_registered": False,
-        "retry_create": False,
-    }
-    assert "private callback URL and token" not in str(exc_info.value.detail)
-
-
-def test_notify_cron_provider_scopes_store_and_runtime_home_together(
-    isolated_profiles,
-    monkeypatch,
-):
-    """Provider reconciliation must observe the mutated profile, not default."""
-    from cron import jobs as cron_jobs
-    from cron import scheduler
-
-    from hermes_constants import (
-        reset_hermes_home_override,
-        set_hermes_home_override,
-    )
-
-    default_home = isolated_profiles["default"]
-    worker_home = isolated_profiles["worker_alpha"]
-    monkeypatch.setattr(scheduler, "_hermes_home", None)
-    monkeypatch.setattr(
-        _web_server_cron,
-        "_cron_profile_dicts",
-        lambda: [{"name": "worker_alpha"}],
-    )
-    captured = {}
-
-    class RecordingProvider:
-        def on_jobs_changed(self):
-            captured["runtime_home"] = scheduler._get_hermes_home()
-            captured["jobs_file"] = cron_jobs._current_cron_store().jobs_file
-
-    monkeypatch.setattr(
-        "cron.scheduler_provider.resolve_cron_scheduler",
-        lambda: RecordingProvider(),
-    )
-
-    outer_token = set_hermes_home_override(default_home)
-    try:
-        _web_server_cron._notify_cron_provider_for_profile("worker_alpha")
-        assert captured == {
-            "runtime_home": worker_home,
-            "jobs_file": worker_home / "cron" / "jobs.json",
-        }
-        assert scheduler._get_hermes_home() == default_home
-    finally:
-        reset_hermes_home_override(outer_token)
-
-
-def test_notify_cron_provider_failure_is_best_effort(
-    isolated_profiles,
-    monkeypatch,
-):
-
-    class FailNotifyProvider:
-        @property
-        def name(self):
-            return "fail-notify"
-
-        def register_job(self, job):
-            return None
-
-        def on_jobs_changed(self):
-            raise RuntimeError("provider unavailable")
-
-    monkeypatch.setattr(
-        "cron.scheduler_provider.resolve_cron_scheduler",
-        lambda: FailNotifyProvider(),
-    )
-
-    created = _web_server_cron._mutate_cron_for_profile(
-        "worker_alpha",
-        "create_job",
-        prompt="survives provider failure",
-        schedule="every 1h",
-        name="best-effort-notify",
-    )
-
-    assert created["profile"] == "worker_alpha"
-    assert created["name"] == "best-effort-notify"
-
-
-def test_external_provider_reconcile_fails_closed_with_multiple_profiles(
-    isolated_profiles,
-    monkeypatch,
-):
-    """Multi-profile dashboard + external provider: the unscoped reconcile
-    must NOT run — its orphan cleanup would disarm the other profiles'
-    armed one-shots in the shared NAS registry. The mutation itself still
-    succeeds (fail-closed only skips the remote converge)."""
-    from cron import scheduler
-
-    monkeypatch.setattr(scheduler, "_hermes_home", None)
-    monkeypatch.setattr(
-        _web_server_cron,
-        "_cron_profile_dicts",
-        lambda: [{"name": "default"}, {"name": "worker_alpha"}],
-    )
-    notified = []
-
-    class ExternalProvider:
-        @property
-        def name(self):
-            return "chronos"
-
-        def register_job(self, job):
-            return None
-
-        def on_jobs_changed(self):
-            notified.append(True)
-
-    monkeypatch.setattr(
-        "cron.scheduler_provider.resolve_cron_scheduler",
-        lambda: ExternalProvider(),
-    )
-
-    created = _web_server_cron._mutate_cron_for_profile(
-        "worker_alpha",
-        "create_job",
-        prompt="must not disarm siblings",
-        schedule="every 1h",
-        name="multi-profile-guard",
-    )
-
-    assert created["profile"] == "worker_alpha"
-    assert notified == [], (
-        "external provider reconcile must stay fail-closed on a "
-        "multi-profile dashboard"
-    )
-
-
-def test_builtin_provider_hook_still_fires_with_multiple_profiles(
-    isolated_profiles,
-    monkeypatch,
-):
-    """The built-in provider re-reads jobs.json per tick — its hook is a
-    safe no-op and must NOT be blocked by the multi-profile guard."""
-    from cron import scheduler
-    from cron.scheduler_provider import InProcessCronScheduler
-
-    monkeypatch.setattr(scheduler, "_hermes_home", None)
-    monkeypatch.setattr(
-        _web_server_cron,
-        "_cron_profile_dicts",
-        lambda: [{"name": "default"}, {"name": "worker_alpha"}],
-    )
-    notified = []
-
-    class BuiltinProbe(InProcessCronScheduler):
-        def on_jobs_changed(self):
-            notified.append(True)
-
-    monkeypatch.setattr(
-        "cron.scheduler_provider.resolve_cron_scheduler",
-        lambda: BuiltinProbe(),
-    )
-
-    created = _web_server_cron._mutate_cron_for_profile(
-        "worker_alpha",
-        "create_job",
-        prompt="builtin notify",
-        schedule="every 1h",
-        name="builtin-notify",
-    )
-
-    assert created["profile"] == "worker_alpha"
-    assert notified == [True]
 
 
 def test_profile_call_cannot_retarget_ticker_store_mid_write(
@@ -419,10 +169,6 @@ def test_profile_call_cannot_retarget_ticker_store_mid_write(
     assert default_saved[0]["next_run_at"] == "2026-07-10T00:00:00+00:00"
 
 
-
-
-
-
 @pytest.mark.asyncio
 async def test_cron_mutation_without_profile_finds_named_profile_job(isolated_profiles):
 
@@ -445,64 +191,6 @@ async def test_cron_mutation_without_profile_finds_named_profile_job(isolated_pr
     assert len(worker_jobs) == 1
     assert worker_jobs[0]["id"] == worker_job["id"]
     assert worker_jobs[0]["enabled"] is False
-
-
-@pytest.mark.asyncio
-async def test_dashboard_cron_mutations_notify_selected_profile_provider(
-    isolated_profiles,
-    monkeypatch,
-):
-
-    notified_profiles = []
-    monkeypatch.setattr(
-        _web_server_cron,
-        "_notify_cron_provider_for_profile",
-        notified_profiles.append,
-    )
-
-    created = await _rt_cron.create_cron_job(
-        _web_models.CronJobCreate(
-            prompt="managed by named profile",
-            schedule="every 1h",
-            name="provider-notify-job",
-        ),
-        profile="worker_alpha",
-    )
-    await _rt_cron.update_cron_job(
-        created["id"],
-        _web_models.CronJobUpdate(updates={"name": "provider-notify-job-updated"}),
-        profile="worker_alpha",
-    )
-    await _rt_cron.pause_cron_job(created["id"], profile="worker_alpha")
-    await _rt_cron.resume_cron_job(created["id"], profile="worker_alpha")
-    await _rt_cron.delete_cron_job(created["id"], profile="worker_alpha")
-
-    assert notified_profiles == ["worker_alpha"] * 5
-
-
-@pytest.mark.asyncio
-async def test_blueprint_instantiation_notifies_selected_profile_provider(
-    isolated_profiles,
-    monkeypatch,
-):
-
-    notified_profiles = []
-    monkeypatch.setattr(
-        _web_server_cron,
-        "_notify_cron_provider_for_profile",
-        notified_profiles.append,
-    )
-
-    created = await _rt_cron.instantiate_blueprint(
-        _web_models.AutomationBlueprintInstantiate(
-            blueprint="morning-brief",
-            values={"time": "07:30", "deliver": "local"},
-        ),
-        profile="worker_alpha",
-    )
-
-    assert created["profile"] == "worker_alpha"
-    assert notified_profiles == ["worker_alpha"]
 
 
 @pytest.mark.asyncio
@@ -542,8 +230,8 @@ async def test_trigger_cron_job_fires_only_selected_job_and_returns_refreshed_st
             return True
 
     monkeypatch.setattr(
-        "cron.scheduler_provider.resolve_cron_scheduler",
-        lambda: RecordingProvider(),
+        "cron.scheduler_provider.InProcessCronScheduler",
+        RecordingProvider,
     )
     monkeypatch.setattr(
         cron_jobs,
@@ -592,12 +280,12 @@ async def test_trigger_cron_job_reports_lost_claim_as_conflict(
     )
 
     class ClaimLostProvider:
-        def fire_due(self, job_id, *, adapters=None, loop=None, force=False):
+        def fire_due(self, job_id, *, adapters=None, loop=None, force=False, manual=False):
             return False
 
     monkeypatch.setattr(
-        "cron.scheduler_provider.resolve_cron_scheduler",
-        lambda: ClaimLostProvider(),
+        "cron.scheduler_provider.InProcessCronScheduler",
+        ClaimLostProvider,
     )
 
     with pytest.raises(HTTPException) as exc:
@@ -624,15 +312,15 @@ async def test_trigger_cron_job_forces_paused_job_atomically(
     observed = {}
 
     class ForceProvider:
-        def fire_due(self, job_id, *, adapters=None, loop=None, force=False):
+        def fire_due(self, job_id, *, adapters=None, loop=None, force=False, manual=False):
             observed["force"] = force
             assert cron_jobs.claim_job_for_fire(job_id, force=force) is True
             cron_jobs.mark_job_run(job_id, success=True)
             return True
 
     monkeypatch.setattr(
-        "cron.scheduler_provider.resolve_cron_scheduler",
-        lambda: ForceProvider(),
+        "cron.scheduler_provider.InProcessCronScheduler",
+        ForceProvider,
     )
 
     triggered = await _rt_cron.trigger_cron_job(
@@ -644,47 +332,6 @@ async def test_trigger_cron_job_forces_paused_job_atomically(
     assert triggered["enabled"] is True
     assert triggered["state"] == "scheduled"
     assert triggered["last_status"] == "ok"
-
-
-@pytest.mark.asyncio
-async def test_trigger_paused_job_rejects_legacy_provider_without_mutating_job(
-    isolated_profiles,
-    monkeypatch,
-):
-    from fastapi import HTTPException
-
-    job = _web_server_cron._call_cron_for_profile(
-        "worker_alpha",
-        "create_job",
-        prompt="stay paused",
-        schedule="every 1h",
-        name="legacy-paused-trigger-job",
-    )
-    _web_server_cron._call_cron_for_profile("worker_alpha", "pause_job", job["id"])
-    calls = []
-
-    class LegacyProvider:
-        def fire_due(self, job_id, *, adapters=None, loop=None):
-            calls.append(job_id)
-            return True
-
-    monkeypatch.setattr(
-        "cron.scheduler_provider.resolve_cron_scheduler",
-        lambda: LegacyProvider(),
-    )
-
-    with pytest.raises(HTTPException) as exc:
-        await _rt_cron.trigger_cron_job(job["id"], profile="worker_alpha")
-
-    assert exc.value.status_code == 409
-    assert calls == []
-    persisted = _web_server_cron._call_cron_for_profile(
-        "worker_alpha",
-        "get_job",
-        job["id"],
-    )
-    assert persisted["state"] == "paused"
-    assert persisted["enabled"] is False
 
 
 @pytest.mark.asyncio
@@ -703,13 +350,13 @@ async def test_trigger_cron_job_returns_refreshed_execution_failure(
     )
 
     class FailedProvider:
-        def fire_due(self, job_id, *, adapters=None, loop=None, force=False):
+        def fire_due(self, job_id, *, adapters=None, loop=None, force=False, manual=False):
             cron_jobs.mark_job_run(job_id, success=False, error="expected failure")
             return False
 
     monkeypatch.setattr(
-        "cron.scheduler_provider.resolve_cron_scheduler",
-        lambda: FailedProvider(),
+        "cron.scheduler_provider.InProcessCronScheduler",
+        FailedProvider,
     )
 
     triggered = await _rt_cron.trigger_cron_job(
@@ -737,13 +384,13 @@ async def test_trigger_cron_job_returns_completed_snapshot_for_retained_oneshot(
     )
 
     class SuccessfulProvider:
-        def fire_due(self, job_id, *, adapters=None, loop=None, force=False):
+        def fire_due(self, job_id, *, adapters=None, loop=None, force=False, manual=False):
             cron_jobs.mark_job_run(job_id, success=True)
             return True
 
     monkeypatch.setattr(
-        "cron.scheduler_provider.resolve_cron_scheduler",
-        lambda: SuccessfulProvider(),
+        "cron.scheduler_provider.InProcessCronScheduler",
+        SuccessfulProvider,
     )
 
     triggered = await _rt_cron.trigger_cron_job(
@@ -765,11 +412,6 @@ async def test_trigger_cron_job_returns_completed_snapshot_for_retained_oneshot(
     )
     assert retained is not None
     assert retained["state"] == "completed"
-
-
-
-
-
 
 
 @pytest.mark.asyncio
@@ -907,12 +549,6 @@ async def test_update_cron_job_rejects_id_mutation(isolated_profiles, monkeypatc
     """Dashboard surfaces a 400 (not a 500 or silent rename) when an
     id-mutation attempt is rejected by cron/jobs.update_job."""
 
-    notified_profiles = []
-    monkeypatch.setattr(
-        _web_server_cron,
-        "_notify_cron_provider_for_profile",
-        notified_profiles.append,
-    )
     worker_job = _web_server_cron._call_cron_for_profile(
         "worker_alpha",
         "create_job",
@@ -930,7 +566,6 @@ async def test_update_cron_job_rejects_id_mutation(isolated_profiles, monkeypatc
 
     assert exc.value.status_code == 400
     assert "id" in exc.value.detail
-    assert notified_profiles == []
     worker_jobs = await _rt_cron.list_cron_jobs(profile="worker_alpha")
     assert [job["id"] for job in worker_jobs] == [worker_job["id"]]
 

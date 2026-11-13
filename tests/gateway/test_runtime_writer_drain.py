@@ -30,9 +30,8 @@ def test_live_runtime_writers_prevent_final_lock_release(tmp_path, monkeypatch, 
             started.set()
             gate.wait(20)
 
-    provider = Provider()
-    monkeypatch.setattr(scheduler_provider, 'resolve_cron_scheduler', lambda: provider)
-    monkeypatch.setattr(scheduler_provider, 'scheduler_for_profile_mode', lambda p, **kw: p)
+    monkeypatch.setattr(scheduler_provider, 'InProcessCronScheduler', Provider)
+    monkeypatch.setattr(run, '_cron_tick_profile_homes', lambda _config: [])
     monkeypatch.setattr(run, '_start_gateway_housekeeping', lambda *a, **kw: gate.wait(20))
     original_start = threading.Thread.start
 

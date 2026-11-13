@@ -83,7 +83,7 @@ async def test_listener_failure_stops_bootstrap_background_threads(monkeypatch):
             thread = threading.Thread(target=stopped.wait, daemon=True)
             thread.start()
             threads.append(thread)
-        return stopped, None, *threads
+        return stopped, *threads
 
     publish = run_runtime.publish_gateway_runtime_ready
 

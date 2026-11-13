@@ -327,67 +327,6 @@ class TestGatewayNotRunningWarning:
         assert "Scheduler is not ready" in out
 
 
-class TestExternalCronProviderStatus:
-    """With an external cron provider (e.g. Chronos), jobs fire via a
-    NAS-mediated webhook, NOT the in-process ticker. The ticker-heartbeat /
-    gateway-process heuristics are meaningless there, so neither
-    `cron status` nor the create/list warning must claim the gateway being
-    absent means jobs won't fire — that was a false-negative on every healthy
-    Chronos instance (the heartbeat is intentionally never written).
-    """
-
-    def test_status_reports_provider_not_ticker_for_chronos(
-        self, tmp_cron_dir, capsys, monkeypatch
-    ):
-        create_job(prompt="Ping", schedule="every 2m")
-        monkeypatch.setattr(
-            "hermes_cli.cron._active_cron_provider_name", lambda: "chronos"
-        )
-        # Even with NO gateway process and NO ticker heartbeat, Chronos status
-        # must NOT report a stall / "not firing".
-        monkeypatch.setattr("hermes_cli.gateway.find_gateway_pids", list)
-        cron_command(Namespace(cron_command="status"))
-        out = capsys.readouterr().out
-        assert "chronos" in out
-        assert "managed scheduler" in out
-        assert "not firing" not in out.lower()
-        assert "STALLED" not in out
-        assert "No scheduler is serving profile" not in out
-        # Still surfaces the active-job summary.
-        assert "active job(s)" in out
-
-
-    def test_create_silent_for_chronos_even_without_gateway(
-        self, tmp_cron_dir, capsys, monkeypatch
-    ):
-        # The create-time "gateway not running" nag is a ticker-only concern;
-        # an external provider doesn't depend on a live in-process ticker.
-        monkeypatch.setattr(
-            "hermes_cli.cron._active_cron_provider_name", lambda: "chronos"
-        )
-        monkeypatch.setattr("hermes_cli.gateway.find_gateway_pids", list)
-        cron_command(
-            Namespace(
-                cron_command="create",
-                schedule="every 2m",
-                prompt="Ping",
-                name="Ping",
-                deliver=None,
-                repeat=None,
-                skill=None,
-                skills=None,
-                script=None,
-                workdir=None,
-                no_agent=False,
-            )
-        )
-        out = capsys.readouterr().out
-        assert "Created job" in out
-        assert "Scheduler is not ready" not in out
-
-
-
-
 def test_cron_tick_invokes_scheduler_tick_verbose_and_headless(monkeypatch):
     """The CLI tick runs outside any gateway: it must declare itself headless so agent jobs are
     refused, never spawned for."""
@@ -588,7 +527,6 @@ class TestSlashCronListLastStatus:
 
         out = self._run_list(tmp_cron_dir, capsys)
         assert "Last run: 2026-09-01T07:00:00+00:00 (delivery_failed: telegram: 502 Bad Gateway)" in out
-
 
 
 class TestStatusSurfacesDeadScheduler:

@@ -1,11 +1,4 @@
-"""Characterization tests for the cron trigger before/after the provider refactor.
-
-These lock the CURRENT in-process-ticker contract (Phase 0 of the pluggable
-CronScheduler plan, .hermes/plans/cron-scheduler-provider-interface.md). They
-must pass unchanged on `main` now, and after every subsequent phase of the
-refactor — they are the regression harness that proves the built-in firing
-behavior is byte-for-byte preserved when the ticker is moved behind the
-CronScheduler provider interface.
+"""Characterization tests for the in-process cron trigger.
 
 No production code is exercised beyond the two ticker entry points:
   - gateway/run.py::_start_cron_ticker        (production gateway ticker)
@@ -101,58 +94,7 @@ def test_desktop_ticker_calls_tick_then_stops():
     assert calls[0].get("sync") is False
 
 
-# ── Phase 1: CronScheduler ABC + InProcessCronScheduler ──────────────────────
-
-
-
-
-def test_abc_growth_stays_additive():
-    """The provider interface stays source-compatible with existing plugins.
-
-    ``start`` must be the only required implementation hook: future optional
-    behavior belongs in non-abstract default methods so custom plugins do not
-    break on import after an upgrade.
-    """
-    from cron.scheduler_provider import CronScheduler
-
-    abstract = set(getattr(CronScheduler, "__abstractmethods__", set()))
-    assert abstract == {"name", "start"}, (
-        f"CronScheduler abstractmethods changed to {abstract}; growth must be "
-        "additive (optional methods with defaults), not new abstract methods."
-    )
-
-
-def test_force_fire_capability_detects_legacy_override():
-    from cron.scheduler_provider import CronScheduler
-
-    class Current(CronScheduler):
-        @property
-        def name(self):
-            return "current"
-
-        def start(self, stop_event, **kw):
-            pass
-
-    class Legacy(Current):
-        def fire_due(  # type: ignore[invalid-method-override]
-            self, job_id, *, adapters=None, loop=None
-        ):
-            return True
-
-    class PositionalOnly(Current):
-        def fire_due(  # type: ignore[invalid-method-override]
-            self, job_id, force=False, /
-        ):
-            return True
-
-    class KeywordSink(Current):
-        def fire_due(self, job_id, **kwargs):
-            return True
-
-    assert Current().supports_force_fire is True
-    assert Legacy().supports_force_fire is False
-    assert PositionalOnly().supports_force_fire is False
-    assert KeywordSink().supports_force_fire is True
+# ── InProcessCronScheduler ──────────────────────────────────────────────────
 
 
 def test_inprocess_provider_ticks_and_stops():
@@ -186,138 +128,7 @@ def test_inprocess_provider_ticks_and_stops():
 # ── Phase 2: config key, discovery, resolver ─────────────────────────────────
 
 
-
-
-
-
-
-
-def test_cron_provider_package_does_not_shadow_core_cron_package(monkeypatch):
-    """Putting plugins/ first on sys.path must not hide the core cron package."""
-    from importlib.machinery import PathFinder
-    from pathlib import Path
-
-    repo_root = Path(__file__).resolve().parents[2]
-
-    monkeypatch.syspath_prepend(str(repo_root))
-    monkeypatch.syspath_prepend(str(repo_root / "plugins"))
-
-    cron_spec = PathFinder.find_spec("cron")
-    assert cron_spec is not None
-    assert Path(cron_spec.origin).resolve() == repo_root / "cron" / "__init__.py"
-
-    jobs_spec = PathFinder.find_spec("cron.jobs", [str(repo_root / "cron")])
-    assert jobs_spec is not None
-    assert Path(jobs_spec.origin).resolve() == repo_root / "cron" / "jobs.py"
-
-
-def test_resolve_defaults_to_builtin(monkeypatch):
-    """Empty cron.provider → built-in."""
-    import hermes_cli.config as cfg
-    from cron import scheduler_provider as sp
-
-    monkeypatch.setattr(cfg, "load_config", lambda: {"cron": {"provider": ""}})
-    prov = sp.resolve_cron_scheduler()
-    assert prov.name == "builtin"
-
-
-def test_resolve_no_cron_section_falls_back_to_builtin(monkeypatch):
-    """Config with no cron section at all → built-in (cfg_get returns default)."""
-    import hermes_cli.config as cfg
-    from cron import scheduler_provider as sp
-
-    monkeypatch.setattr(cfg, "load_config", dict)
-    prov = sp.resolve_cron_scheduler()
-    assert prov.name == "builtin"
-
-
-def test_resolve_unknown_provider_falls_back_to_builtin(monkeypatch):
-    """A named provider that doesn't exist → built-in (cron never dies)."""
-    import hermes_cli.config as cfg
-    from cron import scheduler_provider as sp
-
-    monkeypatch.setattr(cfg, "load_config", lambda: {"cron": {"provider": "nope-not-real"}})
-    prov = sp.resolve_cron_scheduler()
-    assert prov.name == "builtin"
-
-
-def test_resolve_unavailable_provider_falls_back(monkeypatch):
-    """A provider that loads but reports is_available()==False → built-in."""
-    import hermes_cli.config as cfg
-    import plugins.cron_providers as pc
-    from cron import scheduler_provider as sp
-    from cron.scheduler_provider import CronScheduler
-
-    class Unavailable(CronScheduler):
-        @property
-        def name(self):
-            return "unavailable"
-
-        def is_available(self):
-            return False
-
-        def start(self, stop_event, **kw):
-            pass
-
-    monkeypatch.setattr(cfg, "load_config", lambda: {"cron": {"provider": "unavailable"}})
-    monkeypatch.setattr(pc, "load_cron_scheduler", lambda n: Unavailable())
-    prov = sp.resolve_cron_scheduler()
-    assert prov.name == "builtin"
-
-
-def test_resolve_available_provider_is_used(monkeypatch):
-    """A provider that loads and is available is returned (not the fallback)."""
-    import hermes_cli.config as cfg
-    import plugins.cron_providers as pc
-    from cron import scheduler_provider as sp
-    from cron.scheduler_provider import CronScheduler
-
-    class Fake(CronScheduler):
-        @property
-        def name(self):
-            return "fake"
-
-        def is_available(self):
-            return True
-
-        def start(self, stop_event, **kw):
-            pass
-
-    monkeypatch.setattr(cfg, "load_config", lambda: {"cron": {"provider": "fake"}})
-    monkeypatch.setattr(pc, "load_cron_scheduler", lambda n: Fake())
-    prov = sp.resolve_cron_scheduler()
-    assert prov.name == "fake"
-
-
-def test_external_provider_falls_back_to_builtin_under_multiplex():
-    from cron.scheduler_provider import (
-        CronScheduler,
-        InProcessCronScheduler,
-        scheduler_for_profile_mode,
-    )
-
-    class External(CronScheduler):
-        @property
-        def name(self):
-            return "external"
-
-        def start(self, stop_event, **kwargs):
-            return None
-
-    external = External()
-
-    assert scheduler_for_profile_mode(external, multiplex_profiles=False) is external
-    assert isinstance(
-        scheduler_for_profile_mode(external, multiplex_profiles=True),
-        InProcessCronScheduler,
-    )
-
-
-# ── Phase 4B: additive hooks (on_jobs_changed / fire_due / reconcile) ────────
-
-
-
-
+# ── fire_due ─────────────────────────────────────────────────────────────────
 
 
 def test_fire_due_default_claims_then_runs(monkeypatch):
@@ -421,8 +232,6 @@ def test_fire_due_lost_claim_does_not_run(monkeypatch):
 
     assert InProcessCronScheduler().fire_due("j1") is False
     assert ran == []
-
-
 
 
 # ── F2a: ticker liveness — survival, heartbeat, honest status (#32612, #32895) ──

@@ -125,7 +125,6 @@ class TestCronStatusMissingHeartbeat:
         now = time.time()
         out = io.StringIO()
         with (
-            patch("hermes_cli.cron._active_cron_provider_name", return_value="builtin"),
             patch("hermes_cli.gateway.find_gateway_pids", return_value=[4242]),
             patch("gateway.status.is_gateway_runtime_lock_active", return_value=True),
             patch("gateway.status.get_running_pid", return_value=4242),
