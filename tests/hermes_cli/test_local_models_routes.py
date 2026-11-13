@@ -28,7 +28,6 @@ def client(tmp_path, monkeypatch):
     from hermes_cli.local_runtime import catalog
 
     # The first catalog request after start is due a GitHub fetch; tests serve the packaged copy.
-    monkeypatch.setattr(catalog, "refresh_catalog_soon", lambda: None)
     test_client = TestClient(web_server.app)
     # Same auth pattern as the git-route tests: present the session token.
     test_client.headers[web_server._SESSION_HEADER_NAME] = web_server._SESSION_TOKEN
@@ -197,7 +196,6 @@ def test_calibrated_catalog_and_quickstart_respect_backend(client, monkeypatch, 
     budget = HardwareBudget(int(48 * (1 << 30) * .8), 48 << 30, 0, uma=True,
                             gpu_name="NVIDIA RTX Spark N1X (5120-core Blackwell RTX GPU)", platform="win32")
     monkeypatch.setattr(hardware, "probe_budget", lambda **kw: budget)
-    monkeypatch.setattr(catalog, "refresh_catalog_soon", lambda: None)
     monkeypatch.setattr(bootstrap, "staged_model_ids", lambda: set())
     monkeypatch.setattr(binaries, "installed_engine",
                         lambda *args, **kwargs: binaries.Engine("cuda", "b10964", Path("unused")))
