@@ -53,7 +53,7 @@ def _build_runner(monkeypatch, tmp_path) -> GatewayRunner:
 
     runner = GatewayRunner(GatewayConfig())
     adapter = SimpleNamespace(send=AsyncMock(), handle_message=AsyncMock())
-    runner.adapters[Platform.DISCORD] = adapter
+    runner.adapters[Platform.TELEGRAM] = adapter
     return runner
 
 
@@ -86,7 +86,7 @@ async def test_internal_event_bypasses_authorization(monkeypatch, tmp_path):
 
     # Create an internal event with no user_id (simulates the bug scenario)
     source = SessionSource(
-        platform=Platform.DISCORD,
+        platform=Platform.TELEGRAM,
         chat_id="123",
         chat_type="dm",
     )
@@ -186,7 +186,7 @@ async def test_none_user_id_does_not_generate_pairing_code(monkeypatch, tmp_path
 
     runner = GatewayRunner(GatewayConfig())
     adapter = SimpleNamespace(send=AsyncMock())
-    runner.adapters[Platform.DISCORD] = adapter
+    runner.adapters[Platform.TELEGRAM] = adapter
 
     generate_called = False
     original_generate = runner.pairing_store.generate_code
@@ -199,7 +199,7 @@ async def test_none_user_id_does_not_generate_pairing_code(monkeypatch, tmp_path
     runner.pairing_store.generate_code = tracking_generate
 
     source = SessionSource(
-        platform=Platform.DISCORD,
+        platform=Platform.TELEGRAM,
         chat_id="456",
         chat_type="dm",
         user_id=None,

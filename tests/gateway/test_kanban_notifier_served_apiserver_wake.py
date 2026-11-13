@@ -203,7 +203,7 @@ def test_served_profile_wake_runs_in_process_only_for_the_session_it_owns(served
     assert resolve(_api_sub(), profile="ghost") is None                          # unserved profile
     # An adapter on ANOTHER platform is not a boundary for this one (#115460); an own api_server
     # adapter is — the primary never stands in for a credential the profile holds itself.
-    assert resolve(_api_sub(), builder_adapters={Platform.DISCORD: object()}) is not None
+    assert resolve(_api_sub(), builder_adapters={Platform.TELEGRAM: object()}) is not None
     own_api = object()
     assert resolve(_api_sub(), builder_adapters={Platform.API_SERVER: own_api}) is own_api
     _own_session(served.atlas, "stamped-elsewhere", "builder")                   # foreign store

@@ -17,13 +17,8 @@ from gateway.run import (
 # secret-redacted, provider-error-sanitized output (not just Telegram).
 # The filtering functions under test (_prepare_gateway_status_message /
 # _sanitize_gateway_final_response) are platform-agnostic shared logic in
-# gateway.run — a representative platform subset is sufficient; per-platform
-# copies were near-duplicate parametrizations.
-CHAT_PLATFORMS = [
-    "telegram",
-    "slack",
-    "feishu",
-]
+# gateway.run.
+CHAT_PLATFORMS = ["telegram"]
 
 NOISY_STATUS_MESSAGES = [
     "🗜️ Preflight compression check before sending...",
@@ -133,7 +128,7 @@ def test_programmatic_surfaces_keep_raw_status():
     """
     message = "⏳ Retrying in 4.2s (attempt 1/3)..."
 
-    for platform in ("local", "api_server", "webhook", "msgraph_webhook"):
+    for platform in ("local", "api_server", "webhook"):
         assert (
             _prepare_gateway_status_message(platform, "lifecycle", message) == message
         )
@@ -263,7 +258,7 @@ def test_chat_gateways_drop_interrupt_sentinel(platform):
     assert _sanitize_gateway_final_response("local", sentinel) == sentinel
 
 
-@pytest.mark.parametrize("platform", [*CHAT_PLATFORMS, Platform.BLUEBUBBLES])
+@pytest.mark.parametrize("platform", CHAT_PLATFORMS)
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [

@@ -12,7 +12,7 @@ export const deA2Gaps = {
     },
     messaging: {
       title: 'Messenger',
-      text: 'Erreichen Sie A2Assistant über Telegram, Slack, Discord und weitere Dienste.'
+      text: 'Erreichen Sie A2Assistant über Telegram.'
     },
     model: {
       title: 'Modellauswahl',

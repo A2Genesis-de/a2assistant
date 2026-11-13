@@ -21,13 +21,7 @@ def test_all_builtins_have_checker_or_generic_token_path():
     a built-in just because nobody added it to the checker dict.
     """
     # Platforms covered by the generic token/api_key branch
-    generic_token_values = {p.value for p in {
-        Platform.TELEGRAM,
-        Platform.DISCORD,
-        Platform.SLACK,
-        Platform.MATRIX,
-        Platform.MATTERMOST,
-    }}
+    generic_token_values = {Platform.TELEGRAM.value}
 
     # Platforms with a bespoke checker
     checker_values = {p.value for p in set(_PLATFORM_CONNECTED_CHECKERS.keys())}

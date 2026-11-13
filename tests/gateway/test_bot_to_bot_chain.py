@@ -92,7 +92,7 @@ async def test_ingress_drops_the_bot_reply_and_still_admits_the_human(monkeypatc
     runner._adapter_profile_for_source = lambda source: ""
 
     def _event(user, text, is_bot):
-        source = SessionSource(platform=Platform.MATTERMOST, chat_id=CHAT, chat_type="dm", user_id=user, is_bot=is_bot)
+        source = SessionSource(platform=Platform.TELEGRAM, chat_id=CHAT, chat_type="dm", user_id=user, is_bot=is_bot)
         return MessageEvent(text=text, message_id=text, source=source)
 
     from gateway.session_ingress import executing_admission

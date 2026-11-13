@@ -18,23 +18,21 @@ from gateway.session import SessionSource
 def _clear_auth_env(monkeypatch) -> None:
     for key in (
         "TELEGRAM_ALLOWED_USERS",
-        "WHATSAPP_ALLOWED_USERS",
         "GATEWAY_ALLOWED_USERS",
         "TELEGRAM_ALLOW_ALL_USERS",
-        "WHATSAPP_ALLOW_ALL_USERS",
         "GATEWAY_ALLOW_ALL_USERS",
     ):
         monkeypatch.delenv(key, raising=False)
 
 
-def _make_event(text: str = "hello", platform: Platform = Platform.WHATSAPP) -> MessageEvent:
+def _make_event(text: str = "hello", platform: Platform = Platform.TELEGRAM) -> MessageEvent:
     return MessageEvent(
         text=text,
         message_id="m1",
         source=SessionSource(
             platform=platform,
-            user_id="15551234567@s.whatsapp.net",
-            chat_id="15551234567@s.whatsapp.net",
+            user_id="15551234567",
+            chat_id="15551234567",
             user_name="tester",
             chat_type="dm",
         ),
@@ -63,7 +61,7 @@ def _make_runner(platform: Platform):
 async def test_internal_events_bypass_hook(monkeypatch):
     """Internal events (event.internal=True) skip the plugin hook entirely."""
     _clear_auth_env(monkeypatch)
-    monkeypatch.setenv("WHATSAPP_ALLOWED_USERS", "*")
+    monkeypatch.setenv("TELEGRAM_ALLOWED_USERS", "*")
 
     called = {"count": 0}
 
@@ -76,7 +74,7 @@ async def test_internal_events_bypass_hook(monkeypatch):
 
     monkeypatch.setattr("hermes_cli.plugins.invoke_hook", _fake_hook)
 
-    runner, _adapter = _make_runner(Platform.WHATSAPP)
+    runner, _adapter = _make_runner(Platform.TELEGRAM)
     runner._handle_message_with_agent = _capture
 
     event = _make_event("hi")
@@ -110,7 +108,7 @@ async def test_hook_fires_without_session_store_attribute(monkeypatch):
     # The inbound path awaits the hook, so the seam is the async entry point.
     monkeypatch.setattr("hermes_cli.plugins.ainvoke_hook", _fake_hook)
 
-    runner, adapter = _make_runner(Platform.WHATSAPP)
+    runner, adapter = _make_runner(Platform.TELEGRAM)
     del runner.session_store
 
     result = await runner._handle_message(_make_event("hi"))
@@ -147,7 +145,7 @@ async def test_async_hook_callback_is_awaited_on_the_gateway_loop(monkeypatch):
         await asyncio.sleep(0)
         gate.set()
 
-    runner, adapter = _make_runner(Platform.WHATSAPP)
+    runner, adapter = _make_runner(Platform.TELEGRAM)
     asyncio.create_task(_release())
     result = await asyncio.wait_for(runner._handle_message(_make_event("hi")), timeout=5)
     assert result is None
@@ -167,17 +165,17 @@ async def test_rewritten_message_keeps_its_callback_provenance_and_is_admitted(m
     from gateway.session_ingress_context import capture_provenance, native_callback, register_transport_home
     from hermes_constants import get_hermes_home
     from hermes_state_runtime import list_session_admissions
-    from plugins.platforms.discord.adapter import DiscordAdapter
+    from plugins.platforms.telegram.adapter import TelegramAdapter
 
     async def rewrite(name, **_kwargs):
         return [{"action": "rewrite", "text": "rewritten"}] if name == "pre_gateway_dispatch" else []
 
     monkeypatch.setattr("hermes_cli.lifecycle.ainvoke_hook", rewrite)
     monkeypatch.setattr(SessionAuthority, "_schedule", lambda self, ref: None)
-    monkeypatch.setenv("DISCORD_ALLOWED_USERS", "42")
+    monkeypatch.setenv("TELEGRAM_ALLOWED_USERS", "42")
     runner = GatewayRunner(GatewayConfig())
-    adapter = DiscordAdapter(PlatformConfig(enabled=True, token="fixture-token", typing_indicator=False))
-    runner.adapters = {Platform.DISCORD: adapter}
+    adapter = TelegramAdapter(PlatformConfig(enabled=True, token="fixture-token", typing_indicator=False))
+    runner.adapters = {Platform.TELEGRAM: adapter}
     authority = await initialize_session_authority(runner, profile_id="default", instance_id="owner")
     runner._wire_adapter_handlers(adapter)
     # The multiplexed admission check that refused the reporter (thanks @unsupportedpastels).
@@ -222,7 +220,7 @@ async def test_hook_fires_once_at_messaging_ingress_and_never_when_an_admission_
     monkeypatch.setattr("hermes_cli.lifecycle.ainvoke_hook", hook)
     monkeypatch.setattr(authorities, "active_authority", lambda _runner: SimpleNamespace(route_epoch=lambda _route: 0))
     monkeypatch.setattr(ingress, "admit_message", admit)
-    runner, adapter = _make_runner(Platform.WHATSAPP)
+    runner, adapter = _make_runner(Platform.TELEGRAM)
     runner._is_user_authorized_for_source = lambda _s: True
     runner._admit_bot_message_for_source = lambda _s: True
     runner._delivery_adapter_for = runner._intake_adapter_for = lambda _s: adapter

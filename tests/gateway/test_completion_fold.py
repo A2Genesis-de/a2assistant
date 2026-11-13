@@ -11,16 +11,16 @@ from hermes_state_runtime import list_session_admissions
 async def _discord_session(tmp_path, monkeypatch):
     from gateway.session_ingress_context import native_callback, register_transport_home
     from hermes_state import SessionDB
-    from plugins.platforms.discord.adapter import DiscordAdapter
+    from plugins.platforms.telegram.adapter import TelegramAdapter
     monkeypatch.setenv('HERMES_HOME', str(tmp_path))
-    monkeypatch.setenv('DISCORD_ALLOWED_USERS', '42')
+    monkeypatch.setenv('TELEGRAM_ALLOWED_USERS', '42')
     monkeypatch.setattr(SessionAuthority, '_schedule', lambda self, ref: None)  # nothing claims: all stay queued
     runner = GatewayRunner(GatewayConfig(sessions_dir=tmp_path / 'sessions'))
     db = SessionDB(tmp_path / 'state.db')
     runner.session_store._db = runner._session_db = db
     authority = await initialize_session_authority(runner, profile_id='default', instance_id='fold', db=db)
-    adapter = DiscordAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
-    runner.adapters = {Platform.DISCORD: adapter}
+    adapter = TelegramAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
+    runner.adapters = {Platform.TELEGRAM: adapter}
     runner._wire_adapter_handlers(adapter)
     register_transport_home(runner, None, tmp_path)
     source = adapter.build_source(chat_id='42', chat_type='dm', user_id='42')
@@ -36,13 +36,13 @@ async def _discord_session(tmp_path, monkeypatch):
 
     async def complete(name):
         evt = {'type': 'completion', 'session_id': name, 'started_at': 1.0, 'session_key': route, 'parent_session_id': sid,
-               'platform': 'discord', 'chat_type': 'dm', 'chat_id': '42', 'user_id': '42',
+               'platform': 'telegram', 'chat_type': 'dm', 'chat_id': '42', 'user_id': '42',
                'exit_code': 0, 'output': f'{name} output'}
         assert await runner._inject_watch_notification(f'[IMPORTANT: {name} finished]', evt) is True
 
     async def tick(name):
         evt = {'type': 'heartbeat', 'session_id': name, 'event_id': f'{name}-tick', 'started_at': 1.0,
-               'session_key': route, 'parent_session_id': sid, 'platform': 'discord', 'chat_type': 'dm',
+               'session_key': route, 'parent_session_id': sid, 'platform': 'telegram', 'chat_type': 'dm',
                'chat_id': '42', 'user_id': '42', 'output': f'{name} still running', 'omitted': 0}
         assert await runner._inject_watch_notification(f'[IMPORTANT: {name} still running]', evt) is True
     complete.tick = tick

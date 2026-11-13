@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-import sys
 
 
 def _gw():
@@ -16,57 +15,22 @@ def _gw():
     return gateway
 
 
-# Built-in per-platform setup config (env vars, instructions, prompts). Telegram, WhatsApp, Email,
-# SMS, etc. live in plugins/platforms/<name>/ and are discovered via the platform registry.
-_PLATFORMS = [
-    {
-        "key": "mattermost", "label": "Mattermost", "emoji": "💬", "token_var": "MATTERMOST_TOKEN",
-        "setup_instructions": [
-            "1. In Mattermost: Integrations → Bot Accounts → Add Bot Account",
-            "   (System Console → Integrations → Bot Accounts must be enabled)",
-            "2. Give it a username (e.g. hermes) and copy the bot token",
-            "3. Works with any self-hosted Mattermost instance — enter your server URL",
-            "4. Find your user ID (the profile dialog does not show it):",
-            "   Admins: System Console → User Management → Users → open your user.",
-            "   Anyone: while logged in, open <server>/api/v4/users/me in a browser tab.",
-            "   With the bot token: GET <server>/api/v4/users/username/<your-username>.",
-            "   Copy the \"id\" field. /users/me with the bot token returns the bot's ID.",
-            "   ⚠ This is NOT your username — it's a 26-character alphanumeric ID.",
-            "5. To get a channel ID: click the channel name → View Info → copy the ID",
-        ],
-        "vars": [
-            {"name": "MATTERMOST_URL", "prompt": "Server URL (e.g. https://mm.example.com)",
-             "password": False, "help": "Your Mattermost server URL. Works with any self-hosted instance."},
-            {"name": "MATTERMOST_TOKEN", "prompt": "Bot token", "password": True,
-             "help": "Paste the bot token from step 2 above."},
-            {"name": "MATTERMOST_ALLOWED_USERS", "prompt": "Allowed user IDs (comma-separated)",
-             "password": False, "is_allowlist": True,
-             "help": "Your user ID from step 4 above (26 characters, not your @username)."},
-            {"name": "MATTERMOST_HOME_CHANNEL",
-             "prompt": "Home channel ID (for cron/notification delivery, or empty to set later with /set-home)",
-             "password": False, "help": "Channel ID where A2Assistant delivers cron results and notifications."},
-            {"name": "MATTERMOST_REPLY_MODE",
-             "prompt": "Reply mode — 'off' for flat messages, 'thread' for threaded replies (default: off)",
-             "password": False,
-             "help": "off = flat channel messages, thread = replies nest under your message."},
-        ],
-    },
-]
+# Built-in per-platform setup config (env vars, instructions, prompts). Telegram lives in
+# plugins/platforms/telegram/ and is discovered via the platform registry.
+_PLATFORMS: list[dict] = []
 
 
 def _all_platforms() -> list[dict]:
     """Built-in ``_PLATFORMS`` plus registry plugin platforms (same dict shape, source in
     ``_registry_entry``). Plugins are discovered here (idempotent) so the setup menu works without a
-    running gateway; user-installed ones still need ``plugins.enabled`` (untrusted code). Matrix is
-    hidden on Windows: python-olm has no wheel or native build (use WSL)."""
+    running gateway; user-installed ones still need ``plugins.enabled`` (untrusted code)."""
     try:
         from hermes_cli.plugins import discover_plugins
         discover_plugins()
     except Exception as e:
         _gw().logger.debug("plugin discovery failed during platform enumeration: %s", e)
 
-    hide_matrix = sys.platform == "win32"
-    platforms = [dict(p) for p in _gw()._PLATFORMS if not (hide_matrix and p.get("key") == "matrix")]
+    platforms = [dict(p) for p in _gw()._PLATFORMS]
     by_key = {p["key"]: p for p in platforms}
 
     try:
@@ -75,7 +39,7 @@ def _all_platforms() -> list[dict]:
         return platforms
 
     for entry in platform_registry.all_entries():
-        if entry.name in by_key or (hide_matrix and entry.name == "matrix"):
+        if entry.name in by_key:
             continue
         platforms.append({
             "key": entry.name, "label": entry.label, "emoji": entry.emoji,
@@ -209,20 +173,6 @@ def _telegram_auto_setup(token_var: str) -> tuple[bool, object]:
     return False, None
 
 
-def _clean_discord_ids(cleaned: str) -> str:
-    """Strip common Discord prefixes (user:123, <@123>, <@!123>) from a comma-separated list."""
-    parts = []
-    for uid in cleaned.split(","):
-        uid = uid.strip()
-        if uid.startswith("<@") and uid.endswith(">"):
-            uid = uid.lstrip("<@!").rstrip(">")
-        if uid.lower().startswith("user:"):
-            uid = uid[5:]
-        if uid:
-            parts.append(uid)
-    return ",".join(parts)
-
-
 def _prompt_allowlist_var(var: dict, platform_key: str, auto_owner_user_id) -> str | None:
     """Allowlist prompt for one var; returns the saved value or None (open-access prompt shown)."""
     if "TELEGRAM" in var["name"] and auto_owner_user_id:
@@ -249,15 +199,13 @@ def _prompt_allowlist_var(var: dict, platform_key: str, auto_owner_user_id) -> s
         _prompt_unauthorized_access(platform_key)
         return None
     cleaned = value.replace(" ", "")
-    if "DISCORD" in var["name"]:
-        cleaned = _clean_discord_ids(cleaned)
     _gw().save_env_value(var["name"], cleaned)
     _gw().print_success("  Saved — only these users can interact with the bot.")
     return cleaned
 
 
 def _setup_standard_platform(platform: dict):
-    """Interactive setup for Telegram, Discord, or Slack."""
+    """Interactive setup for a token-based platform."""
     from hermes_cli.setup_hidden_env import is_setup_hidden_env as _is_setup_hidden_env
     emoji, label, token_var = platform["emoji"], platform["label"], platform["token_var"]
     print_setup_header(f"{emoji} {label}")
@@ -325,7 +273,7 @@ def _builtin_setup_fn(key: str):
     """Resolve a built-in platform's setup function; late-bound to dodge the hermes_cli.setup cycle."""
     from hermes_cli import setup as _s
     return {
-        # telegram/discord/slack/whatsapp/dingtalk/feishu/wecom setup_fns come from their plugins.
+        # The telegram setup_fn comes from its plugin.
         "webhooks": _gw().setup_platforms._setup_webhooks,
     }.get(key)
 

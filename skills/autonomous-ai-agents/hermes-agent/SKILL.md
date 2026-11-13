@@ -22,7 +22,7 @@ What makes A2Assistant different:
 
 - **Self-improving through skills** — A2Assistant learns from experience by saving reusable procedures as skills that load into future sessions.
 - **Persistent memory across sessions** — remembers who you are, your preferences, environment details, and lessons learned. Pluggable memory backends.
-- **Multi-platform gateway** — the same agent runs on Telegram, Discord, Slack, WhatsApp, iMessage, Signal, Matrix, Teams, Email, and a dozen more platforms with full tool access, not just chat.
+- **Messaging gateway** — the same agent runs on Telegram (plus the API server and webhooks) with full tool access, not just chat.
 - **Many surfaces** — the same agent core drives the CLI, the Ink TUI, a native Electron desktop app, a web dashboard, and an ACP server for IDEs (VS Code / Zed / JetBrains).
 - **Provider-agnostic** — swap models and providers mid-workflow; credential pools rotate across multiple API keys automatically.
 - **Profiles** — run multiple independent A2Assistant instances with isolated configs, sessions, skills, and memory.
@@ -111,7 +111,7 @@ Profiles use `~/.hermes/profiles/<name>/` with the same layout. When a profile i
 | Contributing code: adding tools, slash commands, tests | `references/contributor-guide.md` |
 | delegate_task "capped at N" reports | `references/delegate-task-concurrency-diagnosis.md` |
 | "Can app X use my Nous Portal subscription/OAuth?" | `references/portal-auth-for-third-party-apps.md` |
-| Connecting a messaging platform (Telegram, Discord, Slack, WhatsApp, …) | docs: `/user-guide/messaging` |
+| Connecting Telegram | docs: `/user-guide/messaging` |
 
 The reference list above is not the feature list — it is the set of topics that
 need more than their docs page. For everything else A2Assistant ships, fetch

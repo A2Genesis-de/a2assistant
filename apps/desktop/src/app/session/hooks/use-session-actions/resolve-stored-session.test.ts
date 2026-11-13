@@ -68,14 +68,14 @@ describe('resolveStoredSession profile ownership', () => {
   })
 
   it('routes a moved resolve into its current slice instead of duplicating it', async () => {
-    // Cross-room /resume rewrote the row to source='matrix' (#113827): the
+    // Cross-room /resume rewrote the row to source='telegram' (#113827): the
     // stale regular-sessions copy must go and the row must land in messaging.
     $sessions.set([session({ id: 's1' })])
-    mockGetSession.mockResolvedValueOnce(session({ id: 's1', profile: 'meta', source: 'matrix' }))
+    mockGetSession.mockResolvedValueOnce(session({ id: 's1', profile: 'meta', source: 'telegram' }))
 
     const resolved = await resolveStoredSession('s1')
 
-    expect(resolved?.source).toBe('matrix')
+    expect(resolved?.source).toBe('telegram')
     expect($sessions.get()).toEqual([])
     expect($messagingSessions.get().map(s => s.id)).toEqual(['s1'])
   })

@@ -48,6 +48,6 @@ def test_save_sends_document_through_requesting_platform_adapter():
 
 
 def test_save_without_live_adapter_reports_missing_adapter_not_a_crash():
-    runner = _runner(_entry(Platform.DISCORD), {})
+    runner = _runner(_entry(Platform.TELEGRAM), {})
 
-    assert _save(runner, Platform.DISCORD) == "Platform adapter not found to send the document."
+    assert _save(runner, Platform.TELEGRAM) == "Platform adapter not found to send the document."

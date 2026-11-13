@@ -23,7 +23,7 @@ WARNING = "The model returned only a silence marker"
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("platform", [Platform.SLACK, Platform.WHATSAPP])
+@pytest.mark.parametrize("platform", [Platform.TELEGRAM])
 @pytest.mark.parametrize("interim", [False, True])
 @pytest.mark.parametrize("housekeeping", [False, True], ids=["marker-only", "written-reply"])
 async def test_real_loop_silence_delivery(monkeypatch, tmp_path, real_loop, platform, interim, housekeeping):

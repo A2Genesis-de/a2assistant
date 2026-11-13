@@ -148,11 +148,11 @@ class _FakeAdapter:
 def _make_runner() -> tuple[GatewayRunner, _FakeAdapter]:
     runner = object.__new__(GatewayRunner)
     runner.config = GatewayConfig(
-        platforms={Platform.DISCORD: PlatformConfig(enabled=True, token="token")}
+        platforms={Platform.TELEGRAM: PlatformConfig(enabled=True, token="token")}
     )
     runner.session_store = _FakeSessionStore()
     adapter = _FakeAdapter()
-    runner.adapters = {Platform.DISCORD: adapter}
+    runner.adapters = {Platform.TELEGRAM: adapter}
     runner._queued_events = {}
     return runner, adapter
 
@@ -162,7 +162,7 @@ def _resume_event() -> MessageEvent:
         text="/goal resume",
         message_type=MessageType.TEXT,
         source=SessionSource(
-            platform=Platform.DISCORD,
+            platform=Platform.TELEGRAM,
             chat_id="chat-goal-resume",
             chat_type="channel",
             user_id="user-goal-resume",

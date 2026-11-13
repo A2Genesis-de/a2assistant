@@ -8,7 +8,7 @@ Covers:
 * unknown platform / unregistered adapter / disconnected adapter → structured
   errors, never exceptions
 * verbs route to the right adapter primitives (telegram ``_set_reaction`` /
-  ``rename_dm_topic``; discord ``rename_thread``)
+  ``rename_dm_topic``)
 * adapter-layer exceptions surface as ``action_failed`` results, never raise
 * ``ctx.platform_actions`` facade is bound to the plugin id
 """
@@ -55,14 +55,6 @@ def _telegram_adapter(connected=True):
     a.is_connected = connected
     a._set_reaction = AsyncMock(return_value=True)
     a.rename_dm_topic = AsyncMock(return_value=None)
-    return a
-
-
-def _discord_adapter(connected=True):
-    a = MagicMock()
-    a.platform = Platform.DISCORD
-    a.is_connected = connected
-    a.rename_thread = AsyncMock(return_value=True)
     return a
 
 
@@ -178,10 +170,10 @@ class TestStructuredErrors:
     def test_unsupported_platform_action(self):
         actions = PlatformActions("p")
         adapter = MagicMock()
-        adapter.platform = Platform.SLACK
+        adapter.platform = Platform.WEBHOOK
         adapter.is_connected = True
-        with _grant(True), _runner_with({Platform.SLACK: adapter}):
-            result = asyncio.run(actions.add_reaction("slack", "1", "2", "x"))
+        with _grant(True), _runner_with({Platform.WEBHOOK: adapter}):
+            result = asyncio.run(actions.add_reaction("webhook", "1", "2", "x"))
         assert result["error"] == "unsupported_platform_action"
 
 
@@ -213,54 +205,6 @@ class TestVerbRouting:
             )
         assert result == {"ok": True, "action": "set_thread_title"}
         adapter.rename_dm_topic.assert_awaited_once_with("123", 42, "New title")
-
-    def test_discord_set_thread_title_routes_to_rename_thread(self):
-        actions = PlatformActions("p")
-        adapter = _discord_adapter()
-        with _grant(True), _runner_with({Platform.DISCORD: adapter}):
-            result = asyncio.run(
-                actions.set_thread_title("discord", "555", "321", "Renamed")
-            )
-        assert result == {"ok": True, "action": "set_thread_title"}
-        adapter.rename_thread.assert_awaited_once_with("321", "Renamed")
-
-    def test_discord_rename_false_is_action_failed(self):
-        actions = PlatformActions("p")
-        adapter = _discord_adapter()
-        adapter.rename_thread = AsyncMock(return_value=False)
-        with _grant(True), _runner_with({Platform.DISCORD: adapter}):
-            result = asyncio.run(
-                actions.set_thread_title("discord", "555", "321", "Renamed")
-            )
-        assert result["error"] == "action_failed"
-
-    def test_discord_add_reaction_fetches_and_reacts(self):
-        actions = PlatformActions("p")
-        adapter = _discord_adapter()
-        message = MagicMock()
-        message.add_reaction = AsyncMock()
-        channel = MagicMock()
-        channel.fetch_message = AsyncMock(return_value=message)
-        client = MagicMock()
-        client.get_channel = MagicMock(return_value=channel)
-        adapter._client = client
-        with _grant(True), _runner_with({Platform.DISCORD: adapter}):
-            result = asyncio.run(
-                actions.add_reaction("discord", "555", "456", "\U0001F44D")
-            )
-        assert result == {"ok": True, "action": "add_reaction"}
-        channel.fetch_message.assert_awaited_once_with(456)
-        message.add_reaction.assert_awaited_once_with("\U0001F44D")
-
-    def test_discord_add_reaction_non_numeric_ids(self):
-        actions = PlatformActions("p")
-        adapter = _discord_adapter()
-        adapter._client = MagicMock()
-        with _grant(True), _runner_with({Platform.DISCORD: adapter}):
-            result = asyncio.run(
-                actions.add_reaction("discord", "not-a-number", "456", "x")
-            )
-        assert result["error"] == "invalid_argument"
 
 
 class TestMultiplexProfileRouting:

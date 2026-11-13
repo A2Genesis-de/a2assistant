@@ -20,8 +20,7 @@ from gateway.media_repair import repair_explicit_computer_use_media_paths
 from gateway.platforms.base import BasePlatformAdapter
 from gateway.platforms.event import MessageEvent
 from gateway.session import (
-    SessionSource, _session_key_namespace, build_channel_continuity_note,
-    build_session_context,
+    SessionSource, _session_key_namespace, build_session_context,
 )
 from gateway.session_transcript import TranscriptReadError
 from gateway.turn_context import TurnContext

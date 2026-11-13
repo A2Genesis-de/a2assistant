@@ -15,7 +15,7 @@ from gateway.session import Platform, SessionSource
 
 
 def _source(is_bot):
-    return SessionSource(platform=Platform.MATTERMOST, chat_id="dm", chat_type="dm", user_id="peer", is_bot=is_bot)
+    return SessionSource(platform=Platform.TELEGRAM, chat_id="dm", chat_type="dm", user_id="peer", is_bot=is_bot)
 
 
 @pytest.mark.asyncio
@@ -53,7 +53,7 @@ class _Runner(GatewayTurnMixin):
 async def _shape(agent_result, source):
     return await _Runner()._hmwa_shape_agent_response(
         agent_result, source, history=[], session_entry=SimpleNamespace(session_id="s"), session_key=None,
-        _quick_key=None, run_generation=0, _run_start_session_id="s", _platform_name="mattermost",
+        _quick_key=None, run_generation=0, _run_start_session_id="s", _platform_name="telegram",
         _msg_start_time=0.0)
 
 

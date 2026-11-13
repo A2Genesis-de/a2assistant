@@ -25,7 +25,7 @@ from gateway.session import SessionSource, build_session_key
 
 class _Adapter(BasePlatformAdapter):
     def __init__(self):
-        super().__init__(PlatformConfig(enabled=True, token="t"), Platform.DISCORD)
+        super().__init__(PlatformConfig(enabled=True, token="t"), Platform.TELEGRAM)
         self.images: list[bytes] = []
 
     async def connect(self, *, is_reconnect=False):
@@ -84,7 +84,7 @@ async def test_secondary_docker_media_resolves_via_its_own_mounts(tmp_path, monk
     adapter.set_message_handler(routed_handler)
     event = MessageEvent(
         text="pic", message_type=MessageType.TEXT, message_id="m1",
-        source=SessionSource(platform=Platform.DISCORD, chat_id="1", chat_type="dm", user_id="u"))
+        source=SessionSource(platform=Platform.TELEGRAM, chat_id="1", chat_type="dm", user_id="u"))
     await adapter._process_message_background(event, build_session_key(event.source, profile="public"))
 
     assert len(adapter.images) == 1

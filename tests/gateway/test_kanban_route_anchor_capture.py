@@ -8,7 +8,7 @@ from gateway.session_context import get_session_env
 def test_session_route_anchors_reach_metadata_and_context_then_clear(monkeypatch):
     runner = GatewayRunner.__new__(GatewayRunner)
     runner.adapters = {}
-    source = SessionSource(platform=Platform.DISCORD, chat_id="post", chat_type="thread",
+    source = SessionSource(platform=Platform.TELEGRAM, chat_id="post", chat_type="thread",
                            thread_id="post", scope_id="scope", guild_id="guild",
                            parent_chat_id="parent", profile="yuki")
     context = SessionContext(source=source, connected_platforms=[], home_channels={}, session_key="origin")
@@ -34,7 +34,7 @@ def test_slash_subscription_keeps_the_routed_source_owner(tmp_path, monkeypatch)
     monkeypatch.setenv("HERMES_KANBAN_DB", str(tmp_path / "kanban.db"))
     runner = GatewayRunner.__new__(GatewayRunner)
     runner._kanban_notifier_profile = "default"
-    source = SessionSource(platform=Platform.DISCORD, chat_id="post", chat_type="thread",
+    source = SessionSource(platform=Platform.TELEGRAM, chat_id="post", chat_type="thread",
                            thread_id="post", scope_id="guild", parent_chat_id="parent", profile="yuki")
     with kbc.connect() as conn:
         task = kb.create_task(conn, title="slash-created")

@@ -52,12 +52,12 @@ def test_invalid_plugin_platform_row_still_warns(caplog):
     from hermes_constants import get_hermes_home
     from tools.kanban_tools import _profile_has_kanban_toolset
 
-    _write_config(get_hermes_home(), {"cli": ["hermes-cli"], "teams": ["hermes-tems"]})
+    _write_config(get_hermes_home(), {"cli": ["hermes-cli"], "telegarm": ["hermes-telegarm"]})
     with caplog.at_level(logging.WARNING, logger="hermes_cli.tools_config"):
         _profile_has_kanban_toolset()
 
     errors = _toolset_errors(caplog)
-    assert len(errors) == 1 and "'teams'" in errors[0] and "hermes-tems" in errors[0], errors
+    assert len(errors) == 1 and "'telegarm'" in errors[0] and "hermes-telegarm" in errors[0], errors
 
 
 def test_seeded_config_rows_need_no_plugin():

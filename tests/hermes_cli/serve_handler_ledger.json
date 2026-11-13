@@ -2,7 +2,7 @@
  "counts": {
   "http": {
    "keep-host-wide": 1,
-   "undecided": 342
+   "undecided": 339
   },
   "rpc": {
    "authority": 108,
@@ -36,7 +36,6 @@
   {"current_path": "hermes_cli.web_routers.mcp:remove_mcp_server", "decision": "undecided", "handler": "DELETE /api/mcp/servers/{name}", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.messaging_relay:unlink_relay_account", "decision": "undecided", "handler": "DELETE /api/messaging/relay/{platform}/accounts/{platform_user_id}", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.messaging:cancel_telegram_onboarding", "decision": "undecided", "handler": "DELETE /api/messaging/telegram/onboarding/{pairing_id}", "kind": "http", "ref": ""},
-  {"current_path": "hermes_cli.web_routers.messaging:cancel_whatsapp_onboarding", "decision": "undecided", "handler": "DELETE /api/messaging/whatsapp/onboarding/{pairing_id}", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.ops:delete_hook", "decision": "undecided", "handler": "DELETE /api/ops/hooks", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.profiles:delete_profile_endpoint", "decision": "undecided", "handler": "DELETE /api/profiles/{name}", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.config_env:delete_custom_endpoint", "decision": "undecided", "handler": "DELETE /api/providers/custom-endpoints/{endpoint_id}", "kind": "http", "ref": ""},
@@ -50,6 +49,7 @@
   {"current_path": "hermes_cli.web_routers.actions:get_action_status", "decision": "undecided", "handler": "GET /api/actions/{name}/status", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.analytics:get_models_analytics", "decision": "undecided", "handler": "GET /api/analytics/models", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.analytics:get_usage_analytics", "decision": "undecided", "handler": "GET /api/analytics/usage", "kind": "http", "ref": ""},
+  {"current_path": "hermes_cli.web_routers.audio:get_elevenlabs_voices", "decision": "undecided", "handler": "GET /api/audio/elevenlabs/voices", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.audio:get_client_voice_config", "decision": "undecided", "handler": "GET /api/audio/voice-config", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.audio:get_voice_live_status", "decision": "undecided", "handler": "GET /api/audio/voice-live/status", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.dashboard_auth.routes:api_auth_me", "decision": "undecided", "handler": "GET /api/auth/me", "kind": "http", "ref": ""},
@@ -132,7 +132,6 @@
   {"current_path": "hermes_cli.web_routers.messaging_relay:get_relay_links", "decision": "undecided", "handler": "GET /api/messaging/relay", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.messaging_relay:get_relay_link_state", "decision": "undecided", "handler": "GET /api/messaging/relay/link/{code}", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.messaging:get_telegram_onboarding_status", "decision": "undecided", "handler": "GET /api/messaging/telegram/onboarding/{pairing_id}", "kind": "http", "ref": ""},
-  {"current_path": "hermes_cli.web_routers.messaging:get_whatsapp_onboarding_status", "decision": "undecided", "handler": "GET /api/messaging/whatsapp/onboarding/{pairing_id}", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.models:get_auxiliary_models", "decision": "undecided", "handler": "GET /api/model/auxiliary", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.models:get_model_info", "decision": "undecided", "handler": "GET /api/model/info", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.models:get_moa_models", "decision": "undecided", "handler": "GET /api/model/moa", "kind": "http", "ref": ""},
@@ -281,8 +280,6 @@
   {"current_path": "hermes_cli.web_routers.messaging_relay:request_relay_link", "decision": "undecided", "handler": "POST /api/messaging/relay/{platform}/link", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.messaging:start_telegram_onboarding", "decision": "undecided", "handler": "POST /api/messaging/telegram/onboarding/start", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.messaging:apply_telegram_onboarding", "decision": "undecided", "handler": "POST /api/messaging/telegram/onboarding/{pairing_id}/apply", "kind": "http", "ref": ""},
-  {"current_path": "hermes_cli.web_routers.messaging:start_whatsapp_onboarding", "decision": "undecided", "handler": "POST /api/messaging/whatsapp/onboarding/start", "kind": "http", "ref": ""},
-  {"current_path": "hermes_cli.web_routers.messaging:apply_whatsapp_onboarding", "decision": "undecided", "handler": "POST /api/messaging/whatsapp/onboarding/{pairing_id}/apply", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.models:set_model_assignment", "decision": "undecided", "handler": "POST /api/model/set", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.ops:run_backup", "decision": "undecided", "handler": "POST /api/ops/backup", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.ops:prune_checkpoints", "decision": "undecided", "handler": "POST /api/ops/checkpoints/prune", "kind": "http", "ref": ""},

@@ -292,9 +292,6 @@ export const uk: Translations = {
     delivery: {
       local: "Локально",
       telegram: "Telegram",
-      discord: "Discord",
-      slack: "Slack",
-      email: "Email",
     },
   },
 
@@ -428,7 +425,7 @@ export const uk: Translations = {
       tts: "Синтез мовлення",
       stt: "Розпізнавання мовлення",
       logging: "Журналювання",
-      discord: "Discord",
+      messaging: "Messaging",
       auxiliary: "Додатково",
     },
   },

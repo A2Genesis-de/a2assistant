@@ -2702,7 +2702,7 @@ export const esOverrides = {
       },
       messaging: {
         title: 'Mensajería',
-        detail: 'Configura Telegram, Slack, Discord y más'
+        detail: 'Configura Telegram'
       },
       artifacts: {
         title: 'Artefactos',
@@ -2977,114 +2977,6 @@ export const esOverrides = {
       TELEGRAM_PROXY: {
         label: 'URL de proxy',
         help: 'Solo necesario en redes donde Telegram está bloqueado.'
-      },
-      DISCORD_BOT_TOKEN: {
-        label: 'Token del bot',
-        help: 'Crea una aplicación en Discord Developer Portal, añade un bot y pega su token.'
-      },
-      DISCORD_ALLOWED_USERS: {
-        label: 'IDs de usuarios de Discord permitidos',
-        help: 'Recomendado. IDs de usuarios de Discord (uno por casilla).'
-      },
-      DISCORD_REPLY_TO_MODE: {
-        label: 'Estilo de respuesta',
-        help: '`first`, `all` u `off`.'
-      },
-      DISCORD_ALLOW_ALL_USERS: {
-        label: 'Permitir todos los usuarios de Discord',
-        help: 'Solo desarrollo. Si es true, cualquiera puede enviar DM al bot sin allowlist.'
-      },
-      DISCORD_HOME_CHANNEL: {
-        label: 'ID del canal principal',
-        help: 'Canal donde el bot envía mensajes proactivos (salida de cron, recordatorios).'
-      },
-      DISCORD_HOME_CHANNEL_NAME: {
-        label: 'Nombre del canal principal',
-        help: 'Nombre visible del canal principal en registros y salida de estado.'
-      },
-      BLUEBUBBLES_ALLOW_ALL_USERS: {
-        label: 'Permitir todos los usuarios de iMessage',
-        help: 'Si es true, omite la allowlist de BlueBubbles.'
-      },
-      MATTERMOST_ALLOW_ALL_USERS: {
-        label: 'Permitir todos los usuarios de Mattermost'
-      },
-      MATTERMOST_HOME_CHANNEL: {
-        label: 'Canal principal'
-      },
-      QQ_ALLOW_ALL_USERS: {
-        label: 'Permitir todos los usuarios de QQ'
-      },
-      QQBOT_HOME_CHANNEL: {
-        label: 'Canal principal de QQ',
-        help: 'Canal o grupo predeterminado para entrega cron.'
-      },
-      QQBOT_HOME_CHANNEL_NAME: {
-        label: 'Nombre del canal principal de QQ'
-      },
-      SLACK_BOT_TOKEN: {
-        label: 'Token del bot de Slack',
-        help: 'Usa el token del bot de OAuth & Permissions después de instalar tu app de Slack.',
-        placeholder: 'Pegar token del bot de Slack'
-      },
-      SLACK_APP_TOKEN: {
-        label: 'Token de app de Slack',
-        help: 'Usa el token de nivel de app requerido para Socket Mode.',
-        placeholder: 'Pegar token de app de Slack'
-      },
-      SLACK_ALLOWED_USERS: {
-        label: 'IDs de usuarios de Slack permitidos',
-        help: 'Recomendado. IDs de Slack (uno por casilla).'
-      },
-      MATTERMOST_URL: {
-        label: 'URL del servidor',
-        placeholder: 'https://mattermost.example.com'
-      },
-      MATTERMOST_TOKEN: {
-        label: 'Token del bot'
-      },
-      MATTERMOST_ALLOWED_USERS: {
-        label: 'IDs de usuarios permitidos',
-        help: 'Recomendado. IDs de Mattermost (uno por casilla).'
-      },
-      MATRIX_HOMESERVER: {
-        label: 'URL del homeserver',
-        placeholder: 'https://matrix.org'
-      },
-      MATRIX_ACCESS_TOKEN: {
-        label: 'Token de acceso'
-      },
-      MATRIX_USER_ID: {
-        label: 'ID de usuario del bot',
-        placeholder: '@hermes:example.org'
-      },
-      MATRIX_ALLOWED_USERS: {
-        label: 'IDs de usuarios de Matrix permitidos',
-        help: 'Recomendado. IDs (uno por casilla) en formato @usuario:servidor.'
-      },
-      SIGNAL_HTTP_URL: {
-        label: 'URL del puente Signal',
-        placeholder: 'http://127.0.0.1:8080',
-        help: 'URL de un puente REST signal-cli en ejecución.'
-      },
-      SIGNAL_ACCOUNT: {
-        label: 'Número de teléfono',
-        help: 'El número registrado con tu puente signal-cli.'
-      },
-      SIGNAL_ALLOWED_USERS: {
-        label: 'Usuarios de Signal permitidos',
-        help: 'Recomendado. Identificadores de Signal (uno por casilla).'
-      },
-      WHATSAPP_ENABLED: {
-        label: 'Activar puente de WhatsApp',
-        help: 'Se define automáticamente con el interruptor de abajo. No lo toques salvo que sepas que lo necesitas.'
-      },
-      WHATSAPP_MODE: {
-        label: 'Modo del puente'
-      },
-      WHATSAPP_ALLOWED_USERS: {
-        label: 'Usuarios de WhatsApp permitidos',
-        help: 'Recomendado. Números de teléfono o IDs de WhatsApp (uno por casilla).'
       }
     },
     platformIntro: {}
@@ -3098,7 +2990,7 @@ export const esOverrides = {
     empty: 'Aún no hay suscripciones de webhook.',
     disabledTitle: 'Receptor de webhooks desactivado',
     disabledBody:
-      'Los webhooks tienen su propia plataforma de gateway. Actívalos aquí para aceptar eventos HTTP entrantes; los canales de chat solo son necesarios cuando una suscripción entrega contenido a Telegram, Discord, Slack u otro canal.',
+      'Los webhooks tienen su propia plataforma de gateway. Actívalos aquí para aceptar eventos HTTP entrantes; los canales de chat solo son necesarios cuando una suscripción entrega contenido a Telegram.',
     enable: 'Activar webhooks',
     enabling: 'Activando…',
     enabled: name => `Activado: "${name}"`,
@@ -3149,9 +3041,6 @@ export const esOverrides = {
     deliverOptions: {
       log: 'Registro',
       telegram: 'Telegram',
-      discord: 'Discord',
-      slack: 'Slack',
-      email: 'Correo electrónico',
       github_comment: 'Comentario de GitHub'
     }
   },
@@ -3338,10 +3227,7 @@ export const esOverrides = {
     runAgain: 'Ejecutar de nuevo',
     deliveryLabels: {
       local: 'Este escritorio',
-      telegram: 'Telegram',
-      discord: 'Discord',
-      slack: 'Slack',
-      email: 'Email'
+      telegram: 'Telegram'
     },
     scheduleLabels: {
       daily: 'Diario',
@@ -5448,7 +5334,7 @@ export const esOverrides = {
       },
       messaging: {
         title: 'A2Assistant lejos de tu escritorio',
-        text: 'Conecta Telegram, Discord, Slack y más: el mismo agente, la misma memoria.'
+        text: 'Conecta Telegram: el mismo agente, la misma memoria.'
       },
       artifacts: {
         title: 'Todo lo que ha creado A2Assistant',

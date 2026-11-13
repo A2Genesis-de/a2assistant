@@ -292,9 +292,6 @@ export const af: Translations = {
     delivery: {
       local: "Plaaslik",
       telegram: "Telegram",
-      discord: "Discord",
-      slack: "Slack",
-      email: "Email",
     },
   },
 
@@ -427,7 +424,7 @@ export const af: Translations = {
       tts: "Teks-na-Spraak",
       stt: "Spraak-na-Teks",
       logging: "Aantekening",
-      discord: "Discord",
+      messaging: "Messaging",
       auxiliary: "Hulpmiddels",
     },
   },

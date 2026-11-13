@@ -111,7 +111,7 @@ class GatewayProbe(GatewayGoalCommandsMixin):
         self.events.append(event)
 gw = GatewayProbe()
 event = MessageEvent(text='/goal '+original, message_type=MessageType.TEXT,
-                     source=SessionSource(platform=Platform.DISCORD, chat_id='probe', chat_type='dm', user_id='probe'), message_id='goal-probe')
+                     source=SessionSource(platform=Platform.TELEGRAM, chat_id='probe', chat_type='dm', user_id='probe'), message_id='goal-probe')
 asyncio.run(gw._handle_goal_command(event))
 assert len(gw.events) == 1
 output['gateway_kick'] = {'prompt':gw.events[0].text, 'goal_preserved':gw.mgr.state.goal == original}

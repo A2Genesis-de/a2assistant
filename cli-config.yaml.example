@@ -1389,7 +1389,7 @@ gateway:
 #   - A preset like "hermes-cli" or "hermes-telegram" (curated tool set)
 #   - A list of individual toolsets to compose your own (see list below)
 #
-# Supported platform keys: cli, telegram, discord, whatsapp, slack, qqbot, teams, google_chat
+# Supported platform keys: cli, telegram, cron, api_server, webhook
 #
 # Examples:
 #
@@ -1406,30 +1406,13 @@ gateway:
 #   platform_toolsets:
 #     cli: [web, terminal, file, skills, todo, tts, cronjob]
 #
-#   # Restrictive: Discord gets read-only tools only:
-#   platform_toolsets:
-#     discord: [web, vision, skills, todo]
-#
 # If not set, defaults are:
 #   cli:           hermes-cli            (everything + cronjob management)
 #   telegram:      hermes-telegram       (terminal, file, web, vision, image, tts, browser, skills, todo, cronjob, messaging)
-#   discord:       hermes-discord        (same as telegram)
-#   whatsapp:      hermes-whatsapp       (same as telegram)
-#   slack:         hermes-slack          (same as telegram)
-#   signal:        hermes-signal         (same as telegram)
-#   qqbot:            hermes-qqbot            (same as telegram)
-#   teams:            hermes-teams            (same as telegram)
-#   google_chat:      hermes-google_chat      (same as telegram)
 #
 platform_toolsets:
   cli: [hermes-cli]
   telegram: [hermes-telegram]
-  discord: [hermes-discord]
-  whatsapp: [hermes-whatsapp]
-  slack: [hermes-slack]
-  signal: [hermes-signal]
-  qqbot: [hermes-qqbot]
-  # Plugin platforms (teams, google_chat, ...) need no row: they default to hermes-<platform> once loaded.
 
 # =============================================================================
 # Gateway Platform Settings
@@ -1464,26 +1447,6 @@ platform_toolsets:
 #         priority:
 #           - my_plugin_command
 #           - my-important-skill
-#   matrix:
-#     channel_overrides:
-#       "!exampleTeamRoom:example.org":
-#         # Successful explicit NO_REPLY/[SILENT] finals stay silent, even when addressed.
-#         # Omitted/null/false keeps the current reply policy; failures remain visible.
-#         # Restart the gateway after changing room overrides.
-#         allow_silence: true
-#   slack:
-#     extra:
-#       # Render live tool calls as Slack-native plan/task cards. This explicit
-#       # opt-in works even though Slack text tool_progress defaults to off.
-#       native_task_cards: false
-#       # Slack user IDs whose Web-API posts (user token, e.g. your own
-#       # dashboard/mobile front-end) count as human instead of being dropped
-#       # as app traffic. Narrower than allow_bots: all. Users only — never apps.
-#       api_human_users: ["U0AAAAAAA", "U0BBBBBBB"]
-#       # Suppress automatic link-preview cards without removing clickable links.
-#       # Omit either key to preserve Slack's default for that preview type.
-#       unfurl_links: false
-#       unfurl_media: false
 #   webhook:
 #     extra:
 #       # Route scripts default to a 30 second timeout. Scripts must live under
@@ -1492,18 +1455,6 @@ platform_toolsets:
 #       # Public HTTPS origin in front of this listener; MCP servers with
 #       # `events: true` POST event deliveries to <public_url>/webhooks/<route>.
 #       public_url: "https://hermes.example.com"
-#
-# Discord-specific settings (config.yaml top-level, not under platforms:):
-#
-# discord:
-#   require_mention: true            # Require @mention in server channels (default: true)
-#   bots_require_inline_mention: true  # Bot authors must type a literal @mention (default: true)
-#   auto_thread: true                # Auto-create thread on @mention (default: true)
-#   free_response_auto_thread: false # Free-response channels also auto-thread (default: reply inline)
-#   free_response_channels: ""       # Channel IDs where no mention is needed
-#   reactions: true                  # Show processing reactions (default: true)
-#   history_backfill: true           # Recover missed channel messages on mention (default: true)
-#   history_backfill_limit: 50       # Max messages to scan backwards (default: 50)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Available toolsets (use these names in platform_toolsets or the toolsets list)
@@ -1531,9 +1482,6 @@ platform_toolsets:
 #   hermes-cli       - All of the above except send_message
 #   hermes-telegram  - terminal, file, web, vision, image_gen, tts, browser,
 #                      skills, todo, cronjob, send_message
-#   hermes-discord   - Same as hermes-telegram
-#   hermes-whatsapp  - Same as hermes-telegram
-#   hermes-slack     - Same as hermes-telegram
 #
 # COMPOSITE:
 #   debugging    - terminal + web + file

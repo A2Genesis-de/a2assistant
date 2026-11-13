@@ -3,49 +3,26 @@ import { normalize } from '@/lib/text'
 const SOURCE_LABELS: Record<string, string> = {
   acp: 'ACP',
   api_server: 'API',
-  bluebubbles: 'iMessage',
   cli: 'CLI',
   codex: 'Codex',
   desktop: 'Desktop',
-  discord: 'Discord',
-  email: 'Email',
   gateway: 'Gateway',
   kanban: 'Kanban',
   local: 'Local',
-  matrix: 'Matrix',
-  mattermost: 'Mattermost',
   oneshot: 'One-shot',
-  photon: 'Photon',
-  qqbot: 'QQ',
-  signal: 'Signal',
-  slack: 'Slack',
-  sms: 'SMS',
   telegram: 'Telegram',
   tui: 'TUI',
-  webhook: 'Webhook',
-  weixin: 'WeChat',
-  whatsapp: 'WhatsApp',
-  yuanbao: 'Yuanbao'
+  webhook: 'Webhook'
 }
 
 const SOURCE_ALIASES: Record<string, string[]> = {
-  bluebubbles: ['apple messages', 'imessage'],
-  photon: ['imessage', 'messages'],
   cli: ['terminal'],
   desktop: ['app', 'gui'],
   local: ['machine'],
-  qqbot: ['qq'],
   telegram: ['tg'],
-  tui: ['terminal'],
-  weixin: ['wechat'],
-  whatsapp: ['wa']
+  tui: ['terminal']
 }
 
-// Sources that run on the local machine rather than an external messaging
-// platform. A handoff *from* one of these isn't a platform origin worth a badge.
-// Exported so the recents fetch can keep these in the main list while the
-// messaging fetch excludes them. `acp` runs as a local stdio process spawned
-// by an editor, and its rows must never land in the messaging slice either.
 export const LOCAL_SESSION_SOURCE_IDS = [
   'acp',
   'cli',
@@ -59,31 +36,7 @@ export const LOCAL_SESSION_SOURCE_IDS = [
 ]
 const LOCAL_SOURCE_IDS = new Set(LOCAL_SESSION_SOURCE_IDS)
 
-// External messaging platforms that each get their own self-managed sidebar
-// section (fetched separately from local recents). Mirrors the gateway platform
-// adapters; keep in sync with PLATFORM_ICONS in app/messaging/platform-icon.tsx.
-export const MESSAGING_SESSION_SOURCE_IDS = [
-  'telegram',
-  'discord',
-  'slack',
-  'mattermost',
-  'matrix',
-  'signal',
-  'whatsapp',
-  'bluebubbles',
-  'photon',
-  'homeassistant',
-  'email',
-  'sms',
-  'webhook',
-  'api_server',
-  'weixin',
-  'wecom',
-  'qqbot',
-  'yuanbao',
-  'dingtalk',
-  'feishu'
-]
+export const MESSAGING_SESSION_SOURCE_IDS = ['telegram', 'webhook', 'api_server']
 const MESSAGING_SOURCE_IDS = new Set(MESSAGING_SESSION_SOURCE_IDS)
 
 /** True when a source id is an external messaging platform (gets its own

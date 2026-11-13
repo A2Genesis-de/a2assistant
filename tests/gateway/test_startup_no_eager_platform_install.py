@@ -6,7 +6,7 @@ Historically ``PlatformEntry.check_fn`` doubled as the lazy-installer
 in ``_apply_env_overrides`` used to call ``check_fn`` for *every* registered
 plugin platform unconditionally, so a single ``load_gateway_config()`` —
 which the desktop/dashboard readiness probe (``GET /api/status``) awaits
-synchronously — pip-installed Discord, Telegram, Slack, Feishu and Dingtalk
+synchronously — pip-installed platform SDKs
 even with ``platforms: none``.  That blocked startup until every install
 finished and made the desktop app time out and boot-loop (stuck at 94%).
 
@@ -61,13 +61,13 @@ def test_unconfigured_platform_is_not_probed_for_install(isolated_registry):
     # without ever calling check_fn (which would lazy-install the SDK).
     check_fn = MagicMock(return_value=True)
     _register_fake_platform(
-        "discord", check_fn=check_fn, is_connected=lambda cfg: False
+        "fakechat", check_fn=check_fn, is_connected=lambda cfg: False
     )
 
     config = GatewayConfig()
     _apply_env_overrides(config)
 
     check_fn.assert_not_called()
-    assert not config.platforms.get(Platform.DISCORD, PlatformConfig()).enabled
+    assert not config.platforms.get(Platform("fakechat"), PlatformConfig()).enabled
 
 

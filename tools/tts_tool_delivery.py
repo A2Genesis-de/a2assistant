@@ -92,7 +92,6 @@ class AudioDeliveryProfile:
 
 
 _PLATFORM_AUDIO_DEFAULTS: dict[str, dict[str, Any]] = {
-    "discord": {"max_file_bytes": 10 * 1024 * 1024, "safety_ratio": 0.85},
     "telegram": {"max_file_bytes": 50 * 1024 * 1024, "safety_ratio": 0.85},
     "default": {"max_file_bytes": 10 * 1024 * 1024, "safety_ratio": 0.85}}
 

@@ -75,23 +75,12 @@ def _on(platform_id, **block):
 def no_platform_env(monkeypatch):
     """The token-free tables below assume none of these leak in from the host (a hosted container
     stamps GATEWAY_RELAY_URL, which disables direct platforms)."""
-    for name in ("GATEWAY_RELAY_URL", "GATEWAY_RELAY_ALLOW_DIRECT_PLATFORMS", "WHATSAPP_ENABLED", "WEBHOOK_ENABLED",
-                 "API_SERVER_ENABLED", "API_SERVER_KEY", "MSGRAPH_WEBHOOK_ENABLED", "MSGRAPH_WEBHOOK_CLIENT_STATE"):
+    for name in ("GATEWAY_RELAY_URL", "GATEWAY_RELAY_ALLOW_DIRECT_PLATFORMS", "WEBHOOK_ENABLED",
+                 "API_SERVER_ENABLED", "API_SERVER_KEY"):
         monkeypatch.delenv(name, raising=False)
 
 
 @pytest.mark.parametrize("platform_id, config, env, enabled, configured", [
-    # Dashboard QR onboarding writes both; ``hermes whatsapp`` writes only the env flag.
-    pytest.param("whatsapp", _on("whatsapp"), "WHATSAPP_ENABLED=true\n", True, True, id="whatsapp-paired"),
-    pytest.param("whatsapp", {}, "WHATSAPP_ENABLED=true\n", True, True, id="whatsapp-env-flag-only"),
-    # Declared but never paired: the gateway would not start the bridge.
-    pytest.param("whatsapp", _on("whatsapp"), "", True, False, id="whatsapp-unpaired"),
-    # The flag off wins over an enabled block (the explicit enable stops the plugin's re-enable pass).
-    pytest.param("whatsapp", _on("whatsapp", extra={"mode": "bot"}), "WHATSAPP_ENABLED=false\n",
-                 False, False, id="whatsapp-flag-off"),
-    # The dashboard's disable writes only ``enabled: false``; the leftover env flag must not re-enable it.
-    pytest.param("whatsapp", {"platforms": {"whatsapp": {"enabled": False}}}, "WHATSAPP_ENABLED=true\n",
-                 False, True, id="whatsapp-disabled-flag-on"),
     pytest.param("webhook", _on("webhook"), "", True, True, id="webhook"),
     # Settings without ``enabled``: the gateway leaves it off, so the card must not say enabled.
     pytest.param("webhook", {"platforms": {"webhook": {"extra": {"port": 8123}}}}, "", False, True, id="webhook-not-enabled"),
@@ -101,15 +90,6 @@ def no_platform_env(monkeypatch):
     pytest.param("api_server", _on("api_server", extra={"key": "k" * 24}), "", True, True, id="api-server-key"),
     pytest.param("api_server", {"platforms": {"api_server": {"enabled": False}}}, "API_SERVER_KEY=" + "k" * 32 + "\n",
                  False, True, id="api-server-disabled-env-key"),
-    # A top-level block is the gateway's too, explicit disable included.
-    pytest.param("whatsapp", {"whatsapp": {"enabled": False}}, "WHATSAPP_ENABLED=true\n", False, True,
-                 id="whatsapp-toplevel-disabled-flag-on"),
-    pytest.param("msgraph_webhook", _on("msgraph_webhook"), "", True, False, id="msgraph-no-client-state"),
-    pytest.param("msgraph_webhook", _on("msgraph_webhook", extra={"client_state": "state"}), "", True, True,
-                 id="msgraph-client-state"),
-    pytest.param("msgraph_webhook", {"platforms": {"msgraph_webhook": {"enabled": False}}},
-                 "MSGRAPH_WEBHOOK_ENABLED=true\nMSGRAPH_WEBHOOK_CLIENT_STATE=state\n", False, True,
-                 id="msgraph-disabled-env-on"),
     pytest.param("relay", _on("relay"), "", True, False, id="relay-no-url"),
 ])
 def test_scoped_token_free_platform_status_matches_the_gateway(
@@ -128,13 +108,12 @@ def test_scoped_token_free_platform_status_matches_the_gateway(
     assert (platform["enabled"], platform["configured"]) == (enabled, configured)
 
 
-_MSGRAPH = {"msgraph_webhook": {"enabled": True, "extra": {"client_state": "state"}}}
+_WEBHOOK = {"webhook": {"enabled": True}}
 
 
 @pytest.mark.parametrize("config, direct_enabled", [
-    pytest.param({"platforms": {**_MSGRAPH, "relay": {"enabled": True}}}, False, id="relay-owns-connections"),
-    pytest.param({"platforms": {**_MSGRAPH, "relay": {"enabled": False}}}, True, id="relay-opted-out"),
-    pytest.param({"platforms": _MSGRAPH, "relay": {"enabled": False}}, True, id="relay-opted-out-toplevel"),
+    pytest.param({"platforms": {**_WEBHOOK, "relay": {"enabled": False}}}, True, id="relay-opted-out"),
+    pytest.param({"platforms": _WEBHOOK, "relay": {"enabled": False}}, True, id="relay-opted-out-toplevel"),
 ])
 def test_scoped_status_follows_the_profiles_relay_block(
     client, isolated_profiles, no_platform_env, monkeypatch, config, direct_enabled
@@ -146,8 +125,8 @@ def test_scoped_status_follows_the_profiles_relay_block(
 
     platforms = client.get("/api/messaging/platforms", params={"profile": "worker_alpha"}).json()["platforms"]
 
-    msgraph = next(p for p in platforms if p["id"] == "msgraph_webhook")
-    assert (msgraph["enabled"], msgraph["configured"]) == (direct_enabled, True)
+    webhook = next(p for p in platforms if p["id"] == "webhook")
+    assert (webhook["enabled"], webhook["configured"]) == (direct_enabled, True)
 
 
 @pytest.mark.parametrize("source_enabled, token, counts", [

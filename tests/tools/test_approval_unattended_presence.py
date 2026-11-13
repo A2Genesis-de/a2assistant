@@ -28,7 +28,7 @@ def unattended_session(monkeypatch):
 
 
 @pytest.mark.parametrize("unattended_mode", ["deny", "approve"])
-@pytest.mark.parametrize("platform", ["webhook", "msgraph_webhook"])
+@pytest.mark.parametrize("platform", ["webhook"])
 def test_webhook_resolves_from_unattended_mode_even_with_turn_runner_notifier(
         unattended_session, monkeypatch, platform, unattended_mode):
     # The generic TurnRunner lane registers a notifier on every turn; these adapters still cannot answer it.

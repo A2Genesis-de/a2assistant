@@ -14,6 +14,11 @@ from gateway.platforms.helpers import MessageDeduplicator
 from gateway.run import GatewayRunner
 
 
+_CHAT_A = Platform._add_pseudo_member("chat_a")
+_CHAT_D = Platform._add_pseudo_member("chat_d")
+_CHAT_G = Platform._add_pseudo_member("chat_g")
+
+
 class StubAdapter(BasePlatformAdapter):
     """Adapter whose connect() result can be controlled."""
 
@@ -96,7 +101,7 @@ class TestStartupPlatformIsolation:
         runner.config = GatewayConfig(
             platforms={
                 Platform.TELEGRAM: PlatformConfig(enabled=True, token="test"),
-                Platform.FEISHU: PlatformConfig(enabled=True, token="test"),
+                _CHAT_G: PlatformConfig(enabled=True, token="test"),
             },
             sessions_dir=tmp_path,
         )
@@ -112,7 +117,7 @@ class TestStartupPlatformIsolation:
 
         adapters = {
             Platform.TELEGRAM: StubAdapter(platform=Platform.TELEGRAM),
-            Platform.FEISHU: StubAdapter(platform=Platform.FEISHU),
+            _CHAT_G: StubAdapter(platform=_CHAT_G),
         }
         runner._create_adapter = MagicMock(
             side_effect=lambda platform, _config: adapters[platform]
@@ -144,11 +149,9 @@ class TestStartupPlatformIsolation:
                                     assert await runner.start() is True
 
         assert Platform.TELEGRAM in runner._failed_platforms
-        assert Platform.FEISHU in runner.adapters
+        assert _CHAT_G in runner.adapters
         assert Platform.TELEGRAM not in runner.adapters
         assert runner._create_adapter.call_count == 2
-
-
 
 
 # --- Reconnect watcher ---
@@ -373,7 +376,7 @@ class TestPlatformReconnectWatcher:
         runner = _make_runner()
         runner._update_platform_runtime_status = MagicMock()
         runner._install_reconnected_adapter = AsyncMock()
-        platform = Platform("irc")  # bundled plugin platform (not a builtin adapter)
+        platform = _CHAT_A  # plugin platform (not a builtin adapter)
         monkeypatch.setattr(runner, "_adapter_may_heal", lambda p, c: True)
         runner._failed_platforms[platform] = {
             "config": PlatformConfig(enabled=True), "attempts": 0, "next_retry": 0,
@@ -394,7 +397,7 @@ class TestPlatformReconnectWatcher:
             runner._failed_platforms.get(platform, {})["next_retry"] = 0
             await runner._reconnect_failed_platform(platform, time.monotonic())
 
-        assert rearmed == ["irc"] * 3  # a permanently broken plugin stops being re-imported after the cap
+        assert rearmed == ["chat_a"] * 3  # a permanently broken plugin stops being re-imported after the cap
         assert on_loop and not any(on_loop)  # neither the re-arm nor the plugin load blocks the event loop
         runner._install_reconnected_adapter.assert_awaited_once_with(platform, adapter)
 
@@ -403,7 +406,6 @@ class TestPlatformReconnectWatcher:
 
 class TestRuntimeDisconnectQueuing:
     """Test that _handle_adapter_fatal_error queues retryable disconnections."""
-
 
 
     @pytest.mark.asyncio
@@ -568,8 +570,6 @@ class TestPauseResume:
     """Test the per-platform pause/resume helpers and slash command."""
 
 
-
-
     def test_resume_clears_paused_and_resets_attempts(self):
         runner = _make_runner()
         runner._failed_platforms[Platform.TELEGRAM] = {
@@ -598,8 +598,8 @@ class TestPlatformSlashCommand:
     @pytest.mark.asyncio
     async def test_list_shows_connected_and_paused(self):
         runner = _make_runner()
-        runner.adapters[Platform.DISCORD] = StubAdapter(platform=Platform.DISCORD)
-        runner._failed_platforms[Platform.WHATSAPP] = {
+        runner.adapters[_CHAT_A] = StubAdapter(platform=_CHAT_A)
+        runner._failed_platforms[_CHAT_D] = {
             "config": PlatformConfig(enabled=True, token="t"),
             "attempts": 10,
             "next_retry": float("inf"),
@@ -607,22 +607,22 @@ class TestPlatformSlashCommand:
             "pause_reason": "not paired",
         }
         out = await runner._handle_platform_command(self._make_event("/platform list"))
-        assert "discord" in out
-        assert "whatsapp" in out
+        assert "chat_a" in out
+        assert "chat_d" in out
         assert "not paired" in out
 
     @pytest.mark.asyncio
     async def test_pause_command_pauses_queued_platform(self):
         runner = _make_runner()
-        runner._failed_platforms[Platform.WHATSAPP] = {
+        runner._failed_platforms[_CHAT_D] = {
             "config": PlatformConfig(enabled=True, token="t"),
             "attempts": 2,
             "next_retry": time.monotonic() + 30,
         }
         await runner._handle_platform_command(
-            self._make_event("/platform pause whatsapp")
+            self._make_event("/platform pause chat_d")
         )
-        assert runner._failed_platforms[Platform.WHATSAPP]["paused"] is True
+        assert runner._failed_platforms[_CHAT_D]["paused"] is True
 
 
 # --- Supervised task wrapper (_spawn_supervised) ---
@@ -722,7 +722,7 @@ class TestFatalHandoffCancellationProof:
         runner.adapters[Platform.TELEGRAM] = adapter
         # A healthy peer keeps self.adapters non-empty, so the existing
         # "no platforms remain" shutdown branches do not fire.
-        runner.adapters[Platform.FEISHU] = StubAdapter(platform=Platform.FEISHU)
+        runner.adapters[_CHAT_G] = StubAdapter(platform=_CHAT_G)
 
         await runner._handle_adapter_fatal_error(adapter)
 
@@ -733,11 +733,7 @@ class TestFatalHandoffCancellationProof:
 # ── _ensure_reconnect_watcher_running ──────────────────────────────────
 
 
-
-
 # ── _handle_adapter_fatal_error calls _ensure_reconnect_watcher ────────
-
-
 
 
 class TestReconnectWatcherRaceGuard:
@@ -821,77 +817,7 @@ class TestConnectAdapterDetachOnTimeout:
         await asyncio.sleep(0)
 
 
-
-
 # --- Voice input callback wiring ---
-
-
-class TestVoiceInputCallbackWiring:
-    """Startup and reconnect must wire _voice_input_callback on Discord."""
-
-    @staticmethod
-    def _make_discord_voice_adapter():
-        """A minimal Discord adapter stub with voice attributes."""
-        adapter = MagicMock()
-        adapter._voice_input_callback = None
-        adapter._voice_text_channels = {}
-        adapter._voice_sources = {}
-        adapter.connect = AsyncMock(return_value=True)
-        adapter.disconnect = AsyncMock()
-        return adapter
-
-    def _make_runner_with_discord(self):
-        runner = _make_runner()
-        runner.config = GatewayConfig(
-            platforms={Platform.DISCORD: PlatformConfig(enabled=True, token="test")}
-        )
-        runner._update_runtime_status = MagicMock()
-        runner._update_platform_runtime_status = MagicMock()
-        runner._sync_voice_mode_state_to_adapter = MagicMock()
-        runner._send_update_notification = AsyncMock(return_value=True)
-        runner._send_restart_notification = AsyncMock()
-        runner._suspend_stuck_loop_sessions = MagicMock(return_value=0)
-        runner.hooks = MagicMock()
-        runner.hooks.loaded_hooks = []
-        runner.hooks.emit = AsyncMock()
-        return runner
-
-    @pytest.mark.asyncio
-    async def test_startup_wires_voice_input_callback(self, tmp_path, monkeypatch):
-        """Cold-start connect must wire _voice_input_callback on Discord adapter."""
-        monkeypatch.setenv("HERMES_STARTUP_WARMUP_TIMEOUT", "0")
-        runner = self._make_runner_with_discord()
-        runner._await_startup_boot_sends = AsyncMock()  # see TestStartupPlatformIsolation
-        adapter = self._make_discord_voice_adapter()
-        runner.config.sessions_dir = tmp_path
-
-        def fake_create_task(coro):
-            coro.close()
-            return MagicMock()
-
-        with patch.object(runner, "_create_adapter", return_value=adapter):
-            with patch("gateway.status.publish_runtime_status"):
-                with patch("hermes_cli.plugins.discover_plugins"):
-                    with patch("hermes_cli.config.load_config", return_value={}):
-                        with patch("agent.shell_hooks.register_from_config"):
-                            with patch(
-                                "tools.process_registry.process_registry.recover_from_checkpoint",
-                                return_value=0,
-                            ):
-                                with patch(
-                                    "gateway.channel_directory.build_channel_directory",
-                                    new=AsyncMock(return_value={"platforms": {}}),
-                                ):
-                                    with patch(
-                                        "gateway.run.asyncio.create_task",
-                                        side_effect=fake_create_task,
-                                    ):
-                                        assert await runner.start() is True
-
-        assert adapter._voice_input_callback is not None, (
-            "startup must wire _voice_input_callback"
-        )
-
 
 
 class TestRequeueHealsDeadReconnectWatcher:

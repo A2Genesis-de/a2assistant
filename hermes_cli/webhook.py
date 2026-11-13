@@ -232,7 +232,7 @@ def _cmd_subscribe(args):
         if route["deliver"] == "log":
             print(
                 "Error: --deliver-only requires --deliver to be a real target "
-                "(telegram, discord, slack, github_comment, etc.) — not 'log'.")
+                "(telegram, github_comment, etc.) — not 'log'.")
             return 1
         route["deliver_only"] = True
     if getattr(args, "mirror_to_session", False):

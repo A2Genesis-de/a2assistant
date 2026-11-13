@@ -152,7 +152,7 @@ hermes webhook subscribe stripe-payments \
 hermes webhook subscribe ci-builds \
   --events "pipeline" \
   --prompt "Build {object_attributes.status} on {project.name} branch {object_attributes.ref}\nCommit: {commit.message}" \
-  --deliver discord \
+  --deliver telegram \
   --deliver-chat-id "1234567890"
 ```
 
@@ -184,7 +184,7 @@ hermes webhook subscribe antenna-matches \
 
 The POST returns `200 OK` on successful delivery, `502` on target failure — so upstream services can retry intelligently. HMAC auth, rate limits, and idempotency still apply.
 
-Requires `--deliver` to be a real target (telegram, discord, slack, github_comment, etc.) — `--deliver log` is rejected because log-only direct delivery is pointless.
+Requires `--deliver` to be a real target (telegram, github_comment, etc.) — `--deliver log` is rejected because log-only direct delivery is pointless.
 
 ### Let the user reply to a delivery
 
@@ -202,7 +202,7 @@ Each event runs in its own session, so by default the agent in the target chat h
 1. `a2assistant webhook subscribe` writes to `~/.hermes/webhook_subscriptions.json`
 2. The webhook adapter hot-reloads this file on each incoming request (mtime-gated, negligible overhead)
 3. When a POST arrives matching a route, the adapter formats the prompt and triggers an agent run
-4. The agent's response is delivered to the configured target (Telegram, Discord, GitHub comment, etc.)
+4. The agent's response is delivered to the configured target (Telegram, GitHub comment, etc.)
 
 ## Troubleshooting
 

@@ -12,8 +12,12 @@ from unittest.mock import MagicMock
 import pytest
 
 import gateway.run as gateway_run
+from gateway.config import Platform
 from gateway.platforms.event import MessageEvent, MessageType
 from tests.gateway.restart_test_helpers import make_restart_runner, make_restart_source
+
+
+_CHAT_A = Platform._add_pseudo_member("chat_a")
 
 
 def _make_restart_event(update_id: int | None = 100) -> MessageEvent:
@@ -100,7 +104,6 @@ async def test_event_without_update_id_bypasses_dedup(tmp_path, monkeypatch):
 @pytest.mark.asyncio
 async def test_different_platform_bypasses_dedup(tmp_path, monkeypatch):
     """Marker from Telegram doesn't block a /restart from another platform."""
-    from gateway.config import Platform
     from gateway.session import SessionSource
 
     monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
@@ -117,16 +120,16 @@ async def test_different_platform_bypasses_dedup(tmp_path, monkeypatch):
     runner.request_restart = MagicMock(return_value=True)
 
     # /restart from Discord — not a redelivery candidate
-    discord_source = SessionSource(
-        platform=Platform.DISCORD,
-        chat_id="discord-chan",
+    other_source = SessionSource(
+        platform=_CHAT_A,
+        chat_id="other-chan",
         chat_type="dm",
         user_id="u1",
     )
     event = MessageEvent(
         text="/restart",
         message_type=MessageType.TEXT,
-        source=discord_source,
+        source=other_source,
         message_id="m1",
         platform_update_id=12345,
     )

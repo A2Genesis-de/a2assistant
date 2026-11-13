@@ -4,7 +4,7 @@ import ast
 from functools import cache
 from typing import Callable, List, Optional
 
-from hermes_cli.platforms import PLATFORMS
+from hermes_cli.platforms import PLATFORMS, RETIRED_PLATFORMS
 from hermes_cli.toolset_scope import toolset_allowed_for_platform
 
 _NO_TOOLS = "the agent will have no tools on this platform. Run `hermes tools` to reconfigure."
@@ -126,6 +126,8 @@ def validate_platform_toolsets(
 
     valid_count = 0
     for platform, raw in platform_toolsets.items():
+        if platform in RETIRED_PLATFORMS:
+            continue
         default = _platform_default_toolset(platform)
         default_valid = _platform_default_is_valid(platform, default, is_valid_toolset, is_allowed_for_platform)
         platform_valid_count = 0

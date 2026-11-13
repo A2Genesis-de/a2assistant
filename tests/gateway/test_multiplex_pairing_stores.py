@@ -101,27 +101,27 @@ def test_routed_pairing_grant_mirror_stays_in_profile_scope(tmp_path, monkeypatc
     root = tmp_path / ".hermes"
     prof = root / "profiles" / "b"
     prof.mkdir(parents=True)
-    (root / ".env").write_text("DISCORD_ALLOWED_USERS=default-admin\n")
-    (prof / ".env").write_text("DISCORD_ALLOWED_USERS=b-admin\n")
+    (root / ".env").write_text("TELEGRAM_ALLOWED_USERS=default-admin\n")
+    (prof / ".env").write_text("TELEGRAM_ALLOWED_USERS=b-admin\n")
     monkeypatch.setenv("HERMES_HOME", str(root))
-    monkeypatch.setenv("DISCORD_ALLOWED_USERS", "default-admin")
+    monkeypatch.setenv("TELEGRAM_ALLOWED_USERS", "default-admin")
 
     was_active = ss.is_multiplex_active()
     ss.set_multiplex_active(True)
     try:
         with _profile_runtime_scope(prof):
-            _sync_allowlist_add("discord", "111")
-            assert ss.get_secret("DISCORD_ALLOWED_USERS") == "b-admin,111"
+            _sync_allowlist_add("telegram", "111")
+            assert ss.get_secret("TELEGRAM_ALLOWED_USERS") == "b-admin,111"
     finally:
         ss.set_multiplex_active(was_active)
 
-    assert (prof / ".env").read_text().strip() == "DISCORD_ALLOWED_USERS=b-admin,111"
-    assert (root / ".env").read_text().strip() == "DISCORD_ALLOWED_USERS=default-admin"
-    assert os.environ["DISCORD_ALLOWED_USERS"] == "default-admin"
+    assert (prof / ".env").read_text().strip() == "TELEGRAM_ALLOWED_USERS=b-admin,111"
+    assert (root / ".env").read_text().strip() == "TELEGRAM_ALLOWED_USERS=default-admin"
+    assert os.environ["TELEGRAM_ALLOWED_USERS"] == "default-admin"
 
     # Single-profile: no multiplex -> save still publishes to the process env.
-    save_env_value("DISCORD_ALLOWED_USERS", "default-admin,222")
-    assert os.environ["DISCORD_ALLOWED_USERS"] == "default-admin,222"
+    save_env_value("TELEGRAM_ALLOWED_USERS", "default-admin,222")
+    assert os.environ["TELEGRAM_ALLOWED_USERS"] == "default-admin,222"
 
 
 class _ExplodingScope(dict):
@@ -144,26 +144,26 @@ def test_allowlist_env_read_never_borrows_on_scope_failure(tmp_path, monkeypatch
     from gateway import pairing
 
     monkeypatch.setenv("HERMES_HOME", str(tmp_path / ".hermes"))
-    monkeypatch.setenv("DISCORD_ALLOWED_USERS", "default-admin")
+    monkeypatch.setenv("TELEGRAM_ALLOWED_USERS", "default-admin")
 
     was_active = ss.is_multiplex_active()
     ss.set_multiplex_active(True)
     try:
         # Deliberate: unscoped under multiplex is the launch profile's own env.
-        assert pairing._read_allowlist_env("DISCORD_ALLOWED_USERS") == "default-admin"
+        assert pairing._read_allowlist_env("TELEGRAM_ALLOWED_USERS") == "default-admin"
 
         # Defect arm: a bound scope that errors must propagate, not borrow.
         token = ss.set_secret_scope(_ExplodingScope())
         try:
             with pytest.raises(RuntimeError, match="resolver boom"):
-                pairing._read_allowlist_env("DISCORD_ALLOWED_USERS")
+                pairing._read_allowlist_env("TELEGRAM_ALLOWED_USERS")
         finally:
             ss.reset_secret_scope(token)
     finally:
         ss.set_multiplex_active(was_active)
 
     # Control: unscoped single-profile reads still see the process env.
-    assert pairing._read_allowlist_env("DISCORD_ALLOWED_USERS") == "default-admin"
+    assert pairing._read_allowlist_env("TELEGRAM_ALLOWED_USERS") == "default-admin"
 
 
 def test_allowlist_sync_does_not_persist_foreign_allowlist(tmp_path, monkeypatch):
@@ -181,14 +181,14 @@ def test_allowlist_sync_does_not_persist_foreign_allowlist(tmp_path, monkeypatch
     root = tmp_path / ".hermes"
     root.mkdir(parents=True)
     monkeypatch.setenv("HERMES_HOME", str(root))
-    monkeypatch.setenv("DISCORD_ALLOWED_USERS", "default-admin")
+    monkeypatch.setenv("TELEGRAM_ALLOWED_USERS", "default-admin")
 
     was_active = ss.is_multiplex_active()
     ss.set_multiplex_active(True)
     token = ss.set_secret_scope(_ExplodingScope())
     try:
         with pytest.raises(RuntimeError, match="resolver boom"):
-            pairing._sync_allowlist_add("discord", "111")
+            pairing._sync_allowlist_add("telegram", "111")
     finally:
         ss.reset_secret_scope(token)
         ss.set_multiplex_active(was_active)
@@ -196,7 +196,7 @@ def test_allowlist_sync_does_not_persist_foreign_allowlist(tmp_path, monkeypatch
     # The foreign allowlist was neither persisted nor merged into the process env.
     env_file = root / ".env"
     assert "111" not in (env_file.read_text() if env_file.exists() else "")
-    assert os.environ["DISCORD_ALLOWED_USERS"] == "default-admin"
+    assert os.environ["TELEGRAM_ALLOWED_USERS"] == "default-admin"
 
 
 def test_allowlist_scoped_miss_configures_nothing(tmp_path, monkeypatch):
@@ -215,16 +215,16 @@ def test_allowlist_scoped_miss_configures_nothing(tmp_path, monkeypatch):
     prof.mkdir(parents=True)
     (prof / ".env").write_text("OTHER_KEY=x\n")
     monkeypatch.setenv("HERMES_HOME", str(root))
-    monkeypatch.setenv("DISCORD_ALLOWED_USERS", "default-admin")
+    monkeypatch.setenv("TELEGRAM_ALLOWED_USERS", "default-admin")
 
     was_active = ss.is_multiplex_active()
     ss.set_multiplex_active(True)
     try:
         with _profile_runtime_scope(prof):
-            assert pairing._read_allowlist_env("DISCORD_ALLOWED_USERS") == ""
-            pairing._sync_allowlist_add("discord", "111")
+            assert pairing._read_allowlist_env("TELEGRAM_ALLOWED_USERS") == ""
+            pairing._sync_allowlist_add("telegram", "111")
     finally:
         ss.set_multiplex_active(was_active)
 
     assert (prof / ".env").read_text().strip() == "OTHER_KEY=x"
-    assert os.environ["DISCORD_ALLOWED_USERS"] == "default-admin"
+    assert os.environ["TELEGRAM_ALLOWED_USERS"] == "default-admin"

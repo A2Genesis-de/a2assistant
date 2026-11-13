@@ -22,21 +22,21 @@ def _platforms(home):
 @pytest.mark.asyncio
 async def test_rescan_drops_fatal_for_removed_credential_keeps_live(tmp_path, monkeypatch):
     runner, home = _runner(tmp_path, monkeypatch)
-    alpha = _mkprofile(home, "alpha", "DISCORD_BOT_TOKEN=alpha-token\n")
+    alpha = _mkprofile(home, "alpha", "TELEGRAM_BOT_TOKEN=alpha-token\n")
     with patch("hermes_cli.profiles.get_active_profile_name", return_value="default"):
         await runner._start_secondary_profile_adapters()
-        assert Platform.DISCORD in runner._profile_adapters["alpha"]
-        publish_runtime_status(platform="alpha:discord", platform_state="connected")
-        publish_runtime_status(platform="alpha:telegram", platform_state="fatal",
+        assert Platform.TELEGRAM in runner._profile_adapters["alpha"]
+        publish_runtime_status(platform="alpha:telegram", platform_state="connected")
+        publish_runtime_status(platform="alpha:webhook", platform_state="fatal",
                                error_code="duplicate_credential", error_message="dup")
         publish_runtime_status(platform="telegram", platform_state="connected")
-        assert _platforms(home)["alpha:telegram"]["state"] == "fatal"
+        assert _platforms(home)["alpha:webhook"]["state"] == "fatal"
 
-        # User deletes the copied TELEGRAM_BOT_TOKEN line: the .env change triggers a rescan.
-        (alpha / ".env").write_text("DISCORD_BOT_TOKEN=alpha-token\n# edited\n", encoding="utf-8")
+        # User deletes the copied webhook credential line: the .env change triggers a rescan.
+        (alpha / ".env").write_text("TELEGRAM_BOT_TOKEN=alpha-token\n# edited\n", encoding="utf-8")
         assert (await runner.reconcile_served_profiles())["rescanned"] == ["alpha"]
 
         platforms = _platforms(home)
-        assert "alpha:telegram" not in platforms
-        assert platforms["alpha:discord"]["state"] == "connected"
+        assert "alpha:webhook" not in platforms
+        assert platforms["alpha:telegram"]["state"] == "connected"
         assert platforms["telegram"]["state"] == "connected"

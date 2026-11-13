@@ -17,6 +17,9 @@ from tests.gateway.restart_test_helpers import (
 )
 
 
+_CHAT_B = Platform._add_pseudo_member("chat_b")
+
+
 # ── restart marker helpers ───────────────────────────────────────────────
 
 
@@ -210,15 +213,15 @@ async def test_relay_fronted_logical_home_gets_startup_notification(tmp_path, mo
 
     runner, _native = make_restart_runner()
     relay = MagicMock()
-    relay.fronts_platform.side_effect = lambda platform: platform == Platform.SLACK
+    relay.fronts_platform.side_effect = lambda platform: platform == _CHAT_B
     relay.send_for_platform = AsyncMock(return_value=SendResult(success=True, message_id="home"))
     runner.adapters = {Platform.RELAY: relay}
     runner.config.platforms = {
         Platform.RELAY: PlatformConfig(enabled=True),
-        Platform.SLACK: PlatformConfig(
+        _CHAT_B: PlatformConfig(
             enabled=False,
             home_channel=HomeChannel(
-                platform=Platform.SLACK,
+                platform=_CHAT_B,
                 chat_id="D123",
                 name="Owner DM",
                 user_id="U123",
@@ -229,10 +232,10 @@ async def test_relay_fronted_logical_home_gets_startup_notification(tmp_path, mo
 
     delivered = await runner._send_home_channel_startup_notifications()
 
-    assert delivered == {("slack", "D123", None)}
+    assert delivered == {("chat_b", "D123", None)}
     relay.send_for_platform.assert_awaited_once()
     assert relay.send_for_platform.await_args.args[:3] == (
-        Platform.SLACK,
+        _CHAT_B,
         "D123",
         "♻️ Gateway online — A2Assistant is back and ready.",
     )
@@ -250,7 +253,7 @@ async def test_relay_restart_notification_uses_logical_platform_and_owner(tmp_pa
     notify_path.write_text(
         json.dumps(
             {
-                "platform": "slack",
+                "platform": "chat_b",
                 "chat_id": "D123",
                 "chat_type": "dm",
                 "user_id": "U123",
@@ -262,21 +265,21 @@ async def test_relay_restart_notification_uses_logical_platform_and_owner(tmp_pa
 
     runner, _native = make_restart_runner()
     relay = MagicMock()
-    relay.fronts_platform.side_effect = lambda platform: platform == Platform.SLACK
+    relay.fronts_platform.side_effect = lambda platform: platform == _CHAT_B
     relay.send_for_platform = AsyncMock(
         return_value=SendResult(success=True, message_id="restart")
     )
     runner.adapters = {Platform.RELAY: relay}
     runner.config.platforms = {
         Platform.RELAY: PlatformConfig(enabled=True),
-        Platform.SLACK: PlatformConfig(enabled=False),
+        _CHAT_B: PlatformConfig(enabled=False),
     }
 
     delivered_target = await runner._send_restart_notification()
 
-    assert delivered_target == ("slack", "D123", None)
+    assert delivered_target == ("chat_b", "D123", None)
     relay.send_for_platform.assert_awaited_once()
-    assert relay.send_for_platform.await_args.args[0:2] == (Platform.SLACK, "D123")
+    assert relay.send_for_platform.await_args.args[0:2] == (_CHAT_B, "D123")
     metadata = relay.send_for_platform.await_args.kwargs["metadata"]
     assert metadata["user_id"] == "U123"
     assert metadata["scope_id"] == "T123"

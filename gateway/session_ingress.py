@@ -251,9 +251,7 @@ def pause_notice(authority, ref, reason):
     if reason == 'unknown_execution':
         # GW-10: the way out is in this chat. /discard acknowledges the lost turn (never replayed)
         # through the same fenced resolve_unknown as Desktop/TUI, and the saved messages then run.
-        # Slack registers no native /discard (its slash cap): the umbrella `/hermes discard` reaches it.
-        slack = getattr(getattr(live.source, 'platform', None), 'value', None) == 'slack'
-        discard = '/hermes discard' if slack else '/discard'
+        discard = '/discard'
         return ('⏸️ This conversation is paused: a previous turn did not finish when A2Assistant restarted, '
                 f'and only you know whether to send it again. Your message is saved. Send {discard} to drop '
                 'the lost turn and continue (it is not re-run), or /reset to start a fresh conversation.')

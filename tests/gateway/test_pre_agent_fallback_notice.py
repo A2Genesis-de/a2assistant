@@ -46,7 +46,7 @@ def _runner_with_real_runtime_resolution():
     runner._refresh_fallback_model.return_value = None
     runner._consume_pending_native_image_paths.return_value = []
     runner._consume_pending_turn_sidecar_notes.return_value = []
-    for lane in ("_is_telegram_topic_lane", "_is_discord_auto_thread_lane", "_is_relay_discord_channel_lane"):
+    for lane in ("_is_telegram_topic_lane",):
         getattr(runner, lane).return_value = False
     # Production resolution: no /model override, no channel override.
     runner._resolve_session_key_or_none.return_value = "test-session-key"

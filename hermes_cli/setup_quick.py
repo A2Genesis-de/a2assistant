@@ -11,7 +11,7 @@ from pathlib import Path
 logger = logging.getLogger("hermes_cli.setup")
 
 # (env-var name substring, platform label, emoji) — order matters: first match wins.
-_MESSAGING_PLATFORMS = (("TELEGRAM", "Telegram", "📱"), ("DISCORD", "Discord", "💬"), ("SLACK", "Slack", "💼"))
+_MESSAGING_PLATFORMS = (("TELEGRAM", "Telegram", "📱"),)
 
 
 
@@ -157,7 +157,7 @@ def _run_first_time_quick_setup(config: dict, hermes_home, is_existing: bool, im
 
     # Step 4: Offer messaging gateway setup
     print()
-    gateway_choice = prompt_choice("Connect a messaging platform? (Telegram, Discord, etc.)", [
+    gateway_choice = prompt_choice("Connect a messaging platform? (Telegram)", [
         "Set up messaging now (recommended)", "Skip — set up later with 'hermes setup gateway'",
     ], 0)
     if gateway_choice == 0:
@@ -171,7 +171,7 @@ def _run_first_time_quick_setup(config: dict, hermes_home, is_existing: bool, im
     print_success("Setup complete! You're ready to go.")
     _info(None, "  Configure all settings:    hermes setup")
     if gateway_choice != 0:
-        print_info("  Connect Telegram/Discord:  hermes setup gateway")
+        print_info("  Connect Telegram:  hermes setup gateway")
     _print_macos_fda_tip()
     print()
     _print_setup_summary(config, hermes_home)
@@ -374,7 +374,7 @@ def _blank_slate_walkthrough(config: dict, hermes_home):
 
     # Optional messaging gateway
     print()
-    if prompt_yes_no("Connect a messaging platform (Telegram, Discord, …)?", default=False):
+    if prompt_yes_no("Connect a messaging platform (Telegram)?", default=False):
         setup_gateway(config)
     save_config(config)
     _blank_slate_done(config, hermes_home, "  Enable more tools:   hermes tools")

@@ -31,7 +31,7 @@ def _make_local_skill(tmp_path: Path, name: str, body: str) -> None:
 
 
 def _rewrite(event_text: str, tmp_path, monkeypatch, plugin_home):
-    """Drive ``_hm_skill_slash_rewrite`` for a Discord event; returns its reply."""
+    """Drive ``_hm_skill_slash_rewrite`` for a messaging event; returns its reply."""
     from hermes_cli import plugins as plugins_mod
 
     monkeypatch.setenv("HERMES_HOME", str(plugin_home))
@@ -50,7 +50,7 @@ def _rewrite(event_text: str, tmp_path, monkeypatch, plugin_home):
                 _hm_bundle_slash_rewrite=lambda *a, **k: False,
             )
             runner._hm_skill_slash_rewrite = GatewayInboundMixin._hm_skill_slash_rewrite.__get__(runner)
-            source = SessionSource(platform=Platform.DISCORD, chat_id="c1")
+            source = SessionSource(platform=Platform.TELEGRAM, chat_id="c1")
             event = SimpleNamespace(
                 text=event_text,
                 get_command_args=lambda: event_text.split(maxsplit=1)[1] if len(event_text.split(maxsplit=1)) > 1 else "",

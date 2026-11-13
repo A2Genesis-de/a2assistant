@@ -138,9 +138,9 @@ async def test_shutdown_notice_reaches_every_served_profiles_home_channel(monkey
     r.config = _home_config(Platform.TELEGRAM, "8776018003")
     r._profile_configs = {
         "sec": _home_config(Platform.TELEGRAM, "8776018003"),
-        "quiet": _home_config(Platform.DISCORD, "-quiet", notify=False),
+        "quiet": _home_config(Platform.TELEGRAM, "-quiet", notify=False),
     }
-    r._profile_adapters = {"sec": {Platform.TELEGRAM: _Adapter()}, "quiet": {Platform.DISCORD: _Adapter()}}
+    r._profile_adapters = {"sec": {Platform.TELEGRAM: _Adapter()}, "quiet": {Platform.TELEGRAM: _Adapter()}}
     r._served_profile_homes = {}
     r._snapshot_running_agents = list
 
@@ -148,4 +148,4 @@ async def test_shutdown_notice_reaches_every_served_profiles_home_channel(monkey
 
     assert r.adapters[Platform.TELEGRAM].sent == ["8776018003"]
     assert r._profile_adapters["sec"][Platform.TELEGRAM].sent == ["8776018003"], "own bot, own conversation"
-    assert r._profile_adapters["quiet"][Platform.DISCORD].sent == [], "served profile's opt-out is its own"
+    assert r._profile_adapters["quiet"][Platform.TELEGRAM].sent == [], "served profile's opt-out is its own"

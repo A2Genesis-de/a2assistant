@@ -80,7 +80,7 @@ export const zhHantCommandCenter = {
       newChat: { title: '新工作階段', detail: '開始新的工作階段' },
       settings: { title: '設定', detail: '設定 A2Assistant 桌面端' },
       capabilities: { title: '技能與工具', detail: '啟用技能、工具集和提供方' },
-      messaging: { title: '訊息平台', detail: '設定 Telegram、Slack、Discord 等' },
+      messaging: { title: '訊息平台', detail: '設定 Telegram' },
       artifacts: { title: '成品', detail: '瀏覽產生的輸出' }
     },
     sectionEntries: {
@@ -267,68 +267,7 @@ export const zhHantCommandCenter = {
         label: '允許的 Telegram 使用者 ID',
         help: '建議設定。來自 @userinfobot 的數字 ID（每格一個）。不設定則任何人都能私訊您的機器人。'
       },
-      TELEGRAM_PROXY: { label: '代理 URL', help: '僅在 Telegram 被封鎖的網路中需要。' },
-      DISCORD_BOT_TOKEN: {
-        label: 'Bot Token',
-        help: '在 Discord 開發者入口網站建立應用程式，新增機器人，然後貼上其 Token。'
-      },
-      DISCORD_ALLOWED_USERS: { label: '允許的 Discord 使用者 ID', help: '建議設定。Discord 使用者 ID（每格一個）。' },
-      DISCORD_REPLY_TO_MODE: { label: '回覆方式', help: 'first、all 或 off。' },
-      DISCORD_ALLOW_ALL_USERS: {
-        label: '允許所有 Discord 使用者',
-        help: '僅供開發使用。為 true 時，任何人都可以私訊機器人，不需要允許清單。'
-      },
-      DISCORD_HOME_CHANNEL: {
-        label: '主頻道 ID',
-        help: '機器人主動傳送訊息的頻道（cron 輸出、提醒等）。'
-      },
-      DISCORD_HOME_CHANNEL_NAME: {
-        label: '主頻道名稱',
-        help: '記錄和狀態輸出中顯示的主頻道名稱。'
-      },
-      BLUEBUBBLES_ALLOW_ALL_USERS: { label: '允許所有 iMessage 使用者', help: '為 true 時略過 BlueBubbles 允許清單。' },
-      MATTERMOST_ALLOW_ALL_USERS: { label: '允許所有 Mattermost 使用者' },
-      MATTERMOST_HOME_CHANNEL: { label: '主頻道' },
-      QQ_ALLOW_ALL_USERS: { label: '允許所有 QQ 使用者' },
-      QQBOT_HOME_CHANNEL: { label: 'QQ 主頻道', help: 'cron 傳遞的預設頻道或群組。' },
-      QQBOT_HOME_CHANNEL_NAME: { label: 'QQ 主頻道名稱' },
-      SLACK_BOT_TOKEN: {
-        label: 'Slack bot Token',
-        help: '安裝 Slack 應用程式後，在 OAuth & Permissions 中找到 bot Token。',
-        placeholder: '貼上 Slack bot Token'
-      },
-      SLACK_APP_TOKEN: {
-        label: 'Slack app Token',
-        help: 'Socket Mode 需要 app 層級 Token。',
-        placeholder: '貼上 Slack app Token'
-      },
-      SLACK_ALLOWED_USERS: { label: '允許的 Slack 使用者 ID', help: '建議設定。Slack 使用者 ID（每格一個）。' },
-      MATTERMOST_URL: { label: '伺服器 URL', placeholder: 'https://mattermost.example.com' },
-      MATTERMOST_TOKEN: { label: 'Bot Token' },
-      MATTERMOST_ALLOWED_USERS: { label: '允許的使用者 ID', help: '建議設定。Mattermost 使用者 ID（每格一個）。' },
-      MATRIX_HOMESERVER: { label: 'Homeserver URL', placeholder: 'https://matrix.org' },
-      MATRIX_ACCESS_TOKEN: { label: '存取 Token' },
-      MATRIX_USER_ID: { label: 'Bot 使用者 ID', placeholder: '@hermes:example.org' },
-      MATRIX_ALLOWED_USERS: {
-        label: '允許的 Matrix 使用者 ID',
-        help: '建議設定。@user:server 格式的使用者 ID（每格一個）。'
-      },
-      SIGNAL_HTTP_URL: {
-        label: 'Signal 橋接 URL',
-        placeholder: 'http://127.0.0.1:8080',
-        help: '執行中的 signal-cli REST 橋接的 URL。'
-      },
-      SIGNAL_ACCOUNT: { label: '電話號碼', help: '在 signal-cli 橋接中註冊的號碼。' },
-      SIGNAL_ALLOWED_USERS: { label: '允許的 Signal 使用者', help: '建議設定。Signal 識別碼（每格一個）。' },
-      WHATSAPP_ENABLED: {
-        label: '啟用 WhatsApp 橋接',
-        help: '由下方切換開關自動設定。除非確知需要，否則請勿變更。'
-      },
-      WHATSAPP_MODE: { label: '橋接模式' },
-      WHATSAPP_ALLOWED_USERS: {
-        label: '允許的 WhatsApp 使用者',
-        help: '建議設定。電話號碼或 WhatsApp ID（每格一個）。'
-      }
+      TELEGRAM_PROXY: { label: '代理 URL', help: '僅在 Telegram 被封鎖的網路中需要。' }
     },
     platformIntro: {}
   },
@@ -484,10 +423,7 @@ export const zhHantCommandCenter = {
     },
     deliveryLabels: {
       local: '此桌面',
-      telegram: 'Telegram',
-      discord: 'Discord',
-      slack: 'Slack',
-      email: '電子郵件'
+      telegram: 'Telegram'
     },
     scheduleLabels: {
       daily: '每天',

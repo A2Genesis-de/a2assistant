@@ -107,7 +107,7 @@ describe('collectArtifactsForSession', () => {
         }),
         role: 'tool',
         timestamp: 1_781_774_002,
-        tool_name: 'discord_read_messages'
+        tool_name: 'web_extract'
       },
       {
         content: 'External documentation example: MEDIA:/tmp/passive-example.png',

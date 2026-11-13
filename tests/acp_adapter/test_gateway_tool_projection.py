@@ -60,8 +60,7 @@ def test_gateway_publishes_tool_arguments_and_result_for_live_viewers():
             return True
 
     class Ctx:
-        _voice_ack_guild = [None]
-        _native_slack_task_cards = False
+        pass
 
     runner = TurnRunner.__new__(TurnRunner)
     runner._ctx = Ctx()

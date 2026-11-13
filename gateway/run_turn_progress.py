@@ -212,10 +212,6 @@ class GatewayTurnProgressMixin:
             if thinking_text:
                 ctx.progress_queue.put(t("gateway.progress.thinking_prefix", text=thinking_text))
             return
-        # Native task cards consume the ID-bearing tool_start/tool_complete callbacks instead;
-        # name-correlated text events would duplicate cards and mispair concurrent same-tool calls.
-        if ctx._native_slack_task_cards and event_type in {"tool.started", "tool.completed"}:
-            return
         # tool_progress off → only _thinking passes (above). Only tool.started renders. clarify:
         # send_clarify IS the user-facing rendering (a bubble would duplicate it, and verbose mode
         # would dump the raw args JSON right under the prompt). Post-`stop`: N parallel tool calls
@@ -380,218 +376,6 @@ class GatewayTurnProgressMixin:
             sc.on_tool_progress(msg)
         else:
             ctx.progress_queue.put(msg)
-
-    # ── Slack-native task cards (progress-queue drain) ──────────────────────────────────────
-
-    @dataclasses.dataclass
-    class _TaskCardState:
-        """Task-card rail state for ``_send_native_task_card_progress``."""
-        adapter: Any
-        tasks: dict[str, dict[str, str]] = dataclasses.field(default_factory=dict)
-        task_order: list[str] = dataclasses.field(default_factory=list)
-        fallback_msg_id: Optional[str] = None
-        native_failed: bool = False
-        # TERMINAL for the turn, distinct from native_failed: no later publication
-        # in this turn may deliver task text through the native lane OR the text
-        # fallback. Two causes, both properties of the destination rather than of
-        # one attempt: the connector's egress guard refused the chat, or the chat
-        # cannot host a card (no thread anchor). Declared rather than set
-        # dynamically so the state is visible where it lives.
-        publication_suppressed: bool = False
-        anonymous_seq: int = 0
-
-        @staticmethod
-        def _compact(value: Any, limit: int = 120) -> str:
-            text = re.sub(r"\s+", " ", str(value or "")).strip()
-            return text if len(text) <= limit else text[: limit - 3].rstrip() + "..."
-
-        def visible_tasks(self) -> list[dict[str, str]]:
-            return [self.tasks[task_id] for task_id in self.task_order[-8:]]
-
-        def fallback_text(self) -> str:
-            labels = {"in_progress": t("gateway.progress.task_status_running"),
-                      "complete": t("gateway.progress.task_status_complete"),
-                      "error": t("gateway.progress.task_status_error")}
-            lines = [t("gateway.progress.task_line", title=task["title"], status=labels.get(task["status"], task["status"]))
-                     for task in self.visible_tasks()]
-            return t("gateway.progress.task_card_title") + "\n" + "\n".join(lines)
-
-        def _upsert(self, call_id: str, title: str) -> dict[str, str]:
-            if call_id not in self.tasks:
-                self.task_order.append(call_id)
-            self.tasks[call_id] = {"id": call_id, "title": self._compact(title), "status": "in_progress"}
-            return self.tasks[call_id]
-
-        def apply_event(self, raw: Any) -> bool:
-            event_type = raw.get("type") if isinstance(raw, dict) else None
-            if event_type not in {"tool.started", "tool.completed"}:
-                return False
-            call_id = str(raw.get("tool_call_id") or "")
-            if not call_id:
-                self.anonymous_seq += 1
-                call_id = f"anonymous_{self.anonymous_seq}"
-            tool_name = str(raw.get("tool_name") or "tool")
-            if event_type == "tool.started":
-                preview = self._compact(raw.get("preview"), 64)
-                self._upsert(call_id, f"{tool_name} - {preview}" if preview else tool_name)
-                return True
-            # Completion-only events are rare but valid on some runtimes; keep their real ID instead
-            # of guessing a same-name pending call.
-            task = self.tasks.get(call_id) or self._upsert(call_id, tool_name)
-            task["status"] = "error" if raw.get("is_error") else "complete"
-            return True
-
-    async def _task_card_send_or_edit_fallback(self, st) -> None:
-        ctx = self._ctx
-        text = st.fallback_text()
-        from gateway.relay.egress import declined_send
-
-        if st.publication_suppressed:
-            return
-        if st.fallback_msg_id:
-            result = await st.adapter.edit_message(
-                chat_id=ctx.source.chat_id, message_id=st.fallback_msg_id, content=text, metadata=ctx._progress_metadata,
-            )
-            if getattr(result, "success", False):
-                return
-            # P5(b): R5-4 made a declined native CARD terminal but left this
-            # editable-text fallback: a declined edit fell through to
-            # _send_progress_text and re-sent the same task text to the refused
-            # chat. The decline must set the terminal state here too.
-            if declined_send(result):
-                logger.warning(
-                    "Task-card fallback edit DECLINED by the connector's egress "
-                    "guard; suppressing progress delivery for the rest of this "
-                    "turn (the destination is not approved)"
-                )
-                st.publication_suppressed = True
-                return
-        result = await self._send_progress_text(st, text)
-        if getattr(result, "success", False) and getattr(result, "message_id", None):
-            st.fallback_msg_id = str(result.message_id)
-
-    async def _task_card_publish(self, st) -> None:
-        ctx = self._ctx
-        if not st.tasks:
-            return
-        if st.publication_suppressed:
-            # Publication was suppressed earlier in the turn (egress refusal or a chat
-            # that cannot host a card); every later publication would re-deliver the
-            # same task text there.
-            return
-        # Resolve eligibility in the owning adapter BEFORE transport I/O: a first
-        # timeout/disconnect must not turn an un-cardable chat into text fallback.
-        # Optional for older adapters; only an explicit False refuses publication.
-        destination_supported = getattr(st.adapter, "native_task_card_destination_supported", None)
-        if callable(destination_supported) and destination_supported(
-            ctx.source.chat_id, reply_to=ctx._progress_reply_to, metadata=ctx._progress_metadata,
-        ) is False:
-            self._task_card_uncardable_destination(st)
-            if st.publication_suppressed:
-                return
-        if not st.native_failed:
-            result = await st.adapter.send_native_task_card_progress(
-                chat_id=ctx.source.chat_id, tasks=st.visible_tasks(), title=t("gateway.progress.task_card_title"),
-                reply_to=ctx._progress_reply_to, metadata=ctx._progress_metadata, fallback_text=st.fallback_text(),
-            )
-            if getattr(result, "success", False):
-                return
-            # P5(b): an AUTHORIZATION decline is not a broken card lane. The
-            # fallback below sends the same task text to the same chat, which
-            # turns a refused card into delivered plain text. Stop the lane
-            # without re-delivering; the refusal is already logged.
-            from gateway.relay.egress import declined_send
-
-            if declined_send(result):
-                # TERMINAL, and stored SEPARATELY from native_failed. Reusing
-                # native_failed suppressed exactly ONE update: the next progress
-                # event skipped this branch (the lane is already "failed") and
-                # went straight to the text fallback. A refusal does not expire
-                # after one tick.
-                st.publication_suppressed = True
-                st.native_failed = True
-                logger.warning(
-                    "Slack native task-card progress DECLINED by the connector's "
-                    "egress guard — suppressing the text fallback for the rest "
-                    "of this turn (the destination is not approved)"
-                )
-                return
-            st.native_failed = True
-            from gateway.run_turn_runner import _CARD_DESTINATION_REFUSALS
-            if getattr(result, "error", None) in _CARD_DESTINATION_REFUSALS:
-                self._task_card_uncardable_destination(st, getattr(result, "error", "unknown error"))
-                if st.publication_suppressed:
-                    return
-            else:
-                logger.warning(
-                    "Slack native task-card progress failed; falling back "
-                    "to an editable text update: %s", getattr(result, "error", "unknown error"),
-                )
-        # Once the native rail fails, every later lifecycle event edits the same fallback message.
-        await self._task_card_send_or_edit_fallback(st)
-
-    def _task_card_uncardable_destination(self, st, reason: str = "no thread anchor") -> None:
-        """The chat cannot host a card (flat DM: no thread anchor) — a property of the destination,
-        not a transient outage. The text fallback exists to keep a WORKING card lane live through a
-        transient failure, not to invent text bubbles the operator never asked for: with Slack's tier
-        default (``tool_progress: off``) the lane goes silent for the turn. An operator who WROTE
-        ``new``/``all`` asked for text progress, so the editable fallback carries it instead."""
-        if self._ctx.tool_progress_enabled:
-            st.native_failed = True
-            logger.info(
-                "Slack native task cards are unsupported for this destination (%s); "
-                "tool progress continues as an editable text update", reason,
-            )
-            return
-        st.publication_suppressed = True
-        logger.info(
-            "Slack native task cards are unsupported for this destination (%s); "
-            "tool progress stays off for this turn", reason,
-        )
-
-    def _task_card_drain(self, st) -> bool:
-        changed = False
-        try:
-            while True:
-                changed = st.apply_event(self._ctx.progress_queue.get_nowait()) or changed
-        except queue.Empty:
-            pass
-        except Exception:
-            logger.debug("Slack native progress queue drain failed", exc_info=True)
-        return changed
-
-    async def _send_native_task_card_progress(self, adapter) -> None:
-        """Drain progress into native cards; supported destinations retain editable fallback.
-        Unsupported destinations and egress refusals suppress publication, never finalization.
-
-        See #29483.
-        """
-        ctx = self._ctx
-        st = self._TaskCardState(adapter)
-        try:
-            while ctx._run_still_current():
-                try:
-                    raw = ctx.progress_queue.get_nowait()
-                except queue.Empty:
-                    await asyncio.sleep(0.1)
-                    continue
-                if not self._agent_interrupted() and st.apply_event(raw):
-                    await self._task_card_publish(st)
-        except asyncio.CancelledError:
-            if self._task_card_drain(st) and ctx._run_still_current() and not self._agent_interrupted():
-                await self._task_card_publish(st)
-        finally:
-            if hasattr(adapter, "stop_native_task_card_progress"):
-                # Best-effort on the turn-cleanup path: an escaping transport exception would skip
-                # final-delivery logic (cleanup awaits catch only CancelledError).
-                try:
-                    await adapter.stop_native_task_card_progress(
-                        ctx.source.chat_id, reply_to=ctx._progress_reply_to, metadata=ctx._progress_metadata,
-                    )
-                except asyncio.CancelledError:
-                    raise
-                except Exception:
-                    logger.debug("task-card stop failed during turn cleanup", exc_info=True)
 
     # ── editable progress bubbles (progress-queue drain) ────────────────────────────────────
 
@@ -820,9 +604,6 @@ class GatewayTurnProgressMixin:
         adapter = self._runner._delivery_adapter_for(ctx.source) if ctx.progress_queue else None
         if not adapter:
             return
-        if ctx._native_slack_task_cards and hasattr(adapter, "send_native_task_card_progress"):
-            await self._send_native_task_card_progress(adapter)
-            return
         # Skip tool progress for platforms that can't edit messages (e.g. iMessage/BlueBubbles):
         # each update would be a separate bubble. getattr, not attribute access: duck-typed
         # adapters (test fakes, minimal plugins) may lack edit_message — treated as "can't edit".
@@ -875,68 +656,13 @@ class GatewayTurnProgressMixin:
 
     # ── ID-bearing lifecycle callbacks (agent thread) ───────────────────────────────────────
 
-    def voice_ack_callback(self, call_id, tool_name, args):
-        """tool_start_callback: speak a one-time ack in the voice channel."""
-        ctx = self._ctx
-        if ctx._voice_ack_fired[0] or ctx._voice_ack_guild[0] is None or not ctx._run_still_current():
-            return
-        ctx._voice_ack_fired[0] = True
-        # The bot whose call the guild was resolved on (#139345), not the default profile's.
-        adapter = self._runner._delivery_adapter_for(ctx.source)
-        if adapter is None or not hasattr(adapter, "play_ack_in_voice"):
-            return
-        try:
-            self._schedule(
-                adapter.play_ack_in_voice(ctx._voice_ack_guild[0]), "voice ack scheduling error", loop=ctx._voice_ack_loop,
-            )
-        except Exception as err:
-            logger.debug("voice ack schedule failed: %s", err)
-
-    # Slack-native task cards ride agent.tool_start_callback / tool_complete_callback so start and
-    # completion correlate by the REAL tool-call id; name-correlated progress_callback text events
-    # would duplicate cards and mispair concurrent calls.
-
-    def _native_card_gate(self) -> bool:
-        ctx = self._ctx
-        return bool(ctx.progress_queue) and ctx._run_still_current() and not self._agent_interrupted()
-
-    # ── Slack-native task cards: ID-bearing lifecycle callbacks (#29483) ── These ride
-    # agent.tool_start_callback / agent.tool_complete_callback so start/completion events correlate by the
-    # REAL tool-call id — the name-correlated text events in progress_callback would duplicate cards and
-    # mispair concurrent calls to the same tool.
-    def native_tool_start_callback(self, call_id, tool_name, args):
-        """Queue an ID-correlated native progress start from the agent thread."""
-        if not self._native_card_gate():
-            return
-        from agent.display import build_tool_preview
-        name = str(tool_name or "tool")
-        self._ctx.progress_queue.put({
-            "type": "tool.started", "tool_call_id": str(call_id or ""), "tool_name": name,
-            "preview": build_tool_preview(name, args or {}, max_len=64) or "",
-        })
-
-    def native_tool_complete_callback(self, call_id, tool_name, args, result):
-        """Queue the matching native completion using the real tool-call ID."""
-        if not self._native_card_gate():
-            return
-        from agent.display import _detect_tool_failure
-        name = str(tool_name or "tool")
-        is_error, _ = _detect_tool_failure(name, result)
-        self._ctx.progress_queue.put({
-            "type": "tool.completed", "tool_call_id": str(call_id or ""), "tool_name": name, "is_error": bool(is_error),
-        })
-
     def combined_tool_start_callback(self, call_id, tool_name, args):
-        """Compose the voice ack + native task-card start consumers."""
+        """Publish a tool start to the execution, API and local-viewer consumers."""
         if local_viewer_turn(self):
             from gateway import local_viewer_events
             local_viewer_events.note_tool_start(self, call_id, tool_name, args)
         self._publish_execution("tool.start", _tool_lifecycle_payload(call_id, tool_name, args))
         self._publish_api_tool("tool.start", call_id, tool_name, args)
-        if self._ctx._voice_ack_guild[0] is not None:
-            self.voice_ack_callback(call_id, tool_name, args)
-        if self._ctx._native_slack_task_cards:
-            self.native_tool_start_callback(call_id, tool_name, args)
 
     def combined_tool_complete_callback(self, call_id, tool_name, args, result):
         from agent.display import _detect_tool_failure
@@ -957,8 +683,6 @@ class GatewayTurnProgressMixin:
         if local_viewer_turn(self):
             from gateway import local_viewer_events
             local_viewer_events.publish_control_if_changed(self)
-        if self._ctx._native_slack_task_cards:
-            self.native_tool_complete_callback(call_id, tool_name, args, result)
 
     # ── hook / status bridges (agent thread → gateway loop) ────────────────────────────────
 
@@ -1045,20 +769,12 @@ class GatewayTurnProgressMixin:
                 agent._on_session_title = republish
                 return
             runner = self._runner
-            source = runner._recover_discord_auto_thread_source(ctx.source, ctx.session_key)
-            # Both lanes spend a rate-limited platform call per title, so they use the model's title
-            # only (TitleCallback); renaming twice burns Discord's 2-per-10-min budget on a throwaway.
-            # Relay Discord predicate is shape-only: whether the connector auto-threaded our reply is
-            # only knowable AFTER delivery, so register eagerly and let the rename lane look up the
-            # cache at fire time — gating registration on the cache read meant it never registered.
-            if runner._is_telegram_topic_lane(source):
-                lane = "_schedule_telegram_topic_title_rename"
-            elif runner._is_discord_auto_thread_lane(source) or runner._is_relay_discord_channel_lane(source):
-                lane = "_schedule_discord_semantic_thread_rename"
-            else:
+            source = ctx.source
+            # The rename spends a rate-limited platform call per title, so it uses the model's title only.
+            if not runner._is_telegram_topic_lane(source):
                 return
             agent._on_session_title = lambda title, title_source: (
-                title_source == "llm" and getattr(runner, lane)(source, session_id, title)
+                title_source == "llm" and runner._schedule_telegram_topic_title_rename(source, session_id, title)
             )
         except Exception:
             logger.debug("Failed to attach session title callback", exc_info=True)

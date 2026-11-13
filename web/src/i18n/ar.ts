@@ -233,9 +233,6 @@ export const ar = defineLocale({
     delivery: {
       local: "محلي",
       telegram: "Telegram",
-      discord: "Discord",
-      slack: "Slack",
-      email: "البريد الإلكتروني",
     },
   },
 
@@ -368,7 +365,7 @@ export const ar = defineLocale({
       tts: "تحويل النص إلى كلام",
       stt: "تحويل الكلام إلى نص",
       logging: "التسجيل",
-      discord: "Discord",
+      messaging: "Messaging",
       auxiliary: "إضافي",
     },
   },

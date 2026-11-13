@@ -54,7 +54,7 @@ Full enumeration: `TOOLSETS` dict in `toolsets.py` (`_HERMES_CORE_TOOLS` is the 
 | `kanban` | Multi-agent work-queue tools (gated to workers) |
 | `debugging` | Extra introspection tools (off by default) |
 | `safe` | Minimal low-risk toolset for locked-down sessions |
-| `discord`, `discord_admin`, `feishu_doc`, `feishu_drive` | Service integrations (gated on their credentials). `homeassistant` (`ha_*` tools), `spotify` (`spotify_*` tools) and `yuanbao` (`yb_*` tools) are not built in: they come from the `homeassistant` / `spotify` / `yuanbao` catalog plugins (`a2assistant plugins install <name>`) |
+| Catalog toolsets | `homeassistant` (`ha_*` tools), `spotify` (`spotify_*` tools) and `yuanbao` (`yb_*` tools) are not built in: they come from the `homeassistant` / `spotify` / `yuanbao` catalog plugins (`a2assistant plugins install <name>`) |
 
 Camofox is no longer built in: `a2assistant plugins install camofox` adds it as the `camofox` toolset with its own browser tools. Existing Camofox setups are migrated automatically on `a2assistant update`.
 

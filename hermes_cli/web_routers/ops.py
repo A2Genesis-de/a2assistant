@@ -209,7 +209,7 @@ async def create_webhook(body: WebhookCreate, profile: Optional[str] = None):
         )
     if body.deliver_only and body.deliver == "log":
         raise HTTPException(
-            status_code=400, detail="Direct delivery requires a real target (telegram, discord, …), not 'log'.",
+            status_code=400, detail="Direct delivery requires a real target (telegram, …), not 'log'.",
         )
 
     def _snapshot():

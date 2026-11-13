@@ -6,7 +6,6 @@ import contextlib
 import logging
 import math
 import os
-import re
 from pathlib import Path
 from dataclasses import asdict, dataclass, field, fields, is_dataclass
 from typing import Dict, List, Optional, Any, Callable
@@ -219,25 +218,8 @@ class Platform(Enum):
     demand by ``_missing_`` and cached so ``Platform("irc") is Platform("irc")`` holds."""
     LOCAL = "local"
     TELEGRAM = "telegram"
-    DISCORD = "discord"
-    WHATSAPP = "whatsapp"
-    WHATSAPP_CLOUD = "whatsapp_cloud"
-    SLACK = "slack"
-    SIGNAL = "signal"
-    MATTERMOST = "mattermost"
-    MATRIX = "matrix"
-    EMAIL = "email"
-    SMS = "sms"
-    DINGTALK = "dingtalk"
     API_SERVER = "api_server"
     WEBHOOK = "webhook"
-    MSGRAPH_WEBHOOK = "msgraph_webhook"
-    FEISHU = "feishu"
-    WECOM = "wecom"
-    WECOM_CALLBACK = "wecom_callback"
-    WEIXIN = "weixin"
-    BLUEBUBBLES = "bluebubbles"
-    QQBOT = "qqbot"
     RELAY = "relay"  # generic relay adapter fronted by the connector (EXPERIMENTAL)
 
     @classmethod
@@ -303,12 +285,7 @@ _BUILTIN_PLATFORM_VALUES = frozenset(m.value for m in Platform.__members__.value
 # Platforms that bind a host TCP port. In a multiplexer only the default profile binds: a SECONDARY
 # profile's port-binder is built in shared-listener mode and served at /p/<profile>/<path> on the
 # default's listener (gateway/platforms/shared_ingress.py); api_server/webhook are mirrored there.
-PORT_BINDING_PLATFORM_VALUES = frozenset({
-    "webhook", "api_server", "msgraph_webhook", "feishu", "wecom_callback",
-    "bluebubbles", "sms", "whatsapp_cloud", "line", "teams",
-})
-# Platforms that only bind in one connection mode (Feishu's default websocket mode is outbound).
-PORT_BINDING_CONDITIONAL_MODES: dict[str, str] = {"feishu": "webhook"}
+PORT_BINDING_PLATFORM_VALUES = frozenset({"webhook", "api_server"})
 # Port-binders whose /p/<profile>/ surface is a MIRROR served by the default's own adapter; a secondary
 # never gets an instance of these (api_server: /p/<profile>/v1/..., webhook: profile-bound routes).
 SHARED_LISTENER_MIRROR_PLATFORMS = frozenset({"api_server", "webhook"})
@@ -321,21 +298,7 @@ SHARED_LISTENER_MIRROR_PATHS: dict[str, str] = {"api_server": "/v1", "webhook": 
 
 def platform_binds_port(platform_value: str, extra: Optional[dict] = None) -> bool:
     """True when *platform_value* actually binds a port for *extra* config."""
-    if platform_value not in PORT_BINDING_PLATFORM_VALUES:
-        return False
-    expected_mode = PORT_BINDING_CONDITIONAL_MODES.get(platform_value)
-    return expected_mode is None or str((extra or {}).get("connection_mode", "websocket")).strip().lower() == expected_mode
-
-_DISCORD_CHANNEL_LINK_RE = re.compile(
-    r"https://(?:(?:ptb|canary)\.)?discord(?:app)?\.com/channels/(?:[0-9]+|@me)/([0-9]+)/?")
-
-
-def discord_channel_id_from_link(value: str) -> Optional[str]:
-    """Channel id from a pasted Discord channel link (``https://discord.com/channels/<guild>/<channel>``),
-    else None. Message links (a third path segment) and anything that is not a channel link are
-    left alone so callers keep their own error path."""
-    match = _DISCORD_CHANNEL_LINK_RE.fullmatch(value)
-    return match.group(1) if match else None
+    return platform_value in PORT_BINDING_PLATFORM_VALUES
 
 
 @dataclass
@@ -349,12 +312,6 @@ class HomeChannel:
     # Authenticated logical-target provenance (relay egress re-attaches; connector stays the authz boundary).
     user_id: Optional[str] = None
     scope_id: Optional[str] = None
-
-    def __post_init__(self) -> None:
-        # Copy Link is next to Copy Channel ID in Discord. Normalize at the
-        # shared home boundary so env, YAML and plugin-seeded homes agree.
-        if self.platform == Platform.DISCORD and isinstance(self.chat_id, str):
-            self.chat_id = discord_channel_id_from_link(self.chat_id.strip()) or self.chat_id
 
     def to_dict(self) -> dict[str, Any]:
         optional = {k: v for k in ("thread_id", "user_id", "scope_id") if (v := getattr(self, k))}
@@ -400,11 +357,6 @@ class ChannelOverride:
 # api_key-only) and must never be skipped for a missing token. See #64674.
 PLATFORM_TOKEN_ENV_NAMES: dict[Platform, str] = {
     Platform.TELEGRAM: "TELEGRAM_BOT_TOKEN",
-    Platform.DISCORD: "DISCORD_BOT_TOKEN",
-    Platform.SLACK: "SLACK_BOT_TOKEN",
-    Platform.MATTERMOST: "MATTERMOST_TOKEN",
-    Platform.MATRIX: "MATRIX_ACCESS_TOKEN",
-    Platform.WEIXIN: "WEIXIN_TOKEN",
 }
 
 
@@ -564,7 +516,6 @@ def _has_usable_api_server_key(key: object) -> bool:
 _PLATFORM_CONNECTED_CHECKERS: dict[Platform, Callable[[PlatformConfig], bool]] = {
     Platform.API_SERVER: lambda cfg: _has_usable_api_server_key(cfg.extra.get("key") if cfg else None),
     Platform.WEBHOOK: lambda cfg: True,
-    Platform.MSGRAPH_WEBHOOK: lambda cfg: bool(str(cfg.extra.get("client_state") or "").strip()),
     # Relay dials OUT: "connected" once an endpoint URL is configured. EXPERIMENTAL.
     Platform.RELAY: lambda cfg: bool(cfg.extra.get("relay_url") or cfg.extra.get("url")),
 }
@@ -815,12 +766,9 @@ class GatewayConfig:
         return None
 
     def get_unauthorized_dm_behavior(self, platform: Optional[Platform] = None) -> str:
-        """Effective unauthorized-DM behavior. Email is inbox-shaped so it defaults to ``"ignore"``
-        unless its own ``unauthorized_dm_behavior`` opts in (a global default does not)."""
+        """Effective unauthorized-DM behavior for a platform."""
         choice = self._extra_choice(platform, "unauthorized_dm_behavior", UNAUTHORIZED_DM_BEHAVIORS, self.unauthorized_dm_behavior)
-        if choice is not None:
-            return choice
-        return "ignore" if platform == Platform.EMAIL else self.unauthorized_dm_behavior
+        return self.unauthorized_dm_behavior if choice is None else choice
 
     def get_notice_delivery(self, platform: Optional[Platform] = None) -> str:
         """Effective notice-delivery mode ("public"/"private") for a platform."""
@@ -838,14 +786,6 @@ def load_gateway_config() -> GatewayConfig:
         config_loader.load_yaml_layer(_home, gw_data)
     except Exception as e:
         logger.warning(
-            # DingTalk settings → env vars: migrated to the dingtalk plugin's apply_yaml_config_fn hook
-            # (plugins/platforms/dingtalk/adapter.py). #41112 / #3823.
-            # Mattermost config bridge moved into plugins/platforms/mattermost/
-            # adapter.py::_apply_yaml_config — see #25443 (apply_yaml_config_fn).
-            # Matrix settings → env vars: migrated to the matrix plugin's apply_yaml_config_fn hook
-            # (plugins/platforms/matrix/adapter.py). #41112 / #3823.
-            # Feishu settings → env vars: migrated to the feishu plugin's apply_yaml_config_fn hook
-            # (plugins/platforms/feishu/adapter.py). #41112 / #3823.
             "Failed to process config.yaml — falling back to .env / gateway.json values. "
             "Check %s for syntax errors. Error: %s",
             _home / "config.yaml", e,

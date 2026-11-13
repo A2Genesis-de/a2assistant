@@ -39,10 +39,7 @@ def platforms_lines() -> list[str]:
         config = load_gateway_config()
         out += [f"  {t('cli.gateway_status.platform_config_header')}", "  " + "-" * 55]
         platform_status = {
-            Platform.TELEGRAM: ("Telegram", "TELEGRAM_BOT_TOKEN"),
-            Platform.DISCORD: ("Discord", "DISCORD_BOT_TOKEN"),
-            Platform.SLACK: ("Slack", "SLACK_BOT_TOKEN"),
-            Platform.WHATSAPP: ("WhatsApp", "WHATSAPP_ENABLED")}
+            Platform.TELEGRAM: ("Telegram", "TELEGRAM_BOT_TOKEN")}
         for platform, (name, env_var) in platform_status.items():
             pconfig = config.platforms.get(platform)
             if pconfig and pconfig.enabled:
@@ -57,5 +54,5 @@ def platforms_lines() -> list[str]:
     except Exception as e:  # health: allow BLE001 -- moved unchanged from CLIInfoMixin._show_gateway_status (main): any config load failure prints the setup steps
         return [*out, f"  {t('cli.gateway_status.load_error', error=str(e))}", "",
                 f"  {t('cli.gateway_status.to_configure')}", f"    {t('cli.gateway_status.step_env_vars')}",
-                "       TELEGRAM_BOT_TOKEN=your_token", "       DISCORD_BOT_TOKEN=your_token",
+                "       TELEGRAM_BOT_TOKEN=your_token",
                 f"    {t('cli.gateway_status.step_config', path=config_file)}", ""]

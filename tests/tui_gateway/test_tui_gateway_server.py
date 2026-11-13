@@ -2894,24 +2894,6 @@ def test_history_to_messages_renders_multimodal_content():
     ]
 
 
-def test_history_to_messages_strips_legacy_discord_triggering_note():
-    # Rows written before the gateway persisted the authored text carry the model-facing
-    # routing note in user ``content``; this projection heals them for TUI/web resume
-    # (the desktop hydration strip is the same rule). Reply pointer and assistant rows are kept.
-    from gateway.run_inbound import discord_triggering_note
-
-    note = discord_triggering_note("123")
-    history = [
-        {"role": "user", "content": f"{note}\n\n[Replying to: hi]\nwhat is up"},
-        {"role": "assistant", "content": f"echo: {note}"},
-    ]
-
-    assert server._history_to_messages(history) == [
-        {"role": "user", "text": "[Replying to: hi]\nwhat is up"},
-        {"role": "assistant", "text": f"echo: {note}"},
-    ]
-
-
 def test_history_to_messages_hides_gateway_system_markers():
     # Model-switch / personality notices are persisted as role=user [System: …]
     # rows so strict providers accept them mid-history, but they are model-facing
@@ -15942,11 +15924,11 @@ def test_handoff_request_uses_session_profile_home(monkeypatch, tmp_path):
         seen_homes.append(home)
         config = GatewayConfig()
         if home == profile_home:
-            config.platforms[Platform.DISCORD] = PlatformConfig(
+            config.platforms[Platform.TELEGRAM] = PlatformConfig(
                 enabled=True,
                 home_channel=HomeChannel(
-                    platform=Platform.DISCORD,
-                    chat_id="discord-home",
+                    platform=Platform.TELEGRAM,
+                    chat_id="telegram-home",
                     name="A2Assistant / #chat-coding",
                 ),
             )
@@ -15957,7 +15939,7 @@ def test_handoff_request_uses_session_profile_home(monkeypatch, tmp_path):
             return {"id": _key}
 
         def request_handoff(self, _key, platform):
-            return platform == "discord"
+            return platform == "telegram"
 
     @contextlib.contextmanager
     def profile_db(_session):
@@ -15978,7 +15960,7 @@ def test_handoff_request_uses_session_profile_home(monkeypatch, tmp_path):
                 "method": "handoff.request",
                 "params": {
                     "session_id": "handoff-profile",
-                    "platform": "discord",
+                    "platform": "telegram",
                 },
             }
         )

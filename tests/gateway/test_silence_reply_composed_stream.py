@@ -79,7 +79,7 @@ class EditingAdapter(ProgressCaptureAdapter):
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("platform", [Platform.SLACK, Platform.WHATSAPP])
+@pytest.mark.parametrize("platform", [Platform.TELEGRAM])
 @pytest.mark.parametrize("transform", [False, True])
 async def test_streamed_reply_then_marker_shows_the_reply_once(monkeypatch, tmp_path, real_loop, platform, transform):
     raw = "Answer PRIVATE_VALUE" if transform else ANSWER

@@ -35,7 +35,7 @@ def _runner(command):
 async def test_unavailable_skill_scan_skips_known_commands_and_runs_off_loop():
     import gateway.run as gateway_run
 
-    source = SessionSource(platform=Platform.DISCORD, chat_id="c1")
+    source = SessionSource(platform=Platform.TELEGRAM, chat_id="c1")
     event = SimpleNamespace(text="/x", get_command_args=lambda: "")
     scanned = []
     loop_was_free = []

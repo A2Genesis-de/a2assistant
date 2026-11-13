@@ -352,9 +352,6 @@ export interface Translations {
     delivery: {
       local: string;
       telegram: string;
-      discord: string;
-      slack: string;
-      email: string;
       needsHomeChannel?: string;
       noneConfigured?: string;
     };
@@ -536,7 +533,7 @@ export interface Translations {
       tts: string;
       stt: string;
       logging: string;
-      discord: string;
+      messaging: string;
       auxiliary: string;
     };
   };

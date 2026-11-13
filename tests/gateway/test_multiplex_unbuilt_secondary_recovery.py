@@ -24,7 +24,7 @@ class _PluginPlatformRecoveryAdapter(_SecondaryRecoveryAdapter):
     """A secondary adapter on a platform that is NOT a builtin: the one shape whose creation can
     return None and still heal (a bundled plugin whose deferred load died transiently)."""
 
-    platform = Platform("irc")
+    platform = Platform.TELEGRAM
 
 
 def _install_plugin_platform_context(monkeypatch, runner, adapter):
@@ -35,7 +35,7 @@ def _install_plugin_platform_context(monkeypatch, runner, adapter):
         lambda: GatewayConfig(
             multiplex_profiles=True,
             platforms={
-                Platform("irc"): PlatformConfig(enabled=True, token="plugin-token")
+                Platform.TELEGRAM: PlatformConfig(enabled=True, token="plugin-token")
             },
         ),
     )
@@ -58,9 +58,9 @@ def _install_none_buildable_context(monkeypatch, runner, platform):
     """Secondary restart for a platform whose creation returns None and cannot heal without a
     config change (a builtin whose probe fails).
 
-    The platform must be a real builtin (``_BUILTIN_ADAPTERS``: API_SERVER, WEBHOOK,
-    MSGRAPH_WEBHOOK): a bundled plugin platform such as SIGNAL is exactly the case that now
-    classifies as healable once its registration is gone.
+    The platform must be a real builtin (``_BUILTIN_ADAPTERS``: API_SERVER, WEBHOOK): a bundled
+    plugin platform such as TELEGRAM is exactly the case that classifies as healable once its
+    registration is gone.
     """
     _install_secondary_reconnect_context(monkeypatch, runner, _SecondaryRecoveryAdapter())
     monkeypatch.setattr(
@@ -84,7 +84,7 @@ class TestSecondaryAdapterUnavailableRecovery:
         runner = _secondary_recovery_runner()
         replacement = _PluginPlatformRecoveryAdapter()
         _install_plugin_platform_context(monkeypatch, runner, replacement)
-        _dispose_platform_registration(monkeypatch, "irc")
+        _dispose_platform_registration(monkeypatch, "telegram")
         built = []
 
         def create(platform, config):
@@ -119,51 +119,32 @@ class TestSecondaryAdapterUnavailableRecovery:
         bridge = list(runner._background_tasks)
         assert len(bridge) == 1
         await asyncio.wait_for(bridge[0], timeout=5.0)
-        task = runner._profile_failed_platforms["reviewer"][Platform("irc")]
+        task = runner._profile_failed_platforms["reviewer"][Platform.TELEGRAM]
         await asyncio.wait_for(task, timeout=5.0)
         # The failed load is re-armed, the next attempt builds the plugin, and the slot clears.
         assert rearm.await_count == 1
         assert len(built) == 3
-        assert runner._profile_adapters["reviewer"][Platform("irc")] is replacement
-        assert Platform("irc") not in runner._profile_failed_platforms.get("reviewer", {})
-
-    @pytest.mark.asyncio
-    async def test_unhealable_none_is_not_queued(self, monkeypatch):
-        """A builtin whose probe fails needs a config change: no slot, no retry storm."""
-        runner = _secondary_recovery_runner()
-        built = []
-        _install_none_buildable_context(monkeypatch, runner, Platform.MSGRAPH_WEBHOOK)
-        monkeypatch.setattr(
-            runner, "_create_adapter", lambda platform, config: built.append(platform) or None
-        )
-
-        connected = await runner._start_one_profile_adapters(
-            "reviewer", "/tmp/reviewer", {}
-        )
-
-        assert connected == 0
-        assert built == [Platform.MSGRAPH_WEBHOOK]
-        assert list(runner._background_tasks) == []
-        assert runner._profile_failed_platforms == {}
+        assert runner._profile_adapters["reviewer"][Platform.TELEGRAM] is replacement
+        assert Platform.TELEGRAM not in runner._profile_failed_platforms.get("reviewer", {})
 
     @pytest.mark.asyncio
     async def test_attempt_classifies_healable_none_as_retryable(self, monkeypatch):
         """``(None, False)`` keeps the slot; ``(None, None)`` still gives up."""
         runner = _secondary_recovery_runner()
-        _install_none_buildable_context(monkeypatch, runner, Platform.MSGRAPH_WEBHOOK)
+        _install_none_buildable_context(monkeypatch, runner, Platform.WEBHOOK)
         monkeypatch.setattr(runner, "_create_adapter", lambda platform, config: None)
 
         assert await runner._secondary_reconnect_attempt(
-            "reviewer", Platform.MSGRAPH_WEBHOOK
+            "reviewer", Platform.WEBHOOK
         ) == (None, None)
 
         _install_plugin_platform_context(
             monkeypatch, runner, _PluginPlatformRecoveryAdapter()
         )
-        _dispose_platform_registration(monkeypatch, "irc")
+        _dispose_platform_registration(monkeypatch, "telegram")
         monkeypatch.setattr(runner, "_create_adapter", lambda platform, config: None)
         assert await runner._secondary_reconnect_attempt(
-            "reviewer", Platform("irc")
+            "reviewer", Platform.TELEGRAM
         ) == (None, False)
 
     @pytest.mark.asyncio
@@ -178,7 +159,7 @@ class TestSecondaryAdapterUnavailableRecovery:
             runner, "_create_adapter", lambda platform, config: built.append(platform) or None
         )
         runner._profile_failed_platforms = {
-            "reviewer": {Platform("irc"): MagicMock(name="reconnect-task")}
+            "reviewer": {Platform.TELEGRAM: MagicMock(name="reconnect-task")}
         }
 
         connected = await runner._start_one_profile_adapters(
@@ -207,9 +188,9 @@ class TestSecondaryAdapterUnavailableRecovery:
         queue_info = {}
 
         for _ in range(5):
-            await runner._rearm_failed_plugin_load(Platform("irc"), queue_info)
+            await runner._rearm_failed_plugin_load(Platform.TELEGRAM, queue_info)
 
-        assert rearmed == ["irc"] * 3  # a permanently broken plugin stops being re-imported
+        assert rearmed == ["telegram"] * 3  # a permanently broken plugin stops being re-imported
         assert queue_info["load_rearms"] == 3
         assert on_loop and not any(on_loop)  # the re-arm never blocks the event loop
 
@@ -243,13 +224,13 @@ class TestSecondaryAdapterUnavailableRecovery:
         real_is_registered, real_get = platform_registry.is_registered, platform_registry.get
 
         def is_registered(name):
-            if name != "irc":
+            if name != "telegram":
                 return real_is_registered(name)
             seen.append(("classify", scope.get()))
             return scope.get() == "launch"  # only the launch profile's load of this plugin succeeded
 
         def get(name):
-            if name != "irc":
+            if name != "telegram":
                 return real_get(name)
             seen.append(("load", scope.get(), threading.current_thread() is threading.main_thread()))
 
@@ -271,7 +252,7 @@ class TestSecondaryAdapterUnavailableRecovery:
 
         monkeypatch.setattr(asyncio, "sleep", stop_after_backoff)
         seen.clear()
-        await runner._run_secondary_profile_reconnect("reviewer", Platform("irc"))
+        await runner._run_secondary_profile_reconnect("reviewer", Platform.TELEGRAM)
 
         assert ("load", "/profiles/reviewer", False) in seen  # the import a re-arm enables runs off the loop
         assert [e for e in seen if e[0] in ("classify", "rearm")] == [
@@ -291,11 +272,11 @@ class TestSecondaryAdapterUnavailableRecovery:
         if owned_elsewhere:
             owner = _PluginPlatformRecoveryAdapter()
             owner.token = "shared-bot-token"
-            runner._profile_adapters["owner"] = {Platform("irc"): owner}
+            runner._profile_adapters["owner"] = {Platform.TELEGRAM: owner}
         connect = AsyncMock(return_value=True)
         monkeypatch.setattr(runner, "_connect_adapter_with_timeout", connect)
 
-        adapter, success = await runner._secondary_reconnect_attempt("reviewer", Platform("irc"))
+        adapter, success = await runner._secondary_reconnect_attempt("reviewer", Platform.TELEGRAM)
 
         owned = (getattr(runner, "_profile_bot_platforms", None) or {}).get("reviewer", set())
         if owned_elsewhere:
@@ -304,7 +285,7 @@ class TestSecondaryAdapterUnavailableRecovery:
             assert owned == set()
         else:
             assert (adapter, success) == (healed, True)
-            assert owned == {Platform("irc")}
+            assert owned == {Platform.TELEGRAM}
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("heals", [True, False])
@@ -321,9 +302,9 @@ class TestSecondaryAdapterUnavailableRecovery:
         for bridge in list(runner._background_tasks):
             bridge.cancel()
 
-        assert writes == [("reviewer:irc", {
+        assert writes == [("reviewer:telegram", {
             "platform_state": "retrying" if heals else "fatal", "error_code": "adapter_unavailable",
-            "error_message": _adapter_unavailable_message(Platform("irc"), retrying=heals), "needs_attention": True,
+            "error_message": _adapter_unavailable_message(Platform.TELEGRAM, retrying=heals), "needs_attention": True,
         })]
 
     @pytest.mark.asyncio
@@ -344,12 +325,12 @@ class TestSecondaryAdapterUnavailableRecovery:
             runner._running = len(ticks) < 2
 
         monkeypatch.setattr(asyncio, "sleep", stop_after_two_ticks)
-        await runner._run_secondary_profile_reconnect("reviewer", Platform("irc"))
+        await runner._run_secondary_profile_reconnect("reviewer", Platform.TELEGRAM)
 
         assert len(ticks) == 2
         assert [kw.get("error_code") for _key, kw in writes] == [None, "adapter_unavailable"]  # flag, then hint
         assert writes[1][1]["platform_state"] == "retrying"
-        assert writes[1][1]["error_message"] == _adapter_unavailable_message(Platform("irc"), retrying=True)
+        assert writes[1][1]["error_message"] == _adapter_unavailable_message(Platform.TELEGRAM, retrying=True)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("cause", ["disabled", "no credential", "duplicate", "fatal"])
@@ -357,14 +338,14 @@ class TestSecondaryAdapterUnavailableRecovery:
         """A never-built platform that gives up for good stops claiming the bot (cron and the delivery drain
         read _profile_bot_platforms), and a config reason replaces its retrying status with the reason."""
         runner, _create = _shared_token_runner(monkeypatch)
-        runner._profile_bot_platforms = {"reviewer": {Platform("irc")}}  # an earlier tick's claim
+        runner._profile_bot_platforms = {"reviewer": {Platform.TELEGRAM}}  # an earlier tick's claim
         config = PlatformConfig(enabled=cause != "disabled", token="plugin-token")
         monkeypatch.setattr("gateway.config.load_gateway_config",
-                            lambda: GatewayConfig(multiplex_profiles=True, platforms={Platform("irc"): config}))
+                            lambda: GatewayConfig(multiplex_profiles=True, platforms={Platform.TELEGRAM: config}))
         monkeypatch.setattr(gateway_run, "_platform_has_bot_credential",
                             lambda platform, cfg: cause != "no credential")
         if cause == "duplicate":
-            runner._profile_adapters = {"owner": {Platform("irc"): _create(Platform("irc"), None)}}
+            runner._profile_adapters = {"owner": {Platform.TELEGRAM: _create(Platform.TELEGRAM, None)}}
         if cause == "fatal":  # claimed, then a non-retryable fatal on connect
             async def fatal_connect(adapter, platform, **kwargs):
                 adapter.has_fatal_error, adapter.fatal_error_retryable = True, False
@@ -378,12 +359,12 @@ class TestSecondaryAdapterUnavailableRecovery:
 
         monkeypatch.setattr(asyncio, "sleep", no_retry)
 
-        await runner._run_secondary_profile_reconnect("reviewer", Platform("irc"))
+        await runner._run_secondary_profile_reconnect("reviewer", Platform.TELEGRAM)
 
         assert runner._profile_bot_platforms["reviewer"] == set()
         reason = {"disabled": "disabled in config", "no credential": "no bot credential configured"}.get(cause)
         if reason:
-            assert writes[-1] == ("reviewer:irc", {"platform_state": "disabled", "error_code": None,
+            assert writes[-1] == ("reviewer:telegram", {"platform_state": "disabled", "error_code": None,
                                                    "error_message": reason, "needs_attention": False})
         elif cause == "duplicate":
             assert (writes[-1][1]["platform_state"], writes[-1][1]["error_code"]) == ("fatal", "duplicate_credential")
@@ -401,9 +382,9 @@ class TestSecondaryAdapterUnavailableRecovery:
             return next(outcomes)
 
         async def two_ticks():
-            await runner._secondary_reconnect_attempt("c", Platform("irc"))
+            await runner._secondary_reconnect_attempt("c", Platform.TELEGRAM)
             between_ticks.append(set(runner._held_claim_owners().values()))
-            return await runner._secondary_reconnect_attempt("c", Platform("irc"))
+            return await runner._secondary_reconnect_attempt("c", Platform.TELEGRAM)
 
         monkeypatch.setattr(runner, "_connect_adapter_with_timeout", flaky_connect)
         assert (await asyncio.ensure_future(two_ticks()))[1] is True
@@ -418,10 +399,10 @@ class TestSecondaryAdapterUnavailableRecovery:
             return True
 
         monkeypatch.setattr(runner, "_connect_adapter_with_timeout", slow_connect)
-        first = asyncio.ensure_future(runner._secondary_reconnect_attempt("a", Platform("irc")))
+        first = asyncio.ensure_future(runner._secondary_reconnect_attempt("a", Platform.TELEGRAM))
         await async_wait_until(lambda: connects)
         # Bounded: without the hold "b" would also block in connect().
-        assert await asyncio.wait_for(runner._secondary_reconnect_attempt("b", Platform("irc")), 5) == (None, None)
+        assert await asyncio.wait_for(runner._secondary_reconnect_attempt("b", Platform.TELEGRAM), 5) == (None, None)
         release.set()
         assert (await first)[1] is True
         assert len(connects) == 1
@@ -433,13 +414,13 @@ class TestSecondaryAdapterUnavailableRecovery:
         runner, create = _shared_token_runner(monkeypatch)
         connects = _record_connects(monkeypatch, runner)
         parked = _park_reconnects(monkeypatch, runner)
-        runner._schedule_secondary_profile_reconnect("a", Platform("irc"), create(Platform("irc"), None))
+        runner._schedule_secondary_profile_reconnect("a", Platform.TELEGRAM, create(Platform.TELEGRAM, None))
 
-        assert await runner._secondary_reconnect_attempt("b", Platform("irc")) == (None, None)
+        assert await runner._secondary_reconnect_attempt("b", Platform.TELEGRAM) == (None, None)
         assert connects == []
         assert set(runner._current_claim_owners().values()) == {"a"}
 
-        queued = runner._profile_failed_platforms["a"].pop(Platform("irc"))
+        queued = runner._profile_failed_platforms["a"].pop(Platform.TELEGRAM)
         queued.cancel()
         await asyncio.gather(queued, return_exceptions=True)
         await async_wait_until(lambda: not runner._held_claim_owners())
@@ -451,15 +432,15 @@ class TestSecondaryAdapterUnavailableRecovery:
         queued must not keep the old token reserved."""
         runner, create = _shared_token_runner(monkeypatch)
         _record_connects(monkeypatch, runner, result=False)
-        runner._hold_secondary_claims("a", Platform("irc"), None, (("credential", "irc", "old-token"), None))
-        rebuilt = create(Platform("irc"), None)
+        runner._hold_secondary_claims("a", Platform.TELEGRAM, None, (("credential", "telegram", "old-token"), None))
+        rebuilt = create(Platform.TELEGRAM, None)
         monkeypatch.setattr(runner, "_create_adapter", lambda platform, config: rebuilt)
 
         async def one_tick():  # read the hold before its task ends (the end releases it)
-            await runner._secondary_reconnect_attempt("a", Platform("irc"), create(Platform("irc"), None))
-            return runner._secondary_held_claims[("a", Platform("irc"))][1]
+            await runner._secondary_reconnect_attempt("a", Platform.TELEGRAM, create(Platform.TELEGRAM, None))
+            return runner._secondary_held_claims[("a", Platform.TELEGRAM)][1]
 
-        assert await asyncio.ensure_future(one_tick()) == runner._adapter_claims(Platform("irc"), rebuilt)
+        assert await asyncio.ensure_future(one_tick()) == runner._adapter_claims(Platform.TELEGRAM, rebuilt)
 
     @pytest.mark.asyncio
     @pytest.mark.parametrize("unserved", [False, True])
@@ -477,15 +458,15 @@ class TestSecondaryAdapterUnavailableRecovery:
             await torn_down.wait()
 
         monkeypatch.setattr(runner, "_safe_adapter_disconnect", slow_disconnect)
-        failed = create(Platform("irc"), None)
-        runner._profile_adapters = {"a": {Platform("irc"): failed}}
-        teardown = asyncio.ensure_future(runner._handle_profile_adapter_fatal_error("a", Platform("irc"), failed))
+        failed = create(Platform.TELEGRAM, None)
+        runner._profile_adapters = {"a": {Platform.TELEGRAM: failed}}
+        teardown = asyncio.ensure_future(runner._handle_profile_adapter_fatal_error("a", Platform.TELEGRAM, failed))
         await async_wait_until(lambda: not runner._profile_adapters["a"])  # popped; disconnect pending
 
         assert set(runner._held_claim_owners().values()) == {"a"}
-        assert await runner._secondary_reconnect_attempt("b", Platform("irc")) == (None, None)
+        assert await runner._secondary_reconnect_attempt("b", Platform.TELEGRAM) == (None, None)
         assert await runner._start_one_profile_adapters("a", Path("/profiles/a"), {}) == 0
-        assert not any(kw.get("error_code") == "duplicate_credential" and key == "a:irc" for key, kw in writes)
+        assert not any(kw.get("error_code") == "duplicate_credential" and key == "a:telegram" for key, kw in writes)
         if unserved:
             runner._profile_adapters.pop("a")
         torn_down.set()
@@ -496,7 +477,7 @@ class TestSecondaryAdapterUnavailableRecovery:
             assert runner._profile_failed_platforms == {} and runner._held_claim_owners() == {}
         else:
             assert set(runner._held_claim_owners().values()) == {"a"}  # now the queued reconnect's
-            assert Platform("irc") in runner._profile_failed_platforms["a"]
+            assert Platform.TELEGRAM in runner._profile_failed_platforms["a"]
         parked.set()
         await async_wait_until(lambda: not runner._held_claim_owners())
 
@@ -522,12 +503,12 @@ class TestSecondaryAdapterUnavailableRecovery:
                 await asyncio.Event().wait()
             except asyncio.CancelledError:
                 owners_during_cancel.append(runner._current_claim_owners())
-                runner._profile_adapters.setdefault("a", {})[Platform("telegram")] = late  # installed as cancelled
+                runner._profile_adapters.setdefault("a", {})[Platform.WEBHOOK] = late  # installed as cancelled
                 if resume == "during_unserve":
                     torn_down.set()  # the teardown finishes while unserve awaits this cancellation
                     await asyncio.sleep(0)
                     finished_in_wait.append(teardown.done())
-                if resume == "unserve_cancelled" and platform == Platform("telegram"):
+                if resume == "unserve_cancelled" and platform == Platform.WEBHOOK:
                     await asyncio.Event().wait()  # never finishes cancelling: the unserve itself is cancelled
                 raise
 
@@ -537,7 +518,7 @@ class TestSecondaryAdapterUnavailableRecovery:
             reserve_connecting.set()
             await torn_down.wait()  # the old teardown finishes while this connect is pending
             await teardown
-            owners_during_reserve.append((runner._secondary_held_claims.get(("a", Platform("irc"))) or (None,))[0])
+            owners_during_reserve.append((runner._secondary_held_claims.get(("a", Platform.TELEGRAM)) or (None,))[0])
             return True
 
         monkeypatch.setattr(runner, "_safe_adapter_disconnect", slow_disconnect)
@@ -546,7 +527,7 @@ class TestSecondaryAdapterUnavailableRecovery:
         async def bounded_teardown(adapter, platform, profile=None):
             owners = runner._current_claim_owners()
             torn.append((adapter, owners.get(runner._adapter_claims(platform, adapter)[0]),
-                         owners.get(runner._adapter_claims(Platform("slack"), live)[0])))
+                         owners.get(runner._adapter_claims(Platform.API_SERVER, live)[0])))
 
         monkeypatch.setattr(runner, "_bounded_adapter_teardown", bounded_teardown)
         monkeypatch.setattr(runner, "_run_secondary_profile_reconnect", reconnect_until_cancelled)
@@ -558,11 +539,11 @@ class TestSecondaryAdapterUnavailableRecovery:
         runner._agent_cache, runner._evict_cached_agent = {}, lambda key: None
         runner.config._runtime_profile_homes = (("a", str(home)),)
         runner._adapter_disconnect_timeout_secs = lambda: 5
-        runner._schedule_secondary_profile_reconnect("a", Platform("telegram"))  # another platform, queued
-        failed, live, late = (create(Platform("irc"), None) for _ in range(3))
-        runner._profile_adapters = {"a": {Platform("irc"): failed, Platform("slack"): live}}
-        teardown = asyncio.ensure_future(runner._handle_profile_adapter_fatal_error("a", Platform("irc"), failed))
-        await async_wait_until(lambda: Platform("irc") not in runner._profile_adapters["a"])
+        runner._schedule_secondary_profile_reconnect("a", Platform.WEBHOOK)  # another platform, queued
+        failed, live, late = (create(Platform.TELEGRAM, None) for _ in range(3))
+        runner._profile_adapters = {"a": {Platform.TELEGRAM: failed, Platform.API_SERVER: live}}
+        teardown = asyncio.ensure_future(runner._handle_profile_adapter_fatal_error("a", Platform.TELEGRAM, failed))
+        await async_wait_until(lambda: Platform.TELEGRAM not in runner._profile_adapters["a"])
         assert set(runner._held_claim_owners().values()) == {"a"}
         try:
             if resume == "unserve_cancelled":
@@ -570,8 +551,8 @@ class TestSecondaryAdapterUnavailableRecovery:
                 await async_wait_until(lambda: owners_during_cancel)
                 unserve.cancel()
                 await asyncio.gather(unserve, return_exceptions=True)
-                assert runner._profile_adapters["a"] == {Platform("slack"): live, Platform("telegram"): late}
-                assert set(runner._secondary_held_claims) == {("a", Platform("irc"))}  # the fatal teardown's own
+                assert runner._profile_adapters["a"] == {Platform.API_SERVER: live, Platform.WEBHOOK: late}
+                assert set(runner._secondary_held_claims) == {("a", Platform.TELEGRAM)}  # the fatal teardown's own
                 assert torn == [] and not runner._retiring_profiles
                 torn_down.set()
                 await teardown  # the profile is still served: its fatal platform is queued again
@@ -579,7 +560,7 @@ class TestSecondaryAdapterUnavailableRecovery:
                 with caplog.at_level(logging.INFO, logger="gateway.run_profile_reconcile"):
                     await runner._unserve_profile("a", home)
                 assert "2 adapter(s) stopped" in caplog.text
-                live_claim = runner._adapter_claims(Platform("slack"), live)[0]
+                live_claim = runner._adapter_claims(Platform.API_SERVER, live)[0]
                 assert [owners.get(live_claim) for owners in owners_during_cancel] == ["a"]  # still held
                 assert torn == [(live, "a", "a"), (late, "a", None)]  # a late install too; each holds until its own
                 assert finished_in_wait == ([True] if resume == "during_unserve" else [])
@@ -588,7 +569,7 @@ class TestSecondaryAdapterUnavailableRecovery:
                     await asyncio.wait_for(reserve_connecting.wait(), 5)  # skipped for a stale hold: fails, not hangs
                     torn_down.set()
                     assert await reserve == 1
-                    assert owners_during_reserve == [runner._profile_adapters["a"][Platform("irc")]]  # new hold kept
+                    assert owners_during_reserve == [runner._profile_adapters["a"][Platform.TELEGRAM]]  # new hold kept
         finally:
             torn_down.set()
             await teardown
@@ -601,7 +582,7 @@ class TestSecondaryAdapterUnavailableRecovery:
             process_ownership.release(home)
 
         # no reconnect queued for the retired profile; a still-served one gets its fatal platform back
-        assert set(leftover) == ({Platform("irc")} if resume == "unserve_cancelled" else set())
+        assert set(leftover) == ({Platform.TELEGRAM} if resume == "unserve_cancelled" else set())
         assert runner._held_claim_owners() == {}
 
     @pytest.mark.asyncio
@@ -609,7 +590,7 @@ class TestSecondaryAdapterUnavailableRecovery:
         """Whoever asks (a fatal teardown, a startup handoff), a profile being unserved gets no reconnect."""
         runner, create = _shared_token_runner(monkeypatch)
         runner._retiring_profiles = {"a"}
-        runner._schedule_secondary_profile_reconnect("a", Platform("irc"), create(Platform("irc"), None))
+        runner._schedule_secondary_profile_reconnect("a", Platform.TELEGRAM, create(Platform.TELEGRAM, None))
         assert not runner._profile_failed_platforms.get("a") and runner._held_claim_owners() == {}
 
     @pytest.mark.asyncio
@@ -617,7 +598,7 @@ class TestSecondaryAdapterUnavailableRecovery:
         """A hot-add checks owners as of its check, not the caller's snapshot (taken before the healed "a" was
         installed), and holds its own claim across the connect await so a heal meanwhile is refused."""
         runner, create = _shared_token_runner(monkeypatch)
-        runner._profile_adapters = {"a": {Platform("irc"): create(Platform("irc"), None)}}
+        runner._profile_adapters = {"a": {Platform.TELEGRAM: create(Platform.TELEGRAM, None)}}
         initial = _record_connects(monkeypatch, runner, initial=True)
         assert await runner._start_one_profile_adapters("b", Path("/profiles/b"), {}) == 0
         assert initial == []
@@ -634,7 +615,7 @@ class TestSecondaryAdapterUnavailableRecovery:
         hot_add = asyncio.ensure_future(runner._start_one_profile_adapters("b", Path("/profiles/b"), {}))
         await async_wait_until(lambda: initial)
         assert set(runner._held_claim_owners().values()) == {"b"}
-        assert await runner._secondary_reconnect_attempt("c", Platform("irc")) == (None, None)
+        assert await runner._secondary_reconnect_attempt("c", Platform.TELEGRAM) == (None, None)
         release.set()
         assert await hot_add == 1
         assert runner._held_claim_owners() == {}
@@ -645,7 +626,7 @@ class TestSecondaryAdapterUnavailableRecovery:
         sweep is refused. A shutdown before the handoff lets go."""
         runner, create = _shared_token_runner(monkeypatch)
         runner._running, runner._shutdown_event = False, asyncio.Event()
-        runner._schedule_secondary_profile_startup_reconnect("a", Platform("irc"), create(Platform("irc"), None))
+        runner._schedule_secondary_profile_startup_reconnect("a", Platform.TELEGRAM, create(Platform.TELEGRAM, None))
         built_before = len(create.built)
         assert set(runner._held_claim_owners().values()) == {"a"}
         initial = _record_connects(monkeypatch, runner, initial=True)
@@ -665,7 +646,7 @@ class TestSecondaryAdapterUnavailableRecovery:
         runner, create = _shared_token_runner(monkeypatch)
         runner._running, runner._shutdown_event = False, asyncio.Event()
         runner._profile_adapters = {"a": {}}
-        runner._schedule_secondary_profile_startup_reconnect("a", Platform("irc"), create(Platform("irc"), None))
+        runner._schedule_secondary_profile_startup_reconnect("a", Platform.TELEGRAM, create(Platform.TELEGRAM, None))
         bridge = next(t for t in runner._background_tasks if t.get_name().startswith("secondary-startup"))
         runner._profile_adapters.pop("a")  # unserved while startup is still running
         if served_again:
@@ -677,7 +658,7 @@ class TestSecondaryAdapterUnavailableRecovery:
 
 
 def _shared_token_runner(monkeypatch):
-    """A live runner whose every irc adapter claims one bot token (``create.built`` lists them)."""
+    """A live runner whose every telegram adapter claims one bot token (``create.built`` lists them)."""
     runner = _secondary_recovery_runner()
     _install_plugin_platform_context(monkeypatch, runner, None)
     built = []

@@ -26,7 +26,7 @@ ACTIVE_TURN_MAX_AGE_SECONDS = 60 * 60
 
 def _make_source(chat_id: str = "active-turn-chat") -> SessionSource:
     return SessionSource(
-        platform=Platform.DISCORD,
+        platform=Platform.TELEGRAM,
         chat_id=chat_id,
         user_id="user-1",
         chat_type="channel",
@@ -485,7 +485,7 @@ async def test_unclean_restart_delivers_a_persisted_unledgered_reply_instead_of_
 
     entry = _entry_for(store, source)
     assert (entry.resume_pending, entry.active_turn_token) == (False, None)
-    rows = sweep_recoverable(deliverable_platforms={"discord"})
+    rows = sweep_recoverable(deliverable_platforms={"telegram"})
     assert [(r["content"], r["needs_marker"], r["chat_id"], r["thread_id"]) for r in rows] == [
         ("the stored answer", True, "replied", "thread-1")]
     _close_store_db(store)
@@ -518,7 +518,7 @@ async def test_unclean_restart_never_redelivers_a_reply_live_delivery_suppressed
 
     entry = _entry_for(store, source)
     assert (entry.resume_pending, entry.active_turn_token) == (False, None)
-    assert [r["content"] for r in sweep_recoverable(deliverable_platforms={"discord"})] == owed
+    assert [r["content"] for r in sweep_recoverable(deliverable_platforms={"telegram"})] == owed
     _close_store_db(store)
 
 
@@ -552,5 +552,5 @@ async def test_turn_marker_start_survives_a_timezone_change_across_the_crash(tmp
         time.tzset()
 
     assert _entry_for(store, source).resume_pending is True
-    assert sweep_recoverable(deliverable_platforms={"discord"}) == []
+    assert sweep_recoverable(deliverable_platforms={"telegram"}) == []
     _close_store_db(store)

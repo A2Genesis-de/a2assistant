@@ -714,7 +714,7 @@ def _action_create(a: dict[str, Any]) -> str:
         job = create_job_with_scheduler_registration(
             prompt=prompt or "", schedule=a["schedule"], name=a["name"], repeat=a["repeat"],
             deliver=_resolve_cron_context_deliver(deliver),
-            origin=_origin_from_env(a["schedule"]),
+            origin=_origin_from_env(),
             skills=canonical_skills,
             model=_normalize_optional_job_value(a["model"]), provider=_normalize_optional_job_value(a["provider"]),
             base_url=_normalize_optional_job_value(a["base_url"], strip_trailing_slash=True),

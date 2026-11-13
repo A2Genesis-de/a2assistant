@@ -32,7 +32,7 @@ class _Bot:
 
 
 async def _refuse(bot):
-    source = SimpleNamespace(platform=Platform.SLACK, chat_id='C', message_id='m1',
+    source = SimpleNamespace(platform=Platform.TELEGRAM, chat_id='C', message_id='m1',
                              _rejected_route_profile='beta')
     drop_rejected_route(bot, source)
     await asyncio.gather(*list(bot._background_tasks))
@@ -72,7 +72,7 @@ async def test_a_backlog_for_a_parked_profile_tells_each_chat_once_per_window(mo
     bot = _Bot(SendResult(success=True))
     for _ in range(5):
         await _refuse(bot)
-    other = SimpleNamespace(platform=Platform.SLACK, chat_id='D', message_id='m2', _rejected_route_profile='beta')
+    other = SimpleNamespace(platform=Platform.TELEGRAM, chat_id='D', message_id='m2', _rejected_route_profile='beta')
     drop_rejected_route(bot, other)
     await asyncio.gather(*list(bot._background_tasks))
     assert [chat for chat, _text, _reply in bot.sent] == ['C', 'D']

@@ -28,7 +28,7 @@ from generate_conformance_vectors import (
     generate,
 )
 
-PLATFORMS = ("discord", "slack", "telegram", "whatsapp")
+PLATFORMS = ("telegram",)
 
 
 def test_corpus_ids_unique_and_categorized():

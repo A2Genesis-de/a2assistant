@@ -17,6 +17,11 @@ from hermes_cli.observability import shared_metrics_gateway as smg
 from hermes_constants import get_hermes_home
 
 
+
+_CHAT_A = Platform._add_pseudo_member("chat_a")
+_CHAT_B = Platform._add_pseudo_member("chat_b")
+
+
 @pytest.fixture
 def rows(monkeypatch):
     got = []
@@ -94,7 +99,7 @@ def test_a_reconnect_backoff_loop_is_one_failed_connect_until_it_recovers(rows, 
     assert _connect(_Adapter(connect=outage)) == "ConnectionResetError"  # opted in mid-outage: counts
     for _ in range(5):  # the watcher's backoff retries during the same outage
         assert _connect(_Adapter(connect=outage), is_reconnect=True) == "ConnectionResetError"
-    assert _connect(_Adapter(platform=Platform.DISCORD, connect=outage)) == "ConnectionResetError"
+    assert _connect(_Adapter(platform=_CHAT_A, connect=outage)) == "ConnectionResetError"
     assert _connect(_Adapter(), is_reconnect=True) is True
     assert _connect(_Adapter(connect=outage), is_reconnect=True) == "ConnectionResetError"  # a new outage
     smg.drain()
@@ -104,7 +109,7 @@ def test_a_reconnect_backoff_loop_is_one_failed_connect_until_it_recovers(rows, 
     for name, result in (("alpha", outage), ("beta", outage), ("beta", True), ("alpha", outage)):
         _connect(_Adapter(platform=name, connect=result), is_reconnect=True)
     assert [(r["event"], r["platform"]) for r in rows("hermes.platform.health")] == [
-        ("connect_failed", "telegram"), ("connect_failed", "discord"),
+        ("connect_failed", "telegram"), ("connect_failed", "plugin"),
         ("reconnect", "telegram"), ("connect_failed", "telegram"), ("connect_failed", "telegram"),
         ("connect_failed", "plugin"), ("connect_failed", "plugin"), ("reconnect", "plugin"),
     ]
@@ -142,15 +147,15 @@ def test_first_reply_latency_is_one_row_per_turn_stopped_only_by_reply_text(rows
 def test_a_relay_delivered_turn_stops_the_clock_its_inbound_started(rows):
     # The connector's inbound names the platform it came from; the reply leaves through the relay.
     relay = _Adapter(platform=Platform.RELAY)
-    smg.start_reply_clock(SimpleNamespace(platform=Platform.DISCORD, chat_id="c1"))
+    smg.start_reply_clock(SimpleNamespace(platform=_CHAT_A, chat_id="c1"))
     consumer = GatewayStreamConsumer(relay, "c1", StreamConsumerConfig(cursor=""))
     assert asyncio.run(consumer._send_or_edit("first streamed chunk"))
     event = MessageEvent(text="hi", message_type=MessageType.TEXT, message_id="in-2",
-                         source=SimpleNamespace(platform=Platform.SLACK, chat_id="C2", thread_id=None))
+                         source=SimpleNamespace(platform=_CHAT_B, chat_id="C2", thread_id=None))
     smg.start_reply_clock(event.source)
     asyncio.run(relay.send_final_ledgered(event, "k", "final answer", {}, reply_to=None))
     assert rows("hermes.gateway.reply_latency") == [
-        {"first_response_bucket": "lt_2s", "platform": "discord"}, {"first_response_bucket": "lt_2s", "platform": "slack"}]
+        {"first_response_bucket": "lt_2s", "platform": "plugin"}, {"first_response_bucket": "lt_2s", "platform": "plugin"}]
     assert not smg._reply_clocks
 
 
@@ -161,13 +166,13 @@ def test_a_delivery_sent_after_the_routed_scope_resets_lands_in_the_owning_profi
     home_b = tmp_path / "profiles" / "b"
     token = set_hermes_home_override(str(home_b))
     try:
-        smg.start_reply_clock(SimpleNamespace(platform=Platform.SLACK, chat_id="C9"))
+        smg.start_reply_clock(SimpleNamespace(platform=_CHAT_B, chat_id="C9"))
     finally:
         reset_hermes_home_override(token)
-    asyncio.run(_Adapter(platform=Platform.SLACK)._send_with_retry("C9", "final answer", base_delay=0))
+    asyncio.run(_Adapter(platform=_CHAT_B)._send_with_retry("C9", "final answer", base_delay=0))
     asyncio.run(_Adapter()._send_with_retry("unseen", "hi", base_delay=0))  # no turn: the caller's scope
     assert rows("hermes.platform.delivery", with_home=True) == [
-        (str(home_b), {"failure_class": "none", "outcome": "sent", "platform": "slack"}),
+        (str(home_b), {"failure_class": "none", "outcome": "sent", "platform": "plugin"}),
         (str(get_hermes_home()), {"failure_class": "none", "outcome": "sent", "platform": "telegram"}),
     ]
 

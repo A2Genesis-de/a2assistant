@@ -267,7 +267,7 @@ _UTILITY_TOOL_SPECS = (
          "instructions": {"type": "string",
                           "description": "What to do each time the event arrives (up to 2000 characters)"},
          "deliver": {"type": "string",
-                     "description": "Where each run's result goes: log, telegram, discord, slack, ..."},
+                     "description": "Where each run's result goes: log, telegram, ..."},
          "deliver_chat_id": {"type": "string", "description": "Optional chat id on the deliver platform"},
      }, ["name"]),
     ("unsubscribe_event", "Cancel a subscription to an event from MCP server '{server}'",

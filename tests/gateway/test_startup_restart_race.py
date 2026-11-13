@@ -57,7 +57,7 @@ def make_startup_runner(tmp_path):
     runner.config = GatewayConfig(
         platforms={
             Platform.TELEGRAM: PlatformConfig(enabled=True, token="***"),
-            Platform.SLACK: PlatformConfig(enabled=True, token="***"),
+            Platform.WEBHOOK: PlatformConfig(enabled=True),
         },
         sessions_dir=tmp_path / "sessions",
     )
@@ -138,21 +138,21 @@ async def test_startup_aborts_when_restart_begins_during_platform_connect(tmp_pa
         Platform.TELEGRAM,
         on_connect=lambda: runner.request_restart(detached=False, via_service=True),
     )
-    slack = StartupRaceAdapter(Platform.SLACK, wait_for_disconnect=first_disconnected)
+    webhook = StartupRaceAdapter(Platform.WEBHOOK, wait_for_disconnect=first_disconnected)
 
     async def disconnect_and_release():
         telegram.disconnected = True
         first_disconnected.set()
 
     telegram.disconnect = disconnect_and_release
-    runner._create_adapter = MagicMock(side_effect=[telegram, slack])
+    runner._create_adapter = MagicMock(side_effect=[telegram, webhook])
 
     result = await asyncio.wait_for(runner.start(), timeout=30)
 
     assert result is True
     assert telegram.disconnected is True
     assert telegram.background_cancelled is True
-    assert slack.connected is False
+    assert webhook.connected is False
     assert runner._running is False
     assert runner.adapters == {}
     assert runner._update_runtime_status.call_args_list[-1].args[0] == "stopped"
@@ -161,7 +161,7 @@ async def test_startup_aborts_when_restart_begins_during_platform_connect(tmp_pa
         for call in runner._update_runtime_status.call_args_list
     )
     assert not any(
-        call.args[:2] == (Platform.SLACK.value, "connected")
+        call.args[:2] == (Platform.WEBHOOK.value, "connected")
         for call in runner._update_platform_runtime_status.call_args_list
     )
 

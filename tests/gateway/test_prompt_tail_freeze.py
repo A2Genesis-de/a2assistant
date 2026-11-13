@@ -2,7 +2,7 @@
 
 The composed system prompt used to change bytes nearly every gateway turn:
 the "## Current Session Context" block was re-rendered from live platform
-state per message (thread renames, voice-channel member/speaking state,
+state per message (thread renames,
 one-shot onboarding and auto-reset notes).  Every byte change re-keys the
 provider prompt cache AND changes the gateway agent-cache signature, forcing
 a full AIAgent rebuild per message.
@@ -18,11 +18,8 @@ is guarded by the parity test below.
 
 from __future__ import annotations
 
-import asyncio
-from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-import pytest
 
 from gateway.config import GatewayConfig, HomeChannel, Platform, PlatformConfig
 from gateway.session import (
@@ -50,7 +47,7 @@ def _make_runner(**attrs):
 
 def _make_context(
     *,
-    platform: Platform = Platform.DISCORD,
+    platform: Platform = Platform.WEBHOOK,
     chat_id: str = "111222333",
     chat_name: str = "general",
     chat_type: str = "channel",
@@ -78,11 +75,11 @@ def _make_context(
         scope_id=guild_id,
         message_id=message_id,
     )
-    connected = connected if connected is not None else [Platform.DISCORD, Platform.TELEGRAM]
+    connected = connected if connected is not None else [Platform.WEBHOOK, Platform.TELEGRAM]
     if home_channels is None:
         home_channels = {
-            Platform.DISCORD: HomeChannel(
-                platform=Platform.DISCORD, chat_id="111222333", name="general"
+            Platform.WEBHOOK: HomeChannel(
+                platform=Platform.WEBHOOK, chat_id="111222333", name="general"
             ),
         }
     return SessionContext(
@@ -91,14 +88,6 @@ def _make_context(
         home_channels=home_channels,
         shared_multi_user_session=shared_multi_user,
     )
-
-
-@pytest.fixture(autouse=True)
-def _stable_discord_tools(monkeypatch):
-    """Pin the config/env-dependent renderer gates so key<->render parity is
-    evaluated on the same footing in every environment."""
-    monkeypatch.setattr("gateway.session._discord_tools_loaded", lambda: True)
-    monkeypatch.setattr("gateway.session._slack_tools_loaded", lambda: False)
 
 
 def _key(runner, context, redact_pii=False):
@@ -131,13 +120,13 @@ class TestEphemeralChangeKeyParity:
         ("parent_chat_id", dict(parent_chat_id="999000111")),
         ("chat_id", dict(chat_id="999999999", parent_chat_id="999999999")),
         ("platform", dict(platform=Platform.TELEGRAM)),
-        ("connected_platforms", dict(connected=[Platform.DISCORD])),
+        ("connected_platforms", dict(connected=[Platform.WEBHOOK])),
         (
             "home_channel_renamed",
             dict(
                 home_channels={
-                    Platform.DISCORD: HomeChannel(
-                        platform=Platform.DISCORD, chat_id="111222333", name="ops-home"
+                    Platform.WEBHOOK: HomeChannel(
+                        platform=Platform.WEBHOOK, chat_id="111222333", name="ops-home"
                     )
                 }
             ),
@@ -146,8 +135,8 @@ class TestEphemeralChangeKeyParity:
             "home_channel_added",
             dict(
                 home_channels={
-                    Platform.DISCORD: HomeChannel(
-                        platform=Platform.DISCORD, chat_id="111222333", name="general"
+                    Platform.WEBHOOK: HomeChannel(
+                        platform=Platform.WEBHOOK, chat_id="111222333", name="general"
                     ),
                     Platform.TELEGRAM: HomeChannel(
                         platform=Platform.TELEGRAM, chat_id="tg1", name="tg-home"
@@ -168,8 +157,6 @@ class TestEphemeralChangeKeyParity:
         assert _key(runner, ctx, False) != _key(runner, ctx, True)
 
 
-
-
 # ---------------------------------------------------------------------------
 # 2. The pin: reuse verbatim on hit, exactly one legit bust on change
 # ---------------------------------------------------------------------------
@@ -183,178 +170,6 @@ class TestSessionContextPin:
         # Identity, not just equality: the pinned bytes are reused verbatim,
         # immunizing against renderer nondeterminism.
         assert second is first
-
-
-
-# ---------------------------------------------------------------------------
-# 4. Voice-channel sidecar note: only-when-changed
-# ---------------------------------------------------------------------------
-
-def _source():
-    return SessionSource(
-        platform=Platform.DISCORD, chat_id="c1", chat_type="channel", user_id="u1"
-    )
-
-
-class _VcAdapter:
-    def __init__(self, value):
-        self.value = value
-
-    def get_voice_channel_context(self, guild_id):
-        return self.value
-
-
-def _vc_runner(vc_value):
-    adapter = _VcAdapter(vc_value)
-    runner = _make_runner(adapters={Platform.DISCORD: adapter})
-    return runner, adapter
-
-
-def _vc_event():
-    return SimpleNamespace(raw_message=SimpleNamespace(guild_id="777"))
-
-
-class TestVoiceChannelSidecarNote:
-    def test_first_sighting_injects(self):
-        runner, _ = _vc_runner("**Voice:** dev-vc (2 members)")
-        note = runner._voice_channel_sidecar_note(_vc_event(), _source(), "sk")
-        assert note and "dev-vc (2 members)" in note
-
-    def test_unchanged_state_injects_nothing(self):
-        runner, _ = _vc_runner("**Voice:** dev-vc (2 members)")
-        assert runner._voice_channel_sidecar_note(_vc_event(), _source(), "sk")
-        assert runner._voice_channel_sidecar_note(_vc_event(), _source(), "sk") is None
-
-    def test_member_change_injects_again(self):
-        runner, adapter = _vc_runner("**Voice:** dev-vc (2 members)")
-        runner._voice_channel_sidecar_note(_vc_event(), _source(), "sk")
-        adapter.value = "**Voice:** dev-vc (3 members)"
-        note = runner._voice_channel_sidecar_note(_vc_event(), _source(), "sk")
-        assert note and "dev-vc (3 members)" in note
-
-    def test_leaving_channel_injects_disconnect_note(self):
-        runner, adapter = _vc_runner("**Voice:** dev-vc (2 members)")
-        runner._voice_channel_sidecar_note(_vc_event(), _source(), "sk")
-        adapter.value = ""
-        note = runner._voice_channel_sidecar_note(_vc_event(), _source(), "sk")
-        assert note
-
-    def test_never_in_channel_injects_nothing(self):
-        runner, _ = _vc_runner("")
-        assert runner._voice_channel_sidecar_note(_vc_event(), _source(), "sk") is None
-
-    def test_secondary_profile_reads_its_own_bot_voice_context(self):
-        # Multiplexed gateway: the voice binding lives on the adapter whose bot is
-        # in the call, so the note must be read from the adapter that answers the
-        # source -- not from the default profile's adapter map.
-        primary = _VcAdapter("")
-        secondary = _VcAdapter("**Voice:** dev-vc (2 members)")
-        runner = _make_runner(
-            adapters={Platform.DISCORD: primary},
-            _profile_adapters={"otto": {Platform.DISCORD: secondary}},
-        )
-        source = _source()
-        source._transport_adapter_ref = lambda: secondary
-        note = runner._voice_channel_sidecar_note(_vc_event(), source, "sk")
-        assert note and "dev-vc (2 members)" in note
-
-
-def _multiplex_vc_runner(primary_vc, secondary_vc):
-    primary = _VcAdapter(primary_vc)
-    secondary = _VcAdapter(secondary_vc)
-    runner = _make_runner(adapters={Platform.DISCORD: primary})
-    runner._profile_adapters = {"otto": {Platform.DISCORD: secondary}}
-    runner.config = SimpleNamespace(multiplex_profiles=True)
-    return runner, primary, secondary
-
-
-def _secondary_source():
-    return SessionSource(
-        platform=Platform.DISCORD,
-        chat_id="c1",
-        chat_type="channel",
-        user_id="u1",
-        profile="otto",
-    )
-
-
-class TestVoiceChannelSidecarNoteMultiplexed:
-    """#139345: the note must never be read from another bot's call state.
-
-    The two negative halves of the report, ported from the competing draft
-    #139359 (closed in favour of this one, whose author offered them there).
-    """
-
-    def test_secondary_never_borrows_the_primary_call(self):
-        runner, _primary, _secondary = _multiplex_vc_runner(
-            "**Voice:** ops-vc (5 members)", ""
-        )
-        note = runner._voice_channel_sidecar_note(_vc_event(), _secondary_source(), "sk")
-        assert note is None
-
-    def test_disconnected_secondary_fails_closed(self):
-        runner, _primary, _secondary = _multiplex_vc_runner(
-            "**Voice:** ops-vc (5 members)", ""
-        )
-        runner._profile_adapters = {}
-        note = runner._voice_channel_sidecar_note(_vc_event(), _secondary_source(), "sk")
-        assert note is None
-
-
-class _AckAdapter:
-    """A Discord bot bound to text channel c1's voice call in guild 77."""
-
-    def __init__(self, bound):
-        self._voice_text_channels = {77: "c1"} if bound else {}
-        self.acks = []
-
-    def voice_mixer_active(self, guild_id):
-        return guild_id in self._voice_text_channels
-
-    async def play_ack_in_voice(self, guild_id):
-        self.acks.append(guild_id)
-
-
-class TestVoiceAckFollowsTheAnsweringBot:
-    """#139345, same class: the first-tool-call verbal ack resolves its guild on, and plays through,
-    the bot whose call is bound to the turn's text channel, not the default profile's bot."""
-
-    def _runner(self, primary_bound, secondary_bound):
-        primary, secondary = _AckAdapter(primary_bound), _AckAdapter(secondary_bound)
-        runner = _make_runner(adapters={Platform.DISCORD: primary})
-        runner._profile_adapters = {"otto": {Platform.DISCORD: secondary}}
-        runner.config = SimpleNamespace(multiplex_profiles=True)
-        return runner, primary, secondary
-
-    def test_secondary_in_call_gets_its_guild(self):
-        runner, _primary, secondary = self._runner(False, True)
-        source = _secondary_source()
-        source._transport_adapter_ref = lambda: secondary
-        assert runner._voice_ack_guild_for(source) == 77
-
-    def test_secondary_never_borrows_the_primary_call(self):
-        runner, _primary, secondary = self._runner(True, False)
-        source = _secondary_source()
-        source._transport_adapter_ref = lambda: secondary
-        assert runner._voice_ack_guild_for(source) is None
-
-    def test_ack_plays_through_the_answering_bot(self):
-        from gateway.run_turn_progress import GatewayTurnProgressMixin
-        runner, _primary, secondary = self._runner(True, True)
-        source = _secondary_source()
-        source._transport_adapter_ref = lambda: secondary
-        scheduled = []
-        progress = SimpleNamespace(
-            _runner=runner,
-            _ctx=SimpleNamespace(_voice_ack_fired=[False], _voice_ack_guild=[77], _run_still_current=lambda: True,
-                                 _voice_ack_loop=None, source=source),
-            _schedule=lambda coro, msg, loop=None: scheduled.append(coro),
-        )
-        GatewayTurnProgressMixin.voice_ack_callback(progress, "call1", "web_search", {})
-        assert len(scheduled) == 1
-        asyncio.run(scheduled[0])
-        assert secondary.acks == [77]
-        assert _primary.acks == []
 
 
 # ---------------------------------------------------------------------------
@@ -378,12 +193,12 @@ class TestConnectedPlatformsOrder:
         cfg_a = GatewayConfig(
             platforms={
                 Platform.TELEGRAM: PlatformConfig(enabled=True, token="t"),
-                Platform.DISCORD: PlatformConfig(enabled=True, token="d"),
+                Platform.WEBHOOK: PlatformConfig(enabled=True, token="d"),
             }
         )
         cfg_b = GatewayConfig(
             platforms={
-                Platform.DISCORD: PlatformConfig(enabled=True, token="d"),
+                Platform.WEBHOOK: PlatformConfig(enabled=True, token="d"),
                 Platform.TELEGRAM: PlatformConfig(enabled=True, token="t"),
             }
         )

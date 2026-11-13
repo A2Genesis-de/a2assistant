@@ -72,11 +72,11 @@ async def test_retry_redispatch_admits_natively_under_session_authority(
         await initialize_gateway_runtime(runner)
         register_transport_home(runner, None, root)
         adapter = _FakeAdapter()
-        runner.adapters = {Platform.DISCORD: adapter}
+        runner.adapters = {Platform.TELEGRAM: adapter}
         runner._is_user_authorized_for_source = lambda *a, **k: True
 
         source = SessionSource(
-            platform=Platform.DISCORD, chat_id='probe-chat', chat_type='dm',
+            platform=Platform.TELEGRAM, chat_id='probe-chat', chat_type='dm',
             user_id='probe-user', user_name='probe')
         # build_source stamps this on every inbound event; hand-built sources need it too,
         # otherwise _transport_owner fail-closes to None (not_found).

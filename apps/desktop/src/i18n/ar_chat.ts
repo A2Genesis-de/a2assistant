@@ -495,7 +495,7 @@ export const arChat = {
       },
       messaging: {
         title: 'A2Assistant بعيدًا عن مكتبك',
-        text: 'اربطه بـ Telegram وDiscord وSlack وغيرها — الوكيل نفسه والذاكرة نفسها.'
+        text: 'اربطه بـ Telegram — الوكيل نفسه والذاكرة نفسها.'
       },
       artifacts: {
         title: 'كل ما صنعه A2Assistant',

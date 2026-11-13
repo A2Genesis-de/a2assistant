@@ -1628,7 +1628,7 @@ export const ruOverrides = {
       newChat: { title: 'Новый сеанс', detail: 'Начать новый сеанс' },
       settings: { title: 'Настройки', detail: 'Настройка A2Assistant desktop' },
       capabilities: { title: 'Возможности', detail: 'Навыки, инструменты и MCP-серверы' },
-      messaging: { title: 'Сообщения', detail: 'Настройка Telegram, Slack, Discord и других' },
+      messaging: { title: 'Сообщения', detail: 'Настройка Telegram' },
       artifacts: { title: 'Артефакты', detail: 'Просмотр сгенерированных результатов' }
     },
     sectionEntries: {
@@ -1879,83 +1879,7 @@ export const ruOverrides = {
         label: 'Разрешённые ID пользователей Telegram',
         help: 'Рекомендуется. Числовые ID через @userinfobot (по одному в поле). Без этого писать вашему боту может кто угодно.'
       },
-      TELEGRAM_PROXY: { label: 'URL прокси', help: 'Нужен только в сетях, где Telegram заблокирован.' },
-      DISCORD_BOT_TOKEN: {
-        label: 'Токен бота',
-        help: 'Создайте приложение в Discord Developer Portal, добавьте бота и вставьте его токен.'
-      },
-      DISCORD_ALLOWED_USERS: {
-        label: 'Разрешённые ID пользователей Discord',
-        help: 'Рекомендуется. ID пользователей Discord (по одному в поле).'
-      },
-      DISCORD_REPLY_TO_MODE: { label: 'Стиль ответов', help: 'first, all или off.' },
-      DISCORD_ALLOW_ALL_USERS: {
-        label: 'Разрешить всех пользователей Discord',
-        help: 'Только для разработки. Если true, писать боту в ЛС может кто угодно без allowlist.'
-      },
-      DISCORD_HOME_CHANNEL: {
-        label: 'ID домашнего канала',
-        help: 'Канал, куда бот шлёт проактивные сообщения (результаты cron, напоминания).'
-      },
-      DISCORD_HOME_CHANNEL_NAME: {
-        label: 'Название домашнего канала',
-        help: 'Отображаемое имя домашнего канала в журналах и выводе статуса.'
-      },
-      BLUEBUBBLES_ALLOW_ALL_USERS: {
-        label: 'Разрешить всех пользователей iMessage',
-        help: 'Если true, allowlist BlueBubbles пропускается.'
-      },
-      MATTERMOST_ALLOW_ALL_USERS: { label: 'Разрешить всех пользователей Mattermost' },
-      MATTERMOST_HOME_CHANNEL: { label: 'Домашний канал' },
-      QQ_ALLOW_ALL_USERS: { label: 'Разрешить всех пользователей QQ' },
-      QQBOT_HOME_CHANNEL: { label: 'Домашний канал QQ', help: 'Канал или группа по умолчанию для доставки cron.' },
-      QQBOT_HOME_CHANNEL_NAME: { label: 'Название домашнего канала QQ' },
-      SLACK_BOT_TOKEN: {
-        label: 'Токен бота Slack',
-        help: 'Используйте токен бота из OAuth & Permissions после установки вашего приложения Slack.',
-        placeholder: 'Вставьте токен бота Slack'
-      },
-      SLACK_APP_TOKEN: {
-        label: 'Токен приложения Slack',
-        help: 'Используйте токен уровня приложения, необходимый для Socket Mode.',
-        placeholder: 'Вставьте токен приложения Slack'
-      },
-      SLACK_ALLOWED_USERS: {
-        label: 'Разрешённые ID пользователей Slack',
-        help: 'Рекомендуется. ID пользователей Slack (по одному в поле).'
-      },
-      MATTERMOST_URL: { label: 'URL сервера', placeholder: 'https://mattermost.example.com' },
-      MATTERMOST_TOKEN: { label: 'Токен бота' },
-      MATTERMOST_ALLOWED_USERS: {
-        label: 'Разрешённые ID пользователей',
-        help: 'Рекомендуется. ID пользователей Mattermost (по одному в поле).'
-      },
-      MATRIX_HOMESERVER: { label: 'URL homeserver', placeholder: 'https://matrix.org' },
-      MATRIX_ACCESS_TOKEN: { label: 'Токен доступа' },
-      MATRIX_USER_ID: { label: 'ID пользователя бота', placeholder: '@hermes:example.org' },
-      MATRIX_ALLOWED_USERS: {
-        label: 'Разрешённые ID пользователей Matrix',
-        help: 'Рекомендуется. ID пользователей (по одному в поле) в формате @user:server.'
-      },
-      SIGNAL_HTTP_URL: {
-        label: 'URL моста Signal',
-        placeholder: 'http://127.0.0.1:8080',
-        help: 'URL работающего REST-моста signal-cli.'
-      },
-      SIGNAL_ACCOUNT: { label: 'Номер телефона', help: 'Номер, зарегистрированный в вашем мосте signal-cli.' },
-      SIGNAL_ALLOWED_USERS: {
-        label: 'Разрешённые пользователи Signal',
-        help: 'Рекомендуется. Идентификаторы Signal (по одному в поле).'
-      },
-      WHATSAPP_ENABLED: {
-        label: 'Включить мост WhatsApp',
-        help: 'Устанавливается автоматически переключателем ниже. Не меняйте, если точно не нужно.'
-      },
-      WHATSAPP_MODE: { label: 'Режим моста' },
-      WHATSAPP_ALLOWED_USERS: {
-        label: 'Разрешённые пользователи WhatsApp',
-        help: 'Рекомендуется. Номера телефонов или ID WhatsApp (по одному в поле).'
-      }
+      TELEGRAM_PROXY: { label: 'URL прокси', help: 'Нужен только в сетях, где Telegram заблокирован.' }
     },
     platformIntro: {}
   },
@@ -1968,7 +1892,7 @@ export const ruOverrides = {
     empty: 'Подписок вебхуков пока нет.',
     disabledTitle: 'Приёмник вебхуков отключён',
     disabledBody:
-      'Вебхуки — это отдельная платформа шлюза. Включите их здесь, чтобы принимать входящие HTTP-события; чат-каналы нужны только когда подписка доставляет в Telegram, Discord, Slack или другой канал.',
+      'Вебхуки — это отдельная платформа шлюза. Включите их здесь, чтобы принимать входящие HTTP-события; чат-каналы нужны только когда подписка доставляет в Telegram.',
     enable: 'Включить вебхуки',
     enabling: 'Включение...',
     enabled: name => `Включено: «${name}»`,
@@ -2018,9 +1942,6 @@ export const ruOverrides = {
     deliverOptions: {
       log: 'Журнал',
       telegram: 'Telegram',
-      discord: 'Discord',
-      slack: 'Slack',
-      email: 'Email',
       github_comment: 'Комментарий GitHub'
     }
   },
@@ -2156,10 +2077,7 @@ export const ruOverrides = {
     },
     deliveryLabels: {
       local: 'Это приложение',
-      telegram: 'Telegram',
-      discord: 'Discord',
-      slack: 'Slack',
-      email: 'Email'
+      telegram: 'Telegram'
     },
     scheduleLabels: {
       daily: 'Ежедневно',

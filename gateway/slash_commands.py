@@ -160,16 +160,9 @@ def _spawn_detached_update(hermes_cmd, output_path, exit_code_path) -> None:
 
 
 def _home_thread_from_source(source) -> Optional[str]:
-    """The thread id /sethome should persist on the home target, or None.  Slack thread-per-message
-    keying stamps a top-level message's own id as ``source.thread_id`` (a session key, not a
-    location); persisting it would pin HOME to that ephemeral thread.  A thread id equal to the
-    message's own id is synthetic and dropped; a real thread (id = parent's) is kept."""
+    """The thread id /sethome should persist on the home target, or None."""
     thread_id = getattr(source, "thread_id", None)
-    if not thread_id:
-        return None
-    synthetic = (getattr(source, "platform", None) == Platform.SLACK and getattr(source, "message_id", None)
-                 and str(thread_id) == str(source.message_id))
-    return None if synthetic else str(thread_id)
+    return str(thread_id) if thread_id else None
 
 
 class GatewaySlashCommandsMixin(
@@ -707,22 +700,10 @@ class GatewaySlashCommandsMixin(
             mode, reply_key = _VOICE_MODE_BY_ARG[args]
             _set_mode(mode)
             return t(reply_key)
-        if args in {"channel", "join"}:
-            return await self._handle_voice_channel_join(event)
-        if args == "leave":
-            return await self._handle_voice_channel_leave(event)
         if args == "status":
             mode = self._voice_mode.get(voice_key, "off")
             label = t(f"gateway.voice.label_{mode}") if mode in ("off", "voice_only", "all") else mode
             lines = [t("gateway.voice.status_mode", label=label)]
-            guild_id = self._get_guild_id(event)  # append voice channel info if connected
-            info = adapter.get_voice_channel_info(guild_id) if guild_id and hasattr(adapter, "get_voice_channel_info") else None
-            if info:
-                lines += [t("gateway.voice.status_channel", channel=info['channel_name']),
-                          t("gateway.voice.status_participants", count=info['member_count'])]
-                for m in info["members"]:
-                    status = t("gateway.voice.speaking") if m.get("is_speaking") else ""
-                    lines.append(t("gateway.voice.status_member", name=m['display_name'], status=status))
             return "\n".join(lines)
 
         # Toggle: off → on, on/all → off
@@ -730,10 +711,8 @@ class GatewaySlashCommandsMixin(
         _set_mode("voice_only" if turning_on else "off")
         toggle_line = t("gateway.voice.enabled_short" if turning_on else "gateway.voice.disabled_short")
         # Bare /voice still toggles, but append an explainer so users discover the on/off/tts/status
-        # subcommands (and, on Discord, live voice-channel join/leave). Toggle result shows first.
-        supports_voice_channels = adapter is not None and hasattr(adapter, "join_voice_channel")
-        channels = t("gateway.voice.help_channels") if supports_voice_channels else ""
-        return t("gateway.voice.help", toggle=toggle_line, channels=channels)
+        # subcommands. Toggle result shows first.
+        return t("gateway.voice.help", toggle=toggle_line)
 
     async def _handle_rollback_command(self, event: MessageEvent) -> str:
         """Handle /rollback command — list or restore filesystem checkpoints."""

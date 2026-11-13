@@ -46,14 +46,14 @@ def db(tmp_path, monkeypatch):
 class TestFailHandoffCAS:
     def test_cas_fails_pending_row(self, db):
         db.ensure_session("s1", "cli")
-        assert db.request_handoff("s1", "discord")
+        assert db.request_handoff("s1", "telegram")
         assert db.fail_handoff("s1", "timed out", only_states=("pending",)) is True
         assert db.get_handoff_state("s1")["state"] == "failed"
 
     def test_cas_refuses_running_row(self, db):
         """A waiter timeout must NOT stomp a row the gateway has claimed."""
         db.ensure_session("s2", "cli")
-        assert db.request_handoff("s2", "discord")
+        assert db.request_handoff("s2", "telegram")
         assert db.claim_handoff("s2")  # gateway claimed: pending -> running
         assert db.fail_handoff("s2", "timed out", only_states=("pending",)) is False
         assert db.get_handoff_state("s2")["state"] == "running"
@@ -64,14 +64,14 @@ class TestFailHandoffCAS:
     def test_unconditional_fail_still_available_to_owner(self, db):
         """The gateway watcher (owner of a claimed row) fails unconditionally."""
         db.ensure_session("s3", "cli")
-        assert db.request_handoff("s3", "discord")
+        assert db.request_handoff("s3", "telegram")
         assert db.claim_handoff("s3")
         assert db.fail_handoff("s3", "dispatch raised") is True
         assert db.get_handoff_state("s3")["state"] == "failed"
 
     def test_cas_refuses_terminal_rows(self, db):
         db.ensure_session("s4", "cli")
-        assert db.request_handoff("s4", "discord")
+        assert db.request_handoff("s4", "telegram")
         assert db.claim_handoff("s4")
         db.complete_handoff("s4")
         assert db.fail_handoff("s4", "late timeout", only_states=("pending",)) is False
@@ -111,7 +111,7 @@ def _run_handoff(db, session_id, monkeypatch, time_budget=30.0):
 
     import gateway.config as gwc
 
-    platform_obj = gwc.Platform("discord")
+    platform_obj = gwc.Platform("telegram")
     pcfg = types.SimpleNamespace(enabled=True, extra={})
     gw_config.platforms = {platform_obj: pcfg}
 
@@ -130,7 +130,7 @@ def _run_handoff(db, session_id, monkeypatch, time_budget=30.0):
          patch("time.time", side_effect=fake_time), \
          patch("time.sleep", side_effect=fake_sleep), \
          patch.object(cli_mod, "_cprint", side_effect=lambda s="": printed.append(s)):
-        keep_going = host._handle_handoff_command("/handoff discord")
+        keep_going = host._handle_handoff_command("/handoff telegram")
     return keep_going, printed, host
 
 
@@ -203,7 +203,7 @@ class TestCLIWaitLoop:
         keep, printed, host = _run_handoff(db_proxy, "cli-sess-c", monkeypatch)
         out = "\n".join(printed)
         assert keep is False  # completed -> CLI exits like /quit
-        assert t("cli.commands.handoff.complete", platform="discord") in out
+        assert t("cli.commands.handoff.complete", platform="telegram") in out
         assert t("cli.commands.handoff.timed_out") not in out
         assert host._should_exit is True
         assert db.get_handoff_state("cli-sess-c")["state"] == "completed"
@@ -246,7 +246,7 @@ class TestDesktopHandoffFail:
 
     def test_desktop_fail_refuses_running_row(self, db):
         db.ensure_session("d1", "desktop")
-        assert db.request_handoff("d1", "discord")
+        assert db.request_handoff("d1", "telegram")
         assert db.claim_handoff("d1")
         res = self._call(db, "d1")
         assert res["failed"] is False
@@ -255,7 +255,7 @@ class TestDesktopHandoffFail:
 
     def test_desktop_fail_still_fails_pending_row(self, db):
         db.ensure_session("d2", "desktop")
-        assert db.request_handoff("d2", "discord")
+        assert db.request_handoff("d2", "telegram")
         res = self._call(db, "d2")
         assert res["failed"] is True
         assert db.get_handoff_state("d2")["state"] == "failed"

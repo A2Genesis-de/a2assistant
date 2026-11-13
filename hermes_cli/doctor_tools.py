@@ -401,32 +401,20 @@ def _audit_one(tool: str, cwd, label: str, audit_extra: list[str], manual_issues
 
 @doctor_check()
 def _check_npm_audit(should_fix: bool, f: Finding) -> None:
-    """pnpm audit per installed workspace (root, web, ui-tui); npm audit for the WhatsApp bridge.
+    """pnpm audit per installed workspace (root, web, ui-tui).
 
     The workspaces are audited one --filter each, so the desktop app's tree (Electron, node-pty, ...) is
-    never part of a routine check (#38772). The WhatsApp bridge may live under a writable HERMES_HOME
-    mirror rather than the (possibly read-only) Docker install tree, hence the shared resolver.
+    never part of a routine check (#38772).
     """
     from hermes_cli.doctor import PROJECT_ROOT
-    staged = _pm_tool_path("npm")
-    npm_bin = str(staged) if staged else (_safe_which("npm") if _is_termux() else None)
     # Termux has no pnpm: nothing installs the JS workspaces on device.
     pnpm_bin = _pm_tool_path("pnpm")
-    try:
-        # The WhatsApp bridge may live under a writable HERMES_HOME mirror instead of the (possibly
-        # read-only) install tree in Docker — resolve it through the shared helper so we audit the dir
-        # that actually holds node_modules. See #49561.
-        from gateway.platforms.whatsapp_common import resolve_whatsapp_bridge_dir
-        whatsapp_bridge_dir = resolve_whatsapp_bridge_dir()
-    except Exception:
-        whatsapp_bridge_dir = PROJECT_ROOT / "scripts" / "whatsapp-bridge"
     for tool, tree, label, audit_extra in (
         # The root package.json itself (js-yaml, semver, eslint tooling). See #122223.
         (pnpm_bin, PROJECT_ROOT, "Root npm package", ["--filter", "."]),
         # `{./X}...`: the workspace and the sibling workspaces it depends on (apps/shared, hermes-ink).
         (pnpm_bin, PROJECT_ROOT / "web", "web workspace", ["--filter", "{./web}..."]),
         (pnpm_bin, PROJECT_ROOT / "ui-tui", "ui-tui workspace", ["--filter", "{./ui-tui}..."]),
-        (npm_bin, whatsapp_bridge_dir, "WhatsApp bridge", []),
     ):
         # Only installed trees: pnpm links each installed workspace's own node_modules.
         if tool and (tree / "node_modules").exists():

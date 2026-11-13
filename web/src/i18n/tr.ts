@@ -292,9 +292,6 @@ export const tr: Translations = {
     delivery: {
       local: "Yerel",
       telegram: "Telegram",
-      discord: "Discord",
-      slack: "Slack",
-      email: "Email",
     },
   },
 
@@ -427,7 +424,7 @@ export const tr: Translations = {
       tts: "Metinden Konuşmaya",
       stt: "Konuşmadan Metne",
       logging: "Günlükleme",
-      discord: "Discord",
+      messaging: "Messaging",
       auxiliary: "Yardımcı",
     },
   },

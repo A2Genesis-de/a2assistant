@@ -77,7 +77,7 @@ def test_blocked_overflow_warning_stays_visible_in_dm_and_raw_surfaces():
         )
         == warning
     )
-    for platform in ("local", "api_server", "webhook", "msgraph_webhook"):
+    for platform in ("local", "api_server", "webhook"):
         assert (
             _prepare_gateway_status_message(
                 platform, "warn", warning, "group"

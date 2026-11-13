@@ -34,7 +34,7 @@ from gateway.session import SessionEntry, SessionSource, SessionStore
 
 def _source(user_id: str = "user-1") -> SessionSource:
     return SessionSource(
-        platform=Platform.DISCORD,
+        platform=Platform.TELEGRAM,
         chat_id="chan-1",
         chat_name="chan",
         chat_type="dm",
@@ -71,7 +71,7 @@ class TestRemoveBySessionId:
     def test_drops_every_route_for_the_id_and_persists_both_copies(self, store):
         sid = "20260926_120000_deadbeef"
         entry_kwargs = dict(created_at=datetime.now(), updated_at=datetime.now(),
-                            platform=Platform.DISCORD, chat_type="dm")
+                            platform=Platform.TELEGRAM, chat_type="dm")
         for key in ("agent:main:discord:chan-1:user-1", "agent:main:discord:chan-1:user-2"):
             store._entries[key] = SessionEntry(session_key=key, session_id=sid, **entry_kwargs)
         store._entries["agent:main:discord:chan-2:user-3"] = SessionEntry(

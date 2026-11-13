@@ -1343,7 +1343,7 @@ def _cmd_refresh_prompts(db, args):
 def _cmd_stats(db, args):
     reader = _surface_reader(db)
     print(f"Total sessions: {db.session_count()}\nTotal messages: {db.message_count()}")
-    for src in ("cli", "telegram", "discord", "whatsapp", "slack"):
+    for src in ("cli", "telegram"):
         if (c := reader.session_count(source=src)) > 0:
             print(f"  {src}: {c} sessions")
     if db.db_path.exists():

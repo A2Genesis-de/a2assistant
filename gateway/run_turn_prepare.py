@@ -20,8 +20,7 @@ from gateway.media_repair import repair_explicit_computer_use_media_paths
 from gateway.platforms.base import BasePlatformAdapter
 from gateway.platforms.event import MessageEvent
 from gateway.session import (
-    SessionSource, _session_key_namespace, build_channel_continuity_note,
-    build_session_context,
+    SessionSource, _session_key_namespace, build_session_context,
 )
 from gateway.session_transcript import TranscriptReadError
 from gateway.turn_context import TurnContext
@@ -559,15 +558,6 @@ class GatewayTurnPrepareMixin:
         from gateway.run import _AUTO_RESET_CONTEXT_NOTES
         reset_reason = getattr(session_entry, 'auto_reset_reason', None) or 'suspended'
         context_note = _AUTO_RESET_CONTEXT_NOTES.get(reset_reason, _AUTO_RESET_CONTEXT_NOTES["suspended"])
-        # Long-lived channels: point the agent at the prior same-channel session for session_search.
-        try:
-            # Returns None (appends nothing) for other platforms or when there's no prior activity to
-            # recall. Deterministic — no extra API/DB calls (#36220).
-            continuity_note = build_channel_continuity_note(session_entry, source)
-        except Exception:
-            continuity_note = None
-        if continuity_note:
-            context_note = context_note + "\n\n" + continuity_note
         turn_sidecar_notes.append(context_note)
 
         try:
@@ -688,19 +678,15 @@ class GatewayTurnPrepareMixin:
                 if prof and prof != "default" and _lgc().get_home_channel(source.platform):
                     home_env = "set"
         if not home_env:
-            # Slack routes every command through the parent `/hermes`; bare `/sethome` would fail.
-            sethome_cmd = "/hermes sethome" if source.platform == Platform.SLACK else "/sethome"
             await self._deliver_platform_notice(
-                source, t("gateway.notify.no_home_channel", platform=platform_name.title(), sethome_cmd=sethome_cmd),
+                source, t("gateway.notify.no_home_channel", platform=platform_name.title(), sethome_cmd="/sethome"),
             )
 
     def _hmwa_apply_message_timestamp(self, event, message_text):
         """Capture the platform event time as message metadata and keep the persisted transcript
-        clean — strip any leading timestamp prefix and the Discord triggering-message note (a
-        model instruction, not authored text) — regardless of the toggle; only the in-context
+        clean — strip any leading timestamp prefix — regardless of the toggle; only the in-context
         RENDER is gated behind gateway.message_timestamps.enabled (default OFF)."""
         from gateway.run import _load_gateway_config, _message_timestamps_enabled
-        from gateway.run_inbound import strip_discord_triggering_note
         persist_user_message = None
         persist_user_timestamp = None
         try:
@@ -713,7 +699,7 @@ class GatewayTurnPrepareMixin:
             _evt_tz = _get_evt_tz()
             if message_text and isinstance(message_text, str):
                 _clean_message_text, _embedded_ts = _strip_msg_ts(message_text, tz=_evt_tz)
-                persist_user_message = strip_discord_triggering_note(event, _clean_message_text)
+                persist_user_message = _clean_message_text
                 _event_epoch = _coerce_msg_ts(getattr(event, "timestamp", None), tz=_evt_tz)
                 persist_user_timestamp = _event_epoch if _event_epoch is not None else _embedded_ts
                 if _message_timestamps_enabled(_load_gateway_config()):
@@ -808,12 +794,6 @@ class GatewayTurnPrepareMixin:
             return record_unexecuted_failure(t("gateway.errors.history_unavailable")), _session_env_tokens
 
         await self._hmwa_first_contact_notes(source, history, turn_sidecar_notes, internal=event.internal)
-
-        # Voice channel state rides the user message ONLY when changed (in the system prompt it
-        # forced a rebuild + prompt-cache re-key per message).
-        _vc_note = self._voice_channel_sidecar_note(event, source, session_key)
-        if _vc_note:
-            turn_sidecar_notes.append(_vc_note)
 
         # Auto-analyze user images so the model gets a description plus the local path.
         message_text = await self._prepare_profile_scoped_inbound_message_text(

@@ -235,20 +235,20 @@ class TestResolveDeliveryTarget:
         }
 
     def test_bare_platform_delivery_uses_home_root_instead_of_origin_thread(self, monkeypatch):
-        monkeypatch.setenv("DISCORD_HOME_CHANNEL", "home-parent")
-        monkeypatch.delenv("DISCORD_HOME_CHANNEL_THREAD_ID", raising=False)
+        monkeypatch.setenv("TELEGRAM_HOME_CHANNEL", "home-parent")
+        monkeypatch.delenv("TELEGRAM_HOME_CHANNEL_THREAD_ID", raising=False)
 
         job = {
-            "deliver": "discord",
+            "deliver": "telegram",
             "origin": {
-                "platform": "discord",
+                "platform": "telegram",
                 "chat_id": "origin-parent",
                 "thread_id": "origin-thread",
             },
         }
 
         assert _resolve_delivery_target(job) == {
-            "platform": "discord",
+            "platform": "telegram",
             "chat_id": "home-parent",
             "thread_id": None,
             "_resolved_from": "home",
@@ -281,15 +281,15 @@ class TestResolveDeliveryTarget:
 
     def test_human_friendly_label_resolved_via_channel_directory(self):
         """deliver: 'whatsapp:Alice (dm)' resolves to the real JID."""
-        job = {"deliver": "whatsapp:Alice (dm)"}
+        job = {"deliver": "telegram:Alice (dm)"}
         with patch(
             "gateway.channel_directory.resolve_channel_name",
             return_value="12345678901234@lid",
         ) as resolve_mock:
             result = _resolve_delivery_target(job)
-        resolve_mock.assert_called_once_with("whatsapp", "Alice (dm)")
+        resolve_mock.assert_called_once_with("telegram", "Alice (dm)")
         assert result == {
-            "platform": "whatsapp",
+            "platform": "telegram",
             "chat_id": "12345678901234@lid",
             "thread_id": None,
             "_resolved_from": "explicit",
@@ -297,14 +297,14 @@ class TestResolveDeliveryTarget:
 
     def test_raw_id_not_mangled_when_directory_returns_none(self):
         """deliver: 'whatsapp:12345@lid' passes through when directory has no match."""
-        job = {"deliver": "whatsapp:12345@lid"}
+        job = {"deliver": "telegram:12345@lid"}
         with patch(
             "gateway.channel_directory.resolve_channel_name",
             return_value=None,
         ):
             result = _resolve_delivery_target(job)
         assert result == {
-            "platform": "whatsapp",
+            "platform": "telegram",
             "chat_id": "12345@lid",
             "thread_id": None,
             "_resolved_from": "explicit",
@@ -358,8 +358,8 @@ class TestRoutingIntents:
         from cron.scheduler import _resolve_delivery_targets
 
         monkeypatch.setenv("TELEGRAM_HOME_CHANNEL", "-111")
-        monkeypatch.setenv("DISCORD_HOME_CHANNEL", "-222")
-        monkeypatch.setenv("SLACK_HOME_CHANNEL", "C333")
+        monkeypatch.setenv("TELEGRAM_HOME_CHANNEL", "-222")
+        monkeypatch.setenv("TELEGRAM_HOME_CHANNEL", "C333")
         # Sanity: platforms without the env var must NOT appear in the expansion.
         monkeypatch.delenv("SIGNAL_HOME_CHANNEL", raising=False)
         monkeypatch.delenv("MATRIX_HOME_ROOM", raising=False)
@@ -368,8 +368,8 @@ class TestRoutingIntents:
         platforms = sorted(t["platform"] for t in targets)
 
         assert "telegram" in platforms
-        assert "discord" in platforms
-        assert "slack" in platforms
+        assert "telegram" in platforms
+        assert "telegram" in platforms
         assert "signal" not in platforms
         assert "matrix" not in platforms
 
@@ -394,7 +394,7 @@ class TestDeliverResultWrapping:
         from gateway.config import GatewayConfig, HomeChannel, Platform, PlatformConfig
 
         relay = MagicMock()
-        relay.fronts_platform.side_effect = lambda platform: platform == Platform.SLACK
+        relay.fronts_platform.side_effect = lambda platform: platform == Platform.TELEGRAM
         relay.send_for_platform = AsyncMock(return_value=MagicMock(success=True))
         relay.send_voice = AsyncMock(return_value=MagicMock(success=True))
         relay.supports_inchannel_continuable = False
@@ -405,10 +405,10 @@ class TestDeliverResultWrapping:
         config = GatewayConfig(
             platforms={
                 Platform.RELAY: PlatformConfig(enabled=True),
-                Platform.SLACK: PlatformConfig(
+                Platform.TELEGRAM: PlatformConfig(
                     enabled=False,
                     home_channel=HomeChannel(
-                        platform=Platform.SLACK,
+                        platform=Platform.TELEGRAM,
                         chat_id="D123",
                         name="Owner DM",
                         user_id="U123",
@@ -431,10 +431,10 @@ class TestDeliverResultWrapping:
 
         standalone_send = AsyncMock(return_value={"success": True})
         media_path = self._safe_media_path(tmp_path, monkeypatch, "relay-voice.mp3")
-        monkeypatch.setenv("SLACK_HOME_CHANNEL", "D123")
+        monkeypatch.setenv("TELEGRAM_HOME_CHANNEL", "D123")
         job = {
             "id": "relay-cron",
-            "deliver": "slack",
+            "deliver": "telegram",
         }
 
         with (
@@ -453,11 +453,11 @@ class TestDeliverResultWrapping:
         assert result is None
         relay.send_for_platform.assert_awaited_once()
         args = relay.send_for_platform.await_args.args
-        assert args[:3] == (Platform.SLACK, "D123", "scheduled result")
+        assert args[:3] == (Platform.TELEGRAM, "D123", "scheduled result")
         assert relay.send_for_platform.await_args.kwargs["metadata"]["user_id"] == "U123"
         relay.send_voice.assert_awaited_once()
         media_metadata = relay.send_voice.await_args.kwargs["metadata"]
-        assert media_metadata["_relay_logical_platform"] == "slack"
+        assert media_metadata["_relay_logical_platform"] == "telegram"
         assert media_metadata["user_id"] == "U123"
         standalone_send.assert_not_awaited()
 
@@ -476,7 +476,7 @@ class TestDeliverResultWrapping:
         pconfig = MagicMock()
         pconfig.enabled = True
         mock_cfg = MagicMock()
-        mock_cfg.platforms = {Platform.DISCORD: pconfig}
+        mock_cfg.platforms = {Platform.TELEGRAM: pconfig}
 
         loop = MagicMock()
         loop.is_running.return_value = True
@@ -497,7 +497,7 @@ class TestDeliverResultWrapping:
         job = {
             "id": "tts-job",
             "deliver": "origin",
-            "origin": {"platform": "discord", "chat_id": "9876"},
+            "origin": {"platform": "telegram", "chat_id": "9876"},
         }
 
         with patch("gateway.config.load_gateway_config", return_value=mock_cfg), \
@@ -506,7 +506,7 @@ class TestDeliverResultWrapping:
             _deliver_result(
                 job,
                 f"Here is TTS\nMEDIA:{media_path}",
-                adapters={Platform.DISCORD: adapter},
+                adapters={Platform.TELEGRAM: adapter},
                 loop=loop,
             )
 
@@ -810,66 +810,6 @@ class TestRunJobSessionPersistence:
             "platform": "telegram",
             "chat_id": "-2002",
             "thread_id": None,
-        }
-        assert os.getenv("HERMES_CRON_AUTO_DELIVER_PLATFORM") is None
-        assert os.getenv("HERMES_CRON_AUTO_DELIVER_CHAT_ID") is None
-        assert os.getenv("HERMES_CRON_AUTO_DELIVER_THREAD_ID") is None
-        fake_db.close.assert_called_once()
-
-    def test_run_job_preserves_slack_origin_thread_for_same_explicit_channel(self, tmp_path, monkeypatch):
-        job = {
-            "id": "slack-thread-job",
-            "name": "slack-thread",
-            "prompt": "hello",
-            "deliver": "slack:C0B3KEP3SD6",
-            "origin": {
-                "platform": "slack",
-                "chat_id": "C0B3KEP3SD6",
-                "thread_id": "1778485067.844139",
-            },
-        }
-        fake_db = MagicMock()
-        seen = {}
-
-        monkeypatch.delenv("HERMES_CRON_AUTO_DELIVER_PLATFORM", raising=False)
-        monkeypatch.delenv("HERMES_CRON_AUTO_DELIVER_CHAT_ID", raising=False)
-        monkeypatch.delenv("HERMES_CRON_AUTO_DELIVER_THREAD_ID", raising=False)
-
-        class FakeAgent:
-            def __init__(self, *args, **kwargs):
-                pass
-
-            def run_conversation(self, *args, **kwargs):
-                from gateway.session_context import get_session_env
-
-                seen["platform"] = get_session_env("HERMES_CRON_AUTO_DELIVER_PLATFORM") or None
-                seen["chat_id"] = get_session_env("HERMES_CRON_AUTO_DELIVER_CHAT_ID") or None
-                seen["thread_id"] = get_session_env("HERMES_CRON_AUTO_DELIVER_THREAD_ID") or None
-                return {"final_response": "ok"}
-
-        with patch("cron.scheduler._hermes_home", tmp_path), \
-             patch("cron.scheduler._preflight_job_config", return_value=None), \
-             patch("hermes_state_registry.acquire", return_value=fake_db), \
-             patch(
-                 "hermes_cli.runtime_provider.resolve_runtime_provider",
-                 return_value={
-                     "api_key": "***",
-                     "base_url": "https://example.invalid/v1",
-                     "provider": "openrouter",
-                     "api_mode": "chat_completions",
-                 },
-             ), \
-             patch("run_agent.AIAgent", FakeAgent):
-            success, output, final_response, error = _run_owned_job(job, tmp_path, fake_db)
-
-        assert success is True
-        assert error is None
-        assert final_response == "ok"
-        assert "ok" in output
-        assert seen == {
-            "platform": "slack",
-            "chat_id": "C0B3KEP3SD6",
-            "thread_id": "1778485067.844139",
         }
         assert os.getenv("HERMES_CRON_AUTO_DELIVER_PLATFORM") is None
         assert os.getenv("HERMES_CRON_AUTO_DELIVER_CHAT_ID") is None
@@ -2072,8 +2012,7 @@ class TestCronDeliveryTargets:
     def test_lists_configured_platforms_flagging_missing_home_channel(self, monkeypatch):
         from cron.scheduler_delivery import cron_delivery_targets
 
-        self._patch_connected(monkeypatch, ["matrix", "telegram"])
-        monkeypatch.delenv("MATRIX_HOME_ROOM", raising=False)
+        self._patch_connected(monkeypatch, ["telegram"])
         monkeypatch.delenv("TELEGRAM_HOME_CHANNEL", raising=False)
 
         targets = {t["id"]: t for t in cron_delivery_targets()}
@@ -2083,11 +2022,10 @@ class TestCronDeliveryTargets:
         # platform assertions to the gateway entries.
         platform_targets = {k: v for k, v in targets.items() if not k.startswith("bot-chat")}
 
-        assert set(platform_targets) == {"matrix", "telegram"}
+        assert set(platform_targets) == {"telegram"}
         # Configured but no home channel → surfaced, flagged for the UI.
-        assert platform_targets["matrix"]["home_target_set"] is False
-        assert platform_targets["matrix"]["home_env_var"] == "MATRIX_HOME_ROOM"
         assert platform_targets["telegram"]["home_target_set"] is False
+        assert platform_targets["telegram"]["home_env_var"] == "TELEGRAM_HOME_CHANNEL"
         # Bot Chat targets need no home channel: whatever profiles exist on
         # this machine must all be listed as ready.
         bot_chat = [v for k, v in targets.items() if k.startswith("bot-chat")]
@@ -2205,7 +2143,7 @@ class TestCronContinuableSurfaceInChannel:
         pconfig.enabled = True
         pconfig.extra = extra
         mock_cfg = MagicMock()
-        mock_cfg.platforms = {Platform.SLACK: pconfig}
+        mock_cfg.platforms = {Platform.TELEGRAM: pconfig}
         return mock_cfg
 
     def _run_inchannel_delivery(self, extra, adapter, *, mirror_ok=True, origin=None,
@@ -2237,7 +2175,7 @@ class TestCronContinuableSurfaceInChannel:
             # Channel origin: no thread_id (flat channel message scheduled it).
             # Carries the scheduling user's id — the in_channel seed must key
             # the flat channel session to THIS user (see build_session_key).
-            "origin": origin or {"platform": "slack", "chat_id": "C123", "user_id": "U_HUMAN"},
+            "origin": origin or {"platform": "telegram", "chat_id": "C123", "user_id": "U_HUMAN"},
             # Opt into the continuable mirror (parameterized: the seed must
             # NOT depend on this — see the no-attach regression test).
             "attach_to_session": attach_to_session,
@@ -2250,7 +2188,7 @@ class TestCronContinuableSurfaceInChannel:
              patch("gateway.mirror.mirror_to_session", return_value=mirror_ok) as mirror_mock:
             _deliver_result(
                 job, "Here is today's brief.",
-                adapters={Platform.SLACK: adapter}, loop=loop,
+                adapters={Platform.TELEGRAM: adapter}, loop=loop,
             )
         return open_thread_mock, mirror_mock
 
@@ -2300,7 +2238,7 @@ class TestCronContinuableSurfaceInChannel:
 
         with patch("gateway.mirror.mirror_to_session", return_value=True) as mirror_mock:
             ok = _seed_cron_channel_session(
-                {"id": "j1", "name": "Brief"}, adapter, "slack", "C123",
+                {"id": "j1", "name": "Brief"}, adapter, "telegram", "C123",
                 "Daily brief", is_dm=False, user_id="U_HUMAN", chat_name="ops",
             )
         assert ok is True
@@ -2310,7 +2248,7 @@ class TestCronContinuableSurfaceInChannel:
         # What a plain top-level channel reply (reply_in_thread:false → thread
         # None) from the same user resolves to:
         inbound = SessionSource(
-            platform=Platform.SLACK, chat_id="C123", chat_type="group",
+            platform=Platform.TELEGRAM, chat_id="C123", chat_type="group",
             user_id="U_HUMAN", thread_id=None,
         )
         assert seed_key == build_session_key(inbound), (
@@ -2337,7 +2275,7 @@ class TestCronContinuableSurfaceInChannel:
         adapter = self._slack_adapter(supports_inchannel=True)
         with patch("cron.scheduler_delivery._seed_cron_channel_session", return_value=True) as seed_mock:
             self._run_inchannel_delivery(
-                {"slack": {"cron_continuable_surface": "in_channel"}}, adapter,
+                {"telegram": {"cron_continuable_surface": "in_channel"}}, adapter,
                 attach_to_session=False,
             )
         seed_mock.assert_called_once()
@@ -2366,14 +2304,14 @@ class TestCronContinuableSurfaceInChannel:
 
         adapter = self._slack_adapter(supports_inchannel=True)
         origin_with_thread = {
-            "platform": "slack", "chat_id": "C123", "user_id": "U_HUMAN",
+            "platform": "telegram", "chat_id": "C123", "user_id": "U_HUMAN",
             # Genuine origin thread (job created from inside a thread).
             "thread_id": "1787188000.000100",
         }
         with patch("gateway.delivery.DeliveryRouter", _SpyRouter), \
              patch("cron.scheduler_delivery._seed_cron_channel_session", return_value=True) as seed_mock:
             self._run_inchannel_delivery(
-                {"slack": {"cron_continuable_surface": "in_channel"}}, adapter,
+                {"telegram": {"cron_continuable_surface": "in_channel"}}, adapter,
                 attach_to_session=False, origin=origin_with_thread,
             )
         seed_mock.assert_called_once()
@@ -2405,7 +2343,7 @@ class TestCronContinuableSurfaceInChannel:
 
         adapter = self._slack_adapter(supports_inchannel=True)
         scoped_origin = {
-            "platform": "slack", "chat_id": "C123", "user_id": "U_HUMAN",
+            "platform": "telegram", "chat_id": "C123", "user_id": "U_HUMAN",
             # Persisted workspace scope (captured at job creation). C123 is
             # not any configured home channel in this harness.
             "scope_id": "T0AAAA111",
@@ -2413,7 +2351,7 @@ class TestCronContinuableSurfaceInChannel:
         with patch("gateway.delivery.DeliveryRouter", _SpyRouter), \
              patch("cron.scheduler_delivery._seed_cron_channel_session", return_value=True):
             self._run_inchannel_delivery(
-                {"slack": {"cron_continuable_surface": "in_channel"}}, adapter,
+                {"telegram": {"cron_continuable_surface": "in_channel"}}, adapter,
                 attach_to_session=False, origin=scoped_origin,
             )
         assert captured["metadata"].get("scope_id") == "T0AAAA111", (
@@ -2439,7 +2377,7 @@ class TestCronContinuableSurfaceInChannel:
         with patch("gateway.delivery.DeliveryRouter", _SpyRouter), \
              patch("cron.scheduler_delivery._seed_cron_channel_session", return_value=True):
             self._run_inchannel_delivery(
-                {"slack": {"cron_continuable_surface": "in_channel"}}, adapter,
+                {"telegram": {"cron_continuable_surface": "in_channel"}}, adapter,
                 attach_to_session=False,
             )
         assert "scope_id" not in captured["metadata"]
@@ -2469,7 +2407,7 @@ class TestCronContinuableSurfaceInChannel:
         )
         with patch("cron.scheduler_delivery._seed_cron_channel_session") as seed_mock:
             self._run_inchannel_delivery(
-                {"slack": {"cron_continuable_surface": "in_channel"}}, adapter,
+                {"telegram": {"cron_continuable_surface": "in_channel"}}, adapter,
                 attach_to_session=False,
             )
         # Delivery must have gone through the LIVE adapter — otherwise a
@@ -2500,7 +2438,7 @@ class TestCronContinuableSurfaceInChannel:
 
         with patch("gateway.mirror.mirror_to_session", return_value=True) as mirror_mock:
             ok = _seed_cron_channel_session(
-                {"id": "j1", "name": "Brief"}, adapter, "slack", "D0BJTDCSR7C",
+                {"id": "j1", "name": "Brief"}, adapter, "telegram", "D0BJTDCSR7C",
                 "Daily brief", is_dm=True, user_id="U_HUMAN", chat_name=None,
             )
         assert ok is True
@@ -2518,7 +2456,7 @@ class TestCronContinuableSurfaceInChannel:
         with patch("cron.scheduler_delivery._seed_cron_channel_session", return_value=True), \
              patch("cron.scheduler_delivery._seed_cron_thread_session") as thread_seed_mock:
             self._run_inchannel_delivery(
-                {"slack": {"cron_continuable_surface": "in_channel"}}, adapter,
+                {"telegram": {"cron_continuable_surface": "in_channel"}}, adapter,
                 attach_to_session=False,
             )
         thread_seed_mock.assert_called_once()
@@ -2530,29 +2468,28 @@ class TestMultiTargetDeliveryContinuesOnFailure:
     fallback, the loop must continue to the remaining targets (#47163).
 
     The fallback runs inside the `except RuntimeError` block of
-    `_deliver_result`. Before the fix, an exception raised there (SMTP
-    ConnectionError, future.result timeout) escaped the function entirely —
+    `_deliver_result`. Before the fix, an exception raised there (ConnectionError, future.result timeout) escaped the function entirely —
     it is NOT caught by the sibling `except Exception` — crashing the loop
     and silently dropping every subsequent target.
     """
 
-    def _email_cfg(self):
+    def _platform_cfg(self):
         from gateway.config import Platform
 
         pconfig = MagicMock()
         pconfig.enabled = True
         mock_cfg = MagicMock()
-        mock_cfg.platforms = {Platform.EMAIL: pconfig}
+        mock_cfg.platforms = {Platform.TELEGRAM: pconfig}
         return mock_cfg
 
     def test_first_target_failure_does_not_crash_loop(self):
-        """First email target fails in the fallback; the second is still attempted."""
+        """First target fails in the fallback; the second is still attempted."""
         job = {
-            "id": "multi-email-job",
-            "deliver": "email:a@example.com,email:b@example.com",
+            "id": "multi-target-job",
+            "deliver": "telegram:111,telegram:222",
         }
 
-        with patch("gateway.config.load_gateway_config", return_value=self._email_cfg()), \
+        with patch("gateway.config.load_gateway_config", return_value=self._platform_cfg()), \
              patch("cron.scheduler.load_config", return_value={"cron": {"wrap_response": False}}), \
              patch("asyncio.run", side_effect=RuntimeError("no running loop")), \
              patch("concurrent.futures.ThreadPoolExecutor") as mock_pool_cls:
@@ -2560,7 +2497,7 @@ class TestMultiTargetDeliveryContinuesOnFailure:
             mock_pool_cls.return_value = mock_pool
 
             fail_future = MagicMock()
-            fail_future.result.side_effect = ConnectionError("SMTP connection refused")
+            fail_future.result.side_effect = ConnectionError("connection refused")
             ok_future = MagicMock()
             ok_future.result.return_value = {"success": True}
             mock_pool.submit.side_effect = [fail_future, ok_future]
@@ -2573,17 +2510,17 @@ class TestMultiTargetDeliveryContinuesOnFailure:
         )
         # First target's failure is surfaced in the returned error string.
         assert result is not None
-        assert "a@example.com" in result
-        assert "SMTP connection refused" in result
+        assert "111" in result
+        assert "connection refused" in result
 
     def test_all_targets_fail_returns_combined_errors(self):
         """When every target fails, the result reports all of them."""
         job = {
             "id": "all-fail-job",
-            "deliver": "email:a@example.com,email:b@example.com",
+            "deliver": "telegram:111,telegram:222",
         }
 
-        with patch("gateway.config.load_gateway_config", return_value=self._email_cfg()), \
+        with patch("gateway.config.load_gateway_config", return_value=self._platform_cfg()), \
              patch("cron.scheduler.load_config", return_value={"cron": {"wrap_response": False}}), \
              patch("asyncio.run", side_effect=RuntimeError("no running loop")), \
              patch("concurrent.futures.ThreadPoolExecutor") as mock_pool_cls:
@@ -2597,8 +2534,8 @@ class TestMultiTargetDeliveryContinuesOnFailure:
             result = _deliver_result(job, "Report content")
 
         assert result is not None
-        assert "a@example.com" in result
-        assert "b@example.com" in result
+        assert "111" in result
+        assert "222" in result
         assert mock_pool.submit.call_count == 2
 
 class TestBuildJobPromptExtraPrompt:

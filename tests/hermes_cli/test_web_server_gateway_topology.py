@@ -39,11 +39,10 @@ class TestProfilePlatformPorts:
         runtime = {
             "platforms": {
                 "webhook": {"state": "fatal"},
-                "api_server": {"state": "disconnected"},
-                "msgraph_webhook": {"state": "connected"},
+                "api_server": {"state": "connected"},
             }
         }
-        assert _profile_platform_ports(tmp_path, runtime) == {"msgraph_webhook": 8646}
+        assert _profile_platform_ports(tmp_path, runtime) == {"api_server": 8642}
 
 
 # ---------------------------------------------------------------------------

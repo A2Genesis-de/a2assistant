@@ -28,7 +28,7 @@ class _FakeSessionStore:
         return self.entry
 
     def _generate_session_key(self, source):
-        return "agent:main:discord:channel:loop-test"
+        return "agent:main:telegram:channel:loop-test"
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ def loop_env(tmp_path, monkeypatch):
 def _make_runner():
     runner = object.__new__(GatewayRunner)
     runner.config = GatewayConfig(
-        platforms={Platform.DISCORD: PlatformConfig(enabled=True, token="token")}
+        platforms={Platform.TELEGRAM: PlatformConfig(enabled=True, token="token")}
     )
     runner.session_store = _FakeSessionStore()
     runner.adapters = {}
@@ -64,7 +64,7 @@ def _make_event(text: str) -> MessageEvent:
         text=text,
         message_type=MessageType.TEXT,
         source=SessionSource(
-            platform=Platform.DISCORD,
+            platform=Platform.TELEGRAM,
             chat_id="chat-loop",
             chat_type="channel",
             thread_id="thread-9",
@@ -84,7 +84,7 @@ async def test_gateway_loop_create_captures_route(loop_env):
     state = loops.load_loop("sid-gateway-loop")
     assert state is not None
     assert state.prompt == "check the deploy"
-    assert state.route["platform"] == "discord"
+    assert state.route["platform"] == "telegram"
     assert state.route["chat_id"] == "chat-loop"
     assert state.route["thread_id"] == "thread-9"
 
@@ -286,12 +286,12 @@ async def test_loop_wakeup_watcher_runs_every_sessiondb_call_off_loop_thread(loo
         async def handle_message(self, event):
             self.handled.append(event.text)
 
-    runner.adapters = {Platform.DISCORD: _Adapter()}
+    runner.adapters = {Platform.TELEGRAM: _Adapter()}
     runner._build_process_event_source = lambda evt: SimpleNamespace(
-        platform=Platform.DISCORD, chat_id=evt["chat_id"], chat_type=evt["chat_type"],
+        platform=Platform.TELEGRAM, chat_id=evt["chat_id"], chat_type=evt["chat_type"],
         thread_id=evt["thread_id"] or None, user_id=evt["user_id"], user_name=evt["user_name"],
     )
-    runner._session_key_for_source = lambda source: "agent:main:discord:channel:chat-loop"
+    runner._session_key_for_source = lambda source: "agent:main:telegram:channel:chat-loop"
 
     # A slash-command loop that is due now.
     await GatewayRunner._handle_loop_command(runner, _make_event("/loop 5m /status"))

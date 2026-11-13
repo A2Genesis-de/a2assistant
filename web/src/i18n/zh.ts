@@ -288,9 +288,6 @@ export const zh: Translations = {
     delivery: {
       local: "本地",
       telegram: "Telegram",
-      discord: "Discord",
-      slack: "Slack",
-      email: "邮件",
     },
   },
 
@@ -422,7 +419,7 @@ export const zh: Translations = {
       tts: "文字转语音",
       stt: "语音转文字",
       logging: "日志",
-      discord: "Discord",
+      messaging: "Messaging",
       auxiliary: "辅助",
     },
   },

@@ -1,16 +1,8 @@
 """Target parsing and resolution for send_message (platform:chat_id[:thread] → ids)."""
 
 import logging
-import re
 
 logger = logging.getLogger("tools.send_message_tool")
-
-# E.164 phone recipients ("+1555..."): the '+' fails the isdigit() rule and the channel directory
-# cannot resolve a raw number, so keep the '+' and treat it as explicit.
-_PHONE_PLATFORMS = frozenset({"photon", "signal", "sms", "whatsapp"})
-_E164_TARGET_RE = re.compile(r"^\s*\+(\d{7,15})\s*$")
-# Exceptions to "<PLATFORM>_HOME_CHANNEL" for error hints (email reads EMAIL_HOME_ADDRESS).
-_HOME_CHANNEL_ENV_OVERRIDES = {"email": "EMAIL_HOME_ADDRESS"}
 
 
 def _target_syntax_fn(platform_name: str):
@@ -26,9 +18,8 @@ def _target_syntax_fn(platform_name: str):
 
 
 def _parse_target_ref(platform_name: str, target_ref: str):
-    """(chat_id, thread_id, explicit): the plugin's ``target_ref_syntax_fn`` first, then in order
-    E.164 phone numbers (keeping the '+'), bare numeric ids, Matrix ``!room``/``@user``, XMPP JIDs.
-    Anything else goes to channel-directory resolution."""
+    """(chat_id, thread_id, explicit): the plugin's ``target_ref_syntax_fn`` first, then bare numeric
+    ids. Anything else goes to channel-directory resolution."""
     from gateway.platforms.send_targets import NOT_EXPLICIT
     parser = _target_syntax_fn(platform_name)
     if parser is not None:
@@ -37,10 +28,7 @@ def _parse_target_ref(platform_name: str, target_ref: str):
             return None, None, False
         if parsed is not None:
             return parsed[0], parsed[1], True
-    if platform_name in _PHONE_PLATFORMS and _E164_TARGET_RE.fullmatch(target_ref):
-        return target_ref.strip(), None, True
-    if (target_ref.lstrip("-").isdigit() or (platform_name == "matrix" and target_ref.startswith(("!", "@")))
-            or (platform_name == "xmpp" and "@" in target_ref)):
+    if target_ref.lstrip("-").isdigit():
         return target_ref, None, True
     return None, None, False
 

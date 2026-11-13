@@ -64,12 +64,18 @@ class _HealthyAdapter(BasePlatformAdapter):
         return {"id": chat_id}
 
 
+def _plugin_platform(monkeypatch, name: str) -> Platform:
+    with monkeypatch.context() as m:
+        m.setattr("gateway.platform_registry.platform_registry.is_registered", lambda n: n == name)
+        return Platform(name)
+
+
 def _runner(monkeypatch, tmp_path, platforms, create_adapter) -> GatewayRunner:
     monkeypatch.setenv("HERMES_HOME", str(tmp_path))
-    # Only the bundled bluebubbles plugin counts as registered here, so a None adapter elsewhere is the
-    # "plugin never registered" case and a None bluebubbles adapter is "registered but failed".
+    # Only api_server counts as registered here, so a None adapter elsewhere is the
+    # "plugin never registered" case and a None api_server adapter is "registered but failed".
     monkeypatch.setattr("gateway.platform_registry.platform_registry.is_registered",
-                        lambda name: name == "bluebubbles")
+                        lambda name: name == "api_server")
     runner = GatewayRunner(GatewayConfig(platforms=platforms, sessions_dir=tmp_path / "sessions"))
     monkeypatch.setattr(runner, "_create_adapter", create_adapter)
 
@@ -271,15 +277,16 @@ async def test_every_platform_connected_still_reports_a_normal_run(monkeypatch, 
 @pytest.mark.asyncio
 async def test_missing_adapter_degrades_only_the_unserved_enabled_platform(monkeypatch, tmp_path):
     """An enabled missing plugin must appear in status even when a sibling connects."""
+    missing = _plugin_platform(monkeypatch, "fakechat")
     runner = _runner(
         monkeypatch, tmp_path,
         {
             Platform.TELEGRAM: PlatformConfig(enabled=True, token="***"),
-            Platform.DISCORD: PlatformConfig(enabled=True, token="***"),
-            Platform.SLACK: PlatformConfig(enabled=False, token="***"),
+            missing: PlatformConfig(enabled=True, token="***"),
+            Platform.RELAY: PlatformConfig(enabled=False, token="***"),
             # A registered plugin whose adapter creation fails on missing creds needs a config change:
             # flagged once, never queued (else it re-warns forever at the backoff cap on fleet nodes, #5196).
-            Platform.BLUEBUBBLES: PlatformConfig(enabled=True),
+            Platform.API_SERVER: PlatformConfig(enabled=True),
         },
         lambda platform, platform_config: _HealthyAdapter() if platform is Platform.TELEGRAM else None,
     )
@@ -287,15 +294,15 @@ async def test_missing_adapter_degrades_only_the_unserved_enabled_platform(monke
         assert await runner.start() is True
         state = read_runtime_status()
         assert state["platforms"]["telegram"]["state"] == "connected"
-        assert state["platforms"]["discord"]["state"] == "retrying"
-        assert state["platforms"]["discord"]["error_code"] == "adapter_unavailable"
-        assert state["platforms"]["discord"]["needs_attention"] is True
-        assert "slack" not in state["platforms"]
-        bluebubbles = state["platforms"]["bluebubbles"]
-        assert (bluebubbles["state"], bluebubbles["error_code"]) == ("fatal", "adapter_unavailable")
-        assert bluebubbles["needs_attention"] is True
-        assert "Retrying" not in bluebubbles["error_message"]
-        assert list(runner._failed_platforms) == [Platform.DISCORD]  # the reconnect watcher owns it
+        assert state["platforms"]["fakechat"]["state"] == "retrying"
+        assert state["platforms"]["fakechat"]["error_code"] == "adapter_unavailable"
+        assert state["platforms"]["fakechat"]["needs_attention"] is True
+        assert "relay" not in state["platforms"]
+        api_server = state["platforms"]["api_server"]
+        assert (api_server["state"], api_server["error_code"]) == ("fatal", "adapter_unavailable")
+        assert api_server["needs_attention"] is True
+        assert "Retrying" not in api_server["error_message"]
+        assert list(runner._failed_platforms) == [missing]  # the reconnect watcher owns it
     finally:
         await runner.stop()
 
@@ -304,7 +311,7 @@ async def test_missing_adapter_degrades_only_the_unserved_enabled_platform(monke
 async def test_adapterless_platform_heals_once_its_adapter_appears(monkeypatch, tmp_path):
     """A plugin that registers late: the queued platform stays queued, then connects. One that turns
     into a registered plugin still returning None needs a config change, so the watcher drops it."""
-    platform = Platform.DISCORD
+    platform = _plugin_platform(monkeypatch, "fakechat")
     adapters = {}
     runner = _runner(
         monkeypatch, tmp_path, {platform: PlatformConfig(enabled=True, token="***")},
@@ -332,15 +339,15 @@ async def test_adapterless_platform_heals_once_its_adapter_appears(monkeypatch, 
         assert status["needs_attention"] is False
 
         # Registered plugin whose factory returns None: the watcher marks it fatal and stops retrying.
-        slack = Platform.SLACK
-        runner._failed_platforms[slack] = runner._startup_retry_entry(
-            slack, None, PlatformConfig(enabled=True, token="***"),
+        registered = Platform.API_SERVER
+        runner._failed_platforms[registered] = runner._startup_retry_entry(
+            registered, None, PlatformConfig(enabled=True, token="***"),
         )
         monkeypatch.setattr("gateway.platform_registry.platform_registry.is_registered", lambda name: True)
-        await runner._reconnect_failed_platform(slack, time.monotonic() + 3600)
-        assert slack not in runner._failed_platforms
+        await runner._reconnect_failed_platform(registered, time.monotonic() + 3600)
+        assert registered not in runner._failed_platforms
         assert await flush_runtime_status_async()  # status writes are queued off-thread
-        status = read_runtime_status()["platforms"][slack.value]
+        status = read_runtime_status()["platforms"][registered.value]
         assert (status["state"], status["error_code"]) == ("fatal", "adapter_unavailable")
         assert "Retrying" not in status["error_message"]
     finally:

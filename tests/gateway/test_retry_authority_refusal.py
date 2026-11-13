@@ -50,9 +50,9 @@ async def _exchange(runner, root):
     await initialize_gateway_runtime(runner)
     register_transport_home(runner, None, root)
     adapter = _FakeAdapter()
-    runner.adapters = {Platform.DISCORD: adapter}
+    runner.adapters = {Platform.TELEGRAM: adapter}
     runner._is_user_authorized_for_source = lambda *a, **k: True
-    source = SessionSource(platform=Platform.DISCORD, chat_id='c1', chat_type='dm',
+    source = SessionSource(platform=Platform.TELEGRAM, chat_id='c1', chat_type='dm',
                            user_id='u1', user_name='probe')
     source._transport_adapter_ref = weakref.ref(adapter)
     entry = await runner.async_session_store.get_or_create_session(source)
@@ -109,9 +109,9 @@ async def _admitting_exchange(runner, root, rows=None):
     await initialize_gateway_runtime(runner)
     register_transport_home(runner, None, root)
     adapter = _FakeAdapter()
-    runner.adapters = {Platform.DISCORD: adapter}
+    runner.adapters = {Platform.TELEGRAM: adapter}
     runner._is_user_authorized_for_source = lambda *a, **k: True
-    source = SessionSource(platform=Platform.DISCORD, chat_id='c1', chat_type='dm',
+    source = SessionSource(platform=Platform.TELEGRAM, chat_id='c1', chat_type='dm',
                            user_id='u1', user_name='probe')
     source._transport_adapter_ref = weakref.ref(adapter)
     entry = await runner.async_session_store.get_or_create_session(source)

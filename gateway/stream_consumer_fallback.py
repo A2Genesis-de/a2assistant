@@ -354,14 +354,8 @@ class StreamFallbackMixin:
             # with interim text and orphan the true final.
             _md = self._metadata_for_send(final=False) or {}
             _md["_interim_send"] = True
-            # reply_to only for reply-anchored threading; Discord/Telegram use
-            # thread_id metadata and reply_to on every commentary is spam.
-            _plat = getattr(getattr(self.adapter, "platform", None), "value", None)
-            _platform_name = str(_plat or getattr(self.adapter, "name", "")).lower()
-            _needs_reply_anchor = _platform_name in ("buzz", "slack", "mattermost", "feishu")
-            result = await self.adapter.send(
-                chat_id=self.chat_id, content=text,
-                reply_to=self._initial_reply_to_id if _needs_reply_anchor else None, metadata=_md)
+            # Telegram threads by thread_id metadata; reply_to on every commentary is spam.
+            result = await self.adapter.send(chat_id=self.chat_id, content=text, reply_to=None, metadata=_md)
             # Do NOT set _already_sent: commentary is interim, and the flag would
             # suppress the real final after multiple tool calls.
             if result.success:

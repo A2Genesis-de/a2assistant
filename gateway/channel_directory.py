@@ -8,7 +8,6 @@ import asyncio
 import contextlib
 import json
 import logging
-import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Tuple
@@ -27,14 +26,8 @@ DIRECTORY_PATH: Optional[Path] = None
 # channel_directory.json don't survive); also lets a chat be pre-named before first traffic.
 CHANNEL_ALIASES_PATH: Optional[Path] = None
 
-# Slack refresh failures recur on every timed rebuild (missing scope, revoked
-# token); warn once per (team, error detail) per interval, then DEBUG.
-_SLACK_DIRECTORY_WARNING_INTERVAL_SECONDS = 3600
-_slack_directory_warning_last: dict[tuple[str, str], float] = {}
-
 # Platforms whose historical session origins must never become send targets.
 _SKIP_SESSION_DISCOVERY = frozenset({"local", "api_server", "webhook"})
-_SLACK_RAW_ID_PREFIXES = ("C0", "D0", "G0")
 
 
 def _directory_path() -> Path:
@@ -93,8 +86,6 @@ def _normalize_channel_query(value: str) -> str:
 def _channel_target_name(platform_name: str, channel: dict[str, Any]) -> str:
     """Human-facing target label for a channel entry."""
     name = channel["name"]
-    if platform_name == "discord":
-        return f"#{name}" if channel.get("guild") else name
     return f"{name} ({channel['type']})" if channel.get("type") else name
 
 
@@ -112,21 +103,6 @@ def _session_entry_name(origin: dict[str, Any]) -> str:
     return f"{base_name} / {origin.get('chat_topic') or f'topic {thread_id}'}"
 
 
-def _report_slack_failure(team_id: str, error_code: Optional[str], detail: str) -> None:
-    """missing_scope is expected (session-history fallback); anything else warns once per interval."""
-    if error_code == "missing_scope":
-        logger.debug("Channel directory: Slack team %s lacks channels:read; using session history only", team_id)
-        return
-    key = (str(team_id), str(detail))
-    now = time.monotonic()
-    last = _slack_directory_warning_last.get(key)
-    if last is None or now - last >= _SLACK_DIRECTORY_WARNING_INTERVAL_SECONDS:
-        _slack_directory_warning_last[key] = now
-        logger.warning("Channel directory: failed to list Slack channels for team %s: %s", team_id, detail)
-    else:
-        logger.debug("Channel directory: suppressed repeated Slack channel list failure for team %s: %s", team_id, detail)
-
-
 # --- Build / refresh -------------------------------------------------------
 
 async def build_channel_directory(adapters: dict[Any, Any]) -> dict[str, Any]:
@@ -140,11 +116,6 @@ async def build_channel_directory(adapters: dict[Any, Any]) -> dict[str, Any]:
                 platform_channels = await list_channels()
                 if platform_channels is not None:
                     platforms[platform.value] = _normalize_adapter_channels(platform_channels)
-                    continue
-            if platform == Platform.DISCORD:
-                platforms["discord"] = await asyncio.to_thread(_build_discord, adapter)
-            elif platform == Platform.SLACK:
-                platforms["slack"] = await _build_slack(adapter)
         except Exception as e:
             logger.warning("Channel directory: failed to build %s: %s", platform.value, e)
     # Platforms without channel enumeration get session-based discovery, but only when
@@ -209,40 +180,6 @@ def _qualify_label_clashes(platform_name: str, entries: list[dict[str, Any]], ad
         entry["name"] = f"{entry['id']} / {entry['name']}"
 
 
-def _build_discord(adapter) -> list[dict[str, str]]:
-    """Enumerate text + forum channels the Discord bot can see, plus session DMs."""
-    channels = []
-    client = getattr(adapter, "_client", None)
-    if not client:
-        return channels
-    try:
-        import discord as _discord
-    except ImportError:
-        return channels
-    from gateway.platforms.helpers import is_discord_channel_obfuscated
-
-    for guild in client.guilds:
-        # Forum channels (type 15): creating a message auto-spawns a thread post.
-        forums = getattr(guild, "forum_channels", None) or []
-        for chs, ch_type in ((guild.text_channels, "channel"), (forums, "forum")):
-            for ch in chs:
-                # Obfuscated placeholders (no VIEW_CHANNEL) can never be posted to. #90154
-                if is_discord_channel_obfuscated(ch):
-                    continue
-                channels.append({"id": str(ch.id), "name": ch.name, "guild": guild.name, "type": ch_type})
-    # DM-capable users aren't reachable via guild enumeration; they come from sessions.
-    channels.extend(_build_from_sessions("discord"))
-    return channels
-
-
-def _slack_api_error_code(error: Exception) -> Optional[str]:
-    """Slack Web API error code from SlackApiError-like exceptions."""
-    with contextlib.suppress(Exception):
-        value = error.response.get("error")
-        return str(value) if value else None
-    return None
-
-
 def _normalize_adapter_channels(raw_channels: Any) -> list[dict[str, Any]]:
     """Validate and dedupe entries returned by an adapter's ``list_channels()`` hook."""
     channels: list[dict[str, Any]] = []
@@ -258,100 +195,6 @@ def _normalize_adapter_channels(raw_channels: Any) -> list[dict[str, Any]]:
         entry.update({key: str(raw[key]) for key in ("thread_id", "guild") if raw.get(key)})
         channels.append(entry)
         seen_ids.add(channel_id)
-    return channels
-
-
-def _slack_base_id(entry_id: str) -> str:
-    """Thread-qualified IDs (``C0xxx:ts``) are internal routing keys, not Slack API IDs."""
-    return entry_id.split(":", 1)[0]
-
-
-def _slack_has_raw_name(entry: dict[str, Any]) -> bool:
-    return entry.get("name", "").startswith(_SLACK_RAW_ID_PREFIXES)
-
-
-async def _slack_team_channels(team_id: str, client, seen_ids: set) -> list[dict[str, Any]]:
-    """``users.conversations`` for one workspace (public + private member channels), paginated."""
-    channels: list[dict[str, Any]] = []
-    try:
-        cursor: Optional[str] = None
-        for _page in range(20):  # safety cap on pagination
-            response = await client.users_conversations(
-                types="public_channel,private_channel", exclude_archived=True, limit=200, cursor=cursor,
-            )
-            if not response.get("ok"):
-                error_code = response.get("error", "unknown")
-                _report_slack_failure(team_id, error_code, f"users.conversations not ok: {error_code}")
-                break
-            for ch in response.get("channels", []):
-                cid, name = ch.get("id"), ch.get("name")
-                if not cid or not name or cid in seen_ids:
-                    continue
-                seen_ids.add(cid)
-                channels.append({"id": cid, "name": name, "type": "private" if ch.get("is_private") else "channel"})
-            cursor = (response.get("response_metadata") or {}).get("next_cursor")
-            if not cursor:
-                break
-    except Exception as e:
-        _report_slack_failure(team_id, _slack_api_error_code(e), str(e))
-    return channels
-
-
-async def _slack_resolve_raw_names(client, channels: list[dict[str, Any]]) -> None:
-    """Name remaining raw-ID entries (DMs, channels outside bot scope) via
-    conversations.info + users.info once per base conversation, concurrently."""
-    unresolved_by_base: dict[str, list] = {}
-    for entry in channels:
-        if _slack_has_raw_name(entry):
-            unresolved_by_base.setdefault(_slack_base_id(entry["id"]), []).append(entry)
-    if not unresolved_by_base:
-        return
-    async def _resolve_base(base_id: str, entries: list) -> None:
-        try:
-            resp = await client.conversations_info(channel=base_id)
-            if not resp.get("ok"):
-                return
-            ch_info = resp.get("channel", {})
-            resolved_name = resolved_type = None
-            if not ch_info.get("is_im"):
-                resolved_name = ch_info.get("name") or ch_info.get("name_normalized")
-            elif ch_info.get("user", ""):
-                user_resp = await client.users_info(user=ch_info["user"])
-                if user_resp.get("ok"):
-                    u = user_resp["user"]
-                    resolved_name = u.get("profile", {}).get("display_name") or u.get("real_name") or u.get("name")
-                    resolved_type = "dm"
-            for entry in entries if resolved_name else ():
-                entry["name"] = resolved_name
-                if resolved_type:
-                    entry["type"] = resolved_type
-        except Exception as e:
-            logger.debug("Channel directory: failed to resolve %s: %s", base_id, e)
-    await asyncio.gather(*[_resolve_base(bid, ents) for bid, ents in unresolved_by_base.items()])
-
-
-async def _build_slack(adapter) -> list[dict[str, Any]]:
-    """List Slack channels the bot has joined across all workspaces, merged with
-    session-history DMs. Missing channels:read falls back to session history quietly."""
-    team_clients = getattr(adapter, "_team_clients", None) or {}
-    if not team_clients:
-        return await asyncio.to_thread(_build_from_sessions, "slack")
-    channels: list[dict[str, Any]] = []
-    seen_ids: set = set()
-    for team_id, client in team_clients.items():
-        channels.extend(await _slack_team_channels(team_id, client, seen_ids))
-    # Merge session-history DM/group entries, naming raw-ID entries from the
-    # API-discovered channels where the base conversation ID is known.
-    api_name_lookup = {ch["id"]: ch["name"] for ch in channels}
-    for entry in await asyncio.to_thread(_build_from_sessions, "slack"):
-        eid = entry.get("id")
-        if not isinstance(eid, str) or eid in seen_ids:
-            continue
-        if _slack_has_raw_name(entry) and _slack_base_id(eid) in api_name_lookup:
-            entry["name"] = api_name_lookup[_slack_base_id(eid)]
-        channels.append(entry)
-        seen_ids.add(eid)
-    await _slack_resolve_raw_names(next(iter(team_clients.values())), channels)
     return channels
 
 
@@ -444,13 +287,13 @@ def lookup_channel_type(platform_name: str, chat_id: str) -> Optional[str]:
 
 
 def resolve_channel_name(platform_name: str, name: str) -> Optional[str]:
-    """Resolve a friendly channel name (e.g. "bot-home", "#bot-home", "GuildName/bot-home",
-    Slack "#engineering") to an ID; case-insensitive, first match wins."""
+    """Resolve a friendly channel name (e.g. "bot-home", "#bot-home", "GuildName/bot-home")
+    to an ID; case-insensitive, first match wins."""
     channels = load_directory().get("platforms", {}).get(platform_name, [])
     if not channels:
         return None
-    # 0. Exact ID match — case-sensitive, no normalization, so raw platform IDs (e.g. Slack
-    # "C0B0QV5434G") work even when _parse_target_ref's format guard didn't recognize them.
+    # 0. Exact ID match — case-sensitive, no normalization, so raw platform IDs work even when
+    # _parse_target_ref's format guard didn't recognize them.
     raw = name.strip()
     for ch in channels:
         if ch.get("id") == raw:
@@ -460,7 +303,7 @@ def resolve_channel_name(platform_name: str, name: str) -> Optional[str]:
     for ch in channels:
         if query in (_normalize_channel_query(ch["name"]), _normalize_channel_query(_channel_target_name(platform_name, ch))):
             return ch["id"]
-    # 2. Guild-qualified match for Discord ("GuildName/channel")
+    # 2. Guild-qualified match ("GuildName/channel")
     if "/" in query:
         guild_part, ch_part = query.rsplit("/", 1)
         for ch in channels:
@@ -491,18 +334,6 @@ def format_directory_for_display(platforms: Optional[dict[str, Any]] = None) -> 
                 f"  (no channels discovered yet — send directly with "
                 f"{plat_name}:<chat_id>, or bare '{plat_name}' for the home channel)"
             )
-        elif plat_name == "discord":
-            # Group Discord channels by guild (sorted by name); DMs last, in discovery order.
-            guilds: dict[str, list] = {}
-            dms: list = []
-            for ch in channels:
-                (guilds.setdefault(ch["guild"], []) if ch.get("guild") else dms).append(ch)
-            groups = [(f"Discord ({g}):", sorted(chs, key=lambda c: c["name"])) for g, chs in sorted(guilds.items())]
-            if dms:
-                groups.append(("Discord (DMs):", dms))
-            for header, group in groups:
-                lines.append(header)
-                lines.extend(f"  discord:{_channel_target_name(plat_name, ch)}" for ch in group)
         else:
             lines.append(f"{plat_name.title()}:")
             lines.extend(f"  {plat_name}:{_channel_target_name(plat_name, ch)}" for ch in channels)

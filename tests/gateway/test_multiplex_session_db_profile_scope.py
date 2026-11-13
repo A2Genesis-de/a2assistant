@@ -128,7 +128,7 @@ def test_primary_handler_enters_routed_profile_scope_before_dispatch(multiplex_h
     event = MessageEvent(
         text="second turn",
         source=SessionSource(
-            platform=Platform.DISCORD,
+            platform=Platform.TELEGRAM,
             chat_id="routed-channel",
             user_id="user-1",
             profile="fitness",
@@ -170,7 +170,7 @@ def test_primary_handler_rejected_route_falls_back_and_marks_sentinel(multiplex_
 
     runner._handle_message = capture_scope
     source = SessionSource(
-        platform=Platform.DISCORD,
+        platform=Platform.TELEGRAM,
         chat_id="unserved-channel",
         user_id="user-1",
     )
@@ -199,7 +199,7 @@ def test_primary_route_keeps_transport_authorization_scope(multiplex_homes):
     from gateway.run import GatewayRunner
 
     root, profile = multiplex_homes
-    (root / ".env").write_text("DISCORD_ALLOWED_USERS=user-1\n", encoding="utf-8")
+    (root / ".env").write_text("TELEGRAM_ALLOWED_USERS=user-1\n", encoding="utf-8")
     (profile / ".env").write_text("", encoding="utf-8")
     (profile / "config.yaml").write_text("{}\n", encoding="utf-8")
 
@@ -224,7 +224,7 @@ def test_primary_route_keeps_transport_authorization_scope(multiplex_homes):
     event = MessageEvent(
         text="hello from the shared bot",
         source=SessionSource(
-            platform=Platform.DISCORD,
+            platform=Platform.TELEGRAM,
             chat_id="routed-channel",
             user_id="user-1",
             chat_type="group",
@@ -258,7 +258,7 @@ def test_two_primary_routed_turns_reload_profile_transcript(multiplex_homes):
         profile_routes=[
             ProfileRoute(
                 name="fitness-channel",
-                platform="discord",
+                platform="telegram",
                 profile="fitness",
                 chat_id="routed-channel",
             )
@@ -275,7 +275,7 @@ def test_two_primary_routed_turns_reload_profile_transcript(multiplex_homes):
                 [(message["role"], message["content"]) for message in history]
             )
             if not history:
-                db.create_session(session_id, "discord")
+                db.create_session(session_id, "telegram")
                 db.append_message(session_id, "user", event.text)
                 db.append_message(session_id, "assistant", "first response")
         finally:
@@ -288,7 +288,7 @@ def test_two_primary_routed_turns_reload_profile_transcript(multiplex_homes):
         return MessageEvent(
             text=text,
             source=SessionSource(
-                platform=Platform.DISCORD,
+                platform=Platform.TELEGRAM,
                 chat_id="routed-channel",
                 user_id="user-1",
             ),
@@ -335,7 +335,7 @@ def test_write_under_profile_scope_lands_in_profile_store(multiplex_homes):
 
     token = set_hermes_home_override(str(profile))
     try:
-        store._db.create_session("20260817_233028_542fda58", "feishu")
+        store._db.create_session("20260817_233028_542fda58", "telegram")
     finally:
         reset_hermes_home_override(token)
 

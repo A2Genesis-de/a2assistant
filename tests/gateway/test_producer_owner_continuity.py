@@ -20,12 +20,12 @@ async def test_automation_after_compression_and_released_media_uses_logical_owne
     from gateway.session_automation import check_automation_route
     from hermes_constants import get_hermes_home
     from hermes_state_runtime import claim_session_input, settle_session_input, list_session_admissions
-    from plugins.platforms.discord.adapter import DiscordAdapter
+    from plugins.platforms.telegram.adapter import TelegramAdapter
     monkeypatch.setattr(SessionAuthority, '_schedule', lambda self, ref: None)
-    monkeypatch.setenv('DISCORD_ALLOWED_USERS', '42')
+    monkeypatch.setenv('TELEGRAM_ALLOWED_USERS', '42')
     runner = GatewayRunner(GatewayConfig())
-    adapter = DiscordAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
-    runner.adapters = {Platform.DISCORD: adapter}
+    adapter = TelegramAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
+    runner.adapters = {Platform.TELEGRAM: adapter}
     authority = await initialize_session_authority(runner, profile_id='default', instance_id='owner')
     runner._wire_adapter_handlers(adapter)
     source = adapter.build_source(chat_id='42', chat_type='dm', user_id='42')
@@ -40,7 +40,7 @@ async def test_automation_after_compression_and_released_media_uses_logical_owne
     settle_session_input(authority.db, epoch=authority.epoch, admission_id=receipt.admission_id,
                          generation=claim['generation'], outcome='completed')
     assert release_admission_media(authority.db, receipt.admission_id) == 1
-    authority.db.publish_compression_child(parent_session_id=sid, child_session_id='child', source='discord',
+    authority.db.publish_compression_child(parent_session_id=sid, child_session_id='child', source='telegram',
         messages=[{'role': 'assistant', 'content': 'summary'}], require_compression_lease=False)
     route = runner.session_store._generate_session_key(source)
     runner.session_store.advance_compression_session(route, sid, 'child')
@@ -66,12 +66,12 @@ async def test_automation_for_an_unserved_scope_never_dereferences_a_missing_aut
     from hermes_constants import get_hermes_home
     from hermes_state_runtime import (RuntimeStoreError, claim_session_input, list_session_admissions,
                                       settle_session_input)
-    from plugins.platforms.discord.adapter import DiscordAdapter
+    from plugins.platforms.telegram.adapter import TelegramAdapter
     monkeypatch.setattr(SessionAuthority, '_schedule', lambda self, ref: None)
-    monkeypatch.setenv('DISCORD_ALLOWED_USERS', '42')
+    monkeypatch.setenv('TELEGRAM_ALLOWED_USERS', '42')
     runner = GatewayRunner(GatewayConfig())
-    adapter = DiscordAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
-    runner.adapters = {Platform.DISCORD: adapter}
+    adapter = TelegramAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
+    runner.adapters = {Platform.TELEGRAM: adapter}
     authority = await initialize_session_authority(runner, profile_id='default', instance_id='owner')
     runner._wire_adapter_handlers(adapter)
     source = adapter.build_source(chat_id='42', chat_type='dm', user_id='42')
@@ -82,7 +82,7 @@ async def test_automation_for_an_unserved_scope_never_dereferences_a_missing_aut
     claim = claim_session_input(authority.db, epoch=authority.epoch, session_id=sid)
     settle_session_input(authority.db, epoch=authority.epoch, admission_id=receipt.admission_id,
                          generation=claim['generation'], outcome='completed')
-    authority.db.publish_compression_child(parent_session_id=sid, child_session_id='child', source='discord',
+    authority.db.publish_compression_child(parent_session_id=sid, child_session_id='child', source='telegram',
         messages=[{'role': 'assistant', 'content': 'summary'}], require_compression_lease=False)
     route = runner.session_store._generate_session_key(source)
     runner.session_store.advance_compression_session(route, sid, 'child')

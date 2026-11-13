@@ -5,7 +5,7 @@ the conversation they have open, and the chat must not get that conversation's r
 another one. A Discord chat's conversation A is open in an app; the chat sends ``/new`` and then a
 message, which runs in its new conversation B. The app's prompt on A runs in A on A's own key, and
 the chat adapter receives nothing from it; B's turns and the chat's replies are untouched. A
-``/resume`` of A on the chat brings A's replies back to the chat. Real GatewayRunner, DiscordAdapter
+``/resume`` of A on the chat brings A's replies back to the chat. Real GatewayRunner, TelegramAdapter
 (its ``send`` recorded), SessionAuthority, drain and session resolver over a real SessionDB; the
 agent run is a stand-in that answers with the session and route it was given.
 """
@@ -22,18 +22,18 @@ async def _gateway(monkeypatch):
     from gateway.run import GatewayRunner
     from gateway.session_authority import initialize_session_authority
     from gateway.session_results import execution_result
-    from plugins.platforms.discord.adapter import DiscordAdapter
+    from plugins.platforms.telegram.adapter import TelegramAdapter
 
-    monkeypatch.setenv('DISCORD_ALLOWED_USERS', '42')
+    monkeypatch.setenv('TELEGRAM_ALLOWED_USERS', '42')
     runner = GatewayRunner(GatewayConfig())
-    adapter = DiscordAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
+    adapter = TelegramAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
     sent = []
 
     async def send(chat_id, content, reply_to=None, metadata=None):
         sent.append(content)
         return SendResult(success=True, message_id='s')
     monkeypatch.setattr(adapter, 'send', send)
-    runner.adapters = {Platform.DISCORD: adapter}
+    runner.adapters = {Platform.TELEGRAM: adapter}
     monkeypatch.setattr(runner, '_read_user_config', lambda: {'approvals': {'destructive_slash_confirm': False}})
     authority = await initialize_session_authority(runner, profile_id='default', instance_id='owner')
     runner._wire_adapter_handlers(adapter)

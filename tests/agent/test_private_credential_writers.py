@@ -1,8 +1,7 @@
 """Cross-writer invariant: every private-credential file is 0600 from the moment its temp file exists.
 
-The credential writers (auth.json, MCP OAuth tokens, secret-source cache, iron-proxy state, the
-Photon sidecar record, pairing data, the vault blob, the third-party
-credential file, the spawn ledger, the meet-node token) all funnel through ``utils.atomic_json_write`` / ``atomic_write_text`` /
+The credential writers (auth.json, MCP OAuth tokens, secret-source cache, iron-proxy state,
+pairing data, the vault blob, the third-party credential file, the spawn ledger) all funnel through ``utils.atomic_json_write`` / ``atomic_write_text`` /
 ``atomic_write_bytes`` with ``mode=0o600``. The contract under test: the *temp* file is created
 with mode 0600 (``O_EXCL``) BEFORE any byte lands and the final file carries 0600 — never
 "open at umask, then chmod" (the #19673 window). POSIX-only: mode bits are not enforced on Windows.
@@ -13,7 +12,6 @@ from __future__ import annotations
 import json
 import os
 import stat
-import sys
 from pathlib import Path
 
 import pytest
@@ -50,16 +48,10 @@ def _writers(home: Path, monkeypatch):
     from hermes_cli import auth as auth_mod
     from hermes_cli import process_identity
     from tools import mcp_oauth
-    from plugins.google_meet.node.server import NodeServer
-    from plugins.platforms.photon import adapter as photon_adapter
-
-    photon_record = home / "runtime" / "photon.json"
-    monkeypatch.setattr(photon_adapter, "_runtime_record_path", lambda: photon_record)
     ledger = home / "spawn-ledger.json"
     monkeypatch.setattr(process_identity, "_ledger_path", lambda: ledger)
     cache = DiskCache("probe.json", key_serializer=str)
     vault = VaultStore(home / "vault")
-    meet_node = NodeServer(token_path=home / "meetings" / "node_token.json")
     return [
         ("auth.json", lambda: auth_mod._save_auth_store({"version": auth_mod.AUTH_STORE_VERSION, "providers": {}}),
          auth_mod._auth_file_path()),
@@ -70,11 +62,9 @@ def _writers(home: Path, monkeypatch):
         ("secret-source cache", lambda: cache.write("k", CachedFetch(secrets={"A": "b"}, fetched_at=1.0), 60, home),
          cache.path(home)),
         ("iron-proxy mappings", lambda: iron_proxy.write_mappings([]), home / "proxy" / "mappings.json"),
-        ("photon sidecar record", lambda: photon_adapter._write_runtime_record(1, "tok", 2), photon_record),
         ("pairing", lambda: pairing._save_json_file(home / "pairing" / "p.json", {"a": 1}), home / "pairing" / "p.json"),
         ("vault blob", lambda: vault._write_all([]), vault._vault_path),
         ("spawn ledger", lambda: process_identity.register_self("probe"), ledger),
-        ("meet node token", meet_node.ensure_token, meet_node.token_path),
     ]
 
 

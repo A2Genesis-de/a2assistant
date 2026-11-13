@@ -9,20 +9,20 @@ class TestToolProgressProvenance:
         from gateway.display_config import resolve_tool_progress
         from hermes_cli.plugins import discover_plugins
 
-        discover_plugins()  # slack's "off" default ships on its PlatformEntry (display_overrides)
+        discover_plugins()
         cases = [
             ({}, None, ("off", False)),
             ({}, "all", ("all", True)),
             ({"tool_progress": None}, "all", ("all", True)),
-            ({"platforms": {"slack": {"tool_progress": None}}}, "off", ("off", True)),
-            ({"tool_progress_overrides": {"slack": None}}, "new", ("new", True)),
+            ({"platforms": {"telegram": {"tool_progress": None}}}, "off", ("off", True)),
+            ({"tool_progress_overrides": {"telegram": None}}, "new", ("new", True)),
             ({"tool_progress": False}, "all", ("off", True)),
-            ({"tool_progress": "all", "platforms": {"slack": {"tool_progress": None}}}, "off", ("all", True)),
-            ({"tool_progress": "off", "tool_progress_overrides": {"slack": "new"}}, "all", ("new", True)),
-            ({"tool_progress_overrides": {"slack": "off"}, "platforms": {"slack": {"tool_progress": "all"}}}, None, ("all", True)),
+            ({"tool_progress": "all", "platforms": {"telegram": {"tool_progress": None}}}, "off", ("all", True)),
+            ({"tool_progress": "off", "tool_progress_overrides": {"telegram": "new"}}, "all", ("new", True)),
+            ({"tool_progress_overrides": {"telegram": "off"}, "platforms": {"telegram": {"tool_progress": "all"}}}, None, ("all", True)),
         ]
         for display, env, expected in cases:
-            assert resolve_tool_progress({"display": display}, "slack", env) == expected
+            assert resolve_tool_progress({"display": display}, "telegram", env) == expected
 
 class TestResolveDisplaySetting:
     """resolve_display_setting() resolves with correct priority."""
@@ -61,11 +61,11 @@ class TestResolveDisplaySetting:
             "display": {
                 "tool_progress": "all",
                 "platforms": {
-                    "slack": {"tool_progress": "off"},
+                    "webhook": {"tool_progress": "off"},
                 },
             }
         }
-        assert resolve_display_setting(config, "slack", "tool_progress") == "off"
+        assert resolve_display_setting(config, "webhook", "tool_progress") == "off"
         assert resolve_display_setting(config, "telegram", "tool_progress") == "all"
 
 # ---------------------------------------------------------------------------
@@ -83,12 +83,12 @@ class TestBackwardCompat:
             "display": {
                 "tool_progress": "all",
                 "tool_progress_overrides": {
-                    "signal": "off",
+                    "webhook": "off",
                     "telegram": "verbose",
                 },
             }
         }
-        assert resolve_display_setting(config, "signal", "tool_progress") == "off"
+        assert resolve_display_setting(config, "webhook", "tool_progress") == "off"
         assert resolve_display_setting(config, "telegram", "tool_progress") == "verbose"
 
 # ---------------------------------------------------------------------------
@@ -111,7 +111,7 @@ class TestYAMLNormalisation:
         config = {
             "display": {
                 "platforms": {
-                    "whatsapp": {
+                    "telegram": {
                         "thinking_progress": "generic",
                         "interim_assistant_messages": "generic",
                         "long_running_notifications": "generic",
@@ -119,15 +119,15 @@ class TestYAMLNormalisation:
                 }
             }
         }
-        assert resolve_display_setting(config, "whatsapp", "thinking_progress") is False
-        assert resolve_display_setting(config, "whatsapp", "interim_assistant_messages") is False
-        assert resolve_display_setting(config, "whatsapp", "long_running_notifications") == "generic"
+        assert resolve_display_setting(config, "telegram", "thinking_progress") is False
+        assert resolve_display_setting(config, "telegram", "interim_assistant_messages") is False
+        assert resolve_display_setting(config, "telegram", "long_running_notifications") == "generic"
 
     def test_thinking_progress_string_false_normalised_to_false(self):
         from gateway.display_config import resolve_display_setting
 
-        config = {"display": {"platforms": {"whatsapp": {"thinking_progress": "false"}}}}
-        assert resolve_display_setting(config, "whatsapp", "thinking_progress") is False
+        config = {"display": {"platforms": {"telegram": {"thinking_progress": "false"}}}}
+        assert resolve_display_setting(config, "telegram", "thinking_progress") is False
 
 # ---------------------------------------------------------------------------
 # Built-in platform defaults (tier system)
@@ -182,8 +182,8 @@ class TestInstallerSeededConfigThroughGatewayResolver:
         assert_keeps_platform_display_defaults(seeded)
         # ...and through the resolver the gateway turn actually calls (same arguments as gateway/run_turn.py).
         assert _resolve_gateway_display_bool(
-            seeded, "qqbot", "show_reasoning", default=False, platform=Platform.QQBOT,
-            require_platform_override_for={Platform.MATTERMOST},
+            seeded, "telegram", "show_reasoning", default=False, platform=Platform.TELEGRAM,
+            require_platform_override_for=set(),
         ) is False
 
     def test_explicit_global_opt_in_still_reaches_gateway_platforms(self, tmp_path):
@@ -194,8 +194,8 @@ class TestInstallerSeededConfigThroughGatewayResolver:
         (tmp_path / "config.yaml").write_text("display:\n  show_reasoning: true\n")
         cfg = _load_gateway_config(tmp_path / "config.yaml")
         assert _resolve_gateway_display_bool(
-            cfg, "qqbot", "show_reasoning", default=False, platform=Platform.QQBOT,
-            require_platform_override_for={Platform.MATTERMOST},
+            cfg, "telegram", "show_reasoning", default=False, platform=Platform.TELEGRAM,
+            require_platform_override_for=set(),
         ) is True
 
 
@@ -215,7 +215,7 @@ class TestConfigMigration:
             "_config_version": 15,
             "display": {
                 "tool_progress_overrides": {
-                    "signal": "off",
+                    "webhook": "off",
                     "telegram": "all",
                 },
             },
@@ -232,7 +232,7 @@ class TestConfigMigration:
         # Re-read config
         updated = yaml.safe_load(config_path.read_text(encoding="utf-8"))
         platforms = updated.get("display", {}).get("platforms", {})
-        assert platforms.get("signal", {}).get("tool_progress") == "off"
+        assert platforms.get("webhook", {}).get("tool_progress") == "off"
         assert platforms.get("telegram", {}).get("tool_progress") == "all"
 
 # ---------------------------------------------------------------------------

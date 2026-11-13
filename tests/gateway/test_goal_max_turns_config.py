@@ -28,7 +28,7 @@ def _make_runner() -> GatewayRunner:
     """GatewayRunner skeleton for the /goal command path (no adapters)."""
     runner = object.__new__(GatewayRunner)
     runner.config = GatewayConfig(
-        platforms={Platform.DISCORD: PlatformConfig(enabled=True, token="token")}
+        platforms={Platform.TELEGRAM: PlatformConfig(enabled=True, token="token")}
     )
     runner.session_store = _FakeSessionStore()
     runner.adapters = {}
@@ -41,7 +41,7 @@ def _make_goal_event() -> MessageEvent:
         text="/goal ship the benchmark",
         message_type=MessageType.TEXT,
         source=SessionSource(
-            platform=Platform.DISCORD,
+            platform=Platform.TELEGRAM,
             chat_id="chat-goal-config",
             chat_type="channel",
             user_id="user-goal-config",

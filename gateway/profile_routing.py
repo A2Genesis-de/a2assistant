@@ -19,34 +19,6 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-# Baileys and Cloud share phone/JID/LID identity rules; other platforms compare exactly.
-_WHATSAPP_IDENTITY_PLATFORMS = {"whatsapp", "whatsapp_cloud"}
-_WHATSAPP_NON_USER_SUFFIXES = ("@g.us", "@broadcast", "@newsletter")
-
-
-def _is_whatsapp_non_user_chat(chat_id: Optional[str]) -> bool:
-    """True for group / broadcast / newsletter JIDs — not a sender identity."""
-    return bool(chat_id) and str(chat_id).strip().lower().endswith(_WHATSAPP_NON_USER_SUFFIXES)
-
-
-def _whatsapp_user_chat_ids_match(platform: str, left: Optional[str], right: Optional[str]) -> bool:
-    """True when two WhatsApp *user* chat_ids refer to the same person.
-
-    Uses ``expand_whatsapp_aliases`` (same helper as session keys and adapter allowlists) so a bare
-    number, JID and LID collapse to one identity. Group/broadcast JIDs are chats, not senders;
-    non-WhatsApp platforms → False.
-    """
-    if (
-        (platform or "").strip().lower() not in _WHATSAPP_IDENTITY_PLATFORMS
-        or not left or not right
-        or _is_whatsapp_non_user_chat(left) or _is_whatsapp_non_user_chat(right)
-    ):
-        return False
-    from gateway.whatsapp_identity import expand_whatsapp_aliases
-
-    left_aliases = expand_whatsapp_aliases(str(left))
-    return bool(left_aliases and left_aliases & expand_whatsapp_aliases(str(right)))
-
 
 class ProfileRouteRejected(RuntimeError):
     """An explicit route matched a profile this gateway does not serve (``profile``, when known)."""
@@ -85,8 +57,7 @@ class ProfileRoute:
     ) -> bool:
         """True if every discriminator the route declares holds (AND).
 
-        ``chat_id`` matches the channel directly or as the parent of a thread/forum post; WhatsApp
-        ``chat_id`` also matches across number/JID/LID after the exact check (groups/broadcasts stay exact-only).
+        ``chat_id`` matches the channel directly or as the parent of a thread/forum post.
         ``adapter_profile`` is the profile owning the receiving bot (``None`` = default); it must equal
         the route's ``bot_profile``.
         """
@@ -98,12 +69,7 @@ class ProfileRoute:
             return False
         if self.thread_id and self.thread_id != thread_id:
             return False
-        if (
-            self.chat_id
-            and self.chat_id not in (chat_id, parent_chat_id)
-            and not _whatsapp_user_chat_ids_match(platform, self.chat_id, chat_id)
-            and not _whatsapp_user_chat_ids_match(platform, self.chat_id, parent_chat_id)
-        ):
+        if self.chat_id and self.chat_id not in (chat_id, parent_chat_id):
             return False
         return not (self.guild_id and self.guild_id != guild_id)
 

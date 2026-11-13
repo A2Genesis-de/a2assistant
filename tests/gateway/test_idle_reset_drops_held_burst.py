@@ -3,7 +3,7 @@
 Queue-mode text sent during a turn is held for its burst window. When the turn ends inside that
 window the session guard is gone, so ``/new`` takes the idle path; it must still drop the held text,
 as the busy path does, or the old conversation's message becomes the new conversation's first turn.
-Real GatewayRunner, DiscordAdapter, SessionAuthority and drain over SQLite; the turn is a stand-in.
+Real GatewayRunner, TelegramAdapter, SessionAuthority and drain over SQLite; the turn is a stand-in.
 """
 import asyncio
 
@@ -20,17 +20,17 @@ async def _rig(monkeypatch):
     from gateway.run import GatewayRunner
     from gateway.session_authority import initialize_session_authority
     from gateway.session_results import execution_result
-    from plugins.platforms.discord.adapter import DiscordAdapter
+    from plugins.platforms.telegram.adapter import TelegramAdapter
 
-    monkeypatch.setenv('DISCORD_ALLOWED_USERS', '42')
+    monkeypatch.setenv('TELEGRAM_ALLOWED_USERS', '42')
     runner = GatewayRunner(GatewayConfig())
-    adapter = DiscordAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
+    adapter = TelegramAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
 
     async def send(chat_id, content, reply_to=None, metadata=None):
         return SendResult(success=True, message_id='sent')
     monkeypatch.setattr(adapter, 'send', send)
     adapter.gateway_runner = runner
-    runner.adapters = {Platform.DISCORD: adapter}
+    runner.adapters = {Platform.TELEGRAM: adapter}
     authority = await initialize_session_authority(runner, profile_id='default', instance_id='owner')
     runner._wire_adapter_handlers(adapter, busy_text_mode='queue', busy_text_timing=(_WINDOW, _WINDOW))
     running, finish, executed = asyncio.Event(), asyncio.Event(), []
@@ -59,7 +59,7 @@ async def test_idle_command_after_a_turn_settles_the_held_text(monkeypatch, comm
     adapter, authority, running, finish, executed = await _rig(monkeypatch)
     source = adapter.build_source(chat_id='dm-42', chat_type='dm', user_id='42')
     if refused:
-        adapter.gateway_runner.config.platforms[Platform.DISCORD] = PlatformConfig(
+        adapter.gateway_runner.config.platforms[Platform.TELEGRAM] = PlatformConfig(
             enabled=True, extra={'allow_admin_from': ['99'], 'user_allowed_commands': ['status']})
         assert adapter.gateway_runner._check_slash_access(source, command) is not None
     await adapter.handle_message(MessageEvent(text='A', source=source, message_id='A'))

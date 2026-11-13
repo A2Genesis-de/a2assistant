@@ -501,12 +501,11 @@ class TestPluginDiscovery:
         mgr._hooks["pre_tool_call"] = [lambda **_: None]
         mgr._middleware["llm_request"] = [lambda **_: None]
         mgr._plugin_tool_names.add("some_tool")
-        mgr._plugin_platform_names.add("irc")
+        mgr._plugin_platform_names.add("fakechat")
         mgr._cli_commands["c"] = {"plugin": "p"}
         mgr._plugin_commands["cmd"] = {"plugin": "p"}
         mgr._plugin_skills["p:skill"] = {}
         mgr._aux_tasks["task"] = {"plugin": "p"}
-        mgr._slack_action_handlers.append(("aid", lambda **_: None, "p"))
         mgr._discovered = True
 
         monkeypatch.setattr(PluginManager, "_discover_and_load_inner", lambda self_inner: None)
@@ -523,7 +522,6 @@ class TestPluginDiscovery:
         assert mgr._plugin_commands == {}
         assert mgr._plugin_skills == {}
         assert mgr._aux_tasks == {}
-        assert mgr._slack_action_handlers == []
 
 
 # ── TestPluginLoading ──────────────────────────────────────────────────────

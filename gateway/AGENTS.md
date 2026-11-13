@@ -143,13 +143,13 @@ gateway under the backend, and do NOT "fix" update locks by widening the tree-ki
 - **Token locks.** An adapter that connects with a unique credential (bot token, API key) calls
   `acquire_scoped_lock()` from `gateway.status` in `connect()`/`start()` and `release_scoped_lock()`
   in `disconnect()`/`stop()`, so two profiles cannot share one credential. Canonical:
-  `plugins/platforms/irc/adapter.py`.
+  `plugins/platforms/telegram/adapter.py`.
 - **Multiplex profile-scoped env reads MUST fail closed — never borrow from `os.environ`**
   (`agent/secret_scope.py`; #72348, #86905). Under `gateway.multiplex_profiles`, `os.environ` holds
   the DEFAULT profile's values; a secondary profile's `.env` exists only in its secret scope,
   bound per profile *activity* by `_profile_runtime_scope` (turn, callback, eviction, tick — never
   only "per turn"). All profile-level env config — credentials
-  (`app_secret`, tokens) AND authorization (`FEISHU_ALLOWED_USERS`, `{PLATFORM}_ALLOW_ALL_USERS`,
+  (`app_secret`, tokens) AND authorization (`TELEGRAM_ALLOWED_USERS`, `{PLATFORM}_ALLOW_ALL_USERS`,
   `GATEWAY_ALLOW_ALL_USERS`, `group_policy`, `allow_bots`) — is read scope-aware: adapters via
   `gateway.platforms._shared.get_scoped_secret` (the ONE implementation; adapters import it as
   `_get_scoped_secret`; `extra_or_secret` / `seed_extra_from_env` / `env_is_connected` build on it),
@@ -200,10 +200,7 @@ gateway under the backend, and do NOT "fix" update locks by widening the tree-ki
   conflicting flags before touching precedence.
 - **Unserved is reported, never silent.** Shared-ingress platforms (Relay) run on the default
   profile only; a secondary enabling one is logged once with the remedy and stamped into runtime
-  status (`run_adapters.py::_note_unserved_secondary_platform`). The WhatsApp bridge is per profile:
-  a paired secondary gets its own adapter and port (`plugins/platforms/whatsapp/bridge_ownership.py`),
-  an unpaired one is reported as `whatsapp_unpaired`, and a secondary never adopts or signals a
-  bridge its own pidfile (pid + start time + port) does not identify. `needs_attention` is
+  status (`run_adapters.py::_note_unserved_secondary_platform`). `needs_attention` is
   set and cleared at the single writer (`_update_platform_runtime_status`) on the connect path.
 - **One launch-home identity.** "Does this task serve a routed profile?" compares the override
   with `hermes_constants.get_routing_process_hermes_home()` (`agent/secret_scope.py::

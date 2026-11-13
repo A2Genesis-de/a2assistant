@@ -893,13 +893,12 @@ class GatewayAdapterLifecycleMixin(GatewaySecondaryReconnectMixin):
         del self._failed_platforms[platform]
 
     def _publish_primary_adapter(self, platform, adapter) -> None:
-        """Register a connected primary adapter and wire voice mode/input (transcription without /voice join)."""
+        """Register a connected primary adapter and wire its voice mode."""
         self.adapters[platform] = adapter
         if platform == Platform.API_SERVER:
             from gateway.session_api_turn import recover_api_turns
             recover_api_turns(adapter)
         self._sync_voice_mode_state_to_adapter(adapter)
-        self._bind_voice_input_callback(adapter)
 
     def _schedule_planned_restart_replay(self) -> None:
         """Replay the owed planned-restart notice after a reconnect, in the background: notification delivery
@@ -1223,18 +1222,10 @@ class GatewayAdapterLifecycleMixin(GatewaySecondaryReconnectMixin):
             return
         noted.add((profile_name, platform))
         pv = platform.value
-        if platform is not Platform.WHATSAPP and self._default_owns_platform(platform):
+        if self._default_owns_platform(platform):
             logger.info(
                 "[MULTIPLEX] Profile '%s': %s is served through the default profile's shared adapter",
                 profile_name, pv,
-            )
-            return
-        if platform is Platform.WHATSAPP:
-            message = f"WhatsApp is not paired; pair it: hermes -p {profile_name} whatsapp"
-            logger.info("[MULTIPLEX] Profile '%s': %s", profile_name, message)
-            self._update_platform_runtime_status(
-                f"{profile_name}:{pv}", platform_state="disabled",
-                error_code="whatsapp_unpaired", error_message=message,
             )
             return
         logger.info(
@@ -1258,8 +1249,6 @@ class GatewayAdapterLifecycleMixin(GatewaySecondaryReconnectMixin):
         noted = getattr(self, "_unserved_secondary_platforms", None) or ()
         lines = []
         for platform in sorted({p for _n, p in noted}, key=lambda p: p.value):
-            if platform is Platform.WHATSAPP:
-                continue  # unpaired sessions have their own per-profile remedy
             if self._default_owns_platform(platform):
                 continue  # the default owns it: secondaries ARE served through the shared adapter
             profiles = sorted(n for n, p in noted if p is platform)
@@ -1300,14 +1289,12 @@ class GatewayAdapterLifecycleMixin(GatewaySecondaryReconnectMixin):
             with _profile_runtime_scope(profile_home, hydrate_secrets=False):
                 has_credential = _platform_has_bot_credential(platform, platform_config)
             if multiplex and not has_credential:
-                if platform is Platform.WHATSAPP:
-                    self._note_unserved_secondary_platform(profile_name, platform)
                 logger.info(
                     "[MULTIPLEX] Profile '%s': skipping %s - no bot credential "
                     "in this profile's secrets", profile_name, platform.value,
                 )
                 continue
-            # Relay still uses process-level shared ingress; WhatsApp owns a session per profile.
+            # Relay still uses process-level shared ingress.
             if multiplex and platform is Platform.RELAY:
                 self._note_unserved_secondary_platform(profile_name, platform)
                 continue
@@ -1432,8 +1419,6 @@ class GatewayAdapterLifecycleMixin(GatewaySecondaryReconnectMixin):
             busy_text_timing=(timings.get(profile_name) if isinstance(timings, dict) else None),
             human_delay=(delays.get(profile_name, _UNSET) if isinstance(delays, dict) else _UNSET),
         )
-        # Voice transcripts from this bot's channels dispatch through THIS adapter.
-        self._bind_voice_input_callback(adapter)
         # Secondary adapters carry their profile so prune paths namespace topic bindings correctly.
         # See #76423.
         adapter._hermes_profile_name = profile_name

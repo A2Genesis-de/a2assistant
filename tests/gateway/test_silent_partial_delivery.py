@@ -1,6 +1,6 @@
 """Regression coverage for #95382 / #98552 — silent partial delivery.
 
-#95382 (Discord): the WebSocket drops after the first streaming edit (which
+#95382: the WebSocket drops after the first streaming edit (which
 carried only a prefix). The consumer's delivery flags could suppress the
 gateway's normal final send even though no recorded payload proved the
 COMPLETE ``final_response`` ever reached the platform; and when the normal
@@ -21,9 +21,8 @@ Class contract under test:
    keeps legacy trust.
 2. Every flag-setting site records its delivered payload (fresh-final and
    the optimistic native finalize were the record-less holdouts).
-3. Discord transport-shaped send failures are classified as
-   ``send_path_degraded`` (retryable) so the ledger reconnect sweep can
-   replay the stranded final response.
+3. ``send_path_degraded`` (retryable) rows are replayed by the ledger
+   reconnect sweep.
 
 Boundary tests drive the REAL ``GatewayRunner._run_agent`` with a live
 ``GatewayStreamConsumer`` (pattern from test_stale_finalize_suppression.py).
@@ -167,7 +166,7 @@ class TestFlagSettingSitesRecordPayload:
 
 
 class CaptureAdapter(BasePlatformAdapter):
-    def __init__(self, platform=Platform.DISCORD):
+    def __init__(self, platform=Platform.TELEGRAM):
         super().__init__(PlatformConfig(enabled=True, token="***"), platform)
         self.sent = []
         self.edits = []
@@ -311,7 +310,7 @@ async def _run_turn(monkeypatch, tmp_path, *, consumer_cls=None, session_id):
     adapter = CaptureAdapter()
     runner = _make_runner(adapter)
     source = SessionSource(
-        platform=Platform.DISCORD, chat_id="1534932197436424204", chat_type="group"
+        platform=Platform.TELEGRAM, chat_id="1534932197436424204", chat_type="group"
     )
     result = await runner._run_agent(
         message="deploy status?",
@@ -319,7 +318,7 @@ async def _run_turn(monkeypatch, tmp_path, *, consumer_cls=None, session_id):
         history=[],
         source=source,
         session_id=session_id,
-        session_key=f"agent:main:discord:group:{session_id}",
+        session_key=f"agent:main:telegram:group:{session_id}",
     )
     return adapter, result
 
@@ -398,46 +397,14 @@ async def test_recordless_flag_with_dead_transport_leaves_normal_send(
 
 
 # ---------------------------------------------------------------------------
-# Discord transport classification + ledger reconnect replay (#95382 lane 2)
+# Ledger reconnect replay (#95382 lane 2)
 # ---------------------------------------------------------------------------
 
 
-class TestDiscordTransportClassification:
-    def _adapter_module(self):
-        import plugins.platforms.discord.adapter as mod
-
-        return mod
-
-    def test_connection_error_is_transport(self):
-        mod = self._adapter_module()
-        assert mod._is_discord_transport_error(ConnectionError("websocket closed"))
-        assert mod._is_discord_transport_error(
-            RuntimeError("Session is closed")
-        )
-        assert mod._is_discord_transport_error(OSError(104, "Connection reset"))
-
-    def test_http_and_timeout_errors_are_not_transport(self):
-        mod = self._adapter_module()
-        assert not mod._is_discord_transport_error(
-            RuntimeError("error code: 50013: Missing Permissions")
-        )
-        assert not mod._is_discord_transport_error(TimeoutError())
-
-    @pytest.mark.asyncio
-    async def test_send_without_client_reports_send_path_degraded(self):
-        mod = self._adapter_module()
-        adapter = mod.DiscordAdapter.__new__(mod.DiscordAdapter)
-        adapter._client = None
-        result = await mod.DiscordAdapter.send(adapter, "c1", "hello")
-        assert result.success is False
-        assert result.error == "send_path_degraded"
-        assert result.retryable is True
-
-
-class TestLedgerReplaysDegradedDiscordSend:
-    def test_reconnect_sweep_claims_degraded_discord_row(self, tmp_path, monkeypatch):
+class TestLedgerReplaysDegradedSend:
+    def test_reconnect_sweep_claims_degraded_row(self, tmp_path, monkeypatch):
         """End-to-end ledger check: a final response rejected with
-        ``send_path_degraded`` on Discord is claimed by the runtime
+        ``send_path_degraded`` is claimed by the runtime
         reconnect sweep; a generic 'Not connected' row (pre-fix error
         string) is stranded. This is the exact silent-loss mechanism from
         the #95382 field logs."""
@@ -449,8 +416,8 @@ class TestLedgerReplaysDegradedDiscordSend:
         oid_degraded = dl.compute_obligation_id("sess-a", "msg-1", FULL_RESPONSE)
         dl.record_obligation(
             obligation_id=oid_degraded,
-            session_key="agent:main:discord:group:c1",
-            platform="discord",
+            session_key="agent:main:telegram:group:c1",
+            platform="telegram",
             chat_id="c1",
             thread_id=None,
             content=FULL_RESPONSE,
@@ -461,8 +428,8 @@ class TestLedgerReplaysDegradedDiscordSend:
         oid_generic = dl.compute_obligation_id("sess-b", "msg-2", FULL_RESPONSE)
         dl.record_obligation(
             obligation_id=oid_generic,
-            session_key="agent:main:discord:group:c2",
-            platform="discord",
+            session_key="agent:main:telegram:group:c2",
+            platform="telegram",
             chat_id="c2",
             thread_id=None,
             content=FULL_RESPONSE,
@@ -470,10 +437,10 @@ class TestLedgerReplaysDegradedDiscordSend:
         dl.mark_attempting(oid_generic)
         dl.mark_failed(oid_generic, "Not connected")
 
-        claimed = dl.sweep_failed_for_runtime("discord")
+        claimed = dl.sweep_failed_for_runtime("telegram")
         claimed_ids = {row["obligation_id"] for row in claimed}
         assert oid_degraded in claimed_ids, (
-            "send_path_degraded Discord row must be replayable after reconnect"
+            "send_path_degraded row must be replayable after reconnect"
         )
         assert oid_generic not in claimed_ids, (
             "non-transport errors must not be blindly replayed"

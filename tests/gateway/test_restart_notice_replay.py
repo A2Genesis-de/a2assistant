@@ -17,6 +17,10 @@ import gateway.run as gateway_run
 from gateway.config import GatewayConfig, HomeChannel, Platform, PlatformConfig
 from gateway.platforms.base import SendResult
 
+
+_CHAT_A = Platform._add_pseudo_member("chat_a")
+_CHAT_B = Platform._add_pseudo_member("chat_b")
+
 ONLINE_NOTICE = "♻️ Gateway online — A2Assistant is back and ready."
 
 
@@ -36,10 +40,10 @@ def boot_notice(tmp_path, monkeypatch):
     runner = object.__new__(gateway_run.GatewayRunner)
     runner.config = GatewayConfig(
         platforms={
-            Platform.DISCORD: PlatformConfig(
+            _CHAT_A: PlatformConfig(
                 enabled=True,
                 gateway_restart_notification=True,
-                home_channel=HomeChannel(platform=Platform.DISCORD, chat_id="unit-test-home", name="Test home"),
+                home_channel=HomeChannel(platform=_CHAT_A, chat_id="unit-test-home", name="Test home"),
             ),
         },
         sessions_dir=tmp_path / "sessions",
@@ -79,8 +83,8 @@ async def test_planned_restart_notice_reaches_home_channel(boot_notice, live):
     runner, marker = boot_notice
     adapter = _adapter()
     if live:
-        runner.adapters[Platform.DISCORD] = adapter
-    transport = delivery.resolve_delivery_transport(Platform.DISCORD, runner.config, runner.adapters)
+        runner.adapters[_CHAT_A] = adapter
+    transport = delivery.resolve_delivery_transport(_CHAT_A, runner.config, runner.adapters)
     assert (transport is not None) is live
 
     await _boot(runner)
@@ -89,41 +93,41 @@ async def test_planned_restart_notice_reaches_home_channel(boot_notice, live):
     if not live:
         adapter.send.assert_not_called()
         assert marker.exists(), "marker must survive a boot with no live transport"
-        await _reconnect(runner, Platform.DISCORD, adapter)
-    adapter.send.assert_awaited_once_with("unit-test-home", ONLINE_NOTICE, metadata={"non_conversational": True})
+        await _reconnect(runner, _CHAT_A, adapter)
+    adapter.send.assert_awaited_once_with("unit-test-home", ONLINE_NOTICE)
     assert not marker.exists()
 
 
 @pytest.mark.asyncio
 async def test_partial_delivery_is_persisted_and_not_repeated(boot_notice):
     runner, marker = boot_notice
-    telegram, discord = _adapter(), _adapter()
+    telegram, other = _adapter(), _adapter()
     runner.config.platforms[Platform.TELEGRAM] = PlatformConfig(
         enabled=True,
         home_channel=HomeChannel(platform=Platform.TELEGRAM, chat_id="other-home", thread_id="7", name="Other"),
     )
-    runner.config.platforms[Platform.SLACK] = PlatformConfig(
+    runner.config.platforms[_CHAT_B] = PlatformConfig(
         enabled=True, gateway_restart_notification=False,
-        home_channel=HomeChannel(platform=Platform.SLACK, chat_id="muted-home", name="Muted"),
+        home_channel=HomeChannel(platform=_CHAT_B, chat_id="muted-home", name="Muted"),
     )
     runner.adapters[Platform.TELEGRAM] = telegram
 
     await _boot(runner)
 
     telegram.send.assert_awaited_once()
-    discord.send.assert_not_called()
+    other.send.assert_not_called()
     assert json.loads(marker.read_text(encoding="utf-8"))["delivered_targets"] == [["telegram", "other-home", "7"]]
 
     # A fresh process has no in-memory history: dedupe must come from the marker. The opted-out
     # Slack home is never owed a notice, so Discord's delivery completes the set.
     recovered = object.__new__(gateway_run.GatewayRunner)
     recovered.__dict__.update(runner.__dict__)
-    await _reconnect(recovered, Platform.DISCORD, discord)
+    await _reconnect(recovered, _CHAT_A, other)
 
-    discord.send.assert_awaited_once()
+    other.send.assert_awaited_once()
     telegram.send.assert_awaited_once()
     assert not marker.exists()
 
     # Nothing pending: a later reconnect stays silent.
-    await _reconnect(recovered, Platform.DISCORD, discord)
-    discord.send.assert_awaited_once()
+    await _reconnect(recovered, _CHAT_A, other)
+    other.send.assert_awaited_once()

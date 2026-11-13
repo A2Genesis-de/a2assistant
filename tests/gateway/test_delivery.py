@@ -8,8 +8,6 @@ from typing import Any, cast
 from gateway.config import GatewayConfig, HomeChannel, Platform, PlatformConfig
 from gateway.delivery import DeliveryRouter, DeliveryTarget
 from gateway.platforms.base import SendResult
-from gateway.relay.adapter import RelayAdapter
-from gateway.relay.descriptor import CONTRACT_VERSION, CapabilityDescriptor
 from gateway.session import SessionSource
 
 
@@ -40,10 +38,10 @@ class TestTargetToStringRoundtrip:
 class TestCaseSensitiveChatIdParsing:
     """Test that chat IDs preserve their original case (issue #11768)."""
     
-    def test_slack_uppercase_chat_id_preserved(self):
-        """Slack channel IDs like C123ABC should preserve case."""
-        target = DeliveryTarget.parse("slack:C123ABC")
-        assert target.platform == Platform.SLACK
+    def test_uppercase_chat_id_preserved(self):
+        """Chat IDs like C123ABC should preserve case."""
+        target = DeliveryTarget.parse("telegram:C123ABC")
+        assert target.platform == Platform.TELEGRAM
         assert target.chat_id == "C123ABC"  # Should NOT be lowercased to c123abc
         assert target.is_explicit is True
     
@@ -62,9 +60,9 @@ class TestPlatformNameCaseInsensitivity:
     
 
 class _RelayDeliveryTransport:
-    """Relay transport that advertises Slack and records outbound wire frames."""
+    """Relay transport that advertises Telegram and records outbound wire frames."""
 
-    def __init__(self, platform="slack"):
+    def __init__(self, platform="telegram"):
         self._identities = [(platform, "bot-1")]
         self.sent = []
 
@@ -75,7 +73,10 @@ class _RelayDeliveryTransport:
         return {"success": True, "message_id": "relay-message-1"}
 
 
-def _make_relay(transport, platform="slack", max_message_length=4000):
+def _make_relay(transport, platform="telegram", max_message_length=4000):
+    from gateway.relay.adapter import RelayAdapter
+    from gateway.relay.descriptor import CONTRACT_VERSION, CapabilityDescriptor
+
     return RelayAdapter(
         PlatformConfig(enabled=True),
         CapabilityDescriptor(
@@ -103,10 +104,10 @@ async def test_relay_fronted_target_delivers_without_prior_inbound_chat_state(tm
     config = GatewayConfig(
         platforms={
             Platform.RELAY: PlatformConfig(enabled=True),
-            Platform.SLACK: PlatformConfig(
+            Platform.TELEGRAM: PlatformConfig(
                 enabled=False,
                 home_channel=HomeChannel(
-                    platform=Platform.SLACK,
+                    platform=Platform.TELEGRAM,
                     chat_id="D123",
                     name="Owner DM",
                     user_id="U123",
@@ -117,7 +118,7 @@ async def test_relay_fronted_target_delivers_without_prior_inbound_chat_state(tm
     router = DeliveryRouter(config, adapters={Platform.RELAY: relay})
 
     result = await router._deliver_to_platform(
-        DeliveryTarget(platform=Platform.SLACK, chat_id="D123"),
+        DeliveryTarget(platform=Platform.TELEGRAM, chat_id="D123"),
         content,
         metadata={"job_id": "cron-1", "user_id": "stale-user"},
     )
@@ -161,17 +162,17 @@ async def test_native_adapter_wins_when_relay_also_fronts_platform(tmp_path, mon
     relay = _make_relay(transport)
     config = GatewayConfig(
         platforms={
-            Platform.SLACK: PlatformConfig(enabled=True),
+            Platform.TELEGRAM: PlatformConfig(enabled=True),
             Platform.RELAY: PlatformConfig(enabled=True),
         },
     )
     router = DeliveryRouter(
         config,
-        adapters={Platform.SLACK: native, Platform.RELAY: relay},
+        adapters={Platform.TELEGRAM: native, Platform.RELAY: relay},
     )
 
     await router._deliver_to_platform(
-        DeliveryTarget(platform=Platform.SLACK, chat_id="D123"),
+        DeliveryTarget(platform=Platform.TELEGRAM, chat_id="D123"),
         "native result",
         metadata=None,
     )
@@ -190,10 +191,10 @@ async def test_disabled_native_adapter_does_not_shadow_relay(tmp_path, monkeypat
     relay = _make_relay(transport)
     config = GatewayConfig(
         platforms={
-            Platform.SLACK: PlatformConfig(
+            Platform.TELEGRAM: PlatformConfig(
                 enabled=False,
                 home_channel=HomeChannel(
-                    platform=Platform.SLACK,
+                    platform=Platform.TELEGRAM,
                     chat_id="D123",
                     name="Owner DM",
                     user_id="U123",
@@ -204,18 +205,18 @@ async def test_disabled_native_adapter_does_not_shadow_relay(tmp_path, monkeypat
     )
     router = DeliveryRouter(
         config,
-        adapters={Platform.SLACK: native, Platform.RELAY: relay},
+        adapters={Platform.TELEGRAM: native, Platform.RELAY: relay},
     )
 
     await router._deliver_to_platform(
-        DeliveryTarget(platform=Platform.SLACK, chat_id="D123"),
+        DeliveryTarget(platform=Platform.TELEGRAM, chat_id="D123"),
         "relay result",
         metadata=None,
     )
 
     assert native.calls == []
     assert len(transport.sent) == 1
-    assert transport.sent[0][1] == "slack"
+    assert transport.sent[0][1] == "telegram"
 
 
 class StaleTopicAdapter:
@@ -296,7 +297,7 @@ class FailingAdapter:
 # ---------------------------------------------------------------------------
 
 class ChunkingAdapter:
-    """Adapter that declares splits_long_messages=True (like Discord/Telegram)."""
+    """Adapter that declares splits_long_messages=True (like Telegram)."""
     splits_long_messages = True
 
     def __init__(self):
@@ -323,8 +324,8 @@ async def test_long_output_truncated_for_non_chunking_adapter(tmp_path, monkeypa
     """Non-chunking adapters receive truncated content with a footer + file save."""
     monkeypatch.setattr("gateway.delivery.get_hermes_home", lambda: tmp_path)
     adapter = NonChunkingAdapter()
-    router = DeliveryRouter(GatewayConfig(), adapters={Platform.DISCORD: adapter})
-    target = DeliveryTarget.parse("discord:123")
+    router = DeliveryRouter(GatewayConfig(), adapters={Platform.TELEGRAM: adapter})
+    target = DeliveryTarget.parse("telegram:123")
 
     long_content = "x" * 5000
     await router._deliver_to_platform(target, long_content, metadata={"job_id": "job1"})

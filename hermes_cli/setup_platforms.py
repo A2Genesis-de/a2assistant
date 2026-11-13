@@ -184,11 +184,6 @@ def _setup_telegram():
         save_prompted("TELEGRAM_HOME_CHANNEL", "Home channel ID (or leave empty to set later with /set-home in Telegram)")
 
 
-# _setup_slack and _write_slack_manifest_and_instruct moved to the slack plugin:
-# plugins/platforms/slack/adapter.py::interactive_setup (registered via setup_fn and dispatched through the
-# plugin path). #41112 / #3823.
-# _setup_bluebubbles moved to plugins/platforms/bluebubbles/adapter.py::interactive_setup (setup_fn).
-
 
 def _setup_webhooks():
     """Configure webhook integration."""
@@ -197,7 +192,7 @@ def _setup_webhooks():
     if declines_reconfigure("Webhooks", "Reconfigure webhooks?", "WEBHOOK_ENABLED"):
         return
     print()
-    print_warning("⚠  Webhook and SMS platforms require exposing gateway ports to the")
+    print_warning("⚠  Webhook platforms require exposing gateway ports to the")
     print_warning("   internet. For security, run the gateway in a sandboxed environment")
     print_warning("   (Docker, VM, etc.) to limit blast radius from prompt injection.")
     print()
@@ -223,9 +218,7 @@ def _setup_webhooks():
 
 # (platform label, credential env var, home-channel env vars — any one satisfies)
 _HOME_CHANNEL_CHECKS = (
-    ("Telegram", "TELEGRAM_BOT_TOKEN", ("TELEGRAM_HOME_CHANNEL",)), ("Discord", "DISCORD_BOT_TOKEN", ("DISCORD_HOME_CHANNEL",)),
-    ("Slack", "SLACK_BOT_TOKEN", ("SLACK_HOME_CHANNEL",)), ("BlueBubbles", "BLUEBUBBLES_SERVER_URL", ("BLUEBUBBLES_HOME_CHANNEL",)),
-    ("QQBot", "QQ_APP_ID", ("QQBOT_HOME_CHANNEL", "QQ_HOME_CHANNEL")),
+    ("Telegram", "TELEGRAM_BOT_TOKEN", ("TELEGRAM_HOME_CHANNEL",)),
 )
 
 

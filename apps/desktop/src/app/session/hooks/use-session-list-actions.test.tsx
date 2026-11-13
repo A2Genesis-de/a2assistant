@@ -604,7 +604,7 @@ describe('refreshSessions identity + loading hygiene', () => {
     ownsRefresh = false
     setSessions([row('winner')])
     setCronSessions([row('winner-cron', { source: 'cron' })])
-    setMessagingSessions([row('winner-message', { source: 'signal' })])
+    setMessagingSessions([row('winner-message', { source: 'telegram' })])
     setMessagingTruncated(true)
     setSessionProfilesTruncated({ winner: true })
     setSessionProfilesUsage({ winner: { cost_usd: 2, tokens: 20 } })
@@ -863,7 +863,7 @@ describe('refreshSessions batches slices into one request', () => {
         sidebar(
           { sessions: [row('personal-session', { profile: 'personal' })] },
           [row('personal-cron', { profile: 'personal', source: 'cron' })],
-          [row('personal-signal', { profile: 'personal', source: 'signal' })]
+          [row('personal-telegram', { profile: 'personal', source: 'telegram' })]
         )
       )
       await personalRefresh
@@ -880,7 +880,7 @@ describe('refreshSessions batches slices into one request', () => {
 
     expect($sessions.get().map(session => session.id)).toEqual(['personal-session'])
     expect($cronSessions.get().map(session => session.id)).toEqual(['personal-cron'])
-    expect($messagingSessions.get().map(session => session.id)).toEqual(['personal-signal'])
+    expect($messagingSessions.get().map(session => session.id)).toEqual(['personal-telegram'])
   })
 
   it('ignores an in-flight response after the source changes with the same profile', async () => {
@@ -900,7 +900,7 @@ describe('refreshSessions batches slices into one request', () => {
       )
       await personalRefresh
 
-      work.resolve(sidebar({ sessions: [row('work-session')] }, [], [row('work-chat', { source: 'signal' })]))
+      work.resolve(sidebar({ sessions: [row('work-session')] }, [], [row('work-chat', { source: 'telegram' })]))
       await workRefresh
     })
 
@@ -959,28 +959,28 @@ describe('messaging profile scope', () => {
   })
 
   it('keeps per-platform pagination on the active profile', async () => {
-    setMessagingSessions([row('m1', { profile: 'work', source: 'signal' })])
+    setMessagingSessions([row('m1', { profile: 'work', source: 'telegram' })])
     listAllProfileSessions.mockResolvedValue({
-      sessions: [row('m1', { profile: 'work', source: 'signal' }), row('m2', { profile: 'work', source: 'signal' })],
+      sessions: [row('m1', { profile: 'work', source: 'telegram' }), row('m2', { profile: 'work', source: 'telegram' })],
       total: 2
     })
     const { result } = renderHook(() => useSessionListActions({ profileScope: 'work' }))
 
     await act(async () => {
-      await result.current.loadMoreMessagingForPlatform('signal')
+      await result.current.loadMoreMessagingForPlatform('telegram')
     })
 
     expect(listAllProfileSessions.mock.calls[0][4]).toBe('work')
     expect($messagingSessions.get().map(s => s.id)).toEqual(['m1', 'm2'])
-    expect($messagingPlatformTotals.get()).toEqual({ 'work:signal': 2 })
+    expect($messagingPlatformTotals.get()).toEqual({ 'work:telegram': 2 })
   })
 
   it('keeps rows from every profile when paginating the unified scope', async () => {
-    setMessagingSessions([row('work-signal', { profile: 'work', source: 'signal' })])
+    setMessagingSessions([row('work-telegram', { profile: 'work', source: 'telegram' })])
     listAllProfileSessions.mockResolvedValue({
       sessions: [
-        row('work-signal', { profile: 'work', source: 'signal' }),
-        row('personal-signal', { profile: 'personal', source: 'signal' })
+        row('work-telegram', { profile: 'work', source: 'telegram' }),
+        row('personal-telegram', { profile: 'personal', source: 'telegram' })
       ],
       total: 2
     })
@@ -988,33 +988,33 @@ describe('messaging profile scope', () => {
     const { result } = renderHook(() => useSessionListActions({ profileScope: '__all__' }))
 
     await act(async () => {
-      await result.current.loadMoreMessagingForPlatform('signal')
+      await result.current.loadMoreMessagingForPlatform('telegram')
     })
 
     expect(listAllProfileSessions.mock.calls[0][4]).toBe('all')
-    expect($messagingSessions.get().map(session => session.id)).toEqual(['work-signal', 'personal-signal'])
-    expect($messagingPlatformTotals.get()).toEqual({ 'all:signal': 2 })
+    expect($messagingSessions.get().map(session => session.id)).toEqual(['work-telegram', 'personal-telegram'])
+    expect($messagingPlatformTotals.get()).toEqual({ 'all:telegram': 2 })
   })
 
   it('keeps loaded platform rows when pagination fails', async () => {
-    const loaded = [row('work-signal', { profile: 'work', source: 'signal' })]
+    const loaded = [row('work-telegram', { profile: 'work', source: 'telegram' })]
     setMessagingSessions(loaded)
-    setMessagingPlatformTotals({ 'work:signal': 12 })
+    setMessagingPlatformTotals({ 'work:telegram': 12 })
     listAllProfileSessions.mockRejectedValue(new Error('request failed'))
 
     const { result } = renderHook(() => useSessionListActions({ profileScope: 'work' }))
 
     await act(async () => {
-      await expect(result.current.loadMoreMessagingForPlatform('signal')).resolves.toBeUndefined()
+      await expect(result.current.loadMoreMessagingForPlatform('telegram')).resolves.toBeUndefined()
     })
 
     expect($messagingSessions.get()).toEqual(loaded)
-    expect($messagingPlatformTotals.get()).toEqual({ 'work:signal': 12 })
+    expect($messagingPlatformTotals.get()).toEqual({ 'work:telegram': 12 })
   })
 
   it('keeps resolved platform totals separate across profile switches', async () => {
     listAllProfileSessions.mockResolvedValue({
-      sessions: [row('work-signal', { profile: 'work', source: 'signal' })],
+      sessions: [row('work-telegram', { profile: 'work', source: 'telegram' })],
       total: 42
     })
 
@@ -1023,68 +1023,68 @@ describe('messaging profile scope', () => {
     })
 
     await act(async () => {
-      await result.current.loadMoreMessagingForPlatform('signal')
+      await result.current.loadMoreMessagingForPlatform('telegram')
     })
 
-    expect($messagingPlatformTotals.get()).toEqual({ 'work:signal': 42 })
+    expect($messagingPlatformTotals.get()).toEqual({ 'work:telegram': 42 })
 
     rerender({ profileScope: 'personal' })
 
-    expect($messagingPlatformTotals.get()['personal:signal']).toBeUndefined()
-    expect($messagingPlatformTotals.get()['work:signal']).toBe(42)
+    expect($messagingPlatformTotals.get()['personal:telegram']).toBeUndefined()
+    expect($messagingPlatformTotals.get()['work:telegram']).toBe(42)
 
     listAllProfileSessions.mockResolvedValue({
-      sessions: [row('personal-signal', { profile: 'personal', source: 'signal' })],
+      sessions: [row('personal-telegram', { profile: 'personal', source: 'telegram' })],
       total: 3
     })
 
     await act(async () => {
-      await result.current.loadMoreMessagingForPlatform('signal')
+      await result.current.loadMoreMessagingForPlatform('telegram')
     })
 
-    expect($messagingPlatformTotals.get()).toEqual({ 'personal:signal': 3, 'work:signal': 42 })
+    expect($messagingPlatformTotals.get()).toEqual({ 'personal:telegram': 3, 'work:telegram': 42 })
 
     rerender({ profileScope: 'work' })
 
-    expect($messagingPlatformTotals.get()['work:signal']).toBe(42)
+    expect($messagingPlatformTotals.get()['work:telegram']).toBe(42)
   })
 
   it('ignores an older overlapping load-more response for the same profile and platform', async () => {
     const older = deferred<{ sessions: SessionInfo[]; total: number }>()
     const newer = deferred<{ sessions: SessionInfo[]; total: number }>()
 
-    setMessagingSessions([row('m1', { profile: 'work', source: 'signal' })])
+    setMessagingSessions([row('m1', { profile: 'work', source: 'telegram' })])
     listAllProfileSessions.mockImplementationOnce(() => older.promise).mockImplementationOnce(() => newer.promise)
 
     const { result } = renderHook(() => useSessionListActions({ profileScope: 'work' }))
-    const olderLoad = result.current.loadMoreMessagingForPlatform('signal')
+    const olderLoad = result.current.loadMoreMessagingForPlatform('telegram')
 
     setMessagingSessions([
-      row('m1', { profile: 'work', source: 'signal' }),
-      row('m2', { profile: 'work', source: 'signal' })
+      row('m1', { profile: 'work', source: 'telegram' }),
+      row('m2', { profile: 'work', source: 'telegram' })
     ])
-    const newerLoad = result.current.loadMoreMessagingForPlatform('signal')
+    const newerLoad = result.current.loadMoreMessagingForPlatform('telegram')
 
     await act(async () => {
       newer.resolve({
         sessions: [
-          row('m1', { profile: 'work', source: 'signal' }),
-          row('m2', { profile: 'work', source: 'signal' }),
-          row('m3', { profile: 'work', source: 'signal' })
+          row('m1', { profile: 'work', source: 'telegram' }),
+          row('m2', { profile: 'work', source: 'telegram' }),
+          row('m3', { profile: 'work', source: 'telegram' })
         ],
         total: 3
       })
       await newerLoad
 
       older.resolve({
-        sessions: [row('m1', { profile: 'work', source: 'signal' }), row('m2', { profile: 'work', source: 'signal' })],
+        sessions: [row('m1', { profile: 'work', source: 'telegram' }), row('m2', { profile: 'work', source: 'telegram' })],
         total: 2
       })
       await olderLoad
     })
 
     expect($messagingSessions.get().map(session => session.id)).toEqual(['m1', 'm2', 'm3'])
-    expect($messagingPlatformTotals.get()).toEqual({ 'work:signal': 3 })
+    expect($messagingPlatformTotals.get()).toEqual({ 'work:telegram': 3 })
   })
 
   it('ignores an in-flight response after the active profile changes', async () => {
@@ -1109,7 +1109,7 @@ describe('messaging profile scope', () => {
         total: 1
       })
       await personalRefresh
-      work.resolve({ sessions: [row('work-message', { profile: 'work', source: 'signal' })], total: 1 })
+      work.resolve({ sessions: [row('work-message', { profile: 'work', source: 'telegram' })], total: 1 })
       await workRefresh
     })
 
@@ -1119,7 +1119,7 @@ describe('messaging profile scope', () => {
 
   it('does not let a callback captured before a profile switch disturb current totals', async () => {
     listAllProfileSessions.mockResolvedValue({ sessions: [], total: 0 })
-    setMessagingPlatformTotals({ 'work:signal': 12 })
+    setMessagingPlatformTotals({ 'work:telegram': 12 })
 
     const { rerender, result } = renderHook(({ profileScope }) => useSessionListActions({ profileScope }), {
       initialProps: { profileScope: 'work' }
@@ -1134,7 +1134,7 @@ describe('messaging profile scope', () => {
     })
 
     expect(listAllProfileSessions).not.toHaveBeenCalled()
-    expect($messagingPlatformTotals.get()).toEqual({ 'work:signal': 12 })
+    expect($messagingPlatformTotals.get()).toEqual({ 'work:telegram': 12 })
   })
 
   it('re-reads the messaging slice when a same-route re-activation lands mid-refresh', async () => {

@@ -906,7 +906,7 @@ DEFAULT_CONFIG = {
         # Per-platform: display.platforms.<platform>.status_phrases.
         "status_phrases": {},
         # Reasoning summary rendering: "code" (💭 fenced block) | "blockquote" ("> ") | "subtext"
-        # ("-# " Discord small grey text; Discord's default). Per-platform via
+        # ("-# " small grey text). Per-platform via
         # display.platforms.<platform>.reasoning_style.
         "reasoning_style": "code",
         # Auto-delete EphemeralReply system notices ("✨ New session started!", …) after N seconds
@@ -914,15 +914,10 @@ DEFAULT_CONFIG = {
         # 0 = disabled.
         "ephemeral_system_ttl": 0,
         # Per-platform display/streaming overrides; unset keys fall through to the global. Telegram
-        # has smooth native draft streaming (on); Discord/Slack only edit-based streaming, which
-        # flickers (off). Gap-fillers only: explicit user values win, and the global
-        # streaming.enabled master switch still gates everything.
+        # has smooth native draft streaming (on). Gap-fillers only: explicit user values win, and the
+        # global streaming.enabled master switch still gates everything.
         "platforms": {
             "telegram": {"streaming": True},
-            "discord": {"streaming": False},
-            "slack": {"streaming": False},
-            # WeCom native streaming (msgtype "stream" via aibot_respond_msg).
-            "wecom": {"streaming": True},
         },
         # Gateway runtime footer on the FINAL message, e.g. `model · 68% · ~/projects/hermes`.
         # Per-platform: display.platforms.<platform>.runtime_footer.
@@ -1418,103 +1413,6 @@ DEFAULT_CONFIG = {
     # IANA timezone (e.g. "Asia/Kolkata", "America/New_York"). Empty = server-local time.
     "timezone": "",
 
-    "slack": {
-        "require_mention": True,  # require @mention to respond in channels
-        "free_response_channels": "",  # comma-separated channel IDs answered without mention
-        "allowed_channels": "",  # if set, ONLY respond in these channel IDs (whitelist)
-        "require_mention_channels": "",  # channel IDs where @mention is ALWAYS required
-        # Ignore messages whose first token @mentions another user unless the bot is also mentioned.
-        # Env: SLACK_IGNORE_OTHER_USER_MENTIONS.
-        "ignore_other_user_mentions": False,
-        "thread_require_mention": False,  # require @mention in thread replies too
-        "channel_prompts": {},  # per-channel ephemeral system prompts
-    },
-
-    "discord": {
-        "require_mention": True,  # require @mention to respond in server channels
-        "free_response_channels": "",  # comma-separated channel IDs answered without mention
-        "allowed_channels": "",  # if set, ONLY respond in these channel IDs (whitelist)
-        "auto_thread": True,  # auto-create threads on @mention in channels (like Slack)
-        # Free-response channels reply inline by default; true also gives each top-level
-        # message in them its own thread (still mention-free). Env: DISCORD_FREE_RESPONSE_AUTO_THREAD.
-        "free_response_auto_thread": False,
-        "thread_require_mention": False,  # require @mention in threads too (multi-bot threads)
-        # Bot authors must type @thisbot to trigger a reply; Discord reply pings alone do not count.
-        # Set False only for trusted legacy relays. Humans are unaffected.
-        "bots_require_inline_mention": True,
-        # Prepend recent channel scrollback when triggered (recovers messages gated out by
-        # require_mention); limit = max messages scanned.
-        "history_backfill": True,
-        "history_backfill_limit": 50,
-        # Replay messages missed while offline, after reconnect/startup.
-        "missed_message_backfill": {
-            "enabled": False,
-            "channels": "",  # comma-separated channel IDs; empty uses free_response_channels
-            "window_seconds": 21600,  # only inspect messages from the last 6 hours
-            "limit": 100,  # global cap on messages scanned per reconnect
-            "max_dispatches": 10,  # cap on recovered messages dispatched per reconnect
-            "max_attempts": 3,  # lifetime re-dispatch cap for one message, whatever its outcome
-        },
-        "reactions": True,  # add 👀/✅/❌ reactions to messages during processing
-        # Gateway transport health probe: inspects the WebSocket's ready/open/heartbeat state (never
-        # REST) as proof events still arrive. Any value 0 disables it.
-        "websocket_liveness_interval_seconds": 15,
-        "websocket_liveness_failure_threshold": 2,
-        "websocket_heartbeat_ack_max_age_seconds": 60,
-        "websocket_max_latency_seconds": 30,
-        # Dispatch-side dimension: a socket that ACKs heartbeats but delivers no events for this
-        # long is treated as deaf. 4 h absorbs a quiet server overnight; 0 disables it.
-        "websocket_event_max_silence_seconds": 14400,
-        # per-channel ephemeral system prompts (forum parents apply to child threads)
-        "channel_prompts": {},
-        # Opt-in DM role auth: DISCORD_ALLOWED_ROLES normally authorizes guild messages only (DMs
-        # need DISCORD_ALLOWED_USERS). A guild ID here also authorizes DMs from that guild's members
-        # holding the allowed role. Unset / "" / 0 = off.
-        # See #12136.
-        "dm_role_auth_guild": "",
-        # discord / discord_admin tools: allowed actions (comma string or YAML list; empty = all,
-        # subject to bot intents; unknown names dropped with a warning): list_guilds, server_info,
-        # list_channels, channel_info, list_roles, member_info, search_members, fetch_messages,
-        # list_pins, pin_message, unpin_message, create_thread, add_role, remove_role.
-        "server_actions": "",
-        # DEPRECATED no-op (uploads are always cached; messaging auth is the gate). Kept so existing
-        # configs don't error. Env: DISCORD_ALLOW_ANY_ATTACHMENT.
-        "allow_any_attachment": False,
-        # Max bytes per cached attachment (held in memory while written); 0 = no cap. Env:
-        # DISCORD_MAX_ATTACHMENT_BYTES.
-        "max_attachment_bytes": 33554432,
-        # Mention allowed users on approval prompts so owners notice them in shared channels. Env:
-        # DISCORD_APPROVAL_MENTIONS.
-        "approval_mentions": False,
-        # Voice-channel inactivity timeout (seconds); 0 = stay until `/voice leave`.
-        "voice_channel_inactivity_timeout_seconds": 300,
-        # Minimum seconds before force-stopping a VC playback; the adapter probes clip duration and
-        # extends this floor so long TTS isn't cut off.
-        "voice_playback_timeout_seconds": 120,
-        # Voice-channel software mixer (plugins/platforms/discord/voice_mixer.py): ambient
-        # "thinking" bed, verbal acks and TTS OVERLAP (ambient ducked) vs stop-and-swap.
-        "voice_fx": {
-            "enabled": False,  # master switch for the mixer subsystem
-            "ambient_enabled": True,  # play the idle "thinking" bed while tools run
-            "ambient_path": "",  # custom loop audio file; "" = synthesised pad
-            "ambient_gain": 0.18,  # idle bed loudness, 0.0–1.0
-            "duck_gain": 0.06,  # ambient loudness while speech plays
-            "speech_gain": 1.0,  # TTS / ack loudness, 0.0–1.0
-            "ack_enabled": True,  # speak a short phrase before the first tool call
-            "ack_phrases": [  # picked at random; [] disables phrases
-                "Let me look into that.",
-                "One moment.",
-                "Checking on that now.",
-                "Give me a sec.",
-                "On it.",
-            ],
-        },
-    },
-
-    "whatsapp": {
-        # reply_prefix: None = built-in "☤ *Hermes Agent*" header; "" disables; \n allowed.
-    },
-
     "telegram": {
         "reactions": False,  # add 👀/✅/❌ reactions to messages during processing
         # per-chat/topic ephemeral system prompts (topics inherit from parent group)
@@ -1533,27 +1431,15 @@ DEFAULT_CONFIG = {
         },
     },
 
-    "mattermost": {
-        "require_mention": True,  # require @mention to respond in channels
-        "free_response_channels": "",  # comma-separated channel IDs answered without mention
-        "allowed_channels": "",  # if set, ONLY respond in these channel IDs (whitelist)
-        "channel_prompts": {},  # per-channel ephemeral system prompts
-    },
-
-    "matrix": {
-        "require_mention": True,  # require @mention to respond in rooms
-        "free_response_rooms": "",  # comma-separated room IDs answered without mention
-        "allowed_rooms": "",  # if set, ONLY respond in these room IDs (whitelist)
-    },
     # Approvals for dangerous commands.
     # mode: manual (always prompt) | smart (aux LLM auto-approves low-risk) | off (= --yolo)
     # cron_mode / single_query_mode / unattended_mode: deny | approve — what to do when a
     #   cron job, a -q session (HERMES_INTERACTIVE=1 but nobody to answer), or an unattended
-    #   platform (webhook, msgraph_webhook, api_server; no /approve channel) hits one.
+    #   platform (webhook, api_server; no /approve channel) hits one.
     #   deny blocks instantly so the agent finds another way instead of waiting out the
     #   timeout and failing closed.
     # timeout: seconds before an unanswered prompt fails closed (CLI and gateway). 60s
-    #   proved too tight for Telegram/Discord push notifications, hence 300.
+    #   proved too tight for Telegram push notifications, hence 300.
     "approvals": {
         # single_query_mode — what to do when a single-query (-q) session hits a dangerous command. -q runs
         # export HERMES_INTERACTIVE=1 (for interactive sudo prompts) but have NO user waiting to answer
@@ -1567,7 +1453,6 @@ DEFAULT_CONFIG = {
         # mirrors cron_mode deny) approve — auto-approve all dangerous commands on unattended platforms
         "mode": "smart",
         "timeout": 300,
-        "discord_prompt_timeout": 300,  # Discord buttons stay clickable (min 30 s, cap MAX_SAFE_TIMEOUT_S)
         "cron_mode": "deny",
         "single_query_mode": "deny",
         "unattended_mode": "deny",
@@ -1585,7 +1470,7 @@ DEFAULT_CONFIG = {
         # /reload-mcp confirms before rebuilding the MCP tool set (it invalidates the prompt cache). "Always Approve" → false.
         "mcp_reload_confirm": True,
         # /clear, /new, /reset, /undo confirm before discarding state (Approve Once / Always Approve
-        # / Cancel via tools.slash_confirm; native buttons on Telegram/ Discord/Slack). "Always
+        # / Cancel via tools.slash_confirm; native buttons on Telegram). "Always
         # Approve" → false. HERMES_TUI_NO_CONFIRM=1 skips the TUI modal.
         "destructive_slash_confirm": True,
     },
@@ -1593,8 +1478,7 @@ DEFAULT_CONFIG = {
     "command_allowlist": [],
     # User-defined quick commands that bypass the agent loop (type: exec only).
     "quick_commands": {},
-    # Per-platform system-prompt hint overrides, keyed by platform name (whatsapp, slack, telegram,
-    # ...). Value: {"append": text} keeps the built-in hint and appends; {"replace": text}
+    # Per-platform system-prompt hint overrides, keyed by platform name (telegram, ...). Value: {"append": text} keeps the built-in hint and appends; {"replace": text}
     # substitutes it; a bare string is shorthand for append. `replace` wins over `append` if both
     # are given.
     "platform_hints": {},
@@ -2649,7 +2533,7 @@ OPTIONAL_ENV_VARS = OptionalEnvVars({
     # ── Bundled skills (opt-in) ── category="skill" (not "tool") so the sandbox env blocklist in
     # tools/environments/local.py does NOT rewrite them; skills need them passed through to curl
     # via tools/env_passthrough.py.
-    "NOTION_API_KEY": _skill("Notion integration token (used by the Teams meeting pipeline's Notion sink)",
+    "NOTION_API_KEY": _skill("Notion integration token",
         "Notion API key", "https://www.notion.so/my-integrations"),
     "LINEAR_API_KEY": _skill("Linear personal API key (used by the `linear` skill)",
         "Linear API key", "https://linear.app/settings/account/security"),
@@ -2687,106 +2571,6 @@ OPTIONAL_ENV_VARS = OptionalEnvVars({
     "TELEGRAM_PROXY": _msg(
         "Proxy URL for Telegram connections (overrides HTTPS_PROXY). Supports http://, "
         "https://, socks5://", "Telegram proxy URL (optional)"),
-    "DISCORD_BOT_TOKEN": _msg("Discord bot token from Developer Portal", "Discord bot token",
-        "https://discord.com/developers/applications", password=True),
-    "DISCORD_ALLOWED_USERS": _msg("Comma-separated Discord user IDs allowed to use the bot",
-        "Allowed Discord user IDs (comma-separated)", None),
-    "DISCORD_REPLY_TO_MODE": _msg(
-        "Discord reply threading mode: 'off' (no reply references), 'first' (reply on first "
-        "message only, default), 'all' (reply on every chunk)",
-        "Discord reply mode (off/first/all)", None),
-    "SLACK_BOT_TOKEN": _msg(
-        "Slack bot token (xoxb-). Get from OAuth & Permissions after installing your app. "
-        "Required scopes: chat:write, app_mentions:read, channels:history, groups:history, "
-        "im:history, im:read, im:write, mpim:history, mpim:read, users:read, files:read, "
-        "files:write", "Slack Bot Token (xoxb-...)", "https://api.slack.com/apps",
-        help=("In your Slack app, add the required bot scopes, install the app to the workspace, "
-        "then copy OAuth & Permissions > Bot User OAuth Token."), password=True),
-    "SLACK_APP_TOKEN": _msg(
-        "Slack app-level token (xapp-) for Socket Mode. Get from Basic Information → App-Level "
-        "Tokens. Also ensure Event Subscriptions include: message.im, message.channels, "
-        "message.groups, message.mpim, app_mention", "Slack App Token (xapp-...)",
-        "https://api.slack.com/apps",
-        help=("In your Slack app, enable Socket Mode, then create Basic Information > App-Level "
-        "Tokens with the connections:write scope."), password=True),
-    "SLACK_ALLOWED_USERS": _msg(
-        "Comma-separated Slack member IDs allowed to use A2Assistant, e.g. U01ABC2DEF3. Without "
-        "this, Slack may connect but deny messages by default.", "Allowed Slack member IDs",
-        "https://api.slack.com/apps",
-        help=("In Slack, open your profile, choose More or the three-dot menu, then Copy member "
-        "ID. Add multiple IDs comma-separated.")),
-    "MATTERMOST_URL": _msg("Mattermost server URL (e.g. https://mm.example.com)",
-        "Mattermost server URL", "https://mattermost.com/deploy/"),
-    "MATTERMOST_TOKEN": _msg("Mattermost bot token or personal access token",
-        "Mattermost bot token", None, password=True),
-    "MATTERMOST_ALLOWED_USERS": _msg("Comma-separated Mattermost user IDs allowed to use the bot",
-        "Allowed Mattermost user IDs (comma-separated)", None),
-    "MATTERMOST_REQUIRE_MENTION": _msg(
-        "Require @mention in Mattermost channels (default: true). Set to false to respond to "
-        "all messages.", "Require @mention in channels", None),
-    "MATTERMOST_FREE_RESPONSE_CHANNELS": _msg(
-        "Comma-separated Mattermost channel IDs where bot responds without @mention",
-        "Free-response channel IDs (comma-separated)", None),
-    "MATRIX_HOMESERVER": _msg("Matrix homeserver URL (e.g. https://matrix.example.org)",
-        "Matrix homeserver URL", "https://matrix.org/ecosystem/servers/"),
-    "MATRIX_ACCESS_TOKEN": _msg("Matrix access token (preferred over password login)",
-        "Matrix access token", None, password=True),
-    "MATRIX_USER_ID": _msg("Matrix user ID (e.g. @hermes:example.org)",
-        "Matrix user ID (@user:server)", None),
-    "MATRIX_ALLOWED_USERS": _msg(
-        "Comma-separated Matrix user IDs allowed to use the bot (@user:server format)",
-        "Allowed Matrix user IDs (comma-separated)", None),
-    "MATRIX_REQUIRE_MENTION": _msg(
-        "Require @mention in Matrix rooms (default: true). Set to false to respond to all "
-        "messages.", "Require @mention in rooms (true/false)", None, advanced=True),
-    "MATRIX_FREE_RESPONSE_ROOMS": _msg(
-        "Comma-separated Matrix room IDs where bot responds without @mention",
-        "Free-response room IDs (comma-separated)", None, advanced=True),
-    "MATRIX_AUTO_THREAD": _msg("Auto-create threads for messages in Matrix rooms (default: true)",
-        "Auto-create threads in rooms (true/false)", None, advanced=True),
-    "MATRIX_DM_AUTO_THREAD": _msg("Auto-create threads for DM messages in Matrix (default: false)",
-        "Auto-create threads in DMs (true/false)", None, advanced=True),
-    "MATRIX_DEVICE_ID": _msg(
-        "Stable Matrix device ID for E2EE persistence across restarts (e.g. HERMES_BOT)",
-        "Matrix device ID (stable across restarts)", None, advanced=True),
-    "MATRIX_RECOVERY_KEY": _msg(
-        "Matrix recovery key for cross-signing verification after device key rotation (from "
-        "Element: Settings → Security → Recovery Key)", "Matrix recovery key", None, password=True,
-        advanced=True),
-    "BLUEBUBBLES_SERVER_URL": _msg(
-        "BlueBubbles server URL for iMessage integration (e.g. http://192.168.1.10:1234)",
-        "BlueBubbles server URL", "https://bluebubbles.app/"),
-    "BLUEBUBBLES_PASSWORD": _msg(
-        "BlueBubbles server password (from BlueBubbles Server → Settings → API)",
-        "BlueBubbles server password", None, password=True),
-    "BLUEBUBBLES_ALLOWED_USERS": _msg(
-        "Comma-separated iMessage addresses (email or phone) allowed to use the bot",
-        "Allowed iMessage addresses (comma-separated)", None),
-    "BLUEBUBBLES_ALLOW_ALL_USERS": _msg("Allow all BlueBubbles users without allowlist",
-        "Allow All BlueBubbles Users", password=None),
-    "QQ_APP_ID": _msg("QQ Bot App ID from QQ Open Platform (q.qq.com)", "QQ App ID",
-        "https://q.qq.com", password=None),
-    "QQ_CLIENT_SECRET": _msg("QQ Bot Client Secret from QQ Open Platform", "QQ Client Secret",
-        password=True),
-    "QQ_ALLOWED_USERS": _msg("Comma-separated QQ user IDs allowed to use the bot",
-        "QQ Allowed Users", password=None),
-    "QQ_GROUP_ALLOWED_USERS": _msg("Comma-separated QQ group IDs allowed to interact with the bot",
-        "QQ Group Allowed Users", password=None),
-    "QQ_ALLOW_ALL_USERS": _msg("Allow all QQ users without an allowlist (true/false)",
-        "Allow All QQ Users", password=None),
-    "QQBOT_HOME_CHANNEL": _msg("Default QQ channel/group for cron delivery and notifications",
-        "QQ Home Channel", password=None),
-    "QQBOT_HOME_CHANNEL_NAME": _msg("Display name for the QQ home channel", "QQ Home Channel Name",
-        password=None),
-    "QQ_SANDBOX": _msg("Enable QQ sandbox mode for development testing (true/false)",
-        "QQ Sandbox Mode", password=None),
-    "IRC_SERVER": _msg("IRC server hostname (e.g. irc.libera.chat)", "IRC server", None),
-    "IRC_CHANNEL": _msg("IRC channel to join (e.g. #hermes)", "IRC channel", None),
-    "IRC_NICKNAME": _msg("Bot nickname on IRC (default: hermes-bot)", "IRC nickname", None),
-    "IRC_SERVER_PASSWORD": _msg("IRC server password (if required)", "IRC server password", None,
-        password=True, advanced=True),
-    "IRC_NICKSERV_PASSWORD": _msg("NickServ password for nick identification", "NickServ password",
-        None, password=True, advanced=True),
     "GATEWAY_ALLOW_ALL_USERS": _msg(
         "Allow all users to interact with messaging bots (true/false). Default: false.",
         "Allow all users (true/false)", None, advanced=True),

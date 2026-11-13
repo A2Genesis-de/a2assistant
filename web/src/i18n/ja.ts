@@ -291,9 +291,6 @@ export const ja: Translations = {
     delivery: {
       local: "ローカル",
       telegram: "Telegram",
-      discord: "Discord",
-      slack: "Slack",
-      email: "Email",
     },
   },
 
@@ -426,7 +423,7 @@ export const ja: Translations = {
       tts: "音声合成",
       stt: "音声認識",
       logging: "ロギング",
-      discord: "Discord",
+      messaging: "Messaging",
       auxiliary: "補助",
     },
   },

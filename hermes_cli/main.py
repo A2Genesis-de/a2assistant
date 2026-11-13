@@ -265,8 +265,7 @@ from hermes_cli.subcommands.profile import build_profile_parser
 from hermes_cli.subcommands.model import build_model_parser
 from hermes_cli.subcommands.setup import build_setup_parser
 
-from hermes_cli.subcommands.whatsapp import build_whatsapp_parser, build_whatsapp_cloud_parser
-from hermes_cli.subcommands.slack import build_slack_parser
+
 from hermes_cli.subcommands.login import build_login_parser
 from hermes_cli.subcommands.logout import build_logout_parser
 from hermes_cli.subcommands.auth import build_auth_parser
@@ -711,11 +710,7 @@ from hermes_cli.main_agent_cmds import (
     cmd_skills,
     cmd_tools,
 )
-from hermes_cli.main_platform_setup import (
-    cmd_slack,
-    cmd_whatsapp,
-    cmd_whatsapp_cloud,
-)
+
 from hermes_cli.process_identity import is_desktop_owned_backend as _is_desktop_owned_backend
 from hermes_cli.main_dashboard import (
     _attach_to_host_backend,
@@ -2331,7 +2326,7 @@ def _coalesce_session_name_args(argv: list) -> list:
     """Join unquoted multi-word session names after -c/--continue and -r/--resume: ``hermes -c Pokemon
     Agent Dev`` → ``['-c', 'Pokemon Agent Dev']``, up to the next flag or known top-level subcommand."""
     _SUBCOMMANDS = {
-        "chat", "model", "gateway", "setup", "whatsapp", "whatsapp-cloud", "login", "logout",
+        "chat", "model", "gateway", "setup", "login", "logout",
         "auth", "status", "cron", "doctor", "config", "pairing", "skills", "tools", "mcp",
         "sessions", "insights", "update", "uninstall", "profile", "dashboard", "serve", "webapp",
         "desktop", "gui", "claw", "plugins", "security", "acp", "webhook", "peer",
@@ -2638,9 +2633,9 @@ _BUILTIN_SUBCOMMANDS = frozenset(
         "journey", "memory-graph", "learning",
         "model", "monitoring", "pairing", "pause", "peer", "pets", "plugins", "portal", "profile",
         "project", "proxy", "prompt-size", "resume", "send", "sessions", "setup",
-        "skin", "skills", "slack", "status", "tools", "uninstall", "update",
+        "skin", "skills", "status", "tools", "uninstall", "update",
         "usage", "vault",
-        "webhook", "whatsapp", "whatsapp-cloud", "worktree", "chat", "secrets", "security",
+        "webhook", "worktree", "chat", "secrets", "security",
         "browser",
         "verify",
         # Plugin commands missing from top-level --help is an accepted trade-off.
@@ -3192,9 +3187,7 @@ def _build_cli_parser():
         logger.debug("LSP CLI registration failed: %s", _lsp_err)
 
     build_setup_parser(subparsers, cmd_setup=cmd_setup)
-    build_whatsapp_parser(subparsers, cmd_whatsapp=cmd_whatsapp)
-    build_whatsapp_cloud_parser(subparsers, cmd_whatsapp_cloud=cmd_whatsapp_cloud)
-    build_slack_parser(subparsers, cmd_slack=cmd_slack)
+
 
     from hermes_cli.send_cmd import register_send_subparser
     register_send_subparser(subparsers)

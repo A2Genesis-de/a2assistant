@@ -21,7 +21,7 @@ class _OneTickStopEvent:
 
 
 def test_gateway_housekeeping_drains_cron_delivery_with_live_adapters(monkeypatch):
-    adapters = {"discord": object()}
+    adapters = {"telegram": object()}
     loop = object()
     calls = []
     monkeypatch.setattr(
@@ -114,7 +114,7 @@ def test_multiplex_housekeeping_scopes_primary_and_drains_each_profile(
 def test_multiplex_housekeeping_uses_primary_routes_for_credentialless_satellite(
     tmp_path, monkeypatch
 ):
-    root_adapters = {"slack": object()}
+    root_adapters = {"telegram": object()}
     secondary_home = tmp_path / "secondary"
     runner = SimpleNamespace(
         config=SimpleNamespace(multiplex_profiles=True),
@@ -185,13 +185,13 @@ def test_primary_drain_delivers_credentialless_satellite_queue_row_through_prima
     (satellite_home / "cron").mkdir(parents=True)
     (root / "config.yaml").write_text(yaml.safe_dump({
         "gateway": {"multiplex_profiles": True, "profile_routes": [
-            {"platform": "discord", "guild_id": "G1", "chat_id": "C1", "profile": "satellite"}]},
+            {"platform": "telegram", "guild_id": "G1", "chat_id": "C1", "profile": "satellite"}]},
     }), encoding="utf-8")
     # The satellite names its home channel but holds no token: block present, ``enabled`` False.
     (satellite_home / "config.yaml").write_text(
-        yaml.safe_dump({"platforms": {"discord": {"home_channel": "C1"}}}), encoding="utf-8")
+        yaml.safe_dump({"platforms": {"telegram": {"home_channel": "C1"}}}), encoding="utf-8")
     monkeypatch.setattr("hermes_constants.get_default_hermes_root", lambda: root)
-    monkeypatch.delenv("DISCORD_BOT_TOKEN", raising=False)
+    monkeypatch.delenv("TELEGRAM_BOT_TOKEN", raising=False)
 
     sent, standalone = [], []
 
@@ -202,12 +202,12 @@ def test_primary_drain_delivers_credentialless_satellite_queue_row_through_prima
 
     async def _standalone(platform, pconfig, chat_id, text, **kwargs):
         standalone.append(chat_id)
-        return {"success": False, "error": "DISCORD_BOT_TOKEN is not set"}
+        return {"success": False, "error": "TELEGRAM_BOT_TOKEN is not set"}
 
     # The external worker: no adapters, queues under the OWNING (satellite) home.
     token = set_hermes_home_override(str(satellite_home))
     try:
-        delivery_queue.enqueue("exec-1", {"id": "job1", "name": "probe", "deliver": "discord:C1"}, "hello")
+        delivery_queue.enqueue("exec-1", {"id": "job1", "name": "probe", "deliver": "telegram:C1"}, "hello")
     finally:
         reset_hermes_home_override(token)
 
@@ -218,7 +218,7 @@ def test_primary_drain_delivers_credentialless_satellite_queue_row_through_prima
     try:
         with patch("tools.send_message_tool._send_to_platform", _standalone), \
              patch("cron.scheduler.load_config", return_value={"cron": {"wrap_response": False}}):
-            gateway_run._drain_restart_safe_cron_deliveries({Platform.DISCORD: PrimaryDiscord()}, loop, runner)
+            gateway_run._drain_restart_safe_cron_deliveries({Platform.TELEGRAM: PrimaryDiscord()}, loop, runner)
     finally:
         loop.call_soon_threadsafe(loop.stop)
 
@@ -251,7 +251,7 @@ def test_a_queued_worker_delivery_is_drained_before_the_next_housekeeping_tick(t
     stop = threading.Event()
     thread = threading.Thread(
         target=gateway_run._start_gateway_housekeeping,
-        args=(stop,), kwargs={"adapters": {"slack": object()}, "loop": object(), "interval": 60},
+        args=(stop,), kwargs={"adapters": {"telegram": object()}, "loop": object(), "interval": 60},
         daemon=True)
     thread.start()
     try:

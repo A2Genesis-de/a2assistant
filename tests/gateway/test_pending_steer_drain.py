@@ -98,7 +98,7 @@ async def test_interrupt_then_steer_preserves_channel_inputs(monkeypatch):
     source.parent_chat_id = "parent-channel"
     prompt = "Keep this channel instruction."
     runner._pinned_channel_inputs(KEY, prompt, source, internal=False)
-    adapter = Adapter(PlatformConfig(enabled=True), Platform.DISCORD)
+    adapter = Adapter(PlatformConfig(enabled=True), Platform.TELEGRAM)
     ctx = TurnContext(
         source=source,
         context_prompt="context",

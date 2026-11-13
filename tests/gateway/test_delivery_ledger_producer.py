@@ -32,7 +32,7 @@ class _Adapter(BasePlatformAdapter):  # type: ignore[misc]
     """Minimal concrete adapter driving the real base-class pipeline."""
 
     def __init__(self):
-        super().__init__(PlatformConfig(enabled=True), Platform.SLACK)
+        super().__init__(PlatformConfig(enabled=True), Platform.TELEGRAM)
         self.sent = []
 
     async def connect(self, *, is_reconnect: bool = False):  # pragma: no cover
@@ -54,7 +54,7 @@ def _event(text="hello agent"):
         text=text,
         message_type=MessageType.TEXT,
         source=SessionSource(
-            platform=Platform.SLACK, chat_id="C1", chat_type="channel"
+            platform=Platform.TELEGRAM, chat_id="C1", chat_type="channel"
         ),
         message_id="msg-42",
     )
@@ -148,7 +148,7 @@ class TestProducerHook:
         assert _rows()[0][1] == "failed"
         assert _rows()[0][3] == "reviewer"
         runner._redeliver_failed_obligations_for_platform.assert_awaited_once_with(
-            Platform.SLACK, profile="reviewer"
+            Platform.TELEGRAM, profile="reviewer"
         )
 
 

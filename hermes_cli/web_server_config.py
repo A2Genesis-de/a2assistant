@@ -195,7 +195,7 @@ _CATEGORY_MERGE: dict[str, str] = {
     "goals": "agent",
     "updates": "general",
     "onboarding": "agent",
-    "telegram": "discord",
+    "telegram": "messaging",
     "mcp": "agent",
     "computer_use": "agent",
     "telemetry": "security",

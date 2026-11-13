@@ -1,14 +1,12 @@
 """Profile forwarding through the canonical owner, with exact conversation identity."""
-import asyncio
 from contextvars import ContextVar
 from dataclasses import asdict, replace
 from functools import partial
 import hashlib
 import json
 import logging
-from pathlib import Path
 
-from gateway.session_contract import SessionRef, Submission
+from gateway.session_contract import Submission
 from hermes_state_runtime import RuntimeStoreError
 
 logger = logging.getLogger(__name__)
@@ -114,17 +112,6 @@ async def forward(connection, params):
             raise RuntimeStoreError('admission_conflict')
         ref = restore_local_session(authority, sid)
     else:
-        # Historical `a2a-{agent}-{slug}` titles discarded peer/tenant identity and collapsed
-        # context characters, and those `hermes chat --source a2a` rows stored no origin, so a
-        # titled row never proves it belongs to this exact conversation. Never adopt or retitle
-        # it (that would hand one peer another's history), and never refuse every peer whose
-        # slug collides: start this identity's own canonical session and leave the old row be.
-        from plugins.platforms.a2a.adapter import _safe_context_slug
-        title = f'a2a-{params["agent"]}-{_safe_context_slug(params["context_id"])}'
-        legacy = authority.db.get_session_by_title(title)
-        if legacy is not None:
-            logger.warning('A2A: pre-authority session %s titled %r has no peer identity; '
-                           'forwarding into a new session instead of adopting it', legacy['id'], title)
         token = _forward_identity.set(identity)
         try:
             ref = stage_local_session(authority, actor, {'source': 'a2a', 'request_id': key})
@@ -140,51 +127,3 @@ async def forward(connection, params):
     saved = admission_result(authority.db, receipt.admission_id)
     return dict(asdict(receipt), session_id=ref.session_id,
                 result=saved['result'] if saved is not None else None)
-
-
-async def forward_to_owner(home, *, agent, tenant, peer, context_id, input_id, text, timeout):
-    """Transport-only caller; a timeout never cancels or re-identifies accepted work."""
-    from hermes_cli.gateway_client import (GATEWAY_WS_PROTOCOL, GatewayClient, GatewayClientError,
-        _session_ticket, gateway_ws_target)
-    from hermes_cli.gateway_runtime import ensure_gateway_runtime
-    from websockets.asyncio.client import connect
-    home = await asyncio.to_thread(Path(home).resolve)
-    async with asyncio.timeout(timeout):
-        ready = await asyncio.to_thread(ensure_gateway_runtime, home)
-        if ready.state != 'ready' or ready.endpoint is None:
-            raise GatewayClientError(f'gateway_{ready.state}:{ready.reason_code or "not_ready"}')
-        ticket = await asyncio.to_thread(_session_ticket, home, ready.endpoint)
-        url, protocols = gateway_ws_target(ready.endpoint, ticket)
-        # Loopback authority dial: never through HTTP(S)_PROXY (websockets>=14 honours it by default).
-        async with connect(url, subprotocols=protocols, open_timeout=10, max_size=8 * 1024 * 1024,
-                           proxy=None) as ws:
-            if ws.subprotocol != GATEWAY_WS_PROTOCOL:
-                raise GatewayClientError('gateway_protocol_mismatch')
-            async with GatewayClient(ws) as client:
-                params = dict(agent=agent, tenant=tenant, peer=peer, context_id=context_id, input_id=input_id, text=text)
-                backoff = .25
-                while True:
-                    receipt = await client.rpc('a2a.forward', **params)
-                    if receipt['status'] == 'unknown':
-                        raise GatewayClientError('unknown_execution')
-                    if receipt['status'] == 'terminal':
-                        return receipt
-                    # The forward subscribed this socket to the session: wait for the admission's
-                    # completion frame, re-reading the exact durable receipt on a backed-off
-                    # safety tick (a frame lost to a replay gap) instead of a fixed 100 ms poll.
-                    try:
-                        async with asyncio.timeout(backoff):
-                            await _completion(client, receipt['admission_id'])
-                    except TimeoutError:
-                        backoff = min(backoff * 2, 5.0)
-
-
-async def _completion(client, admission_id):
-    """Consume projections until this admission's completion frame; a transport error raises."""
-    while True:
-        event = await client.events.get()
-        if isinstance(event, Exception):
-            raise event
-        frame = event.get('params') or {}
-        if frame.get('type') == 'message.complete' and (frame.get('payload') or {}).get('admission_id') == admission_id:
-            return

@@ -211,7 +211,7 @@ async def test_local_api_and_unknown_sources_are_never_mounted_by_route(tmp_path
 
 @pytest.mark.asyncio
 async def test_an_origin_that_contradicts_the_row_is_not_trusted(tmp_path):
-    _seed(tmp_path, 'mixed', _source(), routed=False, row_origin=json.dumps(_source('discord').to_dict()))
+    _seed(tmp_path, 'mixed', _source(), routed=False, row_origin=json.dumps(_source('webhook').to_dict()))
     await _refused(tmp_path, 'mixed')
 
 

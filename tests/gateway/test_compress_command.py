@@ -543,20 +543,20 @@ def test_rotated_compress_keeps_atomically_published_foreign_tail(tmp_path, monk
     store = SessionStore(sessions_dir=root / "sessions", config=GatewayConfig(multiplex_profiles=True))
     parent, child = "parent", "child"
     entry = SessionEntry(
-        session_key=f"agent:{profile}:discord:thread:123:123", session_id=parent,
+        session_key=f"agent:{profile}:telegram:thread:123:123", session_id=parent,
         created_at=datetime.now(), updated_at=datetime.now(),
-        platform=Platform.DISCORD, chat_type="thread",
+        platform=Platform.TELEGRAM, chat_type="thread",
     )
     store._entries[entry.session_key] = entry
     db = store._db_for_key(entry.session_key)
-    db.create_session(parent, "discord")
+    db.create_session(parent, "telegram")
     db.append_message(parent, "assistant", "old turn")
     watermark = db.get_active_message_watermark(parent)
     db.append_message(parent, "assistant", "concurrent foreign turn")
     ceiling = db.get_active_message_watermark(parent)
     handoff = [{"role": "assistant", "content": "compressed summary"}]
     db.publish_compression_child(
-        parent_session_id=parent, child_session_id=child, source="discord",
+        parent_session_id=parent, child_session_id=child, source="telegram",
         messages=handoff, watermark=watermark, watermark_ceiling=ceiling,
         require_compression_lease=False,
     )

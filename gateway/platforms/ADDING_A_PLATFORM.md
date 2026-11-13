@@ -49,35 +49,7 @@ status display, gateway setup, and more.
   auto-populate `OPTIONAL_ENV_VARS` in `hermes_cli/config.py` so the setup
   wizard surfaces proper descriptions, prompts, password flags, and URLs.
 
-**Subclassing for platform-specific UX.** When a platform has a hard
-time-window constraint that the base adapter can't anticipate (LINE's
-60s single-use reply token, WhatsApp's 24h session window, etc.), an
-adapter can override `_keep_typing` to layer a mid-flight bubble at a
-threshold without expanding the kwarg surface. Always
-`await super()._keep_typing(...)` so the typing heartbeat keeps running,
-and tear down your side task in `finally`. See `plugins/platforms/line/`
-for the full pattern (Template Buttons postback at 45s, `RequestCache`
-state machine, `interrupt_session_activity` override for `/stop`
-orphans) and the developer-guide page for the prose walkthrough.
-
-**Sibling adapters that share behavior.** When a single platform has
-two transport modes the user picks between — unofficial vs official
-APIs, polling vs websocket, library A vs library B — the right
-structure is two adapters that share a behavior mixin. WhatsApp does
-this: `plugins/platforms/whatsapp/adapter.py` (Baileys bridge) and
-`plugins/platforms/whatsapp_cloud/adapter.py` (Meta Cloud API) both inherit
-from `WhatsAppBehaviorMixin` in `gateway/platforms/whatsapp_common.py`.
-The mixin owns gating, allow-lists, mention parsing, broadcast
-filters, and the WhatsApp-flavored markdown conversion — everything
-that's platform-protocol-agnostic. Each adapter owns its transport.
-Both register distinct `Platform.*` enum values so the gateway can run
-both simultaneously against different phone numbers. The mixin must
-come **first** in the bases list — `class WhatsAppAdapter(Mixin,
-BasePlatformAdapter)` — so the mixin's `format_message` overrides
-`BasePlatformAdapter`'s generic default.
-
-See `plugins/platforms/irc/`, `plugins/platforms/teams/`, and
-`plugins/platforms/google_chat/` for complete working examples, and
+See `plugins/platforms/telegram/` for a complete working example, and
 `website/docs/developer-guide/adding-platform-adapters.md` for the full
 plugin guide with code examples and hook documentation.
 
@@ -87,7 +59,7 @@ Plugin-registered native handlers (`ctx.register_platform_handler(<platform>, fa
 `self._wire_plugin_handlers(native_client)` once in `connect()` before your own catch-all handlers. The base
 class then handles plugins that load mid-run — the runner calls `rewire_plugin_handlers()` on every
 plugin-loaded event and only factories not yet wired on that native client run. Override it only when your
-adapter keeps a second plugin registry (Slack action handlers) or dispatches by registration order with a
+adapter keeps a second plugin registry or dispatches by registration order with a
 catch-all last (Telegram hoists late handlers ahead of core); see `gateway/run_plugin_rewire.py`.
 
 ## Built-in Path (Core Contributors Only)
@@ -134,10 +106,10 @@ If your platform supports interactive button/menu messages, implement these for 
 | `send_clarify(chat_id, question, choices, clarify_id, session_key, ...)` | Render the `clarify` tool's multi-choice question as tappable buttons. Pair with inbound dispatch that routes button taps to `tools.clarify_gateway.resolve_gateway_clarify`. |
 | `_send_exec_approval_prompt(prompt: ExecApprovalPrompt)` | Render a dangerous-command approval as native buttons. `send_exec_approval` is a base template method: it builds the shared text (`_format_exec_approval`, tune via the `_EA_*` class attrs) and the choice set (`prompt.actions` = `(label, choice, style)` rows, choices `once`/`session`/`always`/`deny`) — you only map those rows to widgets. Inbound dispatch routes to `tools.approval.resolve_gateway_approval_card` with the card's request id (`prompt.request_id`), so a press answers the request that card showed. |
 | `send_slash_confirm(chat_id, title, message, session_key, confirm_id, ...)` | Render slash-command confirmations (e.g. `/reload-mcp`) as Once/Always/Cancel buttons. Inbound dispatch routes to `tools.slash_confirm.resolve`. |
-| `send_model_picker(...)` | Interactive `/model` picker. Used by Telegram, Discord, and Slack (Socket Mode). |
-| `send_choice_picker(...)` | Flat single-level picker for finite-choice commands (`/reasoning`, `/fast`). Implemented by Telegram (inline keyboard), Discord (select menu), Matrix (reactions), and Feishu (interactive card buttons). Platforms without it fall back to the text status card automatically. |
+| `send_model_picker(...)` | Interactive `/model` picker. Used by Telegram. |
+| `send_choice_picker(...)` | Flat single-level picker for finite-choice commands (`/reasoning`, `/fast`). Implemented by Telegram (inline keyboard). Platforms without it fall back to the text status card automatically. |
 
-See `plugins/platforms/telegram/adapter.py`, `plugins/platforms/discord/adapter.py`, and `plugins/platforms/whatsapp_cloud/adapter.py` for reference implementations. The button-callback id convention (`cl:<id>:<idx>`, `appr:<id>:<choice>`, `sc:<choice>:<id>`) is shared across adapters — match it so the gateway-side resolvers work without modification.
+See `plugins/platforms/telegram/adapter.py` for the reference implementation. The button-callback id convention (`cl:<id>:<idx>`, `appr:<id>:<choice>`, `sc:<choice>:<id>`) is shared across adapters — match it so the gateway-side resolvers work without modification.
 
 ### Required function
 

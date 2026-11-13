@@ -1933,11 +1933,11 @@ CONFIG_SCHEMA = ProviderConfigSchema(
         are refused even after the entry rotated underneath them."""
         from hermes_cli.config import load_config, load_env, save_config, save_env_value
 
-        key = "DISCORD_BOT_TOKEN"
-        real = "discord-live-secret-abcdef1234567890"
+        key = "TELEGRAM_BOT_TOKEN"
+        real = "123456789:telegram-live-secret-abcdef1234567890"
         save_env_value(key, real)
         response = self.client.put(
-            "/api/messaging/platforms/discord",
+            "/api/messaging/platforms/telegram",
             json={"clear_env": [key], "env": {key: redact_key(real)}},
         )
         assert response.status_code == 400
@@ -2765,44 +2765,6 @@ class TestNewEndpoints:
 
 
     # --- New profiles endpoints: active / description / model / describe-auto ---
-
-
-    def test_discord_toolsets_read_and_write_discord_platform(self):
-        """Platform-restricted toolsets must not be saved as successful CLI no-ops."""
-        from hermes_cli.config import load_config
-
-        listing = {t["name"]: t for t in self.client.get("/api/tools/toolsets").json()}
-        assert listing["discord"]["platform"] == "discord"
-        assert listing["discord"]["platform_label"] == "Discord"
-        assert listing["discord"]["enabled"] is False
-
-        resp = self.client.put("/api/tools/toolsets/discord", json={"enabled": True})
-        assert resp.status_code == 200
-        assert resp.json() == {
-            "ok": True,
-            "name": "discord",
-            "platform": "discord",
-            "enabled": True,
-            # Install-on-enable: no provider post_setup pending for discord.
-            "post_setup_started": None,
-        }
-
-        config = load_config()
-        assert "discord" in config["platform_toolsets"]["discord"]
-        assert "discord" not in config["platform_toolsets"].get("cli", [])
-
-        listing = {t["name"]: t for t in self.client.get("/api/tools/toolsets").json()}
-        assert listing["discord"]["enabled"] is True
-        assert listing["discord_admin"]["enabled"] is False
-
-        resp = self.client.put(
-            "/api/tools/toolsets/discord_admin", json={"enabled": True}
-        )
-        assert resp.status_code == 200
-        config = load_config()
-        assert {"discord", "discord_admin"} <= set(
-            config["platform_toolsets"]["discord"]
-        )
 
 
     def test_get_toolset_config_returns_provider_matrix(self):
