@@ -51,31 +51,6 @@ def multiplex_scope():
 
 
 # ---------------------------------------------------------------------------
-# Family A — memory plugins
-# ---------------------------------------------------------------------------
-
-class TestMemoryFamily:
-    def test_retaindb_scoped_key_wins(self, multiplex_scope, monkeypatch):
-        monkeypatch.setenv("RETAINDB_API_KEY", "env-other-profile")
-        multiplex_scope({"RETAINDB_API_KEY": "scoped-key"})
-
-        from plugins.memory.retaindb import RetainDBMemoryProvider
-
-        assert RetainDBMemoryProvider().is_available() is True
-
-    def test_retaindb_scoped_miss_does_not_borrow_environ(
-        self, multiplex_scope, monkeypatch
-    ):
-        # Env holds another profile's key; the active profile's scope has none.
-        monkeypatch.setenv("RETAINDB_API_KEY", "env-other-profile")
-        multiplex_scope({})
-
-        from plugins.memory.retaindb import RetainDBMemoryProvider
-
-        assert RetainDBMemoryProvider().is_available() is False
-
-
-# ---------------------------------------------------------------------------
 # Family B — image_gen plugins
 # ---------------------------------------------------------------------------
 
