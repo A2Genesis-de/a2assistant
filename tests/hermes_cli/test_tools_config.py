@@ -277,7 +277,6 @@ def test_first_install_nous_auto_configures_video_gen(monkeypatch):
     for env_var in (
         "VOICE_TOOLS_OPENAI_KEY",
         "OPENAI_API_KEY",
-        "ELEVENLABS_API_KEY",
         "FIRECRAWL_API_KEY",
         "FIRECRAWL_API_URL",
         "KEENABLE_API_KEY",

@@ -239,7 +239,7 @@ _API_KEYS = [
     ("OPENCODE_GO_API_KEY", "opencode_go"), ("COMMANDCODE_API_KEY", "commandcode"),
     ("KILOCODE_API_KEY", "kilocode"), ("FIRECRAWL_API_KEY", "firecrawl"), ("TAVILY_API_KEY", "tavily"), ("PERPLEXITY_API_KEY", "perplexity"),
     ("KEENABLE_API_KEY", "keenable"), ("FAL_KEY", "fal"),
-    ("ELEVENLABS_API_KEY", "elevenlabs"), ("GITHUB_TOKEN", "github"),
+    ("GITHUB_TOKEN", "github"),
 ]
 
 

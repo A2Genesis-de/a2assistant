@@ -860,7 +860,7 @@ prompt_caching:
 # Auxiliary Models (Advanced — Experimental)
 # =============================================================================
 # Hermes uses lightweight "auxiliary" models for side tasks: image analysis,
-# browser screenshot analysis, web page summarization, TTS audio-tag insertion,
+# browser screenshot analysis, web page summarization,
 # and context compression.
 #
 # By default these use Gemini Flash via OpenRouter or Nous Portal and are
@@ -930,12 +930,6 @@ prompt_caching:
 #     provider: "auto"
 #     model: ""
 #     reasoning_effort: "low"
-#
-#   # Gemini 3.1 TTS hidden audio-tag insertion
-#   tts_audio_tags:
-#     provider: "auto"       # empty model = your main chat model
-#     model: ""
-#     timeout: 30
 #
 #   # Automatic session title generation after the first exchange
 #   title_generation:
@@ -1553,7 +1547,7 @@ platform_toolsets:
 #   skills       - skills_list, skill_view
 #   skills_hub   - skill_hub (search/install/manage from online registries — user-driven only)
 #   todo         - todo (in-memory task planning, no deps)
-#   tts          - text_to_speech  (Edge TTS free, or ELEVENLABS/OPENAI/MINIMAX/MISTRAL key)
+#   tts          - text_to_speech  (OpenAI-compatible endpoint, or local Piper/KittenTTS)
 #   cronjob      - cronjob (create/list/update/pause/resume/run/remove scheduled tasks)
 #
 # PRESETS (curated bundles):
@@ -1580,7 +1574,7 @@ platform_toolsets:
 #   todo         - Task planning and tracking for multi-step work
 #   memory       - Persistent memory across sessions (personal notes + user profile)
 #   session_search - Search and recall past conversations (FTS5 + Gemini Flash summarization)
-#   tts          - Text-to-speech (Edge TTS free, ElevenLabs, OpenAI, MiniMax, Mistral)
+#   tts          - Text-to-speech (OpenAI-compatible, Piper, KittenTTS)
 #   cronjob      - Schedule and manage automated tasks (CLI-only)
 #
 # Composite toolsets:
@@ -1666,13 +1660,11 @@ platform_toolsets:
 # =============================================================================
 # Text-to-Speech
 # =============================================================================
-# TTS defaults to Edge TTS unless changed in ~/.hermes/config.yaml.
-# Gemini TTS supports persona/director prompt files, and Gemini 3.1 Flash TTS
-# can use a hidden auxiliary rewrite pass to insert expressive square-bracket
-# audio tags into the TTS script without showing tags in chat.
+# TTS defaults to the OpenAI-compatible provider unless changed in ~/.hermes/config.yaml.
+# Point it at any OpenAI-compatible speech server with tts.openai.base_url.
 #
 # tts:
-#   provider: "gemini"
+#   provider: "openai"      # openai | kittentts | piper | a command provider name
 #   speed: 1.0              # global speed multiplier (provider-specific overrides this)
 #   # Per-platform audio upload limits. Built-in defaults: discord 10 MiB,
 #   # telegram 50 MiB, everything else 10 MiB, each with safety_ratio 0.85
@@ -1681,31 +1673,21 @@ platform_toolsets:
 #     telegram:
 #       max_file_bytes: 52428800
 #       safety_ratio: 0.85
-#   gemini:
-#     model: "gemini-3.1-flash-tts-preview"
-#     voice: "Kore"
-#     audio_tags: false
-#     persona_prompt_file: ""  # e.g. ~/.hermes/tts/radio-host.md
-#   xai:
-#     voice_id: "eve"       # built-in or custom voice ID from xAI Console
-#     language: "en"        # BCP-47 code ("en", "pt-BR") or "auto"
-#     speed: 1.0            # 0.7-1.5 playback speed
-#     auto_speech_tags: false  # insert expressive audio tags via LLM rewrite
-#     text_normalization: false  # normalize numbers/abbreviations/symbols
-#     optimize_streaming_latency: 0  # 0-2, trades quality for lower latency
-#     sample_rate: 24000    # 22050 / 24000 / 44100 / 48000
-#     bit_rate: 128000      # MP3 bitrate (codec=mp3 only)
+#   openai:
+#     base_url: ""          # e.g. https://speech.example.com/v1 (OpenAI-compatible)
+#     model: "gpt-4o-mini-tts"
+#     voice: "alloy"
 
 # =============================================================================
 # Voice Transcription (Speech-to-Text)
 # =============================================================================
 # Automatically transcribe voice messages on messaging platforms.
-# Providers: local (free, faster-whisper) | groq (free tier) | openai (Whisper API) | mistral (Voxtral Transcribe)
-# Set the corresponding API key in .env: GROQ_API_KEY, OPENAI_API_KEY, or MISTRAL_API_KEY.
+# Providers: local (free, faster-whisper) | openai (Whisper API or any OpenAI-compatible server)
+# For openai set VOICE_TOOLS_OPENAI_KEY (or OPENAI_API_KEY) in .env; STT_OPENAI_BASE_URL points it elsewhere.
 stt:
   enabled: true
   # provider: "local"          # auto-detected if omitted
-  # --- Cloud pre-upload silence trim (groq/openai/mistral/xai/elevenlabs/deepinfra) ---
+  # --- Cloud pre-upload silence trim (openai) ---
   # Local whisper gets Silero VAD; cloud endpoints otherwise receive raw audio —
   # silence inflates upload time, per-audio-minute billing, and hallucination risk.
   # Collapses pauses with ffmpeg client-side; clips under 12s skip the trim, and
@@ -1722,18 +1704,15 @@ stt:
   # the audio. Do not include secrets or session context you would not send to
   # that provider.
   #
-  # Length / truncation contract: Whisper-family backends (local, openai,
-  # groq, deepinfra) only use the final ~224 prompt tokens, so Hermes
+  # Length / truncation contract: Whisper-family backends (local, openai)
+  # only use the final ~224 prompt tokens, so Hermes
   # truncates longer prompts client-side (keeping the tail) with a WARNING
   # log — never an error. Other backends own their own validation.
   #
   # Provider behavior:
   #   local (faster-whisper)  -> `initial_prompt`, forwarded unchanged
-  #   openai / groq          -> `prompt`, forwarded unchanged
-  #   mistral                -> `prompt`, forwarded unchanged
-  #   deepinfra              -> OpenAI-compatible `prompt`, unchanged
-  #   local_command/xai/
-  #   elevenlabs             -> unsupported; DEBUG log, then continue
+  #   openai                 -> `prompt`, forwarded unchanged
+  #   local_command          -> unsupported; DEBUG log, then continue
   #   plugin providers       -> `prompt` in `**extra`; plugin owns limits
   # prompt: "Hermes, Teknium, Nous Research, kanban"
   local:
@@ -1748,26 +1727,11 @@ stt:
     # logprob_threshold: -1.0       # ...AND avg_logprob < this (both must hit — quiet real speech survives)
     # unload_after_idle_seconds: 0  # 0=never unload (default); e.g. 300 releases the model after 5min idle (frees VRAM on GPU; next voice message reloads it)
   language: "en"               # Global hint; a nonempty provider language wins. Blank falls back to HERMES_LOCAL_STT_LANGUAGE, then auto-detect.
-  # groq:
-  #   model: "whisper-large-v3-turbo"
-  #   language: ""             # blank inherits stt.language, then HERMES_LOCAL_STT_LANGUAGE
   openai:
     model: "whisper-1"         # whisper-1 | gpt-4o-mini-transcribe | gpt-4o-transcribe | gpt-transcribe
     language: ""               # blank = inherit stt.language; set "en", "es", "fr", etc. to force
     timeout: 60                # request timeout in seconds; increase for self-hosted model cold starts
     max_retries: 1             # OpenAI SDK transport retries; set 0 to disable
-  # mistral:
-  #   model: "voxtral-mini-latest"  # voxtral-mini-latest | voxtral-mini-2602
-  # xai:
-  #   # Sent as the multipart ``model`` field. Hermes uses 2.0 by default;
-  #   # pin 1.0 only if a rollback is needed.
-  #   model: "grok-voice-transcribe-2.0"  # or grok-voice-transcribe-1.0
-  #   # language: ""             # blank = stt.language > HERMES_LOCAL_STT_LANGUAGE > auto-detect
-  # deepinfra:
-  #   # Model id is discovered live from the DeepInfra catalog filtered
-  #   # by the `stt` surface tag — leave `model` blank to take the first
-  #   # live result. Pin only when you need a specific Whisper variant.
-  #   model: ""
   # Custom command providers (stt.providers.<name>: type: command) can
   # normalize browser WebM/Opus and other input formats to 16 kHz mono m4a
   # before substituting {input_path}. This is opt-in so CLIs that already
@@ -1777,19 +1741,6 @@ stt:
   #     type: "command"
   #     command: "custom-asr --input {input_path} --output {output_path}"
   #     normalize: true  # requires ffmpeg; default false
-
-# Text-to-speech. Only the deepinfra block is documented here — the
-# remaining providers (edge, openai, xai, minimax, mistral, gemini,
-# elevenlabs, neutts, kittentts, piper) inherit sensible defaults from
-# DEFAULT_CONFIG in hermes_cli/config.py.
-# tts:
-#   provider: "deepinfra"
-#   deepinfra:
-#     # Model id is discovered live from the DeepInfra catalog filtered
-#     # by the `tts` surface tag — leave `model` blank to take the first
-#     # live result.
-#     model: ""
-#     voice: "default"
 
 # "Hey Hermes" hands-free wake word (off by default; toggle with /wake).
 # Full engine/provider options inherit from DEFAULT_CONFIG in

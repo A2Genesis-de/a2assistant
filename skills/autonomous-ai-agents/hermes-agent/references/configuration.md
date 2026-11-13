@@ -13,8 +13,8 @@ Full reference: https://hermes-agent.nousresearch.com/docs/user-guide/configurat
 | `compression` | `enabled`, `threshold` (0.50), `target_ratio` (0.20) |
 | `display` | `skin`, `interface` (cli/tui), `language`, `show_reasoning`, `show_cost`, `pet` |
 | `approvals` | `mode` (smart/manual/off), `timeout`, `cron_mode` |
-| `stt` | `enabled`, `provider` (local/groq/openai/mistral/elevenlabs/deepinfra) |
-| `tts` | `provider` (edge/elevenlabs/openai/minimax/mistral/neutts/gemini/piper/kittentts/deepinfra/xai) |
+| `stt` | `enabled`, `provider` (local/openai) |
+| `tts` | `provider` (openai/piper/kittentts) |
 | `memory` | `memory_enabled`, `user_profile_enabled`, `provider`, `write_approval` |
 | `security` | `redact_secrets`, `website_blocklist` |
 | `browser` | `headed` (false), `engine` (auto/lightpanda), `executable_path` ("" = auto-detect Chromium), `user_data_dir` ("" = fresh ephemeral profile per session), `chromium_args` ([]), `command_timeout` (Chromium launch timeout floor), `cloud_provider`, `cdp_url`, `use_real_profile` |
@@ -70,23 +70,19 @@ Voice messages from messaging platforms are auto-transcribed.
 ```yaml
 stt:
   enabled: true
-  provider: local   # local (faster-whisper, free) | groq | openai | mistral | elevenlabs | deepinfra
+  provider: local   # local (faster-whisper, free) | openai (any OpenAI-compatible server)
   local:
     model: base     # tiny, base, small, medium, large-v3, turbo
 ```
 
-Auto-detect priority: local faster-whisper (`python -c "import pm; pm.sync_venv(['stt-whisper'], explicit=True)"`) → Groq (`GROQ_API_KEY`, free tier) → OpenAI (`VOICE_TOOLS_OPENAI_KEY`) → Mistral Voxtral (`MISTRAL_API_KEY`).
+Auto-detect priority: local faster-whisper (`python -c "import pm; pm.sync_venv(['stt-whisper'], explicit=True)"`) → OpenAI-compatible (`VOICE_TOOLS_OPENAI_KEY`, endpoint via `STT_OPENAI_BASE_URL`).
 
 ### TTS (Text → Voice)
 
 | Provider | Env var | Free? |
 |----------|---------|-------|
-| Edge TTS (default) | None | Yes |
-| ElevenLabs | `ELEVENLABS_API_KEY` | Free tier |
-| OpenAI | `VOICE_TOOLS_OPENAI_KEY` | Paid |
-| MiniMax | `MINIMAX_API_KEY` | Paid |
-| Mistral | `MISTRAL_API_KEY` | Paid |
-| Gemini | `GOOGLE_API_KEY` | Free tier |
-| NeuTTS / Piper / KittenTTS (local) | None | Free |
+| OpenAI-compatible (default, `tts.openai.base_url`) | `VOICE_TOOLS_OPENAI_KEY` | Depends on endpoint |
+| Piper / KittenTTS (local) | None | Free |
+| Command providers (`tts.providers.<name>`) | None | Free |
 
 Voice commands: `/voice on` (voice-to-voice), `/voice tts` (always voice), `/voice off`.

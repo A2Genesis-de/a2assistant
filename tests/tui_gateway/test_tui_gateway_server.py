@@ -20144,7 +20144,7 @@ def _fake_tts_modules(monkeypatch, *, requirements=True, playback_stops=None, li
         "tools.tts_tool",
         types.SimpleNamespace(
             check_tts_requirements=lambda: requirements,
-            _get_provider=lambda cfg: "edge",
+            _get_provider=lambda cfg: "piper",
             _load_tts_config=dict,
             get_env_value=lambda key, default="": default,
         ),

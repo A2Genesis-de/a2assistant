@@ -56,8 +56,7 @@ def _args(live: bool = True) -> argparse.Namespace:
 @pytest.fixture(autouse=True)
 def _clean_env(monkeypatch):
     """Strip backend credentials so each test opts in explicitly."""
-    for var in ("FIRECRAWL_API_KEY", "FAL_KEY", "OPENAI_API_KEY",
-                "ELEVENLABS_API_KEY", "GROQ_API_KEY"):
+    for var in ("FIRECRAWL_API_KEY", "FAL_KEY", "OPENAI_API_KEY"):
         monkeypatch.delenv(var, raising=False)
     # Default: empty config, no MCP servers, local tts/stt.
     monkeypatch.setattr("hermes_cli.config.load_config_readonly", dict)
@@ -139,7 +138,7 @@ class TestConfiguredOnlySelection:
     def test_tts_local_provider_skipped(self, monkeypatch):
         monkeypatch.setattr(
             "hermes_cli.config.load_config_readonly",
-            lambda: {"tts": {"provider": "edge"}})
+            lambda: {"tts": {"provider": "piper"}})
         results = {r.name: r for r in run_live_checks([])}
         assert results["TTS"].status == "skip"
 
@@ -154,11 +153,11 @@ class TestConfiguredOnlySelection:
         results = {r.name: r for r in run_live_checks([])}
         assert results["TTS"].status == "pass"
 
-    def test_stt_groq_probed_with_key(self, monkeypatch):
-        monkeypatch.setenv("GROQ_API_KEY", "gsk-test")
+    def test_stt_openai_probed_with_key(self, monkeypatch):
+        monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
         monkeypatch.setattr(
             "hermes_cli.config.load_config_readonly",
-            lambda: {"stt": {"provider": "groq"}})
+            lambda: {"stt": {"provider": "openai"}})
         monkeypatch.setattr(
             doctor_live, "_http_get",
             lambda *a, **k: SimpleNamespace(status_code=200))
@@ -166,9 +165,10 @@ class TestConfiguredOnlySelection:
         assert results["STT"].status == "pass"
 
     def test_stt_provider_configured_but_key_missing_warns(self, monkeypatch):
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
         monkeypatch.setattr(
             "hermes_cli.config.load_config_readonly",
-            lambda: {"stt": {"provider": "groq"}})
+            lambda: {"stt": {"provider": "openai"}})
         results = {r.name: r for r in run_live_checks([])}
         assert results["STT"].status == "warn"
 

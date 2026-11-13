@@ -66,11 +66,11 @@ def test_scalar_values_unaffected(user_home):
 
     set_config_value("agent.max_turns", "300")
     set_config_value("display.compact", "true")
-    set_config_value("tts.provider", "edge")
+    set_config_value("tts.provider", "piper")
     raw = read_raw_config()
     assert raw["agent"]["max_turns"] == 300
     assert raw["display"]["compact"] is True
-    assert raw["tts"]["provider"] == "edge"
+    assert raw["tts"]["provider"] == "piper"
 
 
 # ---------------------------------------------------------------------------

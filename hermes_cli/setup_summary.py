@@ -7,18 +7,13 @@ logger = logging.getLogger("hermes_cli.setup")
 
 # provider -> (label, env vars: any one set means available; empty = always).
 # Local engines are (label, module, hint) and must be importable.
+_OPENAI_AUDIO_ROW = ("OpenAI", ("VOICE_TOOLS_OPENAI_KEY", "OPENAI_API_KEY"))
 _TTS_SUMMARY_ROWS = {
-    "elevenlabs": ("ElevenLabs", ("ELEVENLABS_API_KEY",)),
-    "openai": ("OpenAI", ("VOICE_TOOLS_OPENAI_KEY", "OPENAI_API_KEY")),
-    "minimax": ("MiniMax", ("MINIMAX_API_KEY",)), "mistral": ("Mistral Voxtral", ("MISTRAL_API_KEY",)),
-    "gemini": ("Google Gemini", ("GEMINI_API_KEY", "GOOGLE_API_KEY")),
-    "neutts": ("NeuTTS", "neutts", "run 'hermes setup tts'"),
-    "kittentts": ("KittenTTS", "kittentts", "run 'hermes setup tts'")}
-_TTS_SUMMARY_DEFAULT = ("Edge TTS", ())
-_STT_SUMMARY_ROWS = {
-    "openai": ("OpenAI", ("VOICE_TOOLS_OPENAI_KEY", "OPENAI_API_KEY")), "groq": ("Groq Whisper", ("GROQ_API_KEY",)),
-    "elevenlabs": ("ElevenLabs Scribe", ("ELEVENLABS_API_KEY",)), "xai": ("xAI", ()),
-    "deepinfra": ("DeepInfra", ("DEEPINFRA_API_KEY",))}
+    "openai": _OPENAI_AUDIO_ROW,
+    "kittentts": ("KittenTTS", "kittentts", "run 'hermes setup tts'"),
+    "piper": ("Piper", "piper", "run 'hermes tools' → Text-to-Speech")}
+_TTS_SUMMARY_DEFAULT = _OPENAI_AUDIO_ROW
+_STT_SUMMARY_ROWS = {"openai": _OPENAI_AUDIO_ROW}
 _STT_SUMMARY_DEFAULT = ("Local Whisper", "faster_whisper", "run 'hermes tools' → Speech-to-Text")
 
 # Browser "missing" hint keyed by the configured provider; anything else gets the generic hint.
@@ -52,6 +47,8 @@ def _voice_provider_status(kind: str, provider: str, rows: dict, default: tuple)
     if isinstance(row[1], tuple) and row[1] and not any(_setup.get_env_value(v) for v in row[1]):
         row = default
     if isinstance(row[1], tuple):
+        if row[1] and not any(_setup.get_env_value(v) for v in row[1]):
+            return (f"{kind} ({row[0]})", False, row[1][0])
         return (f"{kind} ({row[0]})", True, None)
     label, module, hint = row
     if _setup._module_installed(module):
@@ -138,7 +135,7 @@ def _tts_row(config, feats):
     # Configured provider, gated on its key (or local install)
     if feats.tts.managed_by_nous:
         return ("Text-to-Speech (OpenAI via Nous subscription)", True, None)
-    provider = _setup.cfg_get(config, "tts", "provider", default="edge")
+    provider = _setup.cfg_get(config, "tts", "provider", default="openai")
     return _voice_provider_status("Text-to-Speech", provider, _TTS_SUMMARY_ROWS, _TTS_SUMMARY_DEFAULT)
 
 

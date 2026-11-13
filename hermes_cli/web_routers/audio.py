@@ -1,4 +1,4 @@
-"""Audio dashboard routes: transcription upload + live transcribe-stream, voice config, ElevenLabs voices, TTS speak/lease and the speak-stream WebSocket.
+"""Audio dashboard routes: transcription upload + live transcribe-stream, voice config, TTS speak/lease and the speak-stream WebSocket.
 
 Extracted from ``hermes_cli.web_server``; helpers/state that tests monkeypatch on
 ``web_server`` stay there and are late-bound (cycle-safe).
@@ -14,14 +14,12 @@ import threading
 import asyncio
 import json
 import os
-import urllib.parse
-import urllib.request
 from fastapi import APIRouter
 from hermes_cli.dashboard_auth.native_http import grant_home_scope
 from hermes_cli.web_routers._common import http_failure
 from hermes_cli.web_deps import late
 from hermes_cli.web_server_chat import _ws_auth_ok, _ws_request_is_allowed
-from hermes_cli.web_server_gateway import _read_dashboard_json_response, _split_text_for_speak_stream
+from hermes_cli.web_server_gateway import _split_text_for_speak_stream
 from hermes_cli.web_server_surface import policy
 from hermes_cli.web_session_sockets import SPEAK_STREAM_SOCKET, TRANSCRIBE_STREAM_SOCKET
 from fastapi import HTTPException, Request, WebSocket, WebSocketDisconnect
@@ -32,15 +30,13 @@ from hermes_cli.web_models import (
     TTSLeaseRequest,
     VoiceLiveSessionRequest,
 )
-from typing import Any, Dict, Optional
+from typing import Optional
 
 _log = logging.getLogger("hermes_cli.web_server")
 router = APIRouter()
 
 # Late-bound so a test's monkeypatch on the owning module wins at call time.
 _config_profile_scope = late("_config_profile_scope", "hermes_cli.web_server_profiles")
-_voice_list_error_logged_once = late("_voice_list_error_logged_once")
-load_env = late("load_env", "hermes_cli.config")
 
 _AUDIO_MIME_EXTENSIONS: dict[str, str] = {
     "audio/aac": ".aac", "audio/flac": ".flac", "audio/m4a": ".m4a", "audio/mp3": ".mp3",
@@ -156,7 +152,7 @@ async def get_client_voice_config(request: Request, profile: Optional[str] = Non
     Lets the desktop cut the audio relay hop: mic audio goes straight to the
     profile's STT provider and reply text is synthesized on the client with
     the profile's TTS provider — the desktop↔gateway link carries only text.
-    Providers that can only run on this host (local whisper, edge-tts,
+    Providers that can only run on this host (local whisper, local TTS engines,
     command/plugin providers) resolve to ``{"mode": "relay"}`` and the
     desktop keeps using the /api/audio/* relay endpoints.
 
@@ -211,88 +207,6 @@ async def create_voice_live_session(payload: VoiceLiveSessionRequest, profile: O
     except RuntimeError as exc:
         raise HTTPException(status_code=502, detail=str(exc))
     return {"ok": True, **result}
-
-
-def _elevenlabs_voice_label(voice: dict[str, Any]) -> str:
-    name = str(voice.get("name") or voice.get("voice_id") or "Voice").strip()
-    category = str(voice.get("category") or "").strip()
-
-    return f"{name} ({category})" if category else name
-
-
-@router.get("/api/audio/elevenlabs/voices")
-async def get_elevenlabs_voices(profile: Optional[str] = None):
-    """Return ElevenLabs voices when an API key is configured.
-
-    The desktop UI uses this for the ``tts.elevenlabs.voice_id`` dropdown.
-    Only non-secret voice metadata is returned; the API key stays server-side.
-    """
-    # Config-only scope (await-safe): the key lookup reads the requested
-    # profile's .env, matching the profile the settings UI writes to.
-    with _config_profile_scope(profile):
-        api_key = (load_env().get("ELEVENLABS_API_KEY") or "").strip()
-    if not api_key:
-        # Fallback for env-only deployments — scope-aware: under multiplex
-        # os.environ may hold another profile's key, so honor the installed
-        # scope's verdict. Only the unscoped default-profile path
-        # (UnscopedSecretError) reads the env; any other failure stays empty.
-        try:
-            from agent.secret_scope import UnscopedSecretError, get_secret
-
-            try:
-                api_key = (get_secret("ELEVENLABS_API_KEY") or "").strip()
-            except UnscopedSecretError:
-                api_key = (os.environ.get("ELEVENLABS_API_KEY") or "").strip()
-        except Exception:
-            pass
-    if not api_key:
-        return {"available": False, "voices": []}
-
-    request = urllib.request.Request(
-        "https://api.elevenlabs.io/v1/voices",
-        headers={"Accept": "application/json", "xi-api-key": api_key},
-    )
-
-    try:
-        def _fetch() -> dict[str, Any]:
-            with urllib.request.urlopen(request, timeout=10) as response:
-                return _read_dashboard_json_response(response)
-
-        payload = await asyncio.to_thread(_fetch)
-    except urllib.error.HTTPError as exc:
-        # An auth failure (bad/expired/scoped key) is a persistent, user-fixable
-        # state and the desktop polls this on every settings open/focus, so
-        # treat 401/403 as "integration unavailable": 200 to the UI and log at
-        # most once until the error signature changes.
-        if exc.code in (401, 403):
-            if _voice_list_error_logged_once(f"http-{exc.code}"):
-                _log.info("ElevenLabs voices unavailable: %s — check ELEVENLABS_API_KEY", exc)
-            return {"available": False, "voices": [], "error": "unauthorized"}
-        if _voice_list_error_logged_once(f"http-{exc.code}"):
-            _log.warning("ElevenLabs voice list failed: %s", exc)
-        raise HTTPException(status_code=502, detail="Could not load ElevenLabs voices")
-    except Exception as exc:
-        if _voice_list_error_logged_once(str(exc)):
-            _log.warning("ElevenLabs voice list failed: %s", exc)
-        raise HTTPException(status_code=502, detail="Could not load ElevenLabs voices")
-    _voice_list_error_logged_once(None)  # success — re-arm logging for next failure
-
-    voices = []
-    for voice in payload.get("voices") or []:
-        if not isinstance(voice, dict):
-            continue
-
-        voice_id = str(voice.get("voice_id") or "").strip()
-        if not voice_id:
-            continue
-
-        voices.append({
-            "voice_id": voice_id, "name": str(voice.get("name") or voice_id),
-            "label": _elevenlabs_voice_label(voice),
-        })
-
-    voices.sort(key=lambda item: str(item.get("label") or "").lower())
-    return {"available": True, "voices": voices}
 
 
 @router.post("/api/audio/speak")

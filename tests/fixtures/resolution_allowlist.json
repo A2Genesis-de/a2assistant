@@ -328,11 +328,6 @@
     "kind": "bare_which"
   },
   {
-    "path": "hermes_cli/setup_tts.py",
-    "symbol": "_install_neutts_deps",
-    "kind": "bare_which"
-  },
-  {
     "path": "hermes_cli/source_build.py",
     "symbol": "_build_desktop_product",
     "kind": "bare_which"
@@ -566,11 +561,6 @@
   {
     "path": "tools/tts_tool_delivery.py",
     "symbol": "_finalize_wav_output",
-    "kind": "bare_which"
-  },
-  {
-    "path": "tools/tts_tool_delivery.py",
-    "symbol": "_write_wav_bytes_as",
     "kind": "bare_which"
   },
   {

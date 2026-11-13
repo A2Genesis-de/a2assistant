@@ -193,9 +193,9 @@ def test_edge_speak_stream_speaks_each_sentence_instead_of_whole_text_fallback(
     monkeypatch.setattr("tools.tts_streaming.resolve_streaming_provider", lambda cfg: None)
     monkeypatch.setattr(
         "tools.tts_tool._load_tts_config",
-        lambda: {"provider": "edge", "streaming": {"min_len": 6}},
+        lambda: {"provider": "piper", "streaming": {"min_len": 6}},
     )
-    monkeypatch.setattr("tools.tts_tool._get_provider", lambda cfg: "edge")
+    monkeypatch.setattr("tools.tts_tool._get_provider", lambda cfg: "piper")
     monkeypatch.setattr("tools.tts_tool._resolve_max_text_length", lambda provider, cfg: 4000)
     monkeypatch.setattr("tools.tts_tool.text_to_speech_tool", fake_tts)
     monkeypatch.setattr("tools.tts_tool_delivery._ffmpeg_run", fake_ffmpeg)

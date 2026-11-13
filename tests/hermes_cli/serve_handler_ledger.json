@@ -2,7 +2,7 @@
  "counts": {
   "http": {
    "keep-host-wide": 1,
-   "undecided": 343
+   "undecided": 342
   },
   "rpc": {
    "authority": 108,
@@ -50,7 +50,6 @@
   {"current_path": "hermes_cli.web_routers.actions:get_action_status", "decision": "undecided", "handler": "GET /api/actions/{name}/status", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.analytics:get_models_analytics", "decision": "undecided", "handler": "GET /api/analytics/models", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.analytics:get_usage_analytics", "decision": "undecided", "handler": "GET /api/analytics/usage", "kind": "http", "ref": ""},
-  {"current_path": "hermes_cli.web_routers.audio:get_elevenlabs_voices", "decision": "undecided", "handler": "GET /api/audio/elevenlabs/voices", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.audio:get_client_voice_config", "decision": "undecided", "handler": "GET /api/audio/voice-config", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.web_routers.audio:get_voice_live_status", "decision": "undecided", "handler": "GET /api/audio/voice-live/status", "kind": "http", "ref": ""},
   {"current_path": "hermes_cli.dashboard_auth.routes:api_auth_me", "decision": "undecided", "handler": "GET /api/auth/me", "kind": "http", "ref": ""},

@@ -129,7 +129,7 @@ def _post_setup_python(spec: dict) -> None:
 
 
 def _post_setup_xai_grok() -> None:
-    """Shared xAI credential bootstrap for any picker row that talks to xAI (TTS, STT, Video Gen, x_search
+    """Shared xAI credential bootstrap for any picker row that talks to xAI (Video Gen, x_search
     …). Accepts a SuperGrok-tier OAuth token (preferred — billed to the existing subscription) or a raw
     XAI_API_KEY; the rows declare empty env_vars so the auth UX lives here."""
     try:

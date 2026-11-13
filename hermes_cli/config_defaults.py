@@ -762,7 +762,6 @@ DEFAULT_CONFIG = {
             "language": "",
         },
         "memory_query_rewrite": _aux(8, reasoning_effort=False),
-        "tts_audio_tags": _aux(30),
         "voice_chat": {**_aux(120), "reasoning_effort": "none"},  # agent/voice_turn_route.py; off = lowest valid
         # Kanban: triage_specifier expands a Triage one-liner into a spec; kanban_decomposer a JSON graph.
         "triage_specifier": _aux(120),
@@ -1046,13 +1045,11 @@ DEFAULT_CONFIG = {
         "redact_pii": False,  # hash user IDs and strip phone numbers from LLM context
     },
     # Text-to-speech. Each provider accepts an optional `max_text_length:` override for the
-    # per-request input-character cap; omit to use the provider's documented limit (OpenAI 4096, xAI
-    # 15000, MiniMax 10000, ElevenLabs 5k-40k model-aware, Gemini 32000, Edge 5000, Mistral 4000,
-    # NeuTTS/KittenTTS 2000).
+    # per-request input-character cap; omit to use the provider's documented limit (OpenAI 4096,
+    # Piper 5000, KittenTTS 2000).
     "tts": {
-        # "edge" (free) | "elevenlabs" (premium) | "openai" | "xai" | "minimax" | "mistral" |
-        # "gemini" | "deepinfra" | "neutts" (local) | "kittentts" (local) | "piper" (local)
-        "provider": "edge",
+        # "openai" (any OpenAI-compatible endpoint) | "kittentts" (local) | "piper" (local)
+        "provider": "openai",
         # Seconds a local engine (Piper, KittenTTS) stays loaded after the last speech toggle
         # turns off, so a quick re-activation (wake word, voice-chat restart) skips the reload.
         # 0 unloads immediately.
@@ -1061,14 +1058,6 @@ DEFAULT_CONFIG = {
             # Shortest first sentence (chars) spoken on its own by streaming TTS; shorter openers
             # ride with the next sentence. 20 suits English; CJK voice setups use ~6.
             "min_len": 20,
-        },
-        "edge": {
-            # Popular: AriaNeural, JennyNeural, AndrewNeural, BrianNeural, SoniaNeural
-            "voice": "en-US-AriaNeural",
-        },
-        "elevenlabs": {
-            "voice_id": "pNInz6obpgDQGcFmaJgB",  # Adam
-            "model_id": "eleven_multilingual_v2",
         },
         "openai": {
             "model": "gpt-4o-mini-tts",
@@ -1082,38 +1071,9 @@ DEFAULT_CONFIG = {
             # reports its rate (X-Audio-Sample-Rate header) overrides this automatically.
             "pcm_sample_rate": 24000,
         },
-        "gemini": {
-            "model": "gemini-2.5-flash-preview-tts",
-            "voice": "Kore",
-            # Gemini 3.1: aux-model rewrite inserts [audio tags] into the TTS script only.
-            "audio_tags": False,
-            # Optional local text file with performance direction; may include a `{transcript}`
-            # placeholder, else the live transcript is appended.
-            "persona_prompt_file": "",
-        },
-        "xai": {
-            "voice_id": "eve",  # or a custom voice ID (docs.x.ai custom voices)
-            "language": "en",  # BCP-47 code ("en", "pt-BR") or "auto"
-            "speed": 1.0,  # 0.7–1.5
-            "auto_speech_tags": False,  # insert expressive audio tags via LLM rewrite
-            "optimize_streaming_latency": 0,  # 0–2, trades quality for lower latency
-            "sample_rate": 24000,  # 22050 / 24000 / 44100 / 48000
-            "bit_rate": 128000,  # MP3 bitrate; only applies when codec=mp3
-        },
-        "mistral": {
-            "model": "voxtral-mini-tts-2603",
-            "voice_id": "c69964a6-ab8b-4f8a-9465-ec0925096ec8",  # Paul - Neutral
-        },
-        "minimax": {"model": "speech-02-hd", "voice_id": "English_expressive_narrator"},
         "kittentts": {
             "model": "KittenML/kitten-tts-nano-0.8-int8",  # nano 25MB; micro 41MB; mini 80MB
             "voice": "Jasper",
-        },
-        "neutts": {
-            "ref_audio": "",  # path to reference voice audio (empty = bundled default)
-            "ref_text": "",   # path to reference voice transcript (empty = bundled default)
-            "model": "neuphonic/neutts-air-q4-gguf",  # HuggingFace model repo
-            "device": "cpu",  # cpu, cuda, or mps
         },
         "piper": {
             # Voice name (downloaded on first use) or absolute path to a .onnx file; list:
@@ -1122,22 +1082,17 @@ DEFAULT_CONFIG = {
             # noise_scale, noise_w_scale, volume, normalize_audio.
             "voice": "en_US-lessac-medium",
         },
-        "deepinfra": {
-            "model": "",  # empty = first tts-tagged model from the live catalog
-            "voice": "default",
-            # optional "base_url" key overrides DEEPINFRA_BASE_URL for TTS only
-        },
     },
 
     "stt": {
         "enabled": True,
         # Echo the raw transcript of gateway voice messages back as a 🎙️ message.
         "echo_transcripts": True,
-        # No seeded "provider" (a stored value is an explicit pick; unset = autodetect): local | groq |
-        # openai | mistral | elevenlabs | deepinfra | xai. Global language hint unless a per-provider one
+        # No seeded "provider" (a stored value is an explicit pick; unset = autodetect): local |
+        # local_command | openai. Global language hint unless a per-provider one
         # overrides it; "en" because Whisper auto-detect misreads short clips; "" = auto; "es", ...
         "language": "en",
-        "streaming": False,  # live partial text while speaking (openai/xai/elevenlabs); failure = file path
+        "streaming": False,  # live partial text while speaking (openai); failure = file path
         # Pre-upload ffmpeg silence trim (local whisper uses VAD); failure = raw upload.
         "cloud_trim_silence": True,
         "cloud_trim_threshold_db": -40,  # quieter than this counts as silence
@@ -1155,10 +1110,6 @@ DEFAULT_CONFIG = {
             "logprob_threshold": -1.0,
             "unload_after_idle_seconds": 0,  # 0 = never; e.g. 300 frees the model after 5min
         },
-        "groq": {
-            "model": "whisper-large-v3-turbo",  # whisper-large-v3-turbo, whisper-large-v3
-            "language": "",  # blank = inherit stt.language; set "en", "es", ... to force
-        },
         "openai": {
             # whisper-1, gpt-4o-mini-transcribe, gpt-4o-transcribe, gpt-transcribe
             "model": "whisper-1",
@@ -1166,24 +1117,6 @@ DEFAULT_CONFIG = {
             "language": "",  # blank = inherit stt.language; set "en", "es", ... to force
             "timeout": 60,  # seconds; allow self-hosted backends time to cold-start
             "max_retries": 1,  # OpenAI SDK transport retries
-        },
-        "mistral": {
-            "model": "voxtral-mini-latest",  # voxtral-mini-latest, voxtral-mini-2602
-            "language": "",  # blank = inherit stt.language; set "en", "es", ... to force
-        },
-        "xai": {
-            "model": "",  # "" = STT_XAI_MODEL or grok-voice-transcribe-2.0; or grok-voice-transcribe-1.0
-            "language": "",  # blank = inherit stt.language; set "en", "es", ... to force
-        },
-        "elevenlabs": {
-            "model_id": "scribe_v2",  # scribe_v2, scribe_v1
-            "language_code": "",  # blank = inherit stt.language; set "eng", "spa", ... to force
-            "tag_audio_events": False,
-            "diarize": False,
-        },
-        "deepinfra": {
-            "model": "",  # empty = first stt-tagged model from the live catalog
-            # optional "base_url" key overrides DEEPINFRA_BASE_URL for STT only
         },
     },
 
@@ -1763,7 +1696,7 @@ DEFAULT_CONFIG = {
         # hermes_cli/security_advisories.py.
         "acked_advisories": [],
         # Lazy-install opt-in backend packages from PyPI when a backend that needs them is first
-        # enabled (e.g. `elevenlabs`). False = require explicit pip install for everything beyond
+        # enabled (e.g. `kittentts`). False = require explicit pip install for everything beyond
         # the base set (restricted/audited/air-gapped environments).
         "allow_lazy_installs": True,
     },
@@ -2868,12 +2801,6 @@ OPTIONAL_ENV_VARS = OptionalEnvVars({
         "OpenAI API key for voice transcription (Whisper) and OpenAI TTS",
         "OpenAI API Key (for Whisper STT + TTS)", "https://platform.openai.com/api-keys",
         tools=["voice_transcription", "openai_tts"]),
-    "ELEVENLABS_API_KEY": _tool(
-        "ElevenLabs API key for premium text-to-speech voices and Scribe transcription",
-        "ElevenLabs API key", "https://elevenlabs.io/",
-        tools=["elevenlabs_tts", "voice_transcription"]),
-    "MISTRAL_API_KEY": _tool("Mistral API key for Voxtral TTS and transcription (STT)",
-        "Mistral API key", "https://console.mistral.ai/"),
     "PORCUPINE_ACCESS_KEY": _tool(
         "Picovoice access key for the Porcupine 'Hey Hermes' wake word engine (optional; "
         "openWakeWord is the free default)", "Picovoice access key",

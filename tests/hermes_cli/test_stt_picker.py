@@ -30,9 +30,9 @@ def _stt_provider_named(name):
 class TestConfigWrites:
     def test_write_provider_config_sets_stt_provider(self):
         config = {"stt": {"use_gateway": True}}
-        prov = _stt_provider_named("Groq")
+        prov = _stt_provider_named("OpenAI")
         _write_provider_config(prov, config, managed_feature=None)
-        assert config["stt"]["provider"] == "groq"
+        assert config["stt"]["provider"] == "openai"
         # Legacy key is popped so the read-time shim can't override the pick.
         assert "use_gateway" not in config["stt"]
 
@@ -49,9 +49,9 @@ class TestConfigWrites:
 
 class TestActiveDetection:
     def test_active_matches_config(self):
-        config = {"stt": {"provider": "groq"}}
-        assert _is_provider_active(_stt_provider_named("Groq"), config)
-        assert not _is_provider_active(_stt_provider_named("OpenAI"), config)
+        config = {"stt": {"provider": "openai"}}
+        assert _is_provider_active(_stt_provider_named("OpenAI"), config)
+        assert not _is_provider_active(_stt_provider_named("Local Whisper"), config)
 
     def test_unset_provider_defaults_to_local(self):
         assert _is_provider_active(_stt_provider_named("Local Whisper"), {})
@@ -63,11 +63,11 @@ class TestModelPicker:
         import re
 
         from hermes_cli.web_server_config import _SCHEMA_OVERRIDES
-        from tools.transcription_common import BUILTIN_STT_PROVIDERS, STT_MODEL_CONFIG_KEY
+        from tools.transcription_common import BUILTIN_STT_PROVIDERS
 
         desktop = (Path(__file__).resolve().parents[2] / "apps/desktop/src/app/settings/constants.ts").read_text()
         for provider, models in STT_MODEL_CATALOG.items():
-            key = f"stt.{provider}.{STT_MODEL_CONFIG_KEY.get(provider, 'model')}"
+            key = f"stt.{provider}.model"
             listed = re.search(rf"'{re.escape(key)}': \[([^\]]*)\]", desktop)
             assert listed, key
             desktop_models = re.findall(r"'([^']+)'", listed.group(1))

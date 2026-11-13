@@ -84,7 +84,7 @@ _TERMUX_INSTALL_ALL_FALLBACK_NOTES = (
     "Termux uses the A2Assistant APT package: pkg install hermes-agent.",
     "Matrix E2EE extra is excluded on Termux (python-olm currently fails to build).",
     "Local faster-whisper extra is excluded on Termux (ctranslate2/av build path unavailable).",
-    "STT fallback: use Groq Whisper (set GROQ_API_KEY) or OpenAI Whisper (set VOICE_TOOLS_OPENAI_KEY).",
+    "STT fallback: use OpenAI-compatible Whisper (set VOICE_TOOLS_OPENAI_KEY).",
 )
 
 

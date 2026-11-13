@@ -111,7 +111,7 @@ def test_select_provider_and_model_warns_if_named_custom_provider_disappears(
 # _setup_slack wizard migrated to the slack plugin's interactive_setup (#41112).
 
 
-@pytest.mark.parametrize("extra", ["neutts", "kittentts"])
+@pytest.mark.parametrize("extra", ["kittentts"])
 @pytest.mark.parametrize("succeeds", [True, False])
 def test_python_setup_uses_declared_extras_and_reports_restart(extra, succeeds, monkeypatch, capsys):
     import pm
@@ -126,8 +126,7 @@ def test_python_setup_uses_declared_extras_and_reports_restart(extra, succeeds, 
     monkeypatch.setattr(pm, "sync_venv", sync)
     monkeypatch.setattr("pm.extras.extra_supported", lambda name: True)
     monkeypatch.setitem(sys.modules, extra, None)
-    monkeypatch.setattr(setup_tts.shutil, "which", lambda name: "/usr/bin/espeak-ng")
-    assert getattr(setup_tts, f"_install_{extra}_deps")() is succeeds
+    assert setup_tts._install_kittentts_deps() is succeeds
     assert calls == [([extra], True)]
     output = capsys.readouterr().out
     if succeeds:
@@ -139,7 +138,7 @@ def test_python_setup_uses_declared_extras_and_reports_restart(extra, succeeds, 
         assert "installed." not in output
 
 
-@pytest.mark.parametrize("extra", ["neutts", "kittentts"])
+@pytest.mark.parametrize("extra", ["kittentts"])
 def test_unsupported_tts_selection_is_retained_without_installing(extra, monkeypatch, capsys):
     from hermes_cli import setup_tts
 

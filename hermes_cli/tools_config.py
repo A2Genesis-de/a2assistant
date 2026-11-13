@@ -235,30 +235,19 @@ def _row(name: str, badge: str = "", tag: str = "", env_vars: list = (), **marke
 
 _NOUS = {"requires_nous_auth": True}
 _OPENAI_VOICE_KEY = _key("VOICE_TOOLS_OPENAI_KEY", "OpenAI API key", "https://platform.openai.com/api-keys")
-_ELEVENLABS_KEY = _key("ELEVENLABS_API_KEY", "ElevenLabs API key", "https://elevenlabs.io/app/settings/api-keys")
-_DEEPINFRA_KEY = _key("DEEPINFRA_API_KEY", "DeepInfra API key", "https://deepinfra.com/dash/api_keys")
 
 TOOL_CATEGORIES = {
     "tts": {
         "name": "Text-to-Speech", "icon": "🔊",
         "providers": [
-            _row("Microsoft Edge TTS", "★ recommended · free", "Good quality, no API key needed", tts_provider="edge"),
             _row("Nous Subscription", "subscription", "Managed OpenAI TTS billed to your subscription", tts_provider="openai",
                  **_NOUS, managed_nous_feature="tts", override_env_vars=["VOICE_TOOLS_OPENAI_KEY", "OPENAI_API_KEY"]),
-            _row("OpenAI TTS", "paid", "High quality voices", [_OPENAI_VOICE_KEY], tts_provider="openai"),
-            _row("xAI TTS", tag="Grok voices — uses xAI Grok OAuth or XAI_API_KEY", tts_provider="xai", post_setup="xai_grok"),
-            _row("ElevenLabs", "paid", "Most natural voices", [_ELEVENLABS_KEY], tts_provider="elevenlabs"),
-            # Mistral Voxtral TTS — `mistralai` SDK lazy-installs on first use.
-            _row("Mistral (Voxtral TTS)", "paid", "Multilingual, native Opus",
-                 [_key("MISTRAL_API_KEY", "Mistral API key", "https://console.mistral.ai/")], tts_provider="mistral"),
-            _row("Google Gemini TTS", "preview", "30 prebuilt voices, controllable via prompts",
-                 [_key("GEMINI_API_KEY", "Gemini API key", "https://aistudio.google.com/app/apikey")], tts_provider="gemini"),
+            _row("OpenAI TTS", "★ recommended", "OpenAI or any OpenAI-compatible endpoint (tts.openai.base_url)",
+                 [_OPENAI_VOICE_KEY], tts_provider="openai"),
             _row("KittenTTS", "local · free", "Lightweight local ONNX TTS (~25MB), no API key", tts_provider="kittentts",
                  post_setup="kittentts"),
             _row("Piper", "local · free", "Local neural TTS, 44 languages (voices ~20-90MB)", tts_provider="piper",
                  post_setup="piper"),
-            _row("DeepInfra TTS", "paid", "Chatterbox, Qwen3-TTS, … — live catalog from api.deepinfra.com", [_DEEPINFRA_KEY],
-                 tts_provider="deepinfra"),
         ],
     },
     "stt": {
@@ -270,14 +259,6 @@ TOOL_CATEGORIES = {
                  stt_provider="openai", **_NOUS, managed_nous_feature="stt",
                  override_env_vars=["VOICE_TOOLS_OPENAI_KEY", "OPENAI_API_KEY"]),
             _row("OpenAI", "paid", "whisper-1, gpt-4o-transcribe, gpt-transcribe", [_OPENAI_VOICE_KEY], stt_provider="openai"),
-            _row("Groq", "free tier", "whisper-large-v3-turbo, whisper-large-v3 — very fast",
-                 [_key("GROQ_API_KEY", "Groq API key", "https://console.groq.com/keys")], stt_provider="groq"),
-            _row("xAI", tag="Grok Voice Transcribe — uses xAI Grok OAuth or XAI_API_KEY", stt_provider="xai", post_setup="xai_grok"),
-            _row("ElevenLabs Scribe", "paid", "scribe_v2 — diarization + audio-event tagging", [_ELEVENLABS_KEY],
-                 stt_provider="elevenlabs"),
-            _row("Mistral Voxtral", "paid", "voxtral-mini-latest — multilingual",
-                 [_key("MISTRAL_API_KEY", "Mistral API key", "https://console.mistral.ai/")], stt_provider="mistral"),
-            _row("DeepInfra", "paid", "Live STT catalog from api.deepinfra.com", [_DEEPINFRA_KEY], stt_provider="deepinfra"),
         ],
     },
     "web": {
@@ -852,7 +833,7 @@ def _toolset_has_keys(
         feature = features.features.get(ts_key)
         if feature and (feature.available or feature.managed_by_nous):
             return True
-    # Provider-aware categories first: a no-key provider (Local Browser, Edge TTS) counts as configured.
+    # Provider-aware categories first: a no-key provider (Local Browser, Piper TTS) counts as configured.
     cat = TOOL_CATEGORIES.get(ts_key)
     if cat:
         return any(_provider_env_ready(p) for p in _visible_providers(cat, config, force_fresh=force_fresh, features=features))
@@ -1078,7 +1059,7 @@ def _first_install_flow(config: dict, enabled_platforms: list[str]) -> None:
             label = next((l for k, l, _ in CONFIGURABLE_TOOLSETS if k == ts_key), ts_key)
             print(color(f"  ✓ {label}: using your Nous subscription defaults", Colors.GREEN))
         # Walk through ALL selected tools with provider options or key requirements, so browser (Local vs
-        # Lightpanda), TTS (Edge vs OpenAI vs ElevenLabs), etc. are shown even when a free provider exists.
+        # Lightpanda), TTS (OpenAI vs Piper), etc. are shown even when a free provider exists.
         _configure_list(
             [ts for ts in sorted(new_enabled) if _is_configurable(ts) and ts not in auto_configured],
             config, selected=False)

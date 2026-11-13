@@ -53,7 +53,7 @@ _API_KEYS: dict[str, str | tuple[str, ...]] = {
     "Kimi": "KIMI_API_KEY", "StepFun Step Plan": "STEPFUN_API_KEY", "MiniMax": "MINIMAX_API_KEY",
     "MiniMax-CN": "MINIMAX_CN_API_KEY", "DeepInfra": "DEEPINFRA_API_KEY", "Firecrawl": "FIRECRAWL_API_KEY",
     "Tavily": "TAVILY_API_KEY", "Perplexity": "PERPLEXITY_API_KEY", "Keenable": "KEENABLE_API_KEY",
-    "FAL": "FAL_KEY", "ElevenLabs": "ELEVENLABS_API_KEY", "GitHub": "GITHUB_TOKEN"}
+    "FAL": "FAL_KEY", "GitHub": "GITHUB_TOKEN"}
 
 # OAuth detail rows: (label, status key, formatter, gate) — see _oauth_block.
 _FILE_REFRESH_ROWS = (
