@@ -148,7 +148,6 @@ const PROFILE_SCOPED_PREFIXES = [
   "/api/webhooks",
   "/api/ops",
   "/api/logs",
-  "/api/portal",
   // Pool entries live in the profile's home, and DELETE /api/credentials/pool/{provider}/{index}
   // is destructive — without this prefix the dashboard's remove button never named a profile and
   // a multi-profile host refused it outright.
@@ -1369,9 +1368,6 @@ export const api = {
   runCurator: () =>
     fetchJSON<ActionResponse>("/api/curator/run", { method: "POST" }),
 
-  // ── Admin: Portal ───────────────────────────────────────────────────
-  getPortal: () => fetchJSON<PortalStatus>("/api/portal"),
-
   // ── Admin: Diagnostics (backgrounded) ───────────────────────────────
   runPromptSize: () =>
     fetchJSON<ActionResponse>("/api/ops/prompt-size", { method: "POST" }),
@@ -1862,14 +1858,6 @@ export interface CuratorStatus {
   min_idle_hours: number | null;
   stale_after_days: number | null;
   archive_after_days: number | null;
-}
-
-export interface PortalStatus {
-  logged_in: boolean;
-  portal_url: string | null;
-  inference_url: string | null;
-  provider: string;
-  subscription_url: string;
 }
 
 export interface CheckpointSession {
