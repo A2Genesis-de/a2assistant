@@ -1,5 +1,5 @@
 """Cron delivery: target resolution (origin/home/explicit/bot-chat/room), transcript mirroring and
-session seeding, live-adapter / relay / standalone send lanes, and ``_deliver_result``.
+session seeding, live-adapter / standalone send lanes, and ``_deliver_result``.
 
 Split out of ``cron.scheduler``. Import names from this module directly (``cron.scheduler`` only
 imports the few it calls itself). Origin-resident helpers and sibling split modules are reached
@@ -39,21 +39,13 @@ _NON_PUSH_ORIGIN_PLATFORMS = frozenset({"api_server"})
 _HOME_TARGET_PRIORITY = ("telegram",)
 
 
-def _resolve_cron_surface_mode(pconfig, logical_platform_name: str) -> str:
+def _resolve_cron_surface_mode(pconfig) -> str:
     """Return ``"in_channel"`` or ``"thread"`` (default) for a platform config.
 
-    Native: flat ``platforms.<p>.extra.cron_continuable_surface``. Relay-fronted:
-    ``platforms.relay.extra.<logical>.cron_continuable_surface`` (same sub-block as the relay's
-    Slack knobs); the sub-block wins and is scoped to its logical platform. Unlike
-    _relay_slack_extra, a sub-block that omits the knob falls back to the flat key (deliberate —
-    the flat key must keep working), so a flat value applies to EVERY platform the relay fronts.
+    Read from ``platforms.<p>.extra.cron_continuable_surface``.
     """
     with contextlib.suppress(Exception):
-        extra = getattr(pconfig, "extra", None) or {}
-        sub = extra.get(str(logical_platform_name or "").lower())
-        raw = sub.get("cron_continuable_surface") if isinstance(sub, dict) else None
-        if raw is None:
-            raw = extra.get("cron_continuable_surface")
+        raw = (getattr(pconfig, "extra", None) or {}).get("cron_continuable_surface")
         if raw is not None and str(raw).strip().lower() == "in_channel":
             return "in_channel"
     return "thread"
@@ -400,8 +392,7 @@ def _resolve_home_env_var(platform_name: str) -> str:
 
 def _get_config_home_channel(platform_name: str):
     """Persisted ``HomeChannel`` from gateway config — the canonical store ``/sethome`` writes.
-    The ``<PLATFORM>_HOME_CHANNEL`` env var is only a best-effort mirror; relay-fronted platforms
-    may exist solely in config.yaml, so reading only the env mirror would drop their delivery."""
+    The ``<PLATFORM>_HOME_CHANNEL`` env var is only a best-effort mirror."""
     try:
         from gateway.config import load_gateway_config, Platform
         return load_gateway_config().get_home_channel(Platform(platform_name.lower()))
@@ -490,20 +481,6 @@ def _iter_home_target_platforms():
         yield from (n for n in named if n not in _HOME_TARGET_PRIORITY)  # registry order, as before
 
 
-def _relay_fronted_delivery_platforms(connected: set) -> set:
-    """Logical platforms deliverable through a connected relay. ``get_connected_platforms()`` only
-    sees native platforms; fronted ones come from the same ``GATEWAY_RELAY_PLATFORMS`` stamp
-    fire-time routing uses (validation symmetric with routing). No relay -> empty set."""
-    if "relay" not in connected:
-        return set()
-    try:
-        from gateway.relay import relay_fronted_platforms
-        return relay_fronted_platforms()
-    except Exception:
-        logger.debug("relay fronted-platform lookup failed", exc_info=True)
-        return set()
-
-
 def cron_delivery_targets() -> list[dict]:
     """Platforms a cron job can auto-deliver to (single source of truth for UIs): valid delivery
     platform AND gateway-configured; ``home_target_set`` flags whether the home channel exists.
@@ -513,7 +490,6 @@ def cron_delivery_targets() -> list[dict]:
     try:
         from gateway.config import load_gateway_config
         connected = {p.value for p in load_gateway_config().get_connected_platforms()}
-        connected |= _relay_fronted_delivery_platforms(connected)
     except Exception:
         logger.debug("cron_delivery_targets: gateway config unavailable", exc_info=True)
         connected = set()
@@ -1084,10 +1060,6 @@ class _TargetDelivery:
     live_error: Optional[str] = None  # the live lane's own rejection string, e.g. "send_path_degraded"
 
     @property
-    def is_relay(self) -> bool:
-        return self.transport is not None and self.transport.is_relay
-
-    @property
     def where(self) -> str:
         # A topic-routed target without its thread id names the wrong lane in failure reports.
         base = f"{self.platform_name}:{self.chat_id}"
@@ -1100,19 +1072,14 @@ def _note_target_error(job: dict, msg: str, errors: list) -> None:
     errors.append(msg)
 
 
-def _warn_live_lane_failure(job: dict, msg: str, is_relay: bool) -> None:
-    """Relay targets have no standalone fallback, so the log line must not promise one."""
-    if is_relay:
-        logger.warning("Job '%s': %s", job["id"], msg)
-    else:
-        logger.warning("Job '%s': %s, falling back to standalone", job["id"], msg)
+def _warn_live_lane_failure(job: dict, msg: str) -> None:
+    logger.warning("Job '%s': %s, falling back to standalone", job["id"], msg)
 
 
 def _resolve_target_transport(
     job: dict, platform, platform_name: str, target: dict, adapters, config):
     """Resolve ``(transport, pconfig, runtime_adapter, target_adapters)`` for one target, or
-    ``(None, error)`` when it cannot be served (relay-fronted with no live transport, or not
-    configured/enabled)."""
+    ``(None, error)`` when the platform is not configured/enabled."""
     from gateway.delivery import DeliveryTransport, resolve_delivery_transport
     target_adapters = adapters
     transport = None
@@ -1131,51 +1098,28 @@ def _resolve_target_transport(
             from gateway.config import PlatformConfig
             own = config.platforms.get(platform)
             transport = DeliveryTransport(
-                shared, replace(own, enabled=True) if own is not None else PlatformConfig(enabled=True),
-                platform)
+                shared, replace(own, enabled=True) if own is not None else PlatformConfig(enabled=True))
     if transport is None:
         transport = resolve_delivery_transport(platform, config, target_adapters)
     if transport is not None:
         pconfig = transport.config
         runtime_adapter = transport.adapter
     else:
-        # Relay-fronted platforms have NO standalone fallback (the connector owns the credential),
-        # so surface that instead of the native configured/enabled gate, which misdiagnoses them.
-        from gateway.relay import relay_fronted_platforms
-        if platform_name in relay_fronted_platforms():
-            return None, (
-                f"platform '{platform_name}' is relay-fronted and has no "
-                "live gateway transport; start the gateway (its ticker "
-                "owns relay-fronted delivery and will fire the job on "
-                "schedule)"
-            )
         pconfig = config.platforms.get(platform)
         runtime_adapter = None
 
-    if transport is not None and (transport.is_relay or pconfig is None):
-        # Relay transport carries the RELAY adapter's config (enablement already checked): the
-        # logical platform is deliberately NOT natively enabled. A live NATIVE adapter with no
-        # ``platforms.<p>`` block is the same shape — the owning process already authorized the
+    if transport is not None and pconfig is None:
+        # A live adapter with no ``platforms.<p>`` block: the owning process already authorized the
         # adapter; "no config" is not "disabled" (#89302).
-        if pconfig is None:
-            from gateway.config import PlatformConfig
-            pconfig = PlatformConfig(enabled=True)
+        from gateway.config import PlatformConfig
+        pconfig = PlatformConfig(enabled=True)
     elif not pconfig or not pconfig.enabled:
         return None, f"platform '{platform_name}' not configured/enabled"
     return (transport, pconfig, runtime_adapter, target_adapters), None
 
 
-def _inchannel_surface_supported(runtime_adapter, platform_name: str) -> bool:
-    """D6 probe: can this adapter deliver a continuable in_channel brief on ``platform_name``?
-    Per-platform check first (one RelayAdapter fronts N platforms; the scalar attr only carries
-    the PRIMARY identity's bit); native adapters use the class attribute."""
-    per_platform_check = getattr(
-        runtime_adapter, "supports_inchannel_continuable_for_platform", None)
-    if callable(per_platform_check):
-        try:
-            return bool(per_platform_check(platform_name))
-        except Exception:
-            return False
+def _inchannel_surface_supported(runtime_adapter) -> bool:
+    """D6 probe: can this adapter deliver a continuable in_channel brief?"""
     return bool(getattr(runtime_adapter, "supports_inchannel_continuable", False))
 
 
@@ -1231,8 +1175,6 @@ def _live_route_metadata(t: _TargetDelivery) -> tuple[Optional[str], dict, dict]
         if thread_id:
             media_metadata["thread_id"] = thread_id
 
-    # Relay egress discriminators (scope_id / user_id) from the persisted origin: the adapter's caches are cold
-    # after a restart. See cron/scheduler_delivery_origin.py.
     _origin.stamp_origin_discriminators(t, route_metadata, media_metadata)
     return route_thread_id, route_metadata, media_metadata
 
@@ -1329,7 +1271,7 @@ def _live_send_text(
             err, shape = getattr(send_result, "error", None), type(send_result).__name__
         msg = f"live adapter send to {t.where} returned unconfirmed result ({shape}, error={err})"
         t.live_error = str(err) if err else None
-        _warn_live_lane_failure(job, msg, t.is_relay)
+        _warn_live_lane_failure(job, msg)
         target_errors.append(msg)
         return False, False, None
     if send_raw_response and t.thread_id and send_raw_response.get("thread_fallback"):
@@ -1369,14 +1311,6 @@ def _live_send_media(
     unverified_targets: list, topic_name: Optional[str] = None) -> None:
     """Send extracted media as native attachments with the same routing as the text send."""
     routed_media_metadata = dict(media_metadata or {})
-    if t.is_relay:
-        routed_media_metadata["_relay_logical_platform"] = t.platform.value
-        logical_home = t.config.get_home_channel(t.platform)
-        if logical_home is not None and logical_home.chat_id == t.chat_id:
-            if logical_home.user_id:
-                routed_media_metadata["user_id"] = logical_home.user_id
-            if logical_home.scope_id:
-                routed_media_metadata["scope_id"] = logical_home.scope_id
     _media_errors = _send_media_via_adapter(
         t.runtime_adapter, t.chat_id, media_files, routed_media_metadata or None, t.loop, t.job,
         platform=t.platform,
@@ -1508,7 +1442,7 @@ def _deliver_via_live_adapter(
         err_msg = f"live adapter delivery to {t.where} failed: {e}"
         if not any(err_msg in err for err in target_errors):
             target_errors.append(err_msg)
-        _warn_live_lane_failure(job, err_msg, t.is_relay)
+        _warn_live_lane_failure(job, err_msg)
     return delivered
 
 
@@ -1614,12 +1548,6 @@ def _deliver_standalone(
 ) -> None:
     """Standalone fallback for a target the live lane did not deliver."""
     job = t.job
-    if t.is_relay:
-        # Relay owns the destination and credential; a native retry could duplicate — fail closed.
-        if not target_errors:
-            target_errors.append(f"relay delivery to {t.where} failed")
-        delivery_errors.extend(target_errors)
-        return
     result, err = _standalone_send(t, content, media_files)
     if err is None and result and result.get("error"):
         # Not inside an except block — the error comes from the result dict, no traceback.
@@ -1711,11 +1639,11 @@ def _prepare_target_delivery(
     # Continuable surface (D1/D2/D6) from platform config ``extra``; default "thread".
     # ``in_channel`` delivers FLAT so a plain channel reply continues via the shared session
     # ``(platform, chat_id, None)``. Unsupported adapters fail SAFE to thread.
-    in_channel_surface = _resolve_cron_surface_mode(pconfig, platform_name) == "in_channel"
+    in_channel_surface = _resolve_cron_surface_mode(pconfig) == "in_channel"
     if (
         in_channel_surface
         and runtime_adapter is not None
-        and not _inchannel_surface_supported(runtime_adapter, platform_name)
+        and not _inchannel_surface_supported(runtime_adapter)
     ):
         logger.debug(
             "Job '%s': cron_continuable_surface=in_channel not supported on %s, using thread",

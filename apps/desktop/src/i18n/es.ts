@@ -22,7 +22,6 @@ import { esPluginPreviewAccess } from './es_plugin_preview_access'
 import { esPluginUpdate } from './es_plugin_update'
 import { esPreviewWeb } from './es_preview_web'
 import { esProjects } from './es_projects'
-import { esSharedMetrics } from './es_shared_metrics'
 import { esThemePicker } from './es_theme_picker'
 import { esUpdateChannel } from './es_update_channel'
 import { introEs } from './intro-es'
@@ -33,7 +32,6 @@ export const esOverrides = {
     lookupFailed: "No se pudo encontrar este grupo en la pasarela. Inténtalo de nuevo.",
     missing: "Este chat de grupo ya no existe."
   },
-  sharedMetrics: esSharedMetrics,
   firstRun: esFirstRun,
   intro: introEs,
   connectors: esConnectorCard,
@@ -510,29 +508,6 @@ export const esOverrides = {
     }
   },
   ...esNotices,
-  sendDiagnostics: {
-    title: 'Enviar diagnóstico a Nous',
-    privacyNotice:
-      'Esto sube un paquete de depuración a un almacenamiento interno de Nous (no a un sitio público). Incluye información del sistema (SO, versiones, proveedor y qué claves API están configuradas, nunca las claves en sí) y los registros completos del agente, del gateway y de la app de escritorio (hasta 512 KB cada uno), que probablemente contengan contenido de conversaciones, salidas de herramientas y rutas de archivos. Los secretos se ocultan antes de subirlo. Solo el personal de Nous y los moderadores autorizados de Discord pueden ver el paquete, que se elimina automáticamente a los 14 días.',
-    upload: 'Subir',
-    uploading: 'Subiendo…',
-    cancel: 'Cancelar',
-    close: 'Cerrar',
-    copyLink: 'Copiar enlace',
-    uploadIdFallback: id => `No se devolvió un enlace para verlo: indica el ID de subida ${id} al equipo de soporte`,
-    doneTitle: 'Diagnóstico enviado',
-    doneDescription:
-      'Tu paquete se subió de forma privada. Comparte el enlace de abajo en tu hilo de soporte para que el equipo pueda ver tus registros.',
-    failedTitle: 'Error al subir',
-    failedHint:
-      'También puedes ejecutar `hermes debug share --nous` desde una terminal, o `hermes debug share --local` para mostrar el informe sin subirlo.',
-    handoffLead: 'Continúa la conversación en:',
-    links: {
-      github: 'Issues de GitHub',
-      portal: 'Soporte de Nous Portal',
-      discord: 'Discord'
-    }
-  },
   titlebar: {
     hideSidebar: 'Ocultar barra lateral',
     showSidebar: 'Mostrar barra lateral',
@@ -1643,43 +1618,6 @@ export const esOverrides = {
       remoteDesc: 'Conecta esta shell de escritorio a un backend remoto de A2Assistant.',
       remoteAuthHint:
         'Los gateways alojados usan OAuth o usuario y contraseña; los autohospedados pueden usar un token de sesión.',
-      cloudTitle: 'Hermes Cloud',
-      cloudDesc:
-        'Inicia sesión una vez en Hermes Cloud y elige uno de los agentes de tu cuenta; no tienes que pegar ninguna URL.',
-      cloudSignInTitle: 'Hermes Cloud',
-      cloudSignIn: 'Iniciar sesión en Hermes Cloud',
-      cloudSignedIn: 'Sesión iniciada en Hermes Cloud',
-      cloudNeedsSignIn: 'Inicia sesión en Hermes Cloud para descubrir los agentes de tu cuenta.',
-      cloudSignedInDesc: 'Has iniciado sesión. Elige un agente de abajo; la sesión se actualiza automáticamente.',
-      cloudAgentsTitle: 'Tus agentes',
-      cloudOrgPickerTitle: 'Elige una organización',
-      cloudOrgSelect: 'Seleccionar',
-      cloudOrgChange: 'Cambiar organización',
-      cloudOrgRole: role => `Rol: ${role}`,
-      cloudLoadingAgents: 'Cargando tus agentes…',
-      cloudNoAgents: {
-        before: 'No se encontraron agentes en esta cuenta. Crea uno en el ',
-        linkText: 'Portal de Nous',
-        after: ', y luego actualiza.'
-      },
-      cloudRefresh: 'Actualizar',
-      cloudConnect: 'Conectar',
-      cloudSavedTitle: 'Gateways de Cloud guardados',
-      cloudSavedDesc:
-        'Usa un gateway guardado sin cambiar el predeterminado. Inicia sesión abajo para añadir instancias. Gestiona los nombres y el inicio de sesión en la lista de conexiones guardadas.',
-      cloudUseSaved: 'Usar gateway',
-      cloudActive: 'Activo en esta ventana',
-      cloudConnecting: 'Conectando…',
-      cloudDiscoverFailed: 'No se pudieron cargar tus agentes de Hermes Cloud',
-      cloudConnectFailed: 'No se pudo conectar con ese agente',
-      cloudSignInFailed: 'Falló el inicio de sesión en Hermes Cloud',
-      cloudSignedOutTitle: 'Sesión cerrada en Hermes Cloud',
-      cloudSignedOutMessage: 'Se borró la sesión de Hermes Cloud.',
-      cloudConnectedTitle: 'Conectado',
-      cloudConnectedPill: 'Conectado',
-      cloudConnectedTo: name => `Conectado a ${name}.`,
-      cloudAgentProvisioning: 'Preparando…',
-      cloudStatusLabel: status => `Estado: ${status}`,
       remoteUrlTitle: 'URL remota',
       remoteUrlDesc: 'URL base del backend del dashboard remoto. Se admiten prefijos de ruta, por ejemplo /hermes.',
       probing: 'Comprobando cómo se autentica este gateway…',
@@ -2783,12 +2721,6 @@ export const esOverrides = {
       securityAuditDesc: 'Analizar la configuración y las skills en busca de ajustes riesgosos',
       backup: 'Crear copia de seguridad',
       backupDesc: 'Comprimir la configuración, memorias, skills y sesiones en un archivo ZIP',
-      debugShare: 'Compartir datos de depuración',
-      debugShareDesc:
-        'Sube un informe y registros con datos sensibles ocultos y obtén enlaces para compartir (se eliminan automáticamente en 6 h)',
-      debugShareRunning: 'Subiendo informe de depuración…',
-      debugShareLinks: 'Enlaces para compartir',
-      debugShareFailed: 'No se pudieron compartir los datos de depuración',
       copyLink: 'Copiar enlace',
       linkCopied: 'Enlace copiado',
       curator: 'Curador de skills',
@@ -2906,64 +2838,6 @@ export const esOverrides = {
       'Vuelve a pulsar Reiniciar; si sigue fallando, abre los registros y envía un diagnóstico.',
     restartAgain: 'Reiniciar de nuevo',
     openLogs: 'Abrir registros',
-    relayLink: {
-      title: 'Team Gateway',
-      badge: 'Sin token de bot',
-      intro: (platform: string) => `${platform} llega a este agente a través del bot compartido de A2Assistant. Vincula tu cuenta de ${platform} y escribe al bot para hablar con tu agente.`,
-      link: (platform: string) => `Vincular ${platform}`,
-      linkAnother: (platform: string) => `Vincular otra cuenta de ${platform}`,
-      linkedAccounts: 'Cuentas vinculadas',
-      unlink: 'Desvincular',
-      unlinkFailed: 'No se pudo desvincular la cuenta',
-      stepOpen: (platform: string) => `1. Escanea el código con el móvil o abre el bot en ${platform}.`,
-      stepSend: '2. Envía al bot este mensaje desde la cuenta que quieres vincular:',
-      open: (platform: string) => `Abrir ${platform}`,
-      copy: 'Copiar mensaje',
-      copied: 'Copiado',
-      copyFailed: (command: string) => `No se pudo copiar. Escribe ${command}.`,
-      waiting: 'Esperando a que el bot vea tu mensaje. El código sirve una sola vez.',
-      linked: (platform: string) => `Cuenta de ${platform} vinculada. Escribe al bot para hablar con tu agente.`,
-      expired: 'El código caducó antes de usarse. Pide uno nuevo e inténtalo otra vez.',
-      refused: (platform: string) => `${platform} rechazó la vinculación. Pide un código nuevo e inténtalo otra vez.`,
-      qrAlt: (platform: string) => `Código QR del bot compartido de ${platform}`,
-      managed: 'Gestionado por Team Gateway',
-      managedNote: (platform: string) => `Team Gateway gestiona la mensajería en esta instancia, así que el gateway desactiva la conexión directa de ${platform} en cada inicio. Para usarla junto al relay, define GATEWAY_RELAY_ALLOW_DIRECT_PLATFORMS=true en el entorno del gateway (una conexión directa impide que la instancia escale a cero y puede entregar mensajes dos veces).`,
-      managedIntro: 'Las cuentas de este agente se vinculan desde Nous Portal.',
-      openPortal: 'Vincular cuentas en Nous Portal',
-      noNewAccount: (platform: string) => `El código ya no está activo y no apareció ninguna cuenta nueva. Si tu cuenta de ${platform} no aparece, obtén un código nuevo e inténtalo otra vez.`
-    },
-    telegramQr: {
-      title: 'Elige cómo conectar tu bot de Telegram',
-      subtitle:
-        'Ambas opciones conectan un bot que controlas y guardan sus credenciales solo en esta instalación de A2Assistant.',
-      quickSetup: 'Configuración rápida',
-      recommended: 'Recomendado',
-      quickHelp:
-        'Escanea un código QR y confirma en Telegram. A2Assistant crea el bot y detecta tu ID de usuario de Telegram automáticamente.',
-      createWithQr: 'Crear con QR',
-      starting: 'Iniciando…',
-      replaceWarning:
-        'Ya hay credenciales de Telegram configuradas. Una nueva configuración por QR o un nuevo token de bot sustituirá al bot actual cuando guardes.',
-      scanHint: 'Escanéalo con la app de Telegram en tu teléfono o abre el enlace en este equipo.',
-      waiting: 'Esperando a Telegram…',
-      expiresIn: (remaining: string) => `Caduca en ${remaining}`,
-      expired: 'Caducado',
-      openTelegram: 'Abrir Telegram',
-      ready: 'Bot creado',
-      allowedUsers: 'Usuarios permitidos',
-      ownerDetected: 'Propietario detectado',
-      addAtLeastOne: 'Añade al menos un ID de usuario de Telegram.',
-      userIdPlaceholder: 'ID de usuario de Telegram',
-      add: 'Añadir',
-      numericOnly: 'Los ID de usuario de Telegram permitidos deben ser numéricos.',
-      saveAndRestart: 'Guardar y reiniciar',
-      applying: 'Guardando…',
-      pairingExpired:
-        'La vinculación con Telegram caducó. Inicia una nueva configuración por QR para volver a intentarlo.',
-      stillWaiting: (detail: string) => `Seguimos esperando a Telegram. Reintentando tras: ${detail}`,
-      savedRestarting: 'Telegram guardado; reiniciando el gateway…',
-      savedRestartFailed: (detail: string) => `Telegram guardado; falló el reinicio del gateway${detail}`
-    },
     fieldCopy: {
       TELEGRAM_BOT_TOKEN: {
         label: 'Token del bot',
@@ -4902,7 +4776,6 @@ export const esOverrides = {
       errorOpenLogs: 'Abrir registros',
       errorOpenLogsFailed: 'No se pudo abrir la carpeta de registros',
       errorOpenDesktopLogs: 'Abrir registros de Desktop',
-      errorSendDiagnostics: 'Enviar diagnóstico',
       filesChanged: count => (count === 1 ? '1 archivo cambiado' : `${count} archivos cambiados`),
       reviewChanges: 'Revisar',
       readAloudFailed: 'Falló la lectura en voz alta',
@@ -5372,7 +5245,6 @@ export const esOverrides = {
     boundaryTitle: 'Algo se rompió en la interfaz',
     boundaryDesc: 'La vista encontró un error inesperado. Tus chats y configuración están a salvo.',
     boundaryDetails: 'Detalles',
-    sendDiagnostics: 'Enviar diagnóstico',
     reloadWindow: 'Recargar ventana',
     openLogs: 'Abrir registros'
   },

@@ -164,13 +164,7 @@ gateway:
     codex_compacted: "🗜️ Codex app-server thread compacted (thread/compact). The transcript mirror is unchanged by design — the app-server now carries the compacted context."
     codex_incomplete: "⚠️ Codex app-server compaction did not complete — the thread is unchanged. Check the app-server logs, retry /compress, or /reset for a clean session."
   debug:
-    upload_failed: "✗ Failed to upload debug report: {error}"
-    header: "**Debug report uploaded:**"
-    auto_delete: "⏱ Pastes will auto-delete in 6 hours."
-    full_logs_hint: "For full log uploads, use `hermes debug share` from the CLI."
-    share_hint: "Share these links with the A2Assistant team for support."
-    report_label: "Report"
-    local_refused: "`/debug local` keeps the report on the machine running A2Assistant, so it isn't available from a chat. Send `/debug` to upload the summary report."
+    chat_refused: "The debug report stays on the machine running A2Assistant. Run `hermes debug share` there."
   deny:
     stale: "❌ Command denied (approval was stale)."
     no_pending: "No pending command to deny."
@@ -386,7 +380,6 @@ gateway:
     save_failed: "Failed to save home channel: {error}"
     success: "✅ Home channel set to **{name}** (ID: {chat_id}).\nCron jobs and cross-platform messages will be delivered here."
     err_missing_platform: "Missing logical platform"
-    err_relay_unauthenticated: "Relay does not authenticate this logical home target"
   context:
     header: "🧠 **Context Window**"
     model: "Model: `{model}`"
@@ -1337,7 +1330,7 @@ slash:
   version:
     description: "Show A2Assistant version"
   debug:
-    description: "Upload debug report (system info + logs) and get shareable links"
+    description: "Show a redacted debug report (system info + logs)"
   quit:
     description: "Exit the CLI (use --delete to also remove session history)"
 cli:

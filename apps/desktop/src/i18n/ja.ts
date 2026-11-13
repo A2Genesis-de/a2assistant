@@ -23,7 +23,6 @@ import { jaPluginPreviewAccess } from './ja_plugin_preview_access'
 import { jaPluginSettings, jaPluginsTab } from './ja_plugins'
 import { jaPreviewWeb } from './ja_preview_web'
 import { jaProjects } from './ja_projects'
-import { jaSharedMetrics } from './ja_shared_metrics'
 import { jaThemePicker } from './ja_theme_picker'
 import { jaUpdateChannel } from './ja_update_channel'
 
@@ -41,7 +40,6 @@ export const jaOverrides = {
     copyUrl: 'リンクをコピー',
     close: '閉じる'
   },
-  sharedMetrics: jaSharedMetrics,
   firstRun: jaFirstRun,
   intro: introJa,
   sessionImport: jaConnectors.sessionImport,
@@ -198,29 +196,6 @@ export const jaOverrides = {
 
   ...jaNotices,
 
-  sendDiagnostics: {
-    title: 'Nous に診断情報を送信',
-    privacyNotice:
-      'デバッグバンドルを Nous 内部ストレージにアップロードします（公開ペーストではありません）。システム情報（OS、バージョン、プロバイダー、設定済み API キーの種類 — キー自体は含まれません）と、エージェント/ゲートウェイ/デスクトップの完全なログ（各最大 512 KB。会話内容、ツール出力、ファイルパスを含む可能性が高い）が含まれます。シークレットはアップロード前にマスクされます。閲覧できるのは Nous スタッフと許可された Discord モデレーターのみで、14 日後に自動削除されます。',
-    upload: 'アップロード',
-    uploading: 'アップロード中…',
-    cancel: 'キャンセル',
-    close: '閉じる',
-    copyLink: 'リンクをコピー',
-    uploadIdFallback: id => `表示リンクが返されませんでした — サポートにアップロード ID ${id} をお伝えください`,
-    doneTitle: '診断情報を送信しました',
-    doneDescription:
-      'バンドルは非公開でアップロードされました。サポートスレッドで以下のリンクを共有すると、チームがログを確認できます。',
-    failedTitle: 'アップロードに失敗しました',
-    failedHint:
-      'ターミナルから `hermes debug share --nous` を実行するか、`hermes debug share --local` でアップロードせずにレポートを表示することもできます。',
-    handoffLead: '続きは次の場所で:',
-    links: {
-      github: 'GitHub Issues',
-      portal: 'Nous Portal サポート',
-      discord: 'Discord'
-    }
-  },
 
   titlebar: {
     hideSidebar: 'サイドバーを非表示',
@@ -1572,62 +1547,6 @@ export const jaOverrides = {
     restartNow: '今すぐ再起動',
     restarting: '再起動中…',
     restartFailedManual: 'ゲートウェイの再起動に失敗しました。手動で再起動し、ゲートウェイのログを確認してください。',
-    relayLink: {
-      title: 'Team Gateway',
-      badge: 'ボットトークン不要',
-      intro: (platform: string) => `${platform} は共有の A2Assistant ボット経由でこのエージェントに届きます。${platform} アカウントをリンクし、ボットにメッセージを送るとエージェントと話せます。`,
-      link: (platform: string) => `${platform} をリンク`,
-      linkAnother: (platform: string) => `別の ${platform} アカウントをリンク`,
-      linkedAccounts: 'リンク済みアカウント',
-      unlink: 'リンク解除',
-      unlinkFailed: 'アカウントのリンクを解除できませんでした',
-      stepOpen: (platform: string) => `1. スマートフォンでコードを読み取るか、${platform} でボットを開きます。`,
-      stepSend: '2. リンクしたいアカウントから、ボットに次のメッセージを送ります:',
-      open: (platform: string) => `${platform} を開く`,
-      copy: 'メッセージをコピー',
-      copied: 'コピーしました',
-      copyFailed: (command: string) => `コピーできませんでした。${command} と入力してください。`,
-      waiting: 'ボットがメッセージを受け取るのを待っています。コードは1回だけ使えます。',
-      linked: (platform: string) => `${platform} アカウントをリンクしました。ボットにメッセージを送るとエージェントと話せます。`,
-      expired: 'コードは使われる前に期限切れになりました。新しいコードを取得してもう一度お試しください。',
-      refused: (platform: string) => `${platform} がリンクを拒否しました。新しいコードを取得してもう一度お試しください。`,
-      qrAlt: (platform: string) => `共有 ${platform} ボットの QR コード`,
-      managed: 'Team Gateway が管理',
-      managedNote: (platform: string) => `このインスタンスではメッセージを Team Gateway が扱うため、ゲートウェイは起動のたびに ${platform} の直接接続をオフにします。リレーと併用するには、ゲートウェイの環境に GATEWAY_RELAY_ALLOW_DIRECT_PLATFORMS=true を設定してください（直接接続があるとインスタンスがゼロまでスケールダウンできず、メッセージが二重に届くことがあります）。`,
-      managedIntro: 'このエージェントのアカウントは Nous Portal からリンクします。',
-      openPortal: 'Nous Portal でアカウントをリンク',
-      noNewAccount: (platform: string) => `コードは無効になり、新しいアカウントは表示されませんでした。${platform} アカウントが一覧にない場合は、新しいコードを取得してもう一度お試しください。`
-    },
-    telegramQr: {
-      title: 'Telegram ボットの接続方法を選択',
-      subtitle: 'どちらの方法でも、あなたが管理するボットを接続し、資格情報はこの A2Assistant にのみ保存されます。',
-      quickSetup: 'クイックセットアップ',
-      recommended: '推奨',
-      quickHelp:
-        'QR コードをスキャンして Telegram で確認します。A2Assistant がボットを作成し、あなたの Telegram ユーザー ID を自動検出します。',
-      createWithQr: 'QR で作成',
-      starting: '開始中…',
-      replaceWarning:
-        'Telegram の資格情報はすでに設定されています。保存すると新しい QR セットアップまたはトークンが現在のボットを置き換えます。',
-      scanHint: 'スマートフォンの Telegram アプリでスキャンするか、このコンピューターでリンクを開いてください。',
-      waiting: 'Telegram を待機中…',
-      expiresIn: remaining => `有効期限: ${remaining}`,
-      expired: '期限切れ',
-      openTelegram: 'Telegram を開く',
-      ready: 'ボットを作成しました',
-      allowedUsers: '許可ユーザー',
-      ownerDetected: '所有者を検出',
-      addAtLeastOne: 'Telegram ユーザー ID を 1 つ以上追加してください。',
-      userIdPlaceholder: 'Telegram ユーザー ID',
-      add: '追加',
-      numericOnly: 'Telegram ユーザー ID は数字で入力してください。',
-      saveAndRestart: '保存して再起動',
-      applying: '保存中…',
-      pairingExpired: 'Telegram のペアリングが期限切れです。新しい QR セットアップを開始してください。',
-      stillWaiting: detail => `Telegram を待機中。エラー後に再試行: ${detail}`,
-      savedRestarting: 'Telegram を保存しました。ゲートウェイを再起動中…',
-      savedRestartFailed: detail => `Telegram を保存しましたが、ゲートウェイの再起動に失敗しました${detail}`
-    },
     credentialsSet: '認証情報を設定しました',
     needsSetup: '設定が必要',
     gatewayStopped: 'メッセージングゲートウェイが停止中',
@@ -3309,7 +3228,6 @@ export const jaOverrides = {
       errorOpenLogs: 'ログを開く',
       errorOpenLogsFailed: 'ログフォルダを開けませんでした',
       errorOpenDesktopLogs: 'デスクトップのログを開く',
-      errorSendDiagnostics: '診断情報を送信',
       filesChanged: count => `${count} 件のファイルを変更`,
       reviewChanges: 'レビュー',
       readAloudFailed: '読み上げに失敗しました',

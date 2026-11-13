@@ -194,7 +194,6 @@ def test_clone_channels_refusal_lives_in_create_profile(home, monkeypatch):
 _SHARED_ENV = (
     "OPENAI_API_KEY=sk\n"
     "GATEWAY_ALLOW_ALL_USERS=true\nGATEWAY_ALLOWED_USERS=1,2\n"
-    "GATEWAY_RELAY_ID=gw-1\nGATEWAY_RELAY_SECRET=s\nGATEWAY_RELAY_DELIVERY_KEY=k\n"
     "TELEGRAM_ALLOWED_USERS=1\n"
     "TWILIO_ACCOUNT_SID=AC1\nTWILIO_AUTH_TOKEN=tw\nTWILIO_PHONE_NUMBER=+1\n"
 )

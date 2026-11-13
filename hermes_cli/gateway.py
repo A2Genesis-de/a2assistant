@@ -4658,7 +4658,6 @@ from hermes_cli.gateway_setup_wizard import (
     prompt_csv,
     _UNAUTHORIZED_ACCESS_CHOICES,
     _prompt_unauthorized_access,
-    _telegram_auto_setup,
     _prompt_allowlist_var,
     _setup_standard_platform,
     _builtin_setup_fn,

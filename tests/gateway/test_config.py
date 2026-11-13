@@ -580,43 +580,20 @@ class TestLoadGatewayConfig:
         assert config.unauthorized_dm_behavior == "ignore"
 
 
-    def test_relay_platform_enabled_from_env_url(self, tmp_path, monkeypatch):
-        """GATEWAY_RELAY_URL must enable Platform.RELAY in config.platforms so
-        start_gateway()'s connect loop actually dials the connector. Registering
-        the adapter in the platform_registry is NOT enough — the connect loop
-        iterates config.platforms, so an un-enabled RELAY never connects (the
-        'relay registered but no inbound' bug)."""
+    def test_legacy_relay_settings_are_ignored(self, tmp_path, monkeypatch):
         hermes_home = tmp_path / ".hermes"
         hermes_home.mkdir()
-        monkeypatch.setenv("HERMES_HOME", str(hermes_home))
-        monkeypatch.setenv("GATEWAY_RELAY_URL", "https://connector.example/relay/")
-
-        config = load_gateway_config()
-
-        assert Platform.RELAY in config.platforms
-        relay = config.platforms[Platform.RELAY]
-        assert relay.enabled is True
-        # Trailing slash stripped; mirrored into extra for the connected-checker.
-        assert relay.extra.get("relay_url") == "https://connector.example/relay"
-        assert Platform.RELAY in config.get_connected_platforms()
-
-
-    def test_relay_env_url_disables_other_messaging_platforms(self, tmp_path, monkeypatch):
-        """A GATEWAY_RELAY_URL env stamp means the connector owns all platform
-        connections: directly-connected messaging platforms must be disabled,
-        even when explicitly enabled in config.yaml, while non-messaging
-        surfaces (api_server et al.) survive."""
-        hermes_home = tmp_path / ".hermes"
-        hermes_home.mkdir()
-        config_path = hermes_home / "config.yaml"
-        config_path.write_text(
+        (hermes_home / "config.yaml").write_text(
             "gateway:\n"
-            "  platforms:\n"
-            "    telegram:\n"
-            "      enabled: true\n"
-            "      bot_token: '123:abc'\n"
-            "    api_server:\n"
-            "      enabled: true\n",
+            "  relay_url: https://connector.example/relay\n"
+            "platforms:\n"
+            "  relay:\n"
+            "    enabled: true\n"
+            "    extra:\n"
+            "      relay_url: https://connector.example/relay\n"
+            "  telegram:\n"
+            "    enabled: true\n"
+            "    token: '123:abc'\n",
             encoding="utf-8",
         )
         monkeypatch.setenv("HERMES_HOME", str(hermes_home))

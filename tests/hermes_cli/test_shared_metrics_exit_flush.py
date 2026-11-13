@@ -48,11 +48,6 @@ def _metric_names(home: Path) -> set[str]:
         return {name for (name,) in conn.execute("SELECT metric_name FROM counter_aggregates")}
 
 
-def _open_consent_windows(home: Path) -> list[tuple]:
-    with sqlite3.connect(_store(home).as_uri() + "?mode=ro", uri=True) as conn:
-        return conn.execute("SELECT opened_at FROM send_consent_windows WHERE closed_at IS NULL").fetchall()
-
-
 def _require_native_relay() -> None:
     relay = pytest.importorskip("nemo_relay")
     if getattr(relay, "_native", None) is None:
@@ -76,7 +71,7 @@ def metrics_home(tmp_path, monkeypatch):
     monkeypatch.setenv("HERMES_HOME", str(home))
     monkeypatch.setattr(
         "hermes_cli.config.read_raw_config_readonly",
-        lambda: {"telemetry": {"shared_metrics": {"enabled": policy["on"], "send": False}}},
+        lambda: {"telemetry": {"shared_metrics": {"enabled": policy["on"]}}},
     )
     _zero_plugin_runtimes(monkeypatch)
     yield home, policy
@@ -229,7 +224,6 @@ def test_exit_flush_applies_each_profiles_own_consent(tmp_path, monkeypatch):
             gateway_run._exit_after_graceful_shutdown(0)
 
         assert "hermes.session.count" in _metric_names(send_off)  # its own consent still flushes it
-        assert _open_consent_windows(send_off) == []
         assert _metric_names(revoked) == rows_before_exit
     finally:
         relay_shared_metrics._reset_for_tests()

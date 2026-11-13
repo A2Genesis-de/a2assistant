@@ -209,19 +209,6 @@ def listener_plan(home) -> tuple[str, int, WebappMount | None, str | None]:
     return (*settings.bind, mount, None)
 
 
-def use_own_sign_in(webapp: WebappMount):
-    """Sign the Webapp's browsers in to Nous with the Portal client Web Access registered for it
-    (``hermes_cli.webapp_access.sign_in_client``), never the dashboard's
-    ``HERMES_DASHBOARD_OAUTH_CLIENT_ID``, until the returned undo runs. None, changing nothing, when
-    Web Access registered no client of its own (Nous sign-in set up by hand keeps the configured
-    client) or the Nous sign-in plugin is not enabled."""
-    from hermes_cli.dashboard_auth import listener_client
-    from hermes_cli.webapp_access import sign_in_client
-
-    client = sign_in_client(webapp.home)
-    return None if client is None else listener_client.use(*client)
-
-
 class BrowserCredentialError(OSError):
     """The Webapp's browser credential cannot be stored in the home; ``str()`` names the file and why."""
 
@@ -386,12 +373,9 @@ def register_control_verbs(runner, home, server=None, *, links_checked: bool | N
             # Behind the dashboard's sign-in the page asks for it; a launch link opens only a private Webapp.
             # Sign-in returns to a callback the provider must know and checks a state cookie set where it
             # started, so the browser starts at that callback's origin: webapp.public_url when set (the
-            # listener's own public URL), else on the LAN the address Web Access registered Nous sign-in
-            # for, else the loopback address (a password provider, or sign-in set up by hand for it).
-            # Native clients keep the loopback address.
-            from hermes_cli.webapp_access import registered_lan_origin
-            address = (getattr(web.app.state, "listener_public_url", "")
-                       or registered_lan_origin(home, urlsplit(status["url"]).port) or status["url"])
+            # listener's own public URL), else the loopback address. Native clients keep the loopback
+            # address.
+            address = getattr(web.app.state, "listener_public_url", "") or status["url"]
             return {"url": f"{address}/{query}", "private": False, "expires_in_seconds": None, "sign_in": True}
         # Where the browser's connection cannot be checked (macOS, the BSDs, WSL), the link is for the user
         # to open by hand ("private": printed, never passed to a browser launcher), and its ticket spends

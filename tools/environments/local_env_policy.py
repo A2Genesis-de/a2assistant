@@ -37,8 +37,7 @@ _STATIC_PROVIDER_ENV_BLOCKLIST = frozenset({
     "EMAIL_HOME_ADDRESS", "EMAIL_HOME_ADDRESS_NAME", "HERMES_DASHBOARD_SESSION_TOKEN",
     "GATEWAY_ALLOWED_USERS", "GH_TOKEN", "GITHUB_APP_ID", "GITHUB_APP_PRIVATE_KEY_PATH",
     "GITHUB_APP_INSTALLATION_ID", "MODAL_TOKEN_ID", "MODAL_TOKEN_SECRET",
-    "DAYTONA_API_KEY", "GATEWAY_RELAY_ID", "GATEWAY_RELAY_SECRET",
-    "GATEWAY_RELAY_DELIVERY_KEY", "VERCEL_OIDC_TOKEN", "VERCEL_TOKEN",
+    "DAYTONA_API_KEY", "VERCEL_OIDC_TOKEN", "VERCEL_TOKEN",
     "VERCEL_PROJECT_ID", "VERCEL_TEAM_ID",
     # Keys the OAuth provider profiles (nous, qwen-oauth) also accept when pasted. The auth
     # registry mirrors env_vars only for api_key profiles, and discovering the provider plugins
@@ -100,15 +99,14 @@ def _build_provider_env_blocklist() -> frozenset:
 
 def _build_adapter_secret_env() -> frozenset:
     """Secrets the messaging adapters declare, process-wide: core ``password`` messaging entries
-    of OPTIONAL_ENV_VARS, the bundled platform plugin manifests' secret entries, and the
-    secret-named keys the gateway env-override table reads (WEIXIN_TOKEN, FEISHU_ENCRYPT_KEY, ...).
+    of OPTIONAL_ENV_VARS, the bundled platform plugin manifests' secret entries, and the secrets
+    adapters read in code only (listed below).
     Declared names only: a user's own ``SLACK_USER_TOKEN`` or ``LOCAL_LLM_API_KEY`` is not Hermes's.
     A profile's user-installed platform plugins are per home: :func:`_home_adapter_secret_env`.
-    Nothing here fails soft: an unreadable bundled manifest or env table fails the import rather
+    Nothing here fails soft: an unreadable bundled manifest fails the import rather
     than dropping its secrets from the policy."""
     from hermes_cli.config import (
-        CORE_DECLARED_ENV_NAMES, OPTIONAL_ENV_VARS, PLATFORM_SECRET_ENV_SUFFIXES, platform_manifest_secret_envs)
-    from hermes_cli.profile_channels import config_env_table_keys
+        CORE_DECLARED_ENV_NAMES, OPTIONAL_ENV_VARS, platform_manifest_secret_envs)
     # Read in code only, declared nowhere else: the Microsoft Graph app secret and webhook
     # clientState, the QQ bot's speech-to-text key, and secrets only a plugin's ``env_overrides``
     # reads (Feishu webhook keys; Yuanbao's legacy app key, kept while the plugin is absent). Those rows live on the adapter's
@@ -120,7 +118,6 @@ def _build_adapter_secret_env() -> frozenset:
                  if name in CORE_DECLARED_ENV_NAMES
                  and meta.get("category") == "messaging" and meta.get("password"))
     names |= platform_manifest_secret_envs(source="bundled", strict=True)
-    names.update(n.upper() for n in config_env_table_keys() if n.upper().endswith(PLATFORM_SECRET_ENV_SUFFIXES))
     return frozenset(names)
 
 
@@ -317,13 +314,10 @@ def strip_supervised_process_identity(env: dict) -> dict:
 def _is_hermes_internal_secret(key: str) -> bool:
     """True for Hermes-internal secrets injected under *dynamic* names the static
     blocklist cannot enumerate: ``AUXILIARY_<TASK>_API_KEY``/``_BASE_URL`` (per-task
-    side-LLM credentials) and ``GATEWAY_RELAY_*_SECRET``/``_KEY``/``_TOKEN`` (relay
-    auth; non-secret routing hints stay visible). Stripped on every spawn path
-    regardless of env_passthrough registration or ``inherit_credentials``."""
+    side-LLM credentials). Stripped on every spawn path regardless of env_passthrough
+    registration or ``inherit_credentials``."""
     upper = key.upper()
-    if upper.startswith("AUXILIARY_") and upper.endswith(("_API_KEY", "_BASE_URL")):
-        return True
-    return upper.startswith("GATEWAY_RELAY_") and upper.endswith(("_SECRET", "_KEY", "_TOKEN"))
+    return upper.startswith("AUXILIARY_") and upper.endswith(("_API_KEY", "_BASE_URL"))
 
 
 # Authorization gates: the env names platform adapters read to decide WHO may talk to the
@@ -419,10 +413,6 @@ _ALWAYS_STRIP_KEYS: frozenset[str] = frozenset({
     # Gateway / messaging bot tokens and access control
     "TELEGRAM_BOT_TOKEN", "DISCORD_BOT_TOKEN", "SLACK_BOT_TOKEN", "SLACK_APP_TOKEN",
     "SLACK_SIGNING_SECRET", "GATEWAY_ALLOWED_USERS", "GATEWAY_ALLOW_ALL_USERS",
-    # Gateway relay auth triplet. _SECRET/_DELIVERY_KEY are also matched by
-    # _is_hermes_internal_secret, but _ID has no secret suffix, so it must be
-    # enumerated here to stay stripped on the inherit_credentials=True path.
-    "GATEWAY_RELAY_ID", "GATEWAY_RELAY_SECRET", "GATEWAY_RELAY_DELIVERY_KEY",
     "EMAIL_PASSWORD", "HERMES_DASHBOARD_SESSION_TOKEN",
     # Dashboard auth: the basic-auth password and session-signing secret, the OIDC client
     # secret and the drain bearer. They let a holder mint or forge dashboard sessions, and no

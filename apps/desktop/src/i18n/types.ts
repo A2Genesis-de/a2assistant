@@ -31,7 +31,6 @@ import type { PluginPreviewAccessTranslations } from './types_plugin_preview_acc
 import type { PluginUpdateTranslations } from './types_plugin_update'
 import type { SidebarProjectsTranslations } from './types_projects'
 import type { RightSidebarTranslations } from './types_right_sidebar'
-import type { SharedMetricsTranslations } from './types_shared_metrics'
 import type { ThemePickerCopy } from './types_theme_picker'
 import type { UninstallSectionTranslations } from './types_uninstall_section'
 import type { UpdateChannelCopy } from './types_update_channel'
@@ -93,7 +92,6 @@ interface ModeOptionCopy {
 
 export interface Translations extends NoticeTranslations {
   /** Shared-metrics consent: first-run dialog + Settings › Safety toggles. */
-  sharedMetrics: SharedMetricsTranslations
   appTour: AppTourTranslations
   firstRun: FirstRunCopy
   externalOpenFailed: ExternalOpenFailedCopy
@@ -525,26 +523,6 @@ export interface Translations extends NoticeTranslations {
 
   billingBlock: BillingTranslations['billingBlock']
 
-  sendDiagnostics: {
-    title: string
-    privacyNotice: string
-    upload: string
-    uploading: string
-    cancel: string
-    close: string
-    copyLink: string
-    uploadIdFallback: (id: string) => string
-    doneTitle: string
-    doneDescription: string
-    failedTitle: string
-    failedHint: string
-    handoffLead: string
-    links: {
-      discord: string
-      github: string
-      portal: string
-    }
-  }
 
   titlebar: {
     hideSidebar: string
@@ -1151,37 +1129,6 @@ export interface Translations extends NoticeTranslations {
       remoteTitle: string
       remoteDesc: string
       remoteAuthHint: string
-      cloudTitle: string
-      cloudDesc: string
-      cloudSignInTitle: string
-      cloudSignIn: string
-      cloudSignedIn: string
-      cloudNeedsSignIn: string
-      cloudSignedInDesc: string
-      cloudAgentsTitle: string
-      cloudOrgPickerTitle: string
-      cloudOrgSelect: string
-      cloudOrgChange: string
-      cloudOrgRole: (role: string) => string
-      cloudLoadingAgents: string
-      cloudNoAgents: { before: string; linkText: string; after: string }
-      cloudRefresh: string
-      cloudConnect: string
-      cloudSavedTitle: string
-      cloudSavedDesc: string
-      cloudUseSaved: string
-      cloudActive: string
-      cloudConnecting: string
-      cloudDiscoverFailed: string
-      cloudConnectFailed: string
-      cloudSignInFailed: string
-      cloudSignedOutTitle: string
-      cloudSignedOutMessage: string
-      cloudConnectedTitle: string
-      cloudConnectedPill: string
-      cloudConnectedTo: (name: string) => string
-      cloudAgentProvisioning: string
-      cloudStatusLabel: (status: string) => string
       remoteUrlTitle: string
       remoteUrlDesc: string
       probing: string
@@ -2237,11 +2184,6 @@ export interface Translations extends NoticeTranslations {
       securityAuditDesc: string
       backup: string
       backupDesc: string
-      debugShare: string
-      debugShareDesc: string
-      debugShareRunning: string
-      debugShareLinks: string
-      debugShareFailed: string
       copyLink: string
       linkCopied: string
       curator: string
@@ -2341,60 +2283,6 @@ export interface Translations extends NoticeTranslations {
     restartFailedManualDetail: string
     restartAgain: string
     openLogs: string
-    relayLink: {
-      title: string
-      badge: string
-      intro: (platform: string) => string
-      link: (platform: string) => string
-      linkAnother: (platform: string) => string
-      linkedAccounts: string
-      unlink: string
-      unlinkFailed: string
-      stepOpen: (platform: string) => string
-      stepSend: string
-      open: (platform: string) => string
-      copy: string
-      copied: string
-      copyFailed: (command: string) => string
-      waiting: string
-      linked: (platform: string) => string
-      expired: string
-      refused: (platform: string) => string
-      qrAlt: (platform: string) => string
-      managed: string
-      managedNote: (platform: string) => string
-      managedIntro: string
-      openPortal: string
-      noNewAccount: (platform: string) => string
-    }
-    telegramQr: {
-      title: string
-      subtitle: string
-      quickSetup: string
-      recommended: string
-      quickHelp: string
-      createWithQr: string
-      starting: string
-      replaceWarning: string
-      scanHint: string
-      waiting: string
-      expiresIn: (remaining: string) => string
-      expired: string
-      openTelegram: string
-      ready: string
-      allowedUsers: string
-      ownerDetected: string
-      addAtLeastOne: string
-      userIdPlaceholder: string
-      add: string
-      numericOnly: string
-      saveAndRestart: string
-      applying: string
-      pairingExpired: string
-      stillWaiting: (detail: string) => string
-      savedRestarting: string
-      savedRestartFailed: (detail: string) => string
-    }
     fieldCopy: Record<string, { label?: string; help?: string; placeholder?: string }>
     platformIntro: Record<string, string>
   }
@@ -4023,7 +3911,6 @@ export interface Translations extends NoticeTranslations {
       errorOpenLogs: string
       errorOpenLogsFailed: string
       errorOpenDesktopLogs: string
-      errorSendDiagnostics: string
       filesChanged: (count: number) => string
       reviewChanges: string
       readAloudFailed: string
@@ -4305,7 +4192,6 @@ export interface Translations extends NoticeTranslations {
     boundaryTitle: string
     boundaryDesc: string
     boundaryDetails: string
-    sendDiagnostics: string
     reloadWindow: string
     openLogs: string
   }

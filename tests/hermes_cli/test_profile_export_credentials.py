@@ -39,7 +39,6 @@ _EXTRA_STORES = {
     "webhook_subscriptions.json", ".ssh/id_rsa", ".aws/credentials", ".gnupg/x", ".kube/config", ".envrc",
     "webapp/session-token",  # the Webapp browser's credential (gateway.webapp_listener.TOKEN_PATH)
     "webapp/native-sign-in-tokens.json",  # its listener's grants to native apps (webapp_sign_in.RECORD_PATH)
-    "webapp/sign-in-registration.json",  # the Portal callback its Web Access registered (webapp_access)
 }
 # Single-file stores whose name has no dot; every other dotless store is a token directory.
 _DOTLESS_FILES = {"npmrc", "webapp/session-token"}

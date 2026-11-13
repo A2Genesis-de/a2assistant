@@ -640,23 +640,7 @@ fi
 # config-schema migrations that `hermes update` runs for non-Docker installs,
 # after first-boot seeding and before supervised gateway services start.
 # Set HERMES_SKIP_CONFIG_MIGRATION=1 for controlled/manual migrations.
-# Remote config mode (HERMES_CONFIG_BACKEND=remote) has no local config to migrate: the agent
-# migrates the fetched document in memory and never writes it back, so a leftover config.yaml must
-# not be migrated or treated as live. The backend is decided by the agent's own selection (same
-# dotenv parser and precedence as at boot: container env, $HERMES_HOME/.env, managed .env), never
-# by a second grammar here. If it cannot be decided, nothing is migrated: the agent still decides
-# at boot, and a file-mode migration simply waits for the next boot.
-_config_backend=$(s6-setuidgid hermes "$INSTALL_DIR/.venv/bin/python" -c '
-import sys
-from pathlib import Path
-from hermes_cli.env_loader import selected_config_backend_name
-print(selected_config_backend_name(Path(sys.argv[1])))
-' "$HERMES_HOME" 2>/dev/null) || _config_backend=""
-if [ "$_config_backend" = "remote" ]; then
-    echo "[stage2] HERMES_CONFIG_BACKEND=remote: skipping docker_config_migrate.py"
-elif [ -z "$_config_backend" ]; then
-    echo "[stage2] Warning: could not determine the config backend; skipping docker_config_migrate.py"
-elif [ -f "$HERMES_HOME/config.yaml" ]; then
+if [ -f "$HERMES_HOME/config.yaml" ]; then
     s6-setuidgid hermes "$INSTALL_DIR/.venv/bin/python" "$INSTALL_DIR/scripts/docker_config_migrate.py" \
         || echo "[stage2] Warning: docker_config_migrate.py failed; continuing"
 fi
@@ -692,32 +676,6 @@ if [ ! -f "$HERMES_HOME/auth.json" ] && [ -n "${HERMES_AUTH_JSON_BOOTSTRAP:-}" ]
         printf '%s' "$HERMES_AUTH_JSON_BOOTSTRAP" > "$HERMES_HOME/auth.json"
         chown hermes:hermes "$HERMES_HOME/auth.json" 2>/dev/null || true
         chmod 600 "$HERMES_HOME/auth.json"
-    fi
-fi
-
-# auth.json: re-seed a TERMINALLY-DEAD Nous bootstrap session (self-heal).
-#
-# The [ ! -f ] guard above deliberately refuses to clobber an existing
-# auth.json, so a container whose Nous bootstrap session took a terminal
-# invalid_grant (tokens cleared, providers.nous.last_auth_error.relogin_required
-# stamped) can NOT recover from a plain restart — it stays unauthenticated until
-# the credential is replaced. An orchestrator that manages the container can
-# supply a freshly-issued session via HERMES_AUTH_JSON_REBOOTSTRAP (distinct
-# from the create-only *_BOOTSTRAP var); this helper swaps ONLY the
-# providers.nous entry when the on-disk entry is provably terminal OR the
-# orchestrator seed has a later obtained_at timestamp. The latter covers the
-# stop/update/start sequence where NAS already revoked the still-healthy-looking
-# local session. Older/incomparable seeds remain no-ops, so leaving the env set
-# cannot roll a healthy rotated token backward. Runs as its own stdlib-only
-# subprocess (no app imports) and always exits 0.
-if [ -f "$HERMES_HOME/auth.json" ] && [ -n "${HERMES_AUTH_JSON_REBOOTSTRAP:-}" ]; then
-    if refuse_symlinked_path "reseed" "$HERMES_HOME/auth.json"; then
-        :
-    else
-        s6-setuidgid hermes "$INSTALL_DIR/.venv/bin/python" \
-            "$INSTALL_DIR/scripts/docker_rebootstrap_nous_session.py" \
-            "$HERMES_HOME/auth.json" \
-            || echo "[stage2] Warning: docker_rebootstrap_nous_session.py failed; continuing"
     fi
 fi
 

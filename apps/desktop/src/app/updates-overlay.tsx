@@ -689,7 +689,7 @@ function ErrorView({
       <Button onClick={onDismiss} variant="text">
         {u.notNow}
       </Button>
-      <UpdateErrorReport log={log} message={message || u.errorBody} />
+      <UpdateErrorReport log={log} />
     </ErrorState>
   )
 }

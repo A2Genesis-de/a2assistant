@@ -22,7 +22,6 @@ def _build_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="command")
     gateway_subcommands.build_gateway_parser(
         subparsers, cmd_gateway=lambda *_: None, cmd_proxy=lambda *_: None,
-        cmd_gateway_enroll=lambda *_: None,
     )
     return parser
 

@@ -161,13 +161,7 @@ gateway:
     codex_compacted: "🗜️ Tópico do app-server do Codex compactado (thread/compact). O espelho da transcrição permanece inalterado por design — o app-server agora carrega o contexto compactado."
     codex_incomplete: "⚠️ A compactação do app-server do Codex não foi concluída — o tópico permanece inalterado. Verifique os logs do app-server, tente /compress novamente ou use /reset para uma sessão limpa."
   debug:
-    upload_failed: "✗ Falha ao carregar relatório de depuração: {error}"
-    header: "**Relatório de depuração carregado:**"
-    auto_delete: "⏱ Os pastes serão eliminados automaticamente em 6 horas."
-    full_logs_hint: "Para enviar logs completos, usa `a2assistant debug share` a partir da CLI."
-    share_hint: "Partilha estes links com a equipa do A2Assistant para obter suporte."
-    report_label: "Relatório"
-    local_refused: "`/debug local` mantém o relatório na máquina que executa o A2Assistant, por isso não está disponível num chat. Envie `/debug` para enviar o relatório resumido."
+    chat_refused: "O relatório de depuração fica na máquina que executa o A2Assistant. Execute `hermes debug share` lá."
   deny:
     stale: "❌ Comando negado (a aprovação tinha expirado)."
     no_pending: "Não há nenhum comando pendente para negar."
@@ -382,7 +376,6 @@ gateway:
     save_failed: "Falha ao guardar o canal principal: {error}"
     success: "✅ Canal principal definido como **{name}** (ID: {chat_id}).\nAs tarefas cron e mensagens entre plataformas serão entregues aqui."
     err_missing_platform: "Plataforma lógica ausente"
-    err_relay_unauthenticated: "O relay não autentica este destino de home lógico"
   context:
     header: "🧠 **Janela de contexto**"
     model: "Modelo: `{model}`"
@@ -1285,7 +1278,7 @@ slash:
   version:
     description: "Mostrar a versão do A2Assistant"
   debug:
-    description: "Enviar relatório de depuração (informações do sistema + logs) e obter links compartilháveis"
+    description: "Mostrar um relatório de depuração ocultado (informações do sistema + logs)"
   quit:
     description: "Sair da CLI (use --delete para também remover o histórico da sessão)"
 cli:

@@ -17,7 +17,7 @@ import pytest
 
 from hermes_cli.config_backend import ConfigBackendUnavailable
 
-OUTAGE = "Remote Config: cannot load the config for profile 'default' from https://plane: HTTP 503"
+OUTAGE = "config backend: cannot load the config for profile 'default': HTTP 503"
 
 
 def _outage(*_a, **_kw):

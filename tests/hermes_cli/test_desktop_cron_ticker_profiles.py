@@ -28,28 +28,13 @@ class _RecordingBuiltin:
         self.start_kwargs = kwargs
 
 
-class _RecordingExternal:
-    """External provider double — must NOT receive profile_homes."""
-
-    name = "chronos-test"
-
-    def __init__(self):
-        self.start_kwargs = None
-
-    def start(self, stop_event, **kwargs):
-        self.start_kwargs = kwargs
-
-
 @pytest.fixture()
 def _providers(monkeypatch):
     import cron.scheduler_provider as sp
 
     builtin = _RecordingBuiltin()
-    # isinstance(provider, InProcessCronScheduler) gate: register our double
-    # as that class for the module under test.
     monkeypatch.setattr(ws, "_log", ws._log)
-    monkeypatch.setattr(sp, "resolve_cron_scheduler", lambda: builtin)
-    monkeypatch.setattr(sp, "InProcessCronScheduler", _RecordingBuiltin)
+    monkeypatch.setattr(sp, "InProcessCronScheduler", lambda: builtin)
     return sp, builtin
 
 
@@ -78,7 +63,6 @@ def test_multi_profile_homes_passed_to_builtin(monkeypatch, _providers, tmp_path
 @pytest.mark.parametrize("gateway_running", [True, False])
 def test_single_profile_ticks_only_without_gateway(monkeypatch, tmp_path, gateway_running):
     """Exercise Desktop startup through the real built-in scheduler loop."""
-    from cron.scheduler_provider import InProcessCronScheduler
     from hermes_constants import get_hermes_home
     import hermes_cli.profiles as profiles_mod
 
@@ -86,9 +70,6 @@ def test_single_profile_ticks_only_without_gateway(monkeypatch, tmp_path, gatewa
     home.mkdir()
     monkeypatch.setattr(profiles_mod, "profiles_to_serve", lambda **_kw: [("default", home)])
     monkeypatch.setattr(profiles_mod, "_check_gateway_running", lambda _home: gateway_running)
-    monkeypatch.setattr(
-        "cron.scheduler_provider.resolve_cron_scheduler", InProcessCronScheduler
-    )
     ticked = []
     monkeypatch.setattr(
         "cron.scheduler.tick", lambda **_kw: ticked.append(get_hermes_home())
@@ -121,26 +102,6 @@ def test_enumeration_failure_fails_open(monkeypatch, _providers):
     assert builtin.start_kwargs["interval"] == 11
     [(_name, home)] = builtin.start_kwargs["profile_homes"]()
     assert home == Path(get_hermes_home())
-
-
-def test_external_provider_never_gets_profile_homes(monkeypatch, tmp_path):
-    """External registries are not profile-scoped; keep single-store semantics."""
-    import cron.scheduler_provider as sp
-
-    external = _RecordingExternal()
-    monkeypatch.setattr(sp, "resolve_cron_scheduler", lambda: external)
-
-    import hermes_cli.profiles as profiles_mod
-
-    monkeypatch.setattr(
-        profiles_mod,
-        "profiles_to_serve",
-        lambda **_kw: [("default", tmp_path / "a"), ("b", tmp_path / "b")],
-    )
-
-    ws._start_desktop_cron_ticker(threading.Event(), interval=13)
-
-    assert external.start_kwargs == {"interval": 13}
 
 
 def test_desktop_ticker_serves_every_profile_and_yields_to_owning_gateway(monkeypatch, _providers, tmp_path):

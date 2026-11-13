@@ -34,26 +34,15 @@ def _cron_api(**kwargs):
     return json.loads(cronjob_tool(**kwargs))
 
 
-def _active_cron_provider_name() -> str:
-    """Resolved cron scheduler provider name ('builtin', 'chronos', …); 'builtin' on failure."""
-    try:
-        from cron.scheduler_provider import resolve_cron_scheduler
-        return resolve_cron_scheduler().name or "builtin"
-    except Exception:
-        return "builtin"
-
-
 def _builtin_gateway_liveness() -> Optional[bool]:
     """Tri-state readiness of a scheduler serving THIS home (None = probe failed).
 
     A gateway launched from this home proves itself by process liveness. Any other scheduler that
     ticks this home — the host multiplexer for a served profile, or the in-process ticker inside
     ``hermes serve`` / the Desktop backend (#121881) — proves itself only by the fresh heartbeat it
-    writes into this home's store. External providers use their own machinery and are exempt.
+    writes into this home's store.
     """
     try:
-        if _active_cron_provider_name() != "builtin":
-            return True
         # The runtime lock is held for exactly the gateway's lifetime — more reliable than PID
         # scanning (find_gateway_pids transiently misses the gateway right after a restart, and
         # inside the gateway it must never say "not running"). A crashing probe is "unknown".
@@ -531,91 +520,82 @@ def cron_status():
         print(color(f"  {overdue} due run(s) not fired", Colors.RED))
     if store_report is not None:
         print()
-    provider = _active_cron_provider_name()
-    if provider != "builtin":
-        # External providers fire via webhook: no ticker thread / heartbeat file by design, so
-        # the liveness heuristics would always say "stalled".
-        print(color(f"✓ Cron provider: {provider} — jobs fire via the managed scheduler, "
-                    "not the in-process ticker.", Colors.GREEN))
-        print(color("  (No ticker heartbeat is expected for an external provider; "
-                    "due jobs are delivered by an authenticated webhook.)", Colors.DIM))
-    else:
-        from gateway.host_topology import host_gateway_serving
-        active = get_active_profile_name()
-        # FIRST question under multiplex-only: is the HOST gateway alive and does it tick THIS
-        # profile? Starting from find_gateway_pids() (argv `-p <name>`) made every served profile
-        # report "not running" and told the user to start a SECOND host process.
-        host = None
+    from gateway.host_topology import host_gateway_serving
+    active = get_active_profile_name()
+    # FIRST question under multiplex-only: is the HOST gateway alive and does it tick THIS
+    # profile? Starting from find_gateway_pids() (argv `-p <name>`) made every served profile
+    # report "not running" and told the user to start a SECOND host process.
+    host = None
+    with contextlib.suppress(Exception):
+        host = host_gateway_serving(active)
+    pids = [] if host is not None else find_gateway_pids()
+    gateway_alive_via_lock = False
+    served_by_multiplexer = False
+    in_process_ticker = False
+    if host is None and not pids:
+        # The pid scan transiently misses a live gateway right after a restart; the runtime
+        # lock proves the process is alive. Declare "not running" only when both agree.
         with contextlib.suppress(Exception):
-            host = host_gateway_serving(active)
-        pids = [] if host is not None else find_gateway_pids()
-        gateway_alive_via_lock = False
-        served_by_multiplexer = False
-        in_process_ticker = False
-        if host is None and not pids:
-            # The pid scan transiently misses a live gateway right after a restart; the runtime
-            # lock proves the process is alive. Declare "not running" only when both agree.
+            # Same false-alarm class the cronjob tool fixed (#95947): the pid scan can transiently miss
+            # a live gateway (just after a restart) while the runtime lock — held for exactly the
+            # gateway's lifetime — proves the ticker's process is alive.
+            from gateway.status import get_running_pid, is_gateway_runtime_lock_active
+            gateway_alive_via_lock = is_gateway_runtime_lock_active()
+            lock_pid = get_running_pid() if gateway_alive_via_lock else None
+            pids = [lock_pid] if lock_pid else pids
+        # Multiplexer identity does not establish the active profile's ticker health.
+        if not gateway_alive_via_lock:
+            served_by_multiplexer = named_profile_served_by_running_multiplexer()
+        if not gateway_alive_via_lock and not served_by_multiplexer:
+            # `hermes serve` / the Desktop backend ticks every local profile in-process: no
+            # gateway argv, lock or host record — only the heartbeat it writes here (#121881).
             with contextlib.suppress(Exception):
-                # Same false-alarm class the cronjob tool fixed (#95947): the pid scan can transiently miss
-                # a live gateway (just after a restart) while the runtime lock — held for exactly the
-                # gateway's lifetime — proves the ticker's process is alive.
-                from gateway.status import get_running_pid, is_gateway_runtime_lock_active
-                gateway_alive_via_lock = is_gateway_runtime_lock_active()
-                lock_pid = get_running_pid() if gateway_alive_via_lock else None
-                pids = [lock_pid] if lock_pid else pids
-            # Multiplexer identity does not establish the active profile's ticker health.
-            if not gateway_alive_via_lock:
-                served_by_multiplexer = named_profile_served_by_running_multiplexer()
-            if not gateway_alive_via_lock and not served_by_multiplexer:
-                # `hermes serve` / the Desktop backend ticks every local profile in-process: no
-                # gateway argv, lock or host record — only the heartbeat it writes here (#121881).
-                with contextlib.suppress(Exception):
-                    from cron.jobs import get_ticker_heartbeat_age, ticker_heartbeat_writer_alive
-                    in_process_ticker = (_ticker_age_is_fresh(get_ticker_heartbeat_age())
-                                         and ticker_heartbeat_writer_alive())
-        if host is not None:
-            print(f"  Scheduler host: {host.describe()}")
-            # `hermes gateway restart` exits 78 for a served NAMED profile
-            # (_guard_named_profile_under_multiplexer): name the profile that LAUNCHED the host
-            # process. On a standalone fleet that is this profile itself, not default (#120871).
-            owner = None
-            with contextlib.suppress(Exception):
-                from hermes_cli.gateway import host_multiplexer_serving
-                owner = host_multiplexer_serving(active)
-            host_profile = owner.profile_label if owner is not None else "default"
-            _print_ticker_health([host.pid], restart_command=f"hermes --profile {host_profile} gateway restart")
-        elif pids or gateway_alive_via_lock or served_by_multiplexer or in_process_ticker:
-            if served_by_multiplexer:
-                print("  Scheduler host: the host gateway (multiplexing this profile)")
-                _print_ticker_health([], restart_command="hermes --profile default gateway restart")
-            elif in_process_ticker:
-                print(f"  Scheduler host: an in-process ticker (hermes serve / Desktop backend) ticking profile '{active}'")
-                _print_ticker_health([], restart_command="restart the A2Assistant Desktop app (or its serve backend)")
-            else:
-                _print_ticker_health(pids)
+                from cron.jobs import get_ticker_heartbeat_age, ticker_heartbeat_writer_alive
+                in_process_ticker = (_ticker_age_is_fresh(get_ticker_heartbeat_age())
+                                     and ticker_heartbeat_writer_alive())
+    if host is not None:
+        print(f"  Scheduler host: {host.describe()}")
+        # `hermes gateway restart` exits 78 for a served NAMED profile
+        # (_guard_named_profile_under_multiplexer): name the profile that LAUNCHED the host
+        # process. On a standalone fleet that is this profile itself, not default (#120871).
+        owner = None
+        with contextlib.suppress(Exception):
+            from hermes_cli.gateway import host_multiplexer_serving
+            owner = host_multiplexer_serving(active)
+        host_profile = owner.profile_label if owner is not None else "default"
+        _print_ticker_health([host.pid], restart_command=f"hermes --profile {host_profile} gateway restart")
+    elif pids or gateway_alive_via_lock or served_by_multiplexer or in_process_ticker:
+        if served_by_multiplexer:
+            print("  Scheduler host: the host gateway (multiplexing this profile)")
+            _print_ticker_health([], restart_command="hermes --profile default gateway restart")
+        elif in_process_ticker:
+            print(f"  Scheduler host: an in-process ticker (hermes serve / Desktop backend) ticking profile '{active}'")
+            _print_ticker_health([], restart_command="restart the A2Assistant Desktop app (or its serve backend)")
         else:
-            # Only THIS profile's scheduler is knowable from here: a gateway may be alive on the
-            # host ticking other profiles, so never assert a host-wide negative (#99579).
-            print(color(f"✗ No scheduler is serving profile '{active}' — its cron jobs will NOT fire", Colors.RED))
-            # When scheduling last worked before the host went away: without this, a
-            # 7h-overdue job still reads as a normal upcoming "Next run" (#114309).
-            with contextlib.suppress(Exception):
-                from cron.jobs import TICKER_INTERVAL_SECONDS, get_ticker_heartbeat_age
-                hb_age = get_ticker_heartbeat_age()
-                if hb_age is not None and hb_age > TICKER_INTERVAL_SECONDS * 3 + 20:
-                    print(color("  Scheduler last ticked "
-                                f"{_format_lateness(hb_age)} ago — jobs that came due "
-                                "since then have not fired.", Colors.YELLOW))
-            print("\n  Start the ONE host gateway (it multiplexes every profile, this one included):\n"
-                  "    hermes --profile default gateway install   # user service\n"
-                  "    sudo hermes --profile default gateway install --system  # Linux servers: boot-time service\n"
-                  "    hermes --profile default gateway run       # Or run in foreground")
-            if active not in ("default", "custom"):
-                print("\n  It serves this profile automatically. If a per-profile service or gateway\n"
-                      "  from an older release is still installed, fold it in (preflight + dry run):\n"
-                      "      hermes --profile default gateway migrate --multiplex --dry-run\n"
-                      "      hermes --profile default gateway migrate --multiplex\n"
-                      "  Check: hermes cron status from this profile should show its ticker heartbeat.\n")
+            _print_ticker_health(pids)
+    else:
+        # Only THIS profile's scheduler is knowable from here: a gateway may be alive on the
+        # host ticking other profiles, so never assert a host-wide negative (#99579).
+        print(color(f"✗ No scheduler is serving profile '{active}' — its cron jobs will NOT fire", Colors.RED))
+        # When scheduling last worked before the host went away: without this, a
+        # 7h-overdue job still reads as a normal upcoming "Next run" (#114309).
+        with contextlib.suppress(Exception):
+            from cron.jobs import TICKER_INTERVAL_SECONDS, get_ticker_heartbeat_age
+            hb_age = get_ticker_heartbeat_age()
+            if hb_age is not None and hb_age > TICKER_INTERVAL_SECONDS * 3 + 20:
+                print(color("  Scheduler last ticked "
+                            f"{_format_lateness(hb_age)} ago — jobs that came due "
+                            "since then have not fired.", Colors.YELLOW))
+        print("\n  Start the ONE host gateway (it multiplexes every profile, this one included):\n"
+              "    hermes --profile default gateway install   # user service\n"
+              "    sudo hermes --profile default gateway install --system  # Linux servers: boot-time service\n"
+              "    hermes --profile default gateway run       # Or run in foreground")
+        if active not in ("default", "custom"):
+            print("\n  It serves this profile automatically. If a per-profile service or gateway\n"
+                  "  from an older release is still installed, fold it in (preflight + dry run):\n"
+                  "      hermes --profile default gateway migrate --multiplex --dry-run\n"
+                  "      hermes --profile default gateway migrate --multiplex\n"
+                  "  Check: hermes cron status from this profile should show its ticker heartbeat.\n")
 
     print()
     _print_active_jobs_summary(active_jobs)

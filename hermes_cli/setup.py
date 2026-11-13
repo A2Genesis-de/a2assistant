@@ -513,69 +513,6 @@ def setup_tools(config: dict, first_install: bool = False):
     tools_command(first_install=first_install, config=config)
 
 
-# ── Shared Metrics ──
-
-
-_SEND_CONSENT_EXPLAINER = (
-    "", "Sharing uploads each daily package to the Nous telemetry",
-    "service. Packages carry your profile-scoped install ID, a",
-    "stable random UUID that identifies this profile across days",
-    "(it contains no personal information and is reset by deleting",
-    "the shared-metrics directory). Only packages whose entire",
-    "collection period falls inside a recorded consent window are",
-    "ever sent. Apart from the fresh-install note (noted on this",
-    "machine and counted only once you opt in), data from before",
-    "you opt in is never sent. Sharing can be turned off again at",
-    "any time.",
-)
-
-
-def setup_telemetry(config: dict):
-    """Turn shared metrics on (collect and send to Nous) or off: one answer sets both keys."""
-    print_header("Shared Metrics")
-    _info("Shared metrics contain only bounded counters: activity, session length,",
-          "outcomes, error classes (with a fixed-list reason when a memory write or",
-          "context compression is refused, fails or is skipped), model routes and",
-          "token totals, built-in tool, command and catalog names, bucketed setup",
-          "counts, update and install results and timing (with a fixed-list reason",
-          "and the stage when one fails; a fresh install is noted on this machine and",
-          "counted only once you opt in), crashes,",
-          "startup and reply speed, messaging-platform health, how A2Assistant gets used",
-          "(agent accuracy and efficiency, active time per surface, which features and",
-          "settings are used or switched off, provider setup outcomes), and coarse",
-          "machine facts (RAM range, GPU type, version age and channel, updates behind,",
-          "local model server yes/no). Never prompts, files, paths, setting values or",
-          "error text.")
-    _info(*_SEND_CONSENT_EXPLAINER)
-    # The answer is written to config.yaml here, not by the caller's later save: that save strips
-    # values equal to the defaults, so a "no" would vanish and every surface would ask again.
-    from hermes_cli.observability.shared_metrics_consent import save_consent
-
-    shared_metrics = _sub_dict(_sub_dict(config, "telemetry"), "shared_metrics")
-    sharing = shared_metrics.get("enabled") is True and shared_metrics.get("send") is True
-    # One answer for both keys: off also withdraws send consent and stops collection.
-    share = prompt_yes_no("Send shared metrics to Nous?", default=sharing)
-    save_consent(share, share, config)
-    if share:
-        print_success("Shared metrics sent to Nous once a day.")
-    else:
-        print_info("Shared metrics off.")
-
-
-def _record_send_consent_change(*, enabled: bool) -> None:
-    """Reconcile consent windows at the moment the user decides — same single writer as the relay
-    and the sender, so wizard, relay and mid-pass callers cannot disagree."""
-    try:
-        from hermes_cli.observability.shared_metrics import SharedMetricsStore
-        from hermes_cli.observability.shared_metrics_sender import reconcile_send_consent
-        from hermes_cli.sqlite_util import write_txn
-        with SharedMetricsStore()._connection() as connection, write_txn(connection):
-            reconcile_send_consent(connection, enabled)
-    except Exception:
-        # Never block the wizard on telemetry bookkeeping; the relay reconciles on the next hook.
-        logger.debug("Unable to record shared-metrics consent change", exc_info=True)
-
-
 # Extracted sections, re-exported so callers and test patches keep resolving through
 # hermes_cli.setup. They import this module lazily inside bodies, so this is cycle-free.
 
@@ -595,7 +532,6 @@ SETUP_SECTIONS = [
     ("terminal", "Terminal Backend", setup_terminal_backend),
     ("gateway", "Messaging Platforms (Gateway)", setup_gateway),
     ("tools", "Tools", setup_tools),
-    ("telemetry", "Shared Metrics", setup_telemetry),
     ("agent", "Agent Settings", setup_agent_settings),
 ]
 
@@ -756,11 +692,6 @@ def _run_setup_wizard_impl(args):
 
 
 def _record_setup_completed(config: dict) -> None:
-    """Count a wizard run that finished. Every setup flow ends here, so the one-time
-    shared-metrics offer runs first: a user who opts in now is counted; the API checks enablement."""
-    from hermes_cli.observability.shared_metrics_consent import offer_consent_if_undecided
-
-    offer_consent_if_undecided(config)
     from hermes_cli.observability.shared_metrics_events import record_setup_completed
     model = config.get("model")
     record_setup_completed(surface="cli", provider=model.get("provider") if isinstance(model, dict) else None)

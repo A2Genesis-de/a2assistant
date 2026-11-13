@@ -100,19 +100,17 @@ def _start_desktop_cron_ticker(stop_event: threading.Event, interval: int = 60) 
     this a cron created in the app would never fire (no live adapters; delivery
     falls back to the per-platform send path). The primary backend outlives the
     per-profile pool (reaped after ~10 idle minutes), so it ticks EVERY local
-    profile's store like a multiplex gateway; external providers keep the
-    single-store behavior (registries are not profile-scoped). Cross-process
-    safe: the built-in tick takes the per-store ``cron/.tick.lock``.
+    profile's store like a multiplex gateway. Cross-process safe: the tick takes
+    the per-store ``cron/.tick.lock``.
 
     Every local profile's store is ticked, not just this backend's own (#69377's desktop sibling): the
     desktop pools per-profile backends and reaps them after ~10 idle minutes, so a secondary profile's
     ticker dies with its backend and that profile's jobs silently stop firing until the user next opens it
     ("tasks on the sleeping profile could be idle" — community report, Aug 2026).
     """
-    from cron.scheduler_provider import InProcessCronScheduler, resolve_cron_scheduler
+    from cron.scheduler_provider import InProcessCronScheduler
     from hermes_constants import get_hermes_home, profile_name_for_home
 
-    provider = resolve_cron_scheduler()
     own_home = Path(get_hermes_home())
     own_name = profile_name_for_home(own_home) or "default"
     # Ownership is re-checked every tick, not once at startup, so Desktop takes over when the
@@ -120,61 +118,40 @@ def _start_desktop_cron_ticker(stop_event: threading.Event, interval: int = 60) 
     profile_gate = lambda name, home: not _gateway_owns_cron(name, home)
 
     start_kwargs: dict = {"interval": interval}
-    if isinstance(provider, InProcessCronScheduler):
-        try:
-            from hermes_cli.profiles import profiles_to_serve
+    try:
+        from hermes_cli.profiles import profiles_to_serve
 
-            # Same served set as the multiplexer: default + every live profile under profiles/.
-            # The ticker re-enumerates this callable every cycle. Passing a
-            # startup snapshot leaves deleted profiles in the scheduler until
-            # restart, which both writes their removed stores and keeps stale
-            # profiles alive in Desktop's background work.
-            profile_homes = lambda: list(profiles_to_serve(multiplex=True))
-            initial_profile_homes = profile_homes()
-            if initial_profile_homes:
-                # Even one profile needs the per-tick gateway gate; otherwise
-                # Desktop races its dedicated gateway for the same cron store.
-                start_kwargs["profile_homes"] = profile_homes
-                start_kwargs["profile_gate"] = profile_gate
-                from hermes_logging import enable_profile_log_routing
-
-                enable_profile_log_routing(initial_profile_homes)
-                _log.info(
-                    "Desktop cron scheduler will tick %d profile(s): %s",
-                    len(initial_profile_homes),
-                    [name for name, _home in initial_profile_homes],
-                )
-        except Exception:
-            # Fail open to the single-store ticker so the active profile keeps firing.
-            _log.exception("Desktop cron: profile enumeration failed; ticking active profile only")
-        if "profile_homes" not in start_kwargs:
-            # Fail open to this backend's own store behind the same gate. A gated-out profile is
-            # neither ticked nor heartbeated, so Desktop never marks the gateway's store healthy.
-            start_kwargs["profile_homes"] = lambda: [(own_name, own_home)]
+        # Same served set as the multiplexer: default + every live profile under profiles/.
+        # The ticker re-enumerates this callable every cycle. Passing a
+        # startup snapshot leaves deleted profiles in the scheduler until
+        # restart, which both writes their removed stores and keeps stale
+        # profiles alive in Desktop's background work.
+        profile_homes = lambda: list(profiles_to_serve(multiplex=True))
+        initial_profile_homes = profile_homes()
+        if initial_profile_homes:
+            # Even one profile needs the per-tick gateway gate; otherwise
+            # Desktop races its dedicated gateway for the same cron store.
+            start_kwargs["profile_homes"] = profile_homes
             start_kwargs["profile_gate"] = profile_gate
-    else:
-        # External providers take no per-tick gate: defer their start until the gateway is gone.
-        def _owned() -> bool:
-            try:
-                return _gateway_owns_cron(own_name, own_home)
-            except Exception:
-                # Start the ticker rather than silently stand down.
-                _log.warning("Desktop cron: gateway-ownership probe failed; starting the ticker", exc_info=True)
-                return False
+            from hermes_logging import enable_profile_log_routing
 
-        if _owned():
+            enable_profile_log_routing(initial_profile_homes)
             _log.info(
-                "Desktop cron scheduler waiting: live gateway owns cron on this HERMES_HOME; "
-                "the gateway ticks with live adapters (re-probing every %ds)", interval,
+                "Desktop cron scheduler will tick %d profile(s): %s",
+                len(initial_profile_homes),
+                [name for name, _home in initial_profile_homes],
             )
-            while True:
-                if stop_event.wait(interval):
-                    return
-                if not _owned():
-                    break
+    except Exception:
+        # Fail open to the single-store ticker so the active profile keeps firing.
+        _log.exception("Desktop cron: profile enumeration failed; ticking active profile only")
+    if "profile_homes" not in start_kwargs:
+        # Fail open to this backend's own store behind the same gate. A gated-out profile is
+        # neither ticked nor heartbeated, so Desktop never marks the gateway's store healthy.
+        start_kwargs["profile_homes"] = lambda: [(own_name, own_home)]
+        start_kwargs["profile_gate"] = profile_gate
 
-    _log.info("Desktop cron scheduler started (provider=%s, interval=%ds)", provider.name, interval)
-    provider.start(stop_event, **start_kwargs)
+    _log.info("Desktop cron scheduler started (interval=%ds)", interval)
+    InProcessCronScheduler().start(stop_event, **start_kwargs)
 
 
 # Desktop `serve` only (start_server(start_mcp_discovery_after_bind=True)):
@@ -775,7 +752,6 @@ from hermes_cli.web_routers import (
     config_env as _config_env_routes,
     models as _models_routes,
     messaging as _messaging_routes,
-    messaging_relay as _messaging_relay_routes,
     oauth as _oauth_routes,
     cron as _cron_routes,
     mcp as _mcp_routes,
@@ -787,9 +763,7 @@ from hermes_cli.web_routers import (
     chat_workspaces as _chat_workspaces_routes,
     dashboard_ui as _dashboard_ui_routes,
     webapp as _webapp_routes,
-    shared_metrics as _shared_metrics_routes,
     delegation as _delegation_routes,
-    webapp_access as _webapp_access_routes,
     ui_preferences as _ui_preferences_routes,
     gateway_connections as _gateway_connections_routes,
     gateway_connections_reach as _gateway_connections_reach_routes,
@@ -820,7 +794,6 @@ app.include_router(_config_env_routes.config_router)
 app.include_router(_models_routes.router)
 app.include_router(_config_env_routes.router)
 app.include_router(_messaging_routes.router)
-app.include_router(_messaging_relay_routes.router)
 app.include_router(_oauth_routes.router)
 app.include_router(_sessions_routes.manage_router)
 app.include_router(_status_routes.logs_router)
@@ -838,9 +811,7 @@ app.include_router(_dashboard_ui_routes.router)
 app.include_router(_webapp_routes.router)
 # The saved-connections proxy checks its surface per request (WebSocket routes take no Request).
 app.include_router(_webapp_relay_proxy_routes.router)
-app.include_router(_shared_metrics_routes.router)
 app.include_router(_delegation_routes.router)
-app.include_router(_webapp_access_routes.router, dependencies=[_Depends(_route_on("web_access"))])
 app.include_router(_ui_preferences_routes.router, dependencies=[_Depends(_route_on("ui_preferences"))])
 app.include_router(_gateway_connections_routes.router, dependencies=[_Depends(_route_on("gateway_connections"))])
 app.include_router(_gateway_connections_reach_routes.router, dependencies=[_Depends(_route_on("gateway_connections"))])
@@ -865,13 +836,6 @@ def _no_auth_provider_message(host: str) -> str:
     unconfigured provider is not reported as merely "no providers".
     """
     skip_reasons: list[str] = []
-    try:
-        from plugins.dashboard_auth import nous as _nous_plugin
-
-        if _nous_plugin.LAST_SKIP_REASON:
-            skip_reasons.append(f"  • nous: {_nous_plugin.LAST_SKIP_REASON}")
-    except Exception:
-        pass
 
     # A listener that declares its own public URL (the gateway's Webapp: webapp.public_url) is
     # gated by that setting, never by dashboard.public_url.
@@ -909,8 +873,7 @@ def _no_auth_provider_message(host: str) -> str:
         "    (hash with: python -c \"from "
         "plugins.dashboard_auth.basic import hash_password; "
         "print(hash_password('your-password'))\")\n"
-        "  • OAuth: run `hermes dashboard register` (Nous Portal) or "
-        "install a DashboardAuthProvider plugin.\n"
+        "  • OAuth: install a DashboardAuthProvider plugin.\n"
         "  • Deployment token: provision HERMES_DASHBOARD_SESSION_TOKEN "
         "(a literal token, or 'file:<path>' naming a secret-manager-decrypted "
         "token file) — the bundled session-token provider then authorizes "

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 import gateway.run as gateway_run
-from gateway.config import HomeChannel, Platform, PlatformConfig
+from gateway.config import HomeChannel, Platform
 from gateway.platforms.base import SendResult
 from gateway.platforms.event import MessageEvent, MessageType
 from gateway.session import build_session_key
@@ -207,83 +207,9 @@ async def test_send_home_channel_startup_notification_preserves_thread_metadata(
     )
 
 
-@pytest.mark.asyncio
-async def test_relay_fronted_logical_home_gets_startup_notification(tmp_path, monkeypatch):
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
-
-    runner, _native = make_restart_runner()
-    relay = MagicMock()
-    relay.fronts_platform.side_effect = lambda platform: platform == _CHAT_B
-    relay.send_for_platform = AsyncMock(return_value=SendResult(success=True, message_id="home"))
-    runner.adapters = {Platform.RELAY: relay}
-    runner.config.platforms = {
-        Platform.RELAY: PlatformConfig(enabled=True),
-        _CHAT_B: PlatformConfig(
-            enabled=False,
-            home_channel=HomeChannel(
-                platform=_CHAT_B,
-                chat_id="D123",
-                name="Owner DM",
-                user_id="U123",
-                scope_id="T123",
-            ),
-        ),
-    }
-
-    delivered = await runner._send_home_channel_startup_notifications()
-
-    assert delivered == {("chat_b", "D123", None)}
-    relay.send_for_platform.assert_awaited_once()
-    assert relay.send_for_platform.await_args.args[:3] == (
-        _CHAT_B,
-        "D123",
-        "♻️ Gateway online — A2Assistant is back and ready.",
-    )
-    assert relay.send_for_platform.await_args.kwargs["metadata"]["user_id"] == "U123"
-    assert relay.send_for_platform.await_args.kwargs["metadata"]["scope_id"] == "T123"
-
 
 # ── _send_restart_notification ───────────────────────────────────────────
 
-
-@pytest.mark.asyncio
-async def test_relay_restart_notification_uses_logical_platform_and_owner(tmp_path, monkeypatch):
-    monkeypatch.setattr(gateway_run, "_hermes_home", tmp_path)
-    notify_path = tmp_path / ".restart_notify.json"
-    notify_path.write_text(
-        json.dumps(
-            {
-                "platform": "chat_b",
-                "chat_id": "D123",
-                "chat_type": "dm",
-                "user_id": "U123",
-                "scope_id": "T123",
-                "delivered_via_upstream_relay": True,
-            }
-        )
-    )
-
-    runner, _native = make_restart_runner()
-    relay = MagicMock()
-    relay.fronts_platform.side_effect = lambda platform: platform == _CHAT_B
-    relay.send_for_platform = AsyncMock(
-        return_value=SendResult(success=True, message_id="restart")
-    )
-    runner.adapters = {Platform.RELAY: relay}
-    runner.config.platforms = {
-        Platform.RELAY: PlatformConfig(enabled=True),
-        _CHAT_B: PlatformConfig(enabled=False),
-    }
-
-    delivered_target = await runner._send_restart_notification()
-
-    assert delivered_target == ("chat_b", "D123", None)
-    relay.send_for_platform.assert_awaited_once()
-    assert relay.send_for_platform.await_args.args[0:2] == (_CHAT_B, "D123")
-    metadata = relay.send_for_platform.await_args.kwargs["metadata"]
-    assert metadata["user_id"] == "U123"
-    assert metadata["scope_id"] == "T123"
-    assert not notify_path.exists()
 
 
 @pytest.mark.asyncio

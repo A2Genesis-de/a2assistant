@@ -22,7 +22,7 @@ def _parse(*argv):
     parser = argparse.ArgumentParser()
     build_gateway_parser(
         parser.add_subparsers(dest="command"),
-        cmd_gateway=lambda a: None, cmd_proxy=lambda a: None, cmd_gateway_enroll=lambda a: None,
+        cmd_gateway=lambda a: None, cmd_proxy=lambda a: None,
     )
     return parser.parse_args(["gateway", *argv])
 

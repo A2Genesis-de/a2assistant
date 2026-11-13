@@ -28,10 +28,10 @@ from hermes_cli import __release_date__
 from hermes_cli.config import get_config_path, get_env_path
 from hermes_cli.version_info import get_version_info
 from hermes_constants import get_process_hermes_home, profile_name_for_home
-from hermes_cli.web_models import CuratorPause, LearningNodeRef, LearningNodeEdit, DebugShareRequest
+from hermes_cli.web_models import CuratorPause, LearningNodeRef, LearningNodeEdit
 from hermes_cli.web_routers._common import config_scoped_to_thread, destructive_profile, scoped_to_thread
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 _log = logging.getLogger("hermes_cli.web_server")
 router = APIRouter()
@@ -876,33 +876,6 @@ async def run_dump(profile: Optional[str] = None):
 @router.post("/api/ops/config-migrate")
 async def run_config_migrate(profile: Optional[str] = None):
     return _spawn_action(["config", "migrate"], "config-migrate", "Failed", profile)
-
-
-@router.post("/api/ops/debug-share")
-async def run_debug_share_endpoint(body: DebugShareRequest | None = None,
-                                   profile: Optional[str] = None):
-    """Upload a redacted debug report + full logs and return the paste URLs. Synchronous,
-    unlike the other diagnostics actions: the point is the shareable URLs, returned as a
-    structured payload the dashboard renders as copyable links."""
-    from hermes_cli.debug import build_debug_share
-    from hermes_cli.debug_redaction import redact_debug_support_text
-    req = body or DebugShareRequest()
-    try:
-        result = await config_scoped_to_thread(profile, lambda: build_debug_share(
-            log_lines=max(1, min(int(req.lines), 5000)), redact=bool(req.redact)))
-    except HTTPException:
-        raise  # an unknown ?profile= is the scope's 404, not a failed share
-    except RuntimeError as exc:
-        # Required summary-report upload failed (offline / paste service down).
-        error = redact_debug_support_text(exc)
-        raise HTTPException(status_code=502, detail=f"Upload failed: {error}")
-    except Exception as exc:
-        _log.exception("debug share failed")
-        error = redact_debug_support_text(exc)
-        raise HTTPException(status_code=500, detail=f"Failed: {error}")
-
-    return {"ok": True, "urls": result.urls, "failures": result.failures,
-            "redacted": result.redacted, "auto_delete_seconds": result.auto_delete_seconds}
 
 
 @logs_router.get("/api/logs")

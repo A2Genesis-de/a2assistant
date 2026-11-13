@@ -10,7 +10,6 @@ import logging
 import os
 import re
 import time
-import urllib.parse
 from datetime import datetime, UTC
 from pathlib import Path
 from collections.abc import Collection
@@ -23,16 +22,15 @@ from gateway.status import resolve_gateway_liveness, retained_gateway_state
 from hermes_cli.config import OPTIONAL_ENV_VARS, get_env_path
 from hermes_constants import get_process_hermes_home
 from hermes_cli.web_deps import LateState, late
-from hermes_cli.web_server_gateway import _restart_gateway_after
 from hermes_cli.web_server_messaging import (
-    _TelegramOnboardingPairing, _messaging_platform_catalog, _telegram_onboarding_error_message, _telegram_onboarding_lock, _telegram_onboarding_pairings,
+    _messaging_platform_catalog,
 )
 from hermes_cli.web_routers._common import (
     REDACTED_CREDENTIAL_WRITE_DETAIL, http_failure, is_redacted_credential_preview,
     redacted_credential_preview,
 )
 from hermes_cli.web_models import (
-    MessagingPlatformUpdate, TelegramOnboardingApply, TelegramOnboardingStart,
+    MessagingPlatformUpdate,
 )
 
 _log = logging.getLogger("hermes_cli.web_server")
@@ -42,7 +40,6 @@ router = APIRouter()
 _config_profile_scope = late("_config_profile_scope", "hermes_cli.web_server_profiles")
 _profile_scope = late("_profile_scope", "hermes_cli.web_server_profiles")
 _resolve_profile_dir = late("_resolve_profile_dir", "hermes_cli.web_server_profiles")
-_telegram_onboarding_request_sync = late("_telegram_onboarding_request_sync", "hermes_cli.web_server_messaging")
 _write_platform_enabled = late("_write_platform_enabled", "hermes_cli.web_server_messaging")
 load_env = late("load_env", "hermes_cli.config")
 get_secret_source_values = late("get_secret_source_values", "hermes_cli.env_loader")
@@ -155,27 +152,9 @@ def _platform_enablement(
     return enabled, configured, home_channel
 
 
-def _relay_disabled_platform_ids(scoped: bool) -> frozenset[str]:
-    """Platforms the GATEWAY_RELAY_URL relay-exclusive rule switches off at gateway load
-    (#141175), read from the same load_gateway_config() the unscoped enablement arm uses, so the
-    page can say "Team Gateway" instead of a bare "Disabled" that reverts every restart.
-    Unscoped arm only: profile-scoped status is judged per profile (``_platform_enablement``)."""
-    if scoped:
-        return frozenset()
-    try:
-        from gateway.config import load_gateway_config
-
-        platforms = load_gateway_config().platforms
-        return frozenset(p.value for p, cfg in platforms.items() if cfg.disabled_by_relay)
-    except Exception:  # health: allow BLE001 -- advisory label; an unreadable config keeps the plain state
-        _log.debug("relay-disabled platform lookup failed", exc_info=True)
-        return frozenset()
-
-
 def _messaging_platform_payload(
     entry: dict[str, Any], env_on_disk: dict[str, str], runtime: dict | None,
     scoped: bool = False, profile_home: Optional[Path] = None, source_keys: Collection[str] = (),
-    relay_disabled: frozenset[str] = frozenset(), relay_view: tuple[frozenset[str], bool] = (frozenset(), False),
 ) -> dict[str, Any]:
     platform_id = entry["id"]
     rt = runtime if isinstance(runtime, dict) else {}
@@ -249,11 +228,6 @@ def _messaging_platform_payload(
         "gateway_running": gateway_running, "state": state, "error_code": error_code,
         "error_message": error_message, "updated_at": runtime_platform.get("updated_at"),
         "home_channel": home_channel, "env_vars": env_vars,
-        "disabled_by_relay": not enabled and platform_id in relay_disabled,
-        # Team Gateway's shared bot carries this platform: setup is linking an account to it, and a
-        # direct bot is switched off at every start when ``relay_exclusive`` (#141546).
-        "relay_fronted": platform_id in relay_view[0],
-        "relay_exclusive": platform_id in relay_view[0] and relay_view[1],
         # Multiplex secondary served on the default's shared listener: the vendor callback URL.
         "ingress_url": runtime_platform.get("ingress_url") if gateway_running else None,
     }
@@ -278,21 +252,9 @@ def _platform_payloads(scoped_dir: Optional[Path], entries) -> list[dict[str, An
     scoped = scoped_dir is not None
     source_values = get_secret_source_values(scoped_dir) if scoped else {}
     source_keys = frozenset(key for key, value in source_values.items() if str(value).strip())
-    relay_disabled = _relay_disabled_platform_ids(scoped)
-    relay_view = _relay_channel_view(own_home)
     return [_messaging_platform_payload(entry, env_on_disk, runtime, scoped=scoped, profile_home=scoped_dir,
-                                        source_keys=source_keys, relay_disabled=relay_disabled,
-                                        relay_view=relay_view)
+                                        source_keys=source_keys)
             for entry in entries]
-
-
-def _relay_channel_view(home: Path) -> tuple[frozenset[str], bool]:
-    """The relay serves only the gateway's own (launch) profile; other profiles keep direct setup."""
-    if Path(home).resolve() != Path(get_process_hermes_home()).resolve():
-        return frozenset(), False
-    from gateway.relay.link import relay_channel_view
-
-    return relay_channel_view()
 
 
 @contextlib.contextmanager
@@ -310,160 +272,6 @@ def _onboarding_save_errors(log_msg: str, detail: str):
         raise HTTPException(status_code=500, detail=detail) from exc
 
 
-_TELEGRAM_SESSION_NOT_FOUND = "Telegram setup session was not found. Start a new setup."
-_TELEGRAM_INCOMPLETE_RESPONSE = "Telegram setup service returned an incomplete response."
-
-
-def _parse_expiry_ts(value: str) -> float:
-    try:
-        parsed = datetime.fromisoformat(value)
-        if parsed.tzinfo is None:
-            parsed = parsed.replace(tzinfo=UTC)
-        return parsed.timestamp()
-    except Exception:
-        return time.time() + 600
-
-
-def _prune_telegram_onboarding_pairings() -> None:
-    now = time.time()
-    for pairing_id in [pid for pid, record in _telegram_onboarding_pairings.items() if record.expires_at_ts <= now]:
-        _telegram_onboarding_pairings.pop(pairing_id, None)
-
-
-_TELEGRAM_USER_ID_RE = re.compile(r"\d+")
-
-
-def _normalize_telegram_user_id(value: Any) -> str | None:
-    normalized = str(value or "").strip()
-    return normalized if _TELEGRAM_USER_ID_RE.fullmatch(normalized) else None
-
-
-def _telegram_record_or_404(pairing_id: str):
-    """Call with ``_telegram_onboarding_lock`` held."""
-    _prune_telegram_onboarding_pairings()
-    record = _telegram_onboarding_pairings.get(pairing_id)
-    if not record:
-        raise HTTPException(status_code=404, detail=_TELEGRAM_SESSION_NOT_FOUND)
-    return record
-
-
-def _telegram_ready_payload(record) -> dict[str, Any]:
-    return {
-        "status": "ready", "bot_username": record.bot_username,
-        "owner_user_id": record.owner_user_id, "expires_at": record.expires_at,
-    }
-
-
-async def _telegram_onboarding_request(method: str, path: str, *, body=None, bearer_token=None) -> dict[str, Any]:
-    return await asyncio.to_thread(_telegram_onboarding_request_sync, method, path, body=body, bearer_token=bearer_token)
-
-
-@router.post("/api/messaging/telegram/onboarding/start")
-async def start_telegram_onboarding(body: TelegramOnboardingStart):
-    bot_name = (body.bot_name or "A2Assistant").strip() or "A2Assistant"
-    payload = await _telegram_onboarding_request("POST", "/v1/telegram/pairings", body={"bot_name": bot_name})
-
-    def field(key: str) -> str:
-        return str(payload.get(key) or "").strip()
-
-    pairing_id, poll_token, expires_at, deep_link = map(field, ("pairing_id", "poll_token", "expires_at", "deep_link"))
-    if not pairing_id or not poll_token or not expires_at or not deep_link:
-        raise HTTPException(status_code=502, detail=_TELEGRAM_INCOMPLETE_RESPONSE)
-
-    with _telegram_onboarding_lock:
-        _prune_telegram_onboarding_pairings()
-        _telegram_onboarding_pairings[pairing_id] = _TelegramOnboardingPairing(
-            poll_token=poll_token, expires_at=expires_at, expires_at_ts=_parse_expiry_ts(expires_at))
-
-    return {
-        "pairing_id": pairing_id, "suggested_username": field("suggested_username"), "deep_link": deep_link,
-        "qr_payload": str(payload.get("qr_payload") or deep_link).strip(), "expires_at": expires_at,
-    }
-
-
-@router.get("/api/messaging/telegram/onboarding/{pairing_id}")
-async def get_telegram_onboarding_status(pairing_id: str):
-    with _telegram_onboarding_lock:
-        record = _telegram_record_or_404(pairing_id)
-        if record.bot_token:
-            return _telegram_ready_payload(record)
-        poll_token = record.poll_token
-
-    payload = await _telegram_onboarding_request(
-        "GET", f"/v1/telegram/pairings/{urllib.parse.quote(pairing_id, safe='')}", bearer_token=poll_token)
-    status = str(payload.get("status") or "").strip()
-    if status == "waiting":
-        with _telegram_onboarding_lock:
-            current = _telegram_onboarding_pairings.get(pairing_id)
-            expires_at = current.expires_at if current else ""
-        return {"status": "waiting", "expires_at": expires_at}
-
-    if status == "ready":
-        bot_token = str(payload.get("token") or "").strip()
-        if not bot_token:
-            raise HTTPException(status_code=502, detail=_TELEGRAM_INCOMPLETE_RESPONSE)
-        with _telegram_onboarding_lock:
-            record = _telegram_onboarding_pairings.get(pairing_id)
-            if not record:
-                raise HTTPException(status_code=404, detail=_TELEGRAM_SESSION_NOT_FOUND)
-            record.bot_token = bot_token
-            record.bot_username = str(payload.get("bot_username") or "").strip() or None
-            record.owner_user_id = _normalize_telegram_user_id(payload.get("owner_user_id"))
-            return _telegram_ready_payload(record)
-
-    if status in {"expired", "claimed"}:
-        with _telegram_onboarding_lock:
-            _telegram_onboarding_pairings.pop(pairing_id, None)
-        raise HTTPException(status_code=410, detail=_telegram_onboarding_error_message(
-            status, "Telegram setup is no longer available. Start a new setup."))
-
-    raise HTTPException(status_code=502, detail="Telegram setup service returned an unknown status.")
-
-
-@router.post("/api/messaging/telegram/onboarding/{pairing_id}/apply")
-async def apply_telegram_onboarding(pairing_id: str, body: TelegramOnboardingApply, profile: Optional[str] = None):
-    normalized_ids = [_normalize_telegram_user_id(raw_id) for raw_id in body.allowed_user_ids]
-    if not all(normalized_ids):
-        raise HTTPException(status_code=400, detail="Allowed Telegram user IDs must be numeric.")
-    allowed_user_ids = list(dict.fromkeys(normalized_ids))
-    if not allowed_user_ids:
-        raise HTTPException(status_code=400, detail="Add at least one allowed Telegram user ID.")
-
-    with _telegram_onboarding_lock:
-        record = _telegram_record_or_404(pairing_id)
-        bot_token = record.bot_token
-        bot_username = record.bot_username
-        if not bot_token:
-            raise HTTPException(status_code=409, detail="Telegram setup is not ready yet.")
-
-    effective_profile = body.profile or profile
-
-    def _apply():
-        with _profile_scope(effective_profile):
-            save_env_value("TELEGRAM_BOT_TOKEN", bot_token)
-            save_env_value("TELEGRAM_ALLOWED_USERS", ",".join(allowed_user_ids))
-            _write_platform_enabled("telegram", True)
-
-    with _onboarding_save_errors("Telegram onboarding apply failed", "Failed to save Telegram setup."):
-        await asyncio.to_thread(_apply)
-
-    with _telegram_onboarding_lock:
-        _telegram_onboarding_pairings.pop(pairing_id, None)
-
-    # Best-effort restart: the QR flow pulls users into Telegram on another device, so a
-    # saved token waiting on a manual restart click reads as "Hermes is broken" from the
-    # chat side. The save stays authoritative; a failed restart is reported for the UI banner.
-    restart_result = _restart_gateway_after(effective_profile, what="Telegram onboarding", label="Telegram onboarding")
-    return {
-        "ok": True, "platform": "telegram", "bot_username": bot_username,
-        "needs_restart": not restart_result["restart_started"], **restart_result,
-    }
-
-
-@router.delete("/api/messaging/telegram/onboarding/{pairing_id}")
-async def cancel_telegram_onboarding(pairing_id: str):
-    with _telegram_onboarding_lock:
-        _telegram_onboarding_pairings.pop(pairing_id, None)
     return {"ok": True}
 
 

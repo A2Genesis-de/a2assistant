@@ -694,16 +694,7 @@ class CLICommandsMixin(CLICommandsSessionToolsMixin):
             return _cp(f"  {_t('handoff.config_load_failed', error=exc)}")
         pcfg = gw_config.platforms.get(platform)
         if not pcfg or not pcfg.enabled:
-            # Relay aliasing: a relay-fronted gateway has only a RELAY block yet /handoff discord
-            # is deliverable. UX pre-check only — the gateway watcher re-checks before dispatch.
-            relay_fronts = False
-            with suppress(Exception):
-                from gateway.relay import relay_platform_identities
-                relay_cfg = gw_config.platforms.get(Platform.RELAY)
-                if relay_cfg and relay_cfg.enabled:
-                    relay_fronts = platform_name in {p for p, _ in relay_platform_identities()}
-            if not relay_fronts:
-                return _cp(f"  {_t('handoff.platform_not_enabled', platform=platform_name)}")
+            return _cp(f"  {_t('handoff.platform_not_enabled', platform=platform_name)}")
         home = gw_config.get_home_channel(platform)
         if not home or not home.chat_id:
             return _cp(f"  {_t('handoff.no_home_channel', platform=platform_name)}",
@@ -2095,16 +2086,10 @@ class CLICommandsMixin(CLICommandsSessionToolsMixin):
 
     # ---- /debug, /update, /voice, /wake ---------------------------------------------------
     def _handle_debug_command(self, cmd_original: str = ""):
-        """Handle /debug [nous|local] — upload debug report + logs and print share URLs.
-        Default: public paste service; ``nous``: Nous-internal (staff-only); ``local``: render to
-        stdout, no upload. ``local`` wins if both are given (never touches the network)."""
+        """Handle /debug — print the redacted debug report and logs (nothing is uploaded)."""
         from hermes_cli.debug import run_debug_share
         from types import SimpleNamespace
-        words = {w.lower() for w in cmd_original.split()[1:]}
-        local = "local" in words
-        # Typing /debug is the upload consent (yes=True); input() would hang in prompt_toolkit anyway.
-        run_debug_share(SimpleNamespace(
-            lines=200, expire=7, local=local, nous="nous" in words and not local, yes=True))
+        run_debug_share(SimpleNamespace(lines=200))
 
     def _handle_update_command(self) -> bool:
         """Handle /update — exit the session and relaunch as ``hermes update``. Returns True when

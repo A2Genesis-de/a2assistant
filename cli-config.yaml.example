@@ -2066,25 +2066,10 @@ display:
 # Successfully exported local history is retained for 30 days; pending deltas
 # are retained until they can be exported.
 # This profile-owned choice is not overridden by managed-scope configuration.
-#
-# Nothing is uploaded unless you also set `send: true`. That is a separate
-# opt-in and requires `enabled`; it never turns collection on by itself.
-# When sending is on:
-#   * only packages whose entire collection period falls within one
-#     continuous recorded consent window are ever sent. Consent windows open
-#     when you enable sending and close when you disable it, so data
-#     collected before you opted in — or during any gap between opt-ins —
-#     stays on this machine;
-#   * each package carries the profile-scoped ID as-is. It is a random UUID
-#     with no hardware, account, or host-derived content, and deleting the
-#     shared-metrics directory resets it.
-# See docs/observability/relay-shared-metrics.md (Appendix A) for the full
-# consent, identity, retention, and deletion decisions.
+# Nothing is ever uploaded.
 telemetry:
   shared_metrics:
     enabled: false
-    send: false
-    # endpoint: https://telemetry.nousresearch.com/v1/telemetry
 
 
 # =============================================================================
@@ -2133,26 +2118,12 @@ updates:
 # =============================================================================
 # Web Dashboard
 # =============================================================================
-# OAuth gate configuration for `hermes dashboard --host <non-loopback>`.
-# The bundled Nous Portal plugin reads these on startup; settings here are
-# the canonical surface. Each can be overridden by an environment variable:
+# Settings for `hermes dashboard --host <non-loopback>` deployments. Each can
+# be overridden by an environment variable (env wins when non-empty):
 #
-#   dashboard.oauth.client_id   <-  HERMES_DASHBOARD_OAUTH_CLIENT_ID
-#   dashboard.oauth.portal_url  <-  HERMES_DASHBOARD_PORTAL_URL
 #   dashboard.public_url        <-  HERMES_DASHBOARD_PUBLIC_URL
 #
-# Env wins when set to a non-empty value. This is what Fly.io's platform-
-# secret injection uses to push per-deploy client_ids without needing to
-# bake a config.yaml into the image. Empty env values are treated as unset
-# so a provisioned-but-not-populated secret can't shadow a valid entry here.
-#
-# Local dev / on-prem deploys should typically set these via config.yaml
-# (the ~/.hermes/.env file is reserved for API keys and secrets).
-#
 # dashboard:
-#   oauth:
-#     client_id: ""    # agent:{instance_id}; Portal provisions this at deploy
-#     portal_url: ""   # blank → default https://portal.nousresearch.com
 #
 #   # Force the absolute base URL the OAuth callback (and any other public
 #   # URL the dashboard hands to external systems) is built from. Set this
@@ -2184,8 +2155,8 @@ updates:
 #
 # -----------------------------------------------------------------------------
 # Self-hosted OIDC dashboard auth (generic OpenID Connect — Authentik,
-# Keycloak, Zitadel, Authelia, Auth0, Okta, Google, …). Use this INSTEAD of the
-# nous block above when gating the dashboard with your own identity provider.
+# Keycloak, Zitadel, Authelia, Auth0, Okta, Google, …) to gate the dashboard
+# with your own identity provider.
 # Each setting can be overridden by an environment variable:
 #
 #   dashboard.oauth.self_hosted.issuer         <-  HERMES_DASHBOARD_OIDC_ISSUER

@@ -82,7 +82,6 @@ async def test_ingress_drops_the_bot_reply_and_still_admits_the_human(monkeypatc
     from gateway.run import GatewayRunner
 
     runner = object.__new__(GatewayRunner)
-    runner._scale_to_zero_note_real_inbound = lambda: None
 
     async def _passthrough(event, source):
         return event

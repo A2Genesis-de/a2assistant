@@ -22,7 +22,6 @@ import {
   type MessagingPlatformUpdate,
   type PairingUser,
   revokePairing,
-  type TelegramOnboardingApplyResponse,
   updateMessagingPlatform
 } from '@/hermes'
 import { type Translations, useI18n } from '@/i18n'
@@ -31,11 +30,10 @@ import { AlertTriangle, ExternalLink, RefreshCw, Save, Trash2 } from '@/lib/icon
 import { platformStatusTone } from '@/lib/platform-status'
 import { normalize } from '@/lib/text'
 import { cn } from '@/lib/utils'
-import { $activeConnectionId } from '@/store/connections'
 import { $changeEventsAvailable, $pairingChangeTick, $platformsChangeTick } from '@/store/live-sync'
 import { notify, notifyError } from '@/store/notifications'
 import { $settingsRequestProfile } from '@/store/settings-scope'
-import { $gatewayRestarting, runGatewayRestart, watchGatewayRestartOutcome } from '@/store/system-actions'
+import { $gatewayRestarting, runGatewayRestart } from '@/store/system-actions'
 
 import { useRefreshHotkey } from '../hooks/use-refresh-hotkey'
 import { useRouteEnumParam } from '../hooks/use-route-enum-param'
@@ -49,8 +47,6 @@ import type { SetStatusbarItemGroup } from '../shell/statusbar-controls'
 
 import { AllowlistField } from './allowlist-field'
 import { PlatformAvatar } from './platform-icon'
-import { RelayLinkSetup } from './relay-link'
-import { TelegramQrSetup } from './telegram-qr-setup'
 
 interface MessagingViewProps extends React.ComponentProps<'section'> {
   setStatusbarItemGroup?: SetStatusbarItemGroup
@@ -441,54 +437,6 @@ export function MessagingView({ setStatusbarItemGroup: _setStatusbarItemGroup, .
     }
   }
 
-  // QR onboarding wrote the token + allowlist and asked the backend to restart
-  // the gateway. restart_started only means the child spawned; watch its exit
-  // so a failed restart lands in the banner instead of a silent "stopped".
-  async function handleTelegramApplied(result: TelegramOnboardingApplyResponse) {
-    await refreshPlatforms(true)
-
-    if (result.restart_started) {
-      const connectedBot = result.bot_username ? `${m.states.connected}: @${result.bot_username}` : null
-
-      notify({
-        kind: 'success',
-        title: m.setupSaved('Telegram'),
-        message: [connectedBot, m.telegramQr.savedRestarting].filter(Boolean).join(' · ')
-      })
-      setRestartNeeded(false)
-      const ok = await watchGatewayRestartOutcome()
-
-      if (!ok) {
-        setRestartNeeded(true)
-        notify({
-          kind: 'error',
-          title: m.restartFailedManual,
-          message: m.restartFailedManualDetail,
-          action: { label: m.restartAgain, onClick: () => void runGatewayRestart() },
-          secondaryAction: {
-            label: m.openLogs,
-            onClick: () => void window.hermesDesktop?.revealLogs?.().catch(() => undefined)
-          }
-        })
-      }
-
-      void refreshPlatforms(true)
-
-      return
-    }
-
-    if (result.needs_restart) {
-      // Backend could not spawn the restart (or is too old to try): fall back
-      // to the app's own restart action, same as the manual-save path.
-      await restartGatewayNow()
-
-      if (result.restart_error) {
-        notifyError(new Error(result.restart_error), m.telegramQr.savedRestartFailed(`: ${result.restart_error}`))
-        setRestartNeeded(true)
-      }
-    }
-  }
-
   // Approve/revoke paint from a snapshot immediately, then let the
   // authoritative refresh have the last word. A failed write restores the
   // snapshot so the row never silently disappears on an error.
@@ -630,7 +578,6 @@ export function MessagingView({ setStatusbarItemGroup: _setStatusbarItemGroup, .
                       }))
                     }
                     onRevoke={setPendingRevoke}
-                    onTelegramApplied={result => void handleTelegramApplied(result)}
                     pending={pendingByPlatform[selected.id] ?? []}
                     platform={selected}
                     saving={saving}
@@ -712,7 +659,6 @@ function PlatformDetail({
   onClear,
   onEdit,
   onRevoke,
-  onTelegramApplied,
   pending,
   platform,
   saving,
@@ -725,7 +671,6 @@ function PlatformDetail({
   onClear: (key: string) => void
   onEdit: (key: string, value: string) => void
   onRevoke: (user: PairingUser) => void
-  onTelegramApplied: (result: TelegramOnboardingApplyResponse) => void
   pending: PairingUser[]
   platform: MessagingPlatformInfo
   saving: string | null
@@ -733,8 +678,6 @@ function PlatformDetail({
 }) {
   const { t } = useI18n()
   const m = t.messaging
-  const connectionId = useStore($activeConnectionId)
-  const viaRelay = Boolean(platform.relay_exclusive)
 
   return (
     <>
@@ -743,13 +686,9 @@ function PlatformDetail({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="min-w-0 truncate text-[0.9375rem] font-semibold tracking-tight">{platform.name}</h3>
-            {viaRelay ? (
-              <SetupPill active>{m.relayLink.title}</SetupPill>
-            ) : (
-              <StatePill tone={platformStatusTone(platform)}>{stateLabel(platform.state, m)}</StatePill>
-            )}
+            <StatePill tone={platformStatusTone(platform)}>{stateLabel(platform.state, m)}</StatePill>
             {/* Resting states earn no pill — only actionable ones. */}
-            {!platform.configured && !viaRelay && <SetupPill active={false}>{m.needsSetup}</SetupPill>}
+            {!platform.configured && <SetupPill active={false}>{m.needsSetup}</SetupPill>}
             {/* The state pill already reads "gateway stopped" when that is the
                 platform's whole story; only add the hint when it is not. */}
             {!platform.gateway_running && platform.state !== 'gateway_stopped' && (
@@ -825,36 +764,14 @@ function PlatformDetail({
         </section>
       )}
 
-      {platform.relay_fronted && (
-        <section>
-          <RelayLinkSetup
-            // A new backend or profile is a new flow: no code, poll or account list carries over.
-            key={`${connectionId ?? 'local'}:${scopeProfile ?? ''}:${platform.id}`}
-            platform={platform}
-            scopeProfile={scopeProfile}
-          />
-        </section>
-      )}
-
-      {/* Not carried by the shared bot yet switched off at every start: say so instead of a toggle
-          that reverts (#141175). */}
-      {platform.disabled_by_relay && !platform.relay_exclusive && (
-        <p className="text-xs text-muted-foreground">{m.relayLink.managedNote(platform.name)}</p>
-      )}
-
-      {/* Under an exclusive relay a direct bot is switched off at every start: the shared-bot link
-          above is the whole setup, so the credential sections would only lead nowhere (#141546). */}
-      {!platform.relay_exclusive && (
-        <DirectSetupSections
-          edits={edits}
-          onClear={onClear}
-          onEdit={onEdit}
-          onTelegramApplied={onTelegramApplied}
-          platform={platform}
-          saving={saving}
-          scopeProfile={scopeProfile}
-        />
-      )}
+      <DirectSetupSections
+        edits={edits}
+        onClear={onClear}
+        onEdit={onEdit}
+        platform={platform}
+        saving={saving}
+        scopeProfile={scopeProfile}
+      />
     </>
   )
 }
@@ -863,7 +780,6 @@ function DirectSetupSections({
   edits,
   onClear,
   onEdit,
-  onTelegramApplied,
   platform,
   saving,
   scopeProfile
@@ -871,7 +787,6 @@ function DirectSetupSections({
   edits: Record<string, string>
   onClear: (key: string) => void
   onEdit: (key: string, value: string) => void
-  onTelegramApplied: (result: TelegramOnboardingApplyResponse) => void
   platform: MessagingPlatformInfo
   saving: string | null
   scopeProfile: string | undefined
@@ -887,15 +802,6 @@ function DirectSetupSections({
 
   return (
     <>
-      {platform.id === 'telegram' && (
-        <section>
-          <SectionTitle>{m.telegramQr.quickSetup}</SectionTitle>
-          <div className="mt-3">
-            <TelegramQrSetup onApplied={onTelegramApplied} platform={platform} scopeProfile={scopeProfile} />
-          </div>
-        </section>
-      )}
-
       <section>
         <SectionTitle>{m.getCredentials}</SectionTitle>
         <p className="mt-1 text-[length:var(--conversation-caption-font-size)] leading-(--conversation-caption-line-height) text-(--ui-text-tertiary)">
@@ -1008,22 +914,17 @@ function PlatformActionBar({
   const m = t.messaging
   const isSavingEnv = saving === `env:${platform.id}`
 
-  // Under an exclusive relay the direct adapter never runs; the link panel is the whole setup.
-  if (platform.relay_exclusive) {
-    return null
-  }
-
   return (
     <>
       <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
         <Switch
           aria-label={platform.enabled ? m.disableAria(platform.name) : m.enableAria(platform.name)}
           checked={platform.enabled}
-          disabled={platform.disabled_by_relay || saving === `enabled:${platform.id}`}
+          disabled={saving === `enabled:${platform.id}`}
           onCheckedChange={onToggle}
           size="xs"
         />
-        {platform.disabled_by_relay ? m.relayLink.managed : platform.enabled ? m.enabled : m.disabled}
+        {platform.enabled ? m.enabled : m.disabled}
       </label>
 
       <div className="ml-auto flex items-center gap-2">

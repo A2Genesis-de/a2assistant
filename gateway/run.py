@@ -28,7 +28,7 @@ from collections import OrderedDict
 from contextvars import Context, copy_context
 from pathlib import Path
 from datetime import datetime
-from typing import Callable, Dict, Optional, Any, List, Tuple, cast
+from typing import Callable, Dict, Optional, Any, List, Tuple
 
 from agent.async_utils import safe_schedule_threadsafe
 from agent.i18n import t
@@ -764,38 +764,14 @@ def _approval_send_outcome(future, timeout: float) -> str:
         return "failed"
     if getattr(result, "success", False):
         return "sent"
-    # P5(b): a connector DECLINE is not a lane failure. The connector authorized the destination and refused it;
-    # re-sending the same content as plain text into that same chat is the exfiltration the egress guard exists
-    # to stop. `failed` is the cue to fall back, so a decline needs its own verdict — callers must surface it 
-    # and send nothing further.
-    #
-    # CLASSIFY THE STRUCTURED RESPONSE, NOT THE ERROR STRING. The adapter
-    # preserves the connector's own dict in `raw_response`; rebuilding a dict
-    # from `error` alone loses two things review demonstrated:
-    #   * a decline carrying `code: egress_declined` and NO text renders as
-    #     "relay egress declined" — no marker colon — so the string check
-    #     missed it and the fallback fired into the refused chat;
-    #   * `ambiguous: True` (lost ack, mid-write drop) was flattened into a
-    #     DEFINITE failure, which re-sends a card that may well have posted.
-    # I fixed the text-marker path and tested only the text-marker path.
-    from gateway.relay.egress import declined_send
+    from gateway.send_decline import declined_send
 
     _raw = getattr(result, "raw_response", None)
     if isinstance(_raw, dict) and _raw.get("ambiguous"):
-        # The frame may have been applied. Same physics as a scheduling
-        # timeout: possibly-delivered, so never re-send. Checked BEFORE the
-        # decline classification because an ambiguous result is a transport
-        # outcome, not an authorization one, and this lane has three verdicts
-        # rather than the boolean the shared helper answers.
         logger.warning("Prompt send AMBIGUOUS (lost ack): %s", _raw.get("error"))
         return "ambiguous"
     if declined_send(result):
-        # Both shapes, one classifier: a structured body, or the uniform
-        # decline sentence from an older connector.
-        logger.warning(
-            "Prompt send DECLINED by connector egress guard: %s",
-            getattr(result, "error", None),
-        )
+        logger.warning("Prompt send DECLINED: %s", getattr(result, "error", None))
         return "declined"
     logger.warning("Prompt send failed: %s", getattr(result, "error", None) or "unknown error")
     return "failed"
@@ -962,15 +938,6 @@ def _warm_turn_machinery_sync() -> int:
     except Exception:
         logger.debug("model-context warm-up failed (non-fatal)", exc_info=True)
     return len(tool_defs)
-
-
-def _as_thread_info(info: Any) -> Optional[tuple[str, str]]:
-    """*info* as a (thread_id, initial_name) pair, or None if it isn't one.
-
-    The pair crosses the relay connector boundary, so its shape is the connector's word, not ours."""
-    if isinstance(info, tuple) and len(info) == 2 and all(isinstance(x, str) for x in info):
-        return cast(tuple[str, str], info)
-    return None
 
 
 def _float_env(name: str, default: float) -> float:
@@ -4166,22 +4133,6 @@ def _housekeeping_channel_directory(adapters, loop) -> None:
             fut.result(timeout=30)
 
 
-def _housekeeping_paste_sweep() -> None:
-    from hermes_cli.debug import _sweep_expired_pastes
-    deleted, remaining = _sweep_expired_pastes()
-    if deleted:
-        logger.info("Paste sweep: deleted %d expired paste(s), %d pending", deleted, remaining)
-
-
-def _housekeeping_misfire_catch_up(cron_provider, adapters, loop) -> None:
-    """External cron providers only: fire jobs whose time passed with no external fire delivered (dead
-    loopback hop). No-op for the built-in ticker; enforces misfire_grace_minutes; CAS claim de-dupes."""
-    from cron.scheduler_provider import fire_overdue_jobs
-    caught_up = fire_overdue_jobs(cron_provider, adapters=adapters, loop=loop)
-    if caught_up:
-        logger.info("Misfire catch-up: fired %d overdue job(s)", caught_up)
-
-
 def _housekeeping_curator() -> None:
     """maybe_run_curator() is gated by config.interval_hours (7 days default); this is the poll."""
     from agent.curator import maybe_run_curator
@@ -4303,11 +4254,10 @@ def _drain_restart_safe_cron_deliveries(adapters, loop, runner=None) -> None:
 
 
 def _start_gateway_housekeeping(
-    stop_event: threading.Event, adapters=None, loop=None, interval: int = 60, cron_provider=None, runner=None,
+    stop_event: threading.Event, adapters=None, loop=None, interval: int = 60, runner=None,
     cron_thread=None,
 ):
-    """Background thread for gateway-only periodic chores (NOT cron). Separate from the cron trigger
-    so chores run under any ``CronScheduler`` provider (external scale-to-zero has no 60s loop).
+    """Background thread for gateway-only periodic chores (NOT cron), separate from the cron ticker.
     Cadences are ticks of ``interval``; inner gates own the real cadence."""
     from gateway.run_delivery_queue_watch import DRAIN_LABEL, DeliveryQueueWatch, wait_for_next_tick
     from gateway.run_profile_reconcile import _mcp_config_reconciler, profile_scoped_chore
@@ -4320,16 +4270,13 @@ def _start_gateway_housekeeping(
         (1, "Runtime heartbeat", _write_runtime_status_quiet)]
     if adapters is not None or runner is not None:
         # Restart-safe cron workers run outside the gateway cgroup and queue their final send for
-        # whichever gateway is live; drained here (not the scheduler tick) so external providers get it too.
+        # whichever gateway is live; drained here, not in the scheduler tick.
         chores.append((1, DRAIN_LABEL, lambda: _drain_restart_safe_cron_deliveries(adapters, loop, runner)))
     chores += [
         (5, "Channel directory refresh", lambda: adapters and _housekeeping_channel_directory(adapters, loop)),
-        (60, "Media cache cleanup", housekeeping_media_caches),
-        (60, "Paste sweep", _housekeeping_paste_sweep)]
+        (60, "Media cache cleanup", housekeeping_media_caches)]
     # Low disk + auto-prune undecided: ask on the home channel (two syscalls; snoozed per post).
     chores.append((1, "Auto-prune low-disk prompt", lambda: maybe_post_auto_prune_prompt(runner, loop)))
-    if cron_provider is not None:
-        chores.append((5, "Misfire catch-up sweep", lambda: _housekeeping_misfire_catch_up(cron_provider, adapters, loop)))
     if cron_thread is not None:
         # The ticker's own guards keep its loop alive; this is the outer layer for a thread that has
         # already ended (#111010). Runs every tick so the outage is bounded by one housekeeping interval.
@@ -4371,21 +4318,9 @@ def _start_gateway_housekeeping(
 
 
 def _start_cron_ticker(stop_event: threading.Event, adapters=None, loop=None, interval: int = 60):
-    """DEPRECATED shim — runs ONLY the built-in in-process cron tick loop; the trigger now lives behind
-    the ``CronScheduler`` provider and housekeeping in ``_start_gateway_housekeeping``."""
+    """Run the in-process cron tick loop until ``stop_event`` is set."""
     from cron.scheduler_provider import InProcessCronScheduler
     InProcessCronScheduler().start(stop_event, adapters=adapters, loop=loop, interval=interval)
-
-
-def _stop_cron_provider(provider) -> None:
-    """Stop a cron provider without letting it choose the gateway exit code."""
-    try:
-        provider.stop()
-    except SystemExit as exc:
-        logger.warning(
-            "Cron provider stop() attempted to exit the gateway with code %s; ignoring", exc.code)
-    except Exception as exc:
-        logger.debug("Cron provider stop() error: %s", exc)
 
 
 # Cron thread blocks on future.result(timeout=60) (cron/scheduler.py::_deliver_result) + margin.

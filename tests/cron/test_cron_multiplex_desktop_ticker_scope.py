@@ -131,8 +131,6 @@ def test_desktop_ticker_gates_on_profile_gateway_running(tmp_path, monkeypatch, 
 
     from cron import scheduler_provider as sp
 
-    monkeypatch.setattr(web_server, "resolve_cron_scheduler", lambda: _Provider(), raising=False)
-    monkeypatch.setattr(sp, "resolve_cron_scheduler", lambda: _Provider())
     monkeypatch.setattr(sp, "InProcessCronScheduler", _Provider)
     monkeypatch.setattr("hermes_logging.enable_profile_log_routing", lambda homes: None)
 
@@ -253,7 +251,6 @@ def test_dashboard_run_now_isolates_a_sibling_profile_fire_like_the_ticker(tmp_p
     from hermes_cli import web_server_cron
     from agent import secret_scope
     from cron.jobs import create_job
-    from cron.scheduler_provider import InProcessCronScheduler
     from hermes_cli import profiles
     from hermes_constants import reset_hermes_home_override, set_hermes_home_override
 
@@ -273,7 +270,6 @@ def test_dashboard_run_now_isolates_a_sibling_profile_fire_like_the_ticker(tmp_p
     monkeypatch.setattr(profiles, "_get_default_hermes_home", lambda: launch)
     monkeypatch.setattr(profiles, "_get_profiles_root", lambda: launch / "profiles")
     monkeypatch.setattr(scheduler, "_hermes_home", None)
-    monkeypatch.setattr("cron.scheduler_provider.resolve_cron_scheduler", lambda: InProcessCronScheduler())
     secret_scope.set_multiplex_active(False)  # the desktop backend never sets the process flag
 
     def _job_for(home, name):

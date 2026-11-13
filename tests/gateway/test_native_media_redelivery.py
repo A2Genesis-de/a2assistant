@@ -4,7 +4,9 @@ import asyncio
 from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+import tempfile
 import threading
+import urllib.request
 
 import pytest
 
@@ -29,7 +31,6 @@ class _Media(BaseHTTPRequestHandler):
 async def test_redelivered_media_message_returns_its_receipt_and_changed_bytes_conflict(tmp_path, monkeypatch):
     from gateway.config import GatewayConfig, Platform, PlatformConfig
     from gateway.platforms.event import MessageEvent, MessageType
-    from gateway.relay.media import RelayMediaClient
     from gateway.run import GatewayRunner
     from gateway.session_authority import SessionAuthority, initialize_session_authority
     from gateway.session_ingress_context import native_callback
@@ -43,7 +44,13 @@ async def test_redelivered_media_message_returns_its_receipt_and_changed_bytes_c
     server = ThreadingHTTPServer(('127.0.0.1', 0), _Media)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     url = f'http://127.0.0.1:{server.server_port}/photo.png'
-    client = RelayMediaClient(f'http://127.0.0.1:{server.server_port}', None, None)
+
+    def download():
+        fd, staged = tempfile.mkstemp(dir=tmp_path, suffix='.png')
+        with urllib.request.urlopen(url, timeout=10) as resp, open(fd, 'wb') as out:
+            out.write(resp.read())
+        return staged
+
     runner = GatewayRunner(GatewayConfig())
     adapter = TelegramAdapter(PlatformConfig(enabled=True, token='fixture-token', typing_indicator=False))
     runner.adapters = {Platform.TELEGRAM: adapter}
@@ -52,9 +59,7 @@ async def test_redelivered_media_message_returns_its_receipt_and_changed_bytes_c
     source = adapter.build_source(chat_id='42', chat_type='dm', user_id='42')
 
     async def deliver():
-        # Every delivery re-downloads the attachment, as the Relay adapter does before admission.
-        staged = await client.download(url)
-        # The Relay adapter pins the timestamp: the connector sends no provider time.
+        staged = await asyncio.to_thread(download)
         event = MessageEvent(text='look', source=source, message_id='provider-1', message_type=MessageType.PHOTO,
                              media_urls=[staged], media_types=['image/png'],
                              timestamp=datetime.fromtimestamp(0, UTC))

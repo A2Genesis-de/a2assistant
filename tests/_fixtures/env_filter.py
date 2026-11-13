@@ -199,14 +199,6 @@ _HERMES_BEHAVIORAL_VARS = frozenset({
     # shell override leaked "myhost" into the full suite and flipped 20
     # otherwise-unrelated config tests away from the default "hermes" host.
     "HERMES_HONCHO_HOST",
-    # Dashboard OAuth auth gate (PR #30156). When set, the bundled
-    # dashboard-auth `nous` plugin auto-registers itself on plugin discovery,
-    # which is triggered by any `/api/status` call. That leaks a provider
-    # into the dashboard_auth registry across tests in the same worker and
-    # makes assertions like `auth_providers == []` flaky. CI never sets
-    # these, so production tests must not see them either.
-    "HERMES_DASHBOARD_OAUTH_CLIENT_ID",
-    "HERMES_DASHBOARD_PORTAL_URL",
     "TERMINAL_CWD",
     "TERMINAL_ENV",
     "TERMINAL_CONTAINER_CPU",

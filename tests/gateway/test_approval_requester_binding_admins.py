@@ -8,9 +8,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from gateway.config import GatewayConfig, Platform, PlatformConfig
-from gateway.platforms.event import MessageEvent, MessageType
-from gateway.session import SessionSource
+from gateway.config import PlatformConfig
 from tests.gateway.test_approval_requester_binding import pending_from, write_approvers
 
 

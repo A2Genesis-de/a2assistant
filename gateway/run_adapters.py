@@ -382,13 +382,9 @@ class GatewayAdapterLifecycleMixin(GatewaySecondaryReconnectMixin):
             "Fatal %s adapter error (%s): %s", adapter.platform.value,
             adapter.fatal_error_code or "unknown", adapter.fatal_error_message or "unknown error",
         )
-        # relay_disabled (credential revoked by opt-out) renders "disabled", not red fatal/retrying.
         self._update_platform_runtime_status(
             adapter.platform.value,
-            platform_state=(
-                "disabled" if adapter.fatal_error_code == "relay_disabled"
-                else "retrying" if adapter.fatal_error_retryable else "fatal"
-            ),
+            platform_state="retrying" if adapter.fatal_error_retryable else "fatal",
             error_code=adapter.fatal_error_code,
             error_message=adapter.fatal_error_message,
         )
@@ -484,7 +480,7 @@ class GatewayAdapterLifecycleMixin(GatewaySecondaryReconnectMixin):
         _started = time.monotonic()
         # No create_task kwargs (test doubles mock a narrow signature); Context().run isolates instead.
         task = Context().run(lambda: asyncio.create_task(coro_factory()))
-        # PERMANENT watcher: the scale-to-zero idle check ignores it (else busy forever).
+        # PERMANENT watcher: the background-work check ignores it (else busy forever).
         task._hermes_supervised_watcher = True  # type: ignore[attr-defined]
         self._retain_background_task(task)
         if on_spawn is not None:
@@ -776,16 +772,12 @@ class GatewayAdapterLifecycleMixin(GatewaySecondaryReconnectMixin):
     def _bump_reconnect_backoff(
         self, platform, info: dict, attempt: int, error_code, error_message: str
     ) -> int:
-        """Mark the platform retrying and record the failed attempt; returns the backoff applied.
-
-        ``retry_now`` still set here was raised DURING this attempt (the pass clears it when it starts):
-        what the attempt lacked arrived after it began (relay credentials), so the retry stays immediate.
-        """
+        """Mark the platform retrying and record the failed attempt; returns the backoff applied."""
         from gateway.run import _reconnect_backoff
         self._update_platform_runtime_status(
             platform.value, platform_state="retrying", error_code=error_code, error_message=error_message,
         )
-        backoff = 0 if info.pop("retry_now", False) else _reconnect_backoff(attempt)
+        backoff = _reconnect_backoff(attempt)
         info["attempts"] = attempt
         info["next_retry"] = time.monotonic() + backoff
         return backoff
@@ -817,7 +809,6 @@ class GatewayAdapterLifecycleMixin(GatewaySecondaryReconnectMixin):
             return  # not time yet
         platform_config = info["config"]
         attempt = info["attempts"] + 1
-        info.pop("retry_now", None)  # this attempt already sees whatever the request was for
         # Empty-token primary configs can never reconnect; drop them so multiplex setups
         # where a secondary profile owns the bot do not spin forever.
         # See #64674.
@@ -1207,14 +1198,9 @@ class GatewayAdapterLifecycleMixin(GatewaySecondaryReconnectMixin):
         return True
 
     def _note_unserved_secondary_platform(self, profile_name: str, platform: Platform) -> None:
-        """Report unpaired WhatsApp or secondary-only Relay. Log the reason and remedy and stamp a
-        ``<profile>:<platform>`` status entry so ``hermes gateway status --profile X`` and the
-        dashboard show *why* the channel is dead instead of nothing at all.
-
-        A shared-ingress platform the default profile runs is not unserved: the secondary is reached
-        through the default's adapter, so it gets no status entry. An error entry there would read as
-        a broken platform to every health reader, though nothing is wrong and the owner has nothing to
-        fix (a hosted instance stamps ``GATEWAY_RELAY_URL`` into every profile's env)."""
+        """Report an unpaired WhatsApp once: log the remedy and stamp a ``<profile>:<platform>``
+        status entry so ``hermes gateway status --profile X`` and the dashboard show *why* the
+        channel is dead instead of nothing at all."""
         noted = getattr(self, "_unserved_secondary_platforms", None)
         if noted is None:
             noted = self._unserved_secondary_platforms = set()
@@ -1235,29 +1221,9 @@ class GatewayAdapterLifecycleMixin(GatewaySecondaryReconnectMixin):
             profile_name, pv, pv, pv, profile_name,
         )
         self._update_platform_runtime_status(
-            f"{profile_name}:{pv}", platform_state="disabled", error_code="multiplex_shared_ingress",
-            error_message="not served under multiplex (shared ingress owned by default)",
+            f"{profile_name}:{platform.value}", platform_state="disabled",
+            error_code="whatsapp_unpaired", error_message=message,
         )
-
-    def _default_owns_platform(self, platform: Platform) -> bool:
-        """The default profile runs ``platform`` (live, or queued for reconnect with its own status)."""
-        return platform in self.adapters or platform in (getattr(self, "_failed_platforms", None) or {})
-
-    def _unserved_shared_ingress_warnings(self) -> list:
-        """Loud ``not being served`` lines for shared-ingress platforms secondaries enabled while
-        NO profile (default included) actually runs them; empty when the default serves the platform."""
-        noted = getattr(self, "_unserved_secondary_platforms", None) or ()
-        lines = []
-        for platform in sorted({p for _n, p in noted}, key=lambda p: p.value):
-            if self._default_owns_platform(platform):
-                continue  # the default owns it: secondaries ARE served through the shared adapter
-            profiles = sorted(n for n, p in noted if p is platform)
-            lines.append(
-                f"{platform.value} is enabled in profile(s) {', '.join(profiles)} but not on the default "
-                f"profile — the platform is not being served. Under multiplex {platform.value} is shared "
-                "ingress: enable and configure it on the default profile, or disable it in those profiles."
-            )
-        return lines
 
     async def _start_one_profile_adapters(
         self, profile_name: str, profile_home: Path, claimed: dict[tuple, str]
@@ -1293,10 +1259,6 @@ class GatewayAdapterLifecycleMixin(GatewaySecondaryReconnectMixin):
                     "[MULTIPLEX] Profile '%s': skipping %s - no bot credential "
                     "in this profile's secrets", profile_name, platform.value,
                 )
-                continue
-            # Relay still uses process-level shared ingress.
-            if multiplex and platform is Platform.RELAY:
-                self._note_unserved_secondary_platform(profile_name, platform)
                 continue
             # api_server / webhook: the default's listener already mirrors them at /p/<profile>/; a second
             # instance here would fight the default for the port (#100397).

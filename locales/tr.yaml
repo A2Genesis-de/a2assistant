@@ -161,13 +161,7 @@ gateway:
     codex_compacted: "🗜️ Codex app-server thread'i sıkıştırıldı (thread/compact). Transkript aynası tasarım gereği değişmedi — sıkıştırılmış bağlamı artık app-server taşıyor."
     codex_incomplete: "⚠️ Codex app-server sıkıştırması tamamlanmadı — thread değişmedi. App-server günlüklerini kontrol edin, /compress komutunu yeniden deneyin veya temiz bir oturum için /reset kullanın."
   debug:
-    upload_failed: "✗ Hata ayıklama raporu yüklenemedi: {error}"
-    header: "**Hata ayıklama raporu yüklendi:**"
-    auto_delete: "⏱ Paste'ler 6 saat içinde otomatik olarak silinecek."
-    full_logs_hint: "Tam günlük yüklemeleri için CLI'dan `a2assistant debug share` kullanın."
-    share_hint: "Destek için bu bağlantıları A2Assistant ekibiyle paylaşın."
-    report_label: "Rapor"
-    local_refused: "`/debug local` raporu A2Assistant'ın çalıştığı makinede tutar, bu yüzden sohbetten kullanılamaz. Özet raporu yüklemek için `/debug` gönderin."
+    chat_refused: "Hata ayıklama raporu A2Assistant'ın çalıştığı makinede kalır. Orada `hermes debug share` komutunu çalıştırın."
   deny:
     stale: "❌ Komut reddedildi (onay geçersizdi)."
     no_pending: "Reddedilecek bekleyen komut yok."
@@ -382,7 +376,6 @@ gateway:
     save_failed: "Ana kanal kaydedilemedi: {error}"
     success: "✅ Ana kanal **{name}** (ID: {chat_id}) olarak ayarlandı.\nCron işleri ve platformlar arası mesajlar buraya iletilecek."
     err_missing_platform: "Mantıksal platform eksik"
-    err_relay_unauthenticated: "Relay bu mantıksal ana hedefi doğrulamıyor"
   context:
     header: "🧠 **Bağlam Penceresi**"
     model: "Model: `{model}`"
@@ -1285,7 +1278,7 @@ slash:
   version:
     description: "A2Assistant sürümünü göster"
   debug:
-    description: "Hata ayıklama raporunu (sistem bilgisi + günlükler) yükle ve paylaşılabilir bağlantılar al"
+    description: "Gizlenmiş hata ayıklama raporunu göster (sistem bilgisi + günlükler)"
   quit:
     description: "CLI'dan çık (oturum geçmişini de silmek için --delete kullanın)"
 cli:

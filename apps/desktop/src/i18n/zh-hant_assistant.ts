@@ -267,7 +267,6 @@ export const zhHantAssistant = {
       errorOpenLogs: '開啟日誌',
       errorOpenLogsFailed: '無法開啟日誌資料夾',
       errorOpenDesktopLogs: '開啟桌面端日誌',
-      errorSendDiagnostics: '傳送診斷資訊',
       filesChanged: count => `${count} 個檔案已變更`,
       reviewChanges: '檢視',
       readAloudFailed: '朗讀失敗',

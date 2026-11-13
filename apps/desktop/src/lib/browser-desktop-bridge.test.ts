@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { reconnectMovedCloudAgent } from '@/app/settings/cloud-team-change'
 import { $connection } from '@/store/session'
 import { clearWebappSession, seedWebappSession } from '@/test/webapp-session'
 import { browserOpensWebappWindows } from '@/test/webapp-windows'
@@ -43,30 +42,6 @@ describe('browser-hosted Desktop bridge', () => {
     expect(installBrowserDesktopBridge()).toBe(true)
 
     await expect(mutableWindow().hermesDesktop!.fetchLinkTitle('https://example.com/some-article')).resolves.toBe('')
-    expect(fetchMock).not.toHaveBeenCalled()
-  })
-
-  it('refuses cloud-team reconnection without a native connection registry', async () => {
-    seedWebappSession('served-token')
-    const fetchMock = vi.fn()
-    vi.stubGlobal('fetch', fetchMock)
-    expect(installBrowserDesktopBridge()).toBe(true)
-    const desktop = mutableWindow().hermesDesktop!
-    const logout = vi.spyOn(desktop, 'oauthLogoutConnectionConfig')
-    const signIn = vi.spyOn(desktop.cloud, 'agentSignIn')
-
-    await expect(reconnectMovedCloudAgent(desktop, {
-      id: 'cloud-agent',
-      kind: 'cloud',
-      label: 'Cloud agent',
-      url: 'https://agent.example.com',
-      authMode: 'oauth',
-      org: 'old-team',
-      tokenSet: false,
-      tokenPreview: null
-    }, 'new-team', () => true)).resolves.toBe(false)
-    expect(logout).not.toHaveBeenCalled()
-    expect(signIn).not.toHaveBeenCalled()
     expect(fetchMock).not.toHaveBeenCalled()
   })
 

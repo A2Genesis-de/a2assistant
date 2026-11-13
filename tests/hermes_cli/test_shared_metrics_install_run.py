@@ -7,11 +7,9 @@ import os
 import re
 import shutil
 import signal
-import sqlite3
 import subprocess
 import sys
 import time
-from datetime import datetime, timedelta, timezone, UTC
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -19,7 +17,6 @@ import pytest
 
 from agent import relay_runtime
 from hermes_cli.observability import relay_shared_metrics
-from hermes_cli.observability import shared_metrics as store_module
 from hermes_cli.observability import shared_metrics_contract as contract
 from hermes_cli.observability import shared_metrics_install_run as install_run
 from hermes_cli.observability import shared_metrics_process as process_metrics
@@ -170,64 +167,6 @@ _REAL_RECORD_SAVED = relay_shared_metrics.record_process_marks_saved
 _RESOURCE = {"architecture": "x86_64", "hermes_version": "0.0.0", "install_method": "git", "os_family": "linux"}
 
 
-def test_receipt_is_recorded_only_on_a_day_the_sender_can_ever_send(marks, monkeypatch):
-    """The opt-in usually happens inside the install (setup asks), so the first start is the opt-in day,
-    whose package CONSENT_GATE_SQL never passes (period_start < opened_at). The receipt waits for the
-    first start on a later day, and the package carrying it then passes the real gate."""
-    from hermes_cli.observability.shared_metrics_sender import CONSENT_GATE_SQL, reconcile_send_consent
-    from hermes_cli.sqlite_util import write_txn
-
-    t0 = datetime(2026, 10, 6, tzinfo=UTC)
-    clock = {"now": t0 + timedelta(hours=9)}
-    monkeypatch.setattr(store_module, "_utc_now", lambda: clock["now"])
-    monkeypatch.setattr("hermes_cli.config.read_raw_config_readonly",
-                        lambda: {"telemetry": {"shared_metrics": {"enabled": True, "send": True}}})
-    store = store_module.SharedMetricsStore()
-
-    def observe(send=True):
-        with store._connection() as connection, write_txn(connection):
-            reconcile_send_consent(connection, send, now=clock["now"])
-
-    def record(rows):  # the real store, on the store's own clock
-        for mark, data in rows:
-            store.record_counter(contract._DECISION_MARK_METRICS[mark], data, _RESOURCE)
-        return len(rows)
-
-    monkeypatch.setattr(relay_shared_metrics, "record_process_marks_saved", record, raising=False)
-    receipt = _park(marks.home, _receipt(finished_at=int(clock["now"].timestamp()) - 60,
-                                         started_at=int(clock["now"].timestamp()) - 400))
-    observe()  # "Yes, send" in the install's setup stage opens the window now
-    clock["now"] += timedelta(hours=1)
-    install_run.report_pending_installs(marks.home)  # first start, same UTC day
-    assert receipt.exists() and store.counter_snapshot() == []
-
-    clock["now"] = t0 + timedelta(days=1, hours=8)
-    observe()
-    install_run.report_pending_installs(marks.home)  # first start on a later day
-    assert not receipt.exists()
-    clock["now"] = t0 + timedelta(days=2, hours=1)
-    observe()  # the heartbeat that confirms the whole recorded day
-    store.create_and_export_package()
-    with store._connection() as connection:
-        packages = connection.execute(
-            f"SELECT payload_json, {CONSENT_GATE_SQL} FROM package_outbox").fetchall()
-    carrying = [bool(ok) for body, ok in packages
-                if any(m["name"] == contract.INSTALL_RUN_METRIC for m in json.loads(body)["metrics"])]
-    assert carrying == [True]
-
-
-def test_receipt_waits_without_an_open_send_window_and_is_recorded_at_once_when_kept_local(marks, monkeypatch):
-    config = {"enabled": True, "send": True}
-    monkeypatch.setattr("hermes_cli.config.read_raw_config_readonly",
-                        lambda: {"telemetry": {"shared_metrics": config}})
-    receipt = _park(marks.home, _receipt())
-    install_run.report_pending_installs(marks.home)  # send on, no window recorded yet
-    assert receipt.exists() and marks.rows == []
-    config["send"] = False  # collected on this machine only: nothing waits on a send window
-    install_run.report_pending_installs(marks.home)
-    assert not receipt.exists() and len(marks.rows) == 1
-
-
 def test_unreadable_and_week_old_receipts_are_deleted_unreported(marks):
     directory = install_run.pending_installs_dir(marks.home)
     directory.mkdir(parents=True)
@@ -250,25 +189,6 @@ def test_relay_instrumentation_off_keeps_the_receipt_instead_of_latching_it_unre
     install_run.report_pending_installs(marks.home)
     assert receipt.exists()
     assert not install_run._recorded_latch(marks.home, receipt.stem).exists()
-
-
-def test_every_opt_out_answer_purges_pending_receipts(marks, monkeypatch):
-    """A "No" from setup, the pre-chat offer, the dashboard banner or `hermes config` goes through
-    save_consent; none of them starts a process that purges, so the answer itself must."""
-    from hermes_cli.observability import shared_metrics_consent as consent
-    from hermes_cli.observability import shared_metrics_update as update_metrics
-
-    monkeypatch.setattr("hermes_cli.config.is_managed", lambda: False)
-    monkeypatch.setattr("hermes_cli.setup._record_send_consent_change", lambda **_: None)
-    install = _park(marks.home, _receipt())
-    parked = update_metrics.pending_updates_dir(marks.home)
-    parked.mkdir(parents=True)
-    (parked / f"{'f' * 32}.json").write_text("{}", encoding="utf-8")
-
-    consent.save_consent(True, False)
-    assert install.exists() and parked.exists()
-    consent.save_consent(False, False)
-    assert not install.exists() and not parked.exists()
 
 
 _MAIN_GUARD = 'if [ "${BASH_SOURCE[0]:-$0}" = "$0" ]; then\n'

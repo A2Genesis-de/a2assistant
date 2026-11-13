@@ -65,13 +65,6 @@ class MessagingPlatformUpdate(BaseModel):
     # Explicit body profile beats the switcher's query param (same as other scoped writes).
     profile: Optional[str] = None
 
-class TelegramOnboardingStart(BaseModel):
-    bot_name: Optional[str] = None
-
-class TelegramOnboardingApply(BaseModel):
-    allowed_user_ids: list[str]
-    profile: Optional[str] = None
-
 class AudioTranscriptionRequest(BaseModel):
     data_url: str
     mime_type: Optional[str] = None
@@ -224,11 +217,6 @@ class LearningNodeEdit(BaseModel):
     id: str
     content: str
     profile: Optional[str] = None
-
-class DebugShareRequest(BaseModel):
-    # Redaction scrubs credential-shaped tokens before logs leave the machine; opt-out only.
-    redact: bool = True
-    lines: int = 200  # recent log lines in the summary tail (full logs are separate)
 
 class TTSSpeakRequest(BaseModel):
     text: str

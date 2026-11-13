@@ -44,8 +44,7 @@ def test_local_viewer_title_republishes_session_info(monkeypatch):
     turn._approval_owner = (authority, 's', 1)
     turn._runner = SimpleNamespace(_recover_discord_auto_thread_source=lambda source, key: source,
                                    _is_telegram_topic_lane=lambda s: False,
-                                   _is_discord_auto_thread_lane=lambda s: False,
-                                   _is_relay_discord_channel_lane=lambda s: False)
+                                   _is_discord_auto_thread_lane=lambda s: False)
     from gateway import session_local
     monkeypatch.setattr(session_local, 'local_session_info', lambda authority, ref: {'title': 'Auto'})
     agent = SimpleNamespace(session_id='s')

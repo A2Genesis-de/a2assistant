@@ -30,7 +30,6 @@ export * from './api/sessions'
 export * from './api/skills'
 export * from './api/system'
 export * from './api/toolsets'
-export * from './api/webapp-access'
 
 export type {
   ActionResponse,
@@ -64,7 +63,6 @@ export type {
   CustomEndpointsResponse,
   CustomEndpointUpdate,
   CustomEndpointValidationResponse,
-  DebugShareResponse,
   EnvVarInfo,
   HermesConfig,
   HermesConfigRecord,
@@ -99,10 +97,6 @@ export type {
   ProjectFolder,
   ProjectInfo,
   ProjectsPayload,
-  RelayLinkCode,
-  RelayLinkCodeState,
-  RelayLinkedAccount,
-  RelayLinksResponse,
   SessionCreateResponse,
   SessionInfo,
   SessionMessage,
@@ -122,9 +116,6 @@ export type {
   StaleAuxAssignment,
   StarmapGraph,
   StatusResponse,
-  TelegramOnboardingApplyResponse,
-  TelegramOnboardingStartResponse,
-  TelegramOnboardingStatusResponse,
   ToolsetConfig,
   ToolsetInfo,
   ToolsetModel,

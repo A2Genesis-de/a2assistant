@@ -22,7 +22,6 @@ import { frPluginPreviewAccess } from './fr_plugin_preview_access'
 import { frPluginUpdate } from './fr_plugin_update'
 import { frPreviewWeb } from './fr_preview_web'
 import { frProjects } from './fr_projects'
-import { frSharedMetrics } from './fr_shared_metrics'
 import { frThemePicker } from './fr_theme_picker'
 import { frUpdateChannel } from './fr_update_channel'
 import { introFr } from './intro-fr'
@@ -33,7 +32,6 @@ export const frOverrides = {
     lookupFailed: "Impossible de retrouver ce groupe sur la passerelle. Réessayez.",
     missing: "Cette discussion de groupe n’existe plus."
   },
-  sharedMetrics: frSharedMetrics,
   firstRun: frFirstRun,
   intro: introFr,
   connectors: frConnectorCard,
@@ -508,29 +506,6 @@ export const frOverrides = {
     }
   },
   ...frNotices,
-  sendDiagnostics: {
-    title: 'Envoyer les diagnostics à Nous',
-    privacyNotice:
-      "Cela téléverse un paquet de débogage vers un stockage interne de Nous, et non vers un service de partage public. Il contient des informations système (système d'exploitation, versions, fournisseur et clés API configurées — jamais les clés elles-mêmes) ainsi que les journaux complets de l'agent, du gateway et du Desktop (jusqu'à 512 Ko chacun), susceptibles de contenir des conversations, des résultats d'outils et des chemins de fichiers. Les secrets sont expurgés avant l'envoi. Seuls le personnel de Nous et les modérateurs Discord autorisés peuvent consulter le paquet, qui est automatiquement supprimé après 14 jours.",
-    upload: 'Envoyer',
-    uploading: 'Envoi en cours…',
-    cancel: 'Annuler',
-    close: 'Fermer',
-    copyLink: 'Copier le lien',
-    uploadIdFallback: id => `Aucun lien de consultation renvoyé — indiquez l'identifiant ${id} au support`,
-    doneTitle: 'Diagnostics envoyés',
-    doneDescription:
-      "Votre paquet a été téléversé de manière privée. Partagez le lien ci-dessous dans votre fil d'assistance afin que l'équipe puisse consulter vos journaux.",
-    failedTitle: "Échec de l'envoi",
-    failedHint:
-      'Vous pouvez également exécuter `hermes debug share --nous` dans un terminal, ou `hermes debug share --local` pour afficher le rapport sans le téléverser.',
-    handoffLead: 'Poursuivez la discussion sur :',
-    links: {
-      github: 'Issues GitHub',
-      portal: 'Assistance du portail Nous',
-      discord: 'Discord'
-    }
-  },
   titlebar: {
     hideSidebar: 'Masquer la barre latérale',
     showSidebar: 'Afficher la barre latérale',
@@ -1650,44 +1625,6 @@ export const frOverrides = {
       remoteDesc: 'Connecter ce shell desktop à un backend A2Assistant distant.',
       remoteAuthHint:
         "Les gateways hébergés utilisent OAuth ou un nom d'utilisateur et un mot de passe ; les auto-hébergés peuvent utiliser un jeton de session.",
-      cloudTitle: 'Hermes Cloud',
-      cloudDesc:
-        "Connectez-vous une fois à Hermes Cloud et choisissez parmi les agents de votre compte — pas d'URL à coller.",
-      cloudSignInTitle: 'Hermes Cloud',
-      cloudSignIn: 'Se connecter à Hermes Cloud',
-      cloudSignedIn: 'Connecté à Hermes Cloud',
-      cloudNeedsSignIn: 'Connectez-vous à Hermes Cloud pour découvrir les agents de votre compte.',
-      cloudSignedInDesc:
-        'Vous êtes connecté. Choisissez un agent ci-dessous ; la session se rafraîchit automatiquement.',
-      cloudAgentsTitle: 'Vos agents',
-      cloudOrgPickerTitle: 'Choisir une organisation',
-      cloudOrgSelect: 'Sélectionner',
-      cloudOrgChange: "Changer d'organisation",
-      cloudOrgRole: role => `Rôle : ${role}`,
-      cloudLoadingAgents: 'Chargement de vos agents…',
-      cloudNoAgents: {
-        before: 'Aucun agent trouvé sur ce compte… Créez-en un dans le ',
-        linkText: 'portail Nous',
-        after: ', puis actualisez.'
-      },
-      cloudRefresh: 'Actualiser',
-      cloudConnect: 'Connecter',
-      cloudSavedTitle: 'Gateways Cloud enregistrés',
-      cloudSavedDesc:
-        'Utilisez un gateway enregistré sans modifier celui par défaut. Connectez-vous ci-dessous pour ajouter des instances. Gérez leurs noms et leur connexion dans la liste des connexions enregistrées.',
-      cloudUseSaved: 'Utiliser le gateway',
-      cloudActive: 'Actif dans cette fenêtre',
-      cloudConnecting: 'Connexion…',
-      cloudDiscoverFailed: 'Impossible de charger vos agents Hermes Cloud',
-      cloudConnectFailed: 'Impossible de se connecter à cet agent',
-      cloudSignInFailed: 'Échec de la connexion à Hermes Cloud',
-      cloudSignedOutTitle: 'Déconnecté de Hermes Cloud',
-      cloudSignedOutMessage: 'Session Hermes Cloud effacée.',
-      cloudConnectedTitle: 'Connecté',
-      cloudConnectedPill: 'Connecté',
-      cloudConnectedTo: name => `Connecté à ${name}.`,
-      cloudAgentProvisioning: 'Provisionnement…',
-      cloudStatusLabel: status => `État : ${status}`,
       remoteUrlTitle: 'URL distante',
       remoteUrlDesc:
         'URL de base du backend de tableau de bord distant. Les préfixes de chemin sont pris en charge, par exemple /hermes.',
@@ -2801,12 +2738,6 @@ export const frOverrides = {
       securityAuditDesc: 'Analyser la configuration et les skills à la recherche de paramètres risqués',
       backup: 'Créer une sauvegarde',
       backupDesc: 'Archiver en zip la configuration, les mémoires, les skills et les sessions',
-      debugShare: 'Partage de débogage',
-      debugShareDesc:
-        'Téléverser un rapport expurgé + journaux, obtenir des liens partageables (auto-suppression après 6h)',
-      debugShareRunning: 'Téléversement du rapport de débogage...',
-      debugShareLinks: 'Liens de partage',
-      debugShareFailed: 'Échec du partage de débogage',
       copyLink: 'Copier le lien',
       linkCopied: 'Lien copié',
       curator: 'Curateur de skills',
@@ -2925,63 +2856,6 @@ export const frOverrides = {
       'Réessayez le redémarrage ; si le problème persiste, ouvrez les journaux et envoyez les diagnostics.',
     restartAgain: 'Redémarrer à nouveau',
     openLogs: 'Ouvrir les journaux',
-    relayLink: {
-      title: 'Team Gateway',
-      badge: 'Aucun jeton de bot requis',
-      intro: (platform: string) => `${platform} atteint cet agent via le bot A2Assistant partagé. Associez votre compte ${platform} et écrivez au bot pour parler à votre agent.`,
-      link: (platform: string) => `Associer ${platform}`,
-      linkAnother: (platform: string) => `Associer un autre compte ${platform}`,
-      linkedAccounts: 'Comptes associés',
-      unlink: 'Dissocier',
-      unlinkFailed: 'Impossible de dissocier ce compte',
-      stepOpen: (platform: string) => `1. Scannez le code avec votre téléphone ou ouvrez le bot dans ${platform}.`,
-      stepSend: '2. Envoyez ce message au bot depuis le compte à associer :',
-      open: (platform: string) => `Ouvrir ${platform}`,
-      copy: 'Copier le message',
-      copied: 'Copié',
-      copyFailed: (command: string) => `Échec de la copie. Tapez plutôt ${command}.`,
-      waiting: 'En attente du message dans le bot. Le code ne sert qu’une fois.',
-      linked: (platform: string) => `Compte ${platform} associé. Écrivez au bot pour parler à votre agent.`,
-      expired: 'Le code a expiré avant d’être utilisé. Demandez-en un nouveau et réessayez.',
-      refused: (platform: string) => `${platform} a refusé l’association. Demandez un nouveau code et réessayez.`,
-      qrAlt: (platform: string) => `Code QR du bot ${platform} partagé`,
-      managed: 'Géré par Team Gateway',
-      managedNote: (platform: string) => `Team Gateway assure la messagerie sur cette instance : le gateway désactive donc la connexion directe ${platform} à chaque démarrage. Pour l’utiliser en plus du relais, définissez GATEWAY_RELAY_ALLOW_DIRECT_PLATFORMS=true dans l’environnement du gateway (une connexion directe empêche l’instance de descendre à zéro et peut livrer les messages deux fois).`,
-      managedIntro: 'Les comptes de cet agent se lient depuis Nous Portal.',
-      openPortal: 'Lier des comptes dans Nous Portal',
-      noNewAccount: (platform: string) => `Le code n’est plus actif et aucun nouveau compte n’est apparu. Si votre compte ${platform} n’est pas listé, obtenez un nouveau code et réessayez.`
-    },
-    telegramQr: {
-      title: 'Choisissez comment connecter votre bot Telegram',
-      subtitle:
-        "Les deux méthodes connectent un bot que vous contrôlez et enregistrent ses identifiants uniquement dans cette installation d'A2Assistant.",
-      quickSetup: 'Configuration rapide',
-      recommended: 'Recommandé',
-      quickHelp:
-        "Scannez un code QR et confirmez dans Telegram. A2Assistant crée le bot et détecte automatiquement votre identifiant d'utilisateur Telegram.",
-      createWithQr: 'Créer avec un code QR',
-      starting: 'Démarrage…',
-      replaceWarning:
-        "Des identifiants Telegram sont déjà configurés. Une nouvelle configuration par QR ou un nouveau jeton remplacera le bot actuel lors de l'enregistrement.",
-      scanHint: "Scannez avec l'application Telegram de votre téléphone ou ouvrez le lien sur cet ordinateur.",
-      waiting: 'En attente de Telegram…',
-      expiresIn: remaining => `Expire dans ${remaining}`,
-      expired: 'Expiré',
-      openTelegram: 'Ouvrir Telegram',
-      ready: 'Bot créé',
-      allowedUsers: 'Utilisateurs autorisés',
-      ownerDetected: 'Propriétaire détecté',
-      addAtLeastOne: "Ajoutez au moins un identifiant d'utilisateur Telegram.",
-      userIdPlaceholder: "Identifiant d'utilisateur Telegram",
-      add: 'Ajouter',
-      numericOnly: "Les identifiants d'utilisateurs Telegram autorisés doivent être numériques.",
-      saveAndRestart: 'Enregistrer et redémarrer',
-      applying: 'Enregistrement…',
-      pairingExpired: 'La liaison Telegram a expiré. Relancez une configuration par QR pour réessayer.',
-      stillWaiting: detail => `Toujours en attente de Telegram. Nouvelle tentative après : ${detail}`,
-      savedRestarting: 'Telegram enregistré ; redémarrage du gateway…',
-      savedRestartFailed: detail => `Telegram enregistré ; le redémarrage du gateway a échoué${detail}`
-    },
     fieldCopy: {
       TELEGRAM_BOT_TOKEN: {
         label: 'Jeton du bot',
@@ -4927,7 +4801,6 @@ export const frOverrides = {
       errorOpenLogs: 'Ouvrir les journaux',
       errorOpenLogsFailed: "Impossible d'ouvrir le dossier des journaux",
       errorOpenDesktopLogs: 'Ouvrir les journaux du Desktop',
-      errorSendDiagnostics: 'Envoyer les diagnostics',
       filesChanged: count => (count === 1 ? '1 fichier modifié' : `${count} fichiers modifiés`),
       reviewChanges: 'Examiner',
       readAloudFailed: 'Échec de la lecture à voix haute',
@@ -5397,7 +5270,6 @@ export const frOverrides = {
     boundaryTitle: "Un problème est survenu dans l'interface",
     boundaryDesc: 'La vue a rencontré une erreur inattendue. Vos conversations et vos paramètres sont en sécurité.',
     boundaryDetails: 'Détails',
-    sendDiagnostics: 'Envoyer les diagnostics',
     reloadWindow: 'Recharger la fenêtre',
     openLogs: 'Ouvrir les journaux'
   },

@@ -161,13 +161,7 @@ gateway:
     codex_compacted: "🗜️ Codex-App-Server-Thread komprimiert (thread/compact). Der Transkript-Spiegel bleibt absichtlich unverändert — der App-Server trägt jetzt den komprimierten Kontext."
     codex_incomplete: "⚠️ Die Komprimierung im Codex-App-Server wurde nicht abgeschlossen — der Thread ist unverändert. Prüfen Sie die App-Server-Logs, wiederholen Sie /compress oder verwenden Sie /reset für eine saubere Sitzung."
   debug:
-    upload_failed: "✗ Debug-Bericht konnte nicht hochgeladen werden: {error}"
-    header: "**Debug-Bericht hochgeladen:**"
-    auto_delete: "⏱ Pastes werden in 6 Stunden automatisch gelöscht."
-    full_logs_hint: "Für vollständige Log-Uploads verwenden Sie `a2assistant debug share` aus der CLI."
-    share_hint: "Teilen Sie diese Links mit dem A2Assistant-Team, um Unterstützung zu erhalten."
-    report_label: "Bericht"
-    local_refused: "`/debug local` behält den Bericht auf dem Rechner, auf dem A2Assistant läuft, und ist daher im Chat nicht verfügbar. Senden Sie `/debug`, um den Kurzbericht hochzuladen."
+    chat_refused: "Der Debug-Bericht bleibt auf dem Rechner, auf dem A2Assistant läuft. Führen Sie dort `hermes debug share` aus."
   deny:
     stale: "❌ Befehl abgelehnt (Genehmigung war veraltet)."
     no_pending: "Kein ausstehender Befehl zum Ablehnen."
@@ -382,7 +376,6 @@ gateway:
     save_failed: "Home-Kanal konnte nicht gespeichert werden: {error}"
     success: "✅ Home-Kanal auf **{name}** (ID: {chat_id}) gesetzt.\nCron-Jobs und plattformübergreifende Nachrichten werden hierher geliefert."
     err_missing_platform: "Logische Plattform fehlt"
-    err_relay_unauthenticated: "Das Relay authentifiziert dieses logische Home-Ziel nicht"
   context:
     header: "🧠 **Kontextfenster**"
     model: "Modell: `{model}`"
@@ -1285,7 +1278,7 @@ slash:
   version:
     description: "A2Assistant-Version anzeigen"
   debug:
-    description: "Debug-Bericht hochladen (Systeminfo + Logs) und teilbare Links erhalten"
+    description: "Bereinigten Debug-Bericht anzeigen (Systeminfo + Logs)"
   quit:
     description: "CLI beenden (--delete entfernt zusätzlich den Sitzungsverlauf)"
 cli:

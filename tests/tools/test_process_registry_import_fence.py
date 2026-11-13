@@ -60,7 +60,7 @@ async def test_gateway_startup_restores_pending_delegation_completions(tmp_path,
         process_registry.completion_queue.get_nowait()
 
     runner = gateway_run.GatewayRunner.__new__(gateway_run.GatewayRunner)
-    runner._start_register_plugins_relay_hooks = MagicMock()
+    runner._start_register_plugins_hooks = MagicMock()
     runner.hooks = MagicMock()
     runner._recover_unclean_sessions = _async_return((0, 0))
     runner._consume_clean_shutdown_marker = _async_return(0)

@@ -73,7 +73,7 @@ def test_secondary_profile_is_ticked_with_multiplex_profiles_off(
     async def _start():
         return gateway_run._start_gateway_start_cron_and_housekeeping(runner)
 
-    cron_stop, _provider, _thread, housekeeping = asyncio.run(_start())
+    cron_stop, _thread, housekeeping = asyncio.run(_start())
     cron_stop.set()
     if isinstance(housekeeping, threading.Thread):
         housekeeping.join(timeout=5)

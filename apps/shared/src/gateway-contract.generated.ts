@@ -653,19 +653,6 @@ export interface SetupRuntimeCheckResult {
   free_tier_route?: boolean | null
   profile?: string | null
 }
-export interface DiagnosticsShareNousParams {
-  error_context?: string | null
-  extra_files?: Record<string, string> | null
-  log_lines?: number | null
-}
-/** Structured envelope: ``ok=False`` + ``error`` renders inline instead of failing the RPC. */
-export interface DiagnosticsShareNousResult {
-  ok: boolean
-  view_url?: string | null
-  upload_id?: string | null
-  expires_at?: string | null
-  error?: string | null
-}
 /** ``available`` = an identity exists AND the tier is on; whether inference runs on it is ``setup.runtime_check.free_tier_route``'s question. */
 export interface FreeTierStatusResult {
   has_guest: boolean
@@ -719,19 +706,9 @@ export interface FreeTierClaimNudgeParams {
 export interface FreeTierClaimNudgeResult {
   claimed: boolean
 }
-/** The focused profile's ``telemetry.shared_metrics`` opt-ins. ``send`` is never true while ``enabled`` is false; ``decided`` = either key is written in config.yaml (the shipped defaults are not an answer) and it is not a ``reask``: an "off" from before the type-ahead fix, offered once more with the reason. */
-export interface SharedMetricsConsentResult {
+/** Whether the focused profile collects shared metrics locally (``telemetry.shared_metrics.enabled``). */
+export interface SharedMetricsStatusResult {
   enabled: boolean
-  send: boolean
-  decided: boolean
-  reask?: boolean
-}
-/** ``send`` is ignored unless ``enabled``; ``first_run`` marks the Desktop first-run answer. */
-export interface SharedMetricsSetParams {
-  profile?: string | null
-  enabled: boolean
-  send?: boolean
-  first_run?: boolean
 }
 /** ``command`` is the raw typed name (no leading ``/``, no args); the backend canonicalizes it against the published registry. ``session_id`` scopes the count to that session's profile. */
 export interface SharedMetricsSlashCommandParams {
@@ -6280,8 +6257,6 @@ export interface RpcMethods {
   'delegation.pause': { params: DelegationPauseParams; result: DelegationPauseResult }
   /** Running subagent tree plus the spawn pause flag and limits. */
   'delegation.status': { params: ProfileParams; result: DelegationStatusResult }
-  /** Upload a force-redacted debug bundle to Nous-internal diagnostics storage. */
-  'diagnostics.share_nous': { params: DiagnosticsShareNousParams; result: DiagnosticsShareNousResult }
   /** Run the distro package install on the gateway host; progress streams as display.install.log/.done. */
   'display.install': { params: ProfileParams; result: DisplayInstallResult }
   /** Take over: the human named by a viewer id this connection minted controls the screen. */
@@ -6624,14 +6599,12 @@ export interface RpcMethods {
   'shared_metrics.desktop_friction': { params: SharedMetricsDesktopFrictionParams; result: OkResult }
   /** Count one Desktop first-run step transition (fire-and-forget; once per step+event; a no-op unless on). */
   'shared_metrics.desktop_onboarding': { params: SharedMetricsDesktopOnboardingParams; result: OkResult }
-  /** Write both shared-metrics opt-ins at once (send requires collection) and reconcile consent windows. */
-  'shared_metrics.set': { params: SharedMetricsSetParams; result: SharedMetricsConsentResult }
   /** Count one user-typed slash command (fire-and-forget; a no-op unless shared metrics are on). */
   'shared_metrics.slash_command': { params: SharedMetricsSlashCommandParams; result: SharedMetricsSlashCommandResult }
   /** Record one client launch-to-ready latency (fire-and-forget; a no-op unless shared metrics are on). */
   'shared_metrics.startup_latency': { params: SharedMetricsStartupLatencyParams; result: SharedMetricsStartupLatencyResult }
-  /** Pure read of the focused profile's shared-metrics opt-ins (collection, upload, answered). */
-  'shared_metrics.status': { params: ProfileParams; result: SharedMetricsConsentResult }
+  /** Read the focused profile's local shared-metrics collection switch. */
+  'shared_metrics.status': { params: ProfileParams; result: SharedMetricsStatusResult }
   /** Count one Desktop packaged self-update outcome (fire-and-forget; a no-op unless shared metrics are on). */
   'shared_metrics.update_run': { params: SharedMetricsUpdateRunParams; result: SharedMetricsUpdateRunResult }
   /** Run a safe (non-dangerous) shell command captured for ``!cmd`` / inline substitution. */
@@ -6763,7 +6736,6 @@ export const RPC_METHODS = [
   'cron.manage',
   'delegation.pause',
   'delegation.status',
-  'diagnostics.share_nous',
   'display.install',
   'display.lease.acquire',
   'display.lease.release',
@@ -6935,7 +6907,6 @@ export const RPC_METHODS = [
   'shared_metrics.desktop_feature_use',
   'shared_metrics.desktop_friction',
   'shared_metrics.desktop_onboarding',
-  'shared_metrics.set',
   'shared_metrics.slash_command',
   'shared_metrics.startup_latency',
   'shared_metrics.status',

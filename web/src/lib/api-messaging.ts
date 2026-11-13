@@ -34,40 +34,5 @@ export interface MessagingPlatform {
   home_channel: { platform: string; chat_id: string; name: string; thread_id?: string } | null;
   /** Multiplex secondary served on the default profile's shared listener: the vendor callback URL. */
   ingress_url?: string | null;
-  /** Switched off by the GATEWAY_RELAY_URL relay-exclusive rule, not by the user (absent on older backends). */
-  disabled_by_relay?: boolean;
-  /** Team Gateway's shared bot carries this platform: setup links an account to it. */
-  relay_fronted?: boolean;
-  /** The relay owns this platform outright, so a direct bot would be switched off at every start. */
-  relay_exclusive?: boolean;
   env_vars: MessagingPlatformEnvVar[];
-}
-
-export interface RelayLinkedAccount {
-  platformUserId: string;
-  handle?: string;
-  displayName?: string;
-  containerName?: string;
-}
-
-export interface RelayLinksResponse {
-  /** "portal" when the Nous Portal access setting governs this agent: links are made there. */
-  managed_by?: "portal" | "connector";
-  portal_url?: string;
-  platforms: { platform: string; bot_url: string | null; accounts: RelayLinkedAccount[] }[];
-}
-
-export interface RelayLinkCode {
-  platform: string;
-  code: string;
-  /** The exact message to send the shared bot. */
-  command: string;
-  expires_at: string | null;
-  bot_url: string | null;
-}
-
-export interface RelayLinkCodeState {
-  /** pending = not redeemed yet; inactive = used or expired; refused = see reason. */
-  state: "pending" | "inactive" | "refused";
-  reason?: string | null;
 }

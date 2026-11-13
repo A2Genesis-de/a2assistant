@@ -4,7 +4,7 @@ Runs after ``GatewayConfig.from_dict`` so env always wins over config.yaml / gat
 Most platforms follow one shape — "credentials present in env ⇒ enable the platform and
 copy the values into ``extra``" — declared by each platform plugin as ``PlatformEntry.env_overrides``
 (``gateway.platform_env.EnvCred`` rows; see that module). Core-only platforms (api_server, webhook,
-msgraph_webhook, relay) keep their small functions here.
+msgraph_webhook) keep their small functions here.
 """
 
 import copy
@@ -36,18 +36,9 @@ getenv = _getenv_str
 # env": config reloads every turn, so the notice is one-time per platform per process.
 _EXPLICIT_DISABLE_WARNED: set = set()
 
-# Env var(s) whose presence drives a CORE platform's env-enable branch, named in the explicit-disable
-# WARNING. Plugin platforms declare theirs as ``PlatformEntry.env_enable_credentials``.
-_ENV_ENABLE_CREDENTIALS: dict = {
-    Platform.RELAY: ("GATEWAY_RELAY_URL",),
-}
-
-
 def _enable_credential_names(platform: Platform) -> tuple:
-    """WARNING credential names: the core row, else the platform entry's declaration. The entry is
-    already materialized (its own env step is what is warning), so the lookup never imports."""
-    if platform in _ENV_ENABLE_CREDENTIALS:
-        return _ENV_ENABLE_CREDENTIALS[platform]
+    """WARNING credential names from the platform entry's declaration. The entry is already
+    materialized (its own env step is what is warning), so the lookup never imports."""
     from gateway.platform_registry import platform_registry
     entry = platform_registry.get(platform.value)
     names = tuple(getattr(entry, "env_enable_credentials", ()) or ())
@@ -292,56 +283,6 @@ def _enable_plugin_platforms_from_env(config: GatewayConfig, entries: list) -> N
             logger.debug("Plugin platform enable pass failed for %s: %s", entry.name, e)
 
 
-def _relay(config: GatewayConfig) -> None:
-    """Relay (connector-fronted, EXPERIMENTAL): enabled by GATEWAY_RELAY_URL or gateway.relay_url;
-    the URL is mirrored into extra["relay_url"] for the connected-checker.
-
-    Relay-exclusive: the GATEWAY_RELAY_URL env stamp means the connector owns every platform
-    connection; a directly-connected adapter would be a second unmanaged ingress (duplicate
-    deliveries, split sessions, a socket disarming scale-to-zero). So the env stamp disables all
-    other messaging platforms — even explicitly enabled ones — except non-messaging surfaces (local,
-    api_server, webhook; same set as the scale-to-zero arm gate). relay_url from YAML only keeps the
-    additive behavior. Opt out with GATEWAY_RELAY_ALLOW_DIRECT_PLATFORMS=true.
-    """
-    relay_url_env = getenv("GATEWAY_RELAY_URL").strip()
-    existing_relay = config.platforms.get(Platform.RELAY)
-    relay_url_yaml = str(existing_relay.extra.get("relay_url") or "").strip() if existing_relay else ""
-    relay_url_val = relay_url_env or relay_url_yaml
-    if relay_url_val:
-        relay_config = _enable_from_env(config, Platform.RELAY)
-        relay_config.extra["relay_url"] = relay_url_val.rstrip("/")
-        # An opted-out relay does not own this profile's native connections.
-        if not relay_config.enabled:
-            return
-
-    if not relay_url_env or is_truthy_value(getenv("GATEWAY_RELAY_ALLOW_DIRECT_PLATFORMS")):
-        return
-    skip = {Platform.RELAY, Platform.LOCAL, Platform.API_SERVER, Platform.WEBHOOK}
-    for platform, platform_config in config.platforms.items():
-        if platform in skip or not platform_config.enabled:
-            continue
-        if _STATUS_READ.get():
-            pass  # status reads repeat this on every poll
-        elif platform_config.extra.get("_enabled_explicit"):
-            logger.warning(
-                "Relay connector is configured via GATEWAY_RELAY_URL; "
-                "disabling directly-connected platform '%s' even though "
-                "it is explicitly enabled in this profile's configuration. "
-                "All messaging goes through the connector on this "
-                "deployment. Set GATEWAY_RELAY_ALLOW_DIRECT_PLATFORMS=true "
-                "to keep direct platforms alongside the relay.",
-                platform.value,
-            )
-        else:
-            logger.info(
-                "Relay connector is configured via GATEWAY_RELAY_URL; "
-                "disabling directly-connected platform '%s'.",
-                platform.value,
-            )
-        platform_config.enabled = False
-        platform_config.disabled_by_relay = True
-
-
 def _scrub_explicit_markers(config: GatewayConfig) -> None:
     for platform_config in config.platforms.values():
         platform_config.extra.pop("_enabled_explicit", None)
@@ -351,8 +292,8 @@ def _apply_env_overrides(config: GatewayConfig, *, only: Optional[Platform] = No
     """Apply environment variable overrides to *config*.
 
     Order: plugin platforms' declared env rows, then the core-only rows (api_server, webhook,
-    msgraph_webhook; each touches only its own platform), then the registry enable pass, relay
-    disabling (needs every platform's final ``enabled``), and the marker scrub, which must be last.
+    msgraph_webhook; each touches only its own platform), then the registry enable pass and the
+    marker scrub, which must be last.
     ``only`` limits the plugin passes to that built-in platform's own entry and bundled env rows
     (no per-call manifest scan; see ``builtin_platform_status``).
     """
@@ -365,7 +306,6 @@ def _apply_env_overrides(config: GatewayConfig, *, only: Optional[Platform] = No
     _api_server(config)
     _webhook(config)
     _enable_plugin_platforms_from_env(config, entries)
-    _relay(config)
     _scrub_explicit_markers(config)
 
 
@@ -377,8 +317,7 @@ def builtin_platform_status(platform_id: str, yaml_cfg: dict) -> Optional[tuple[
     For judging one platform of a profile that is not the process's own (the dashboard's Channels
     page): ``load_gateway_config()`` there enumerates that profile's platform plugins and constructs
     ``Platform(<plugin id>)`` for them, process-wide pseudo-members every other profile then sees.
-    So only this platform's and the relay's blocks (the relay can disable it) go through the
-    loader's own steps (section merge, administrator-pinned keys, top-level bridge; see
+    So only this platform's block goes through the loader's own steps (section merge, administrator-pinned keys, top-level bridge; see
     ``load_yaml_layer``), which also record an explicit ``enabled`` for the env pass. The env pass's
     logs and one-time warnings are held back.
     """
@@ -390,13 +329,13 @@ def builtin_platform_status(platform_id: str, yaml_cfg: dict) -> Optional[tuple[
     from hermes_cli.managed_scope import apply_managed_overlay
 
     platform = Platform(platform_id)
-    names = {platform_id, Platform.RELAY.value}
+    names = {platform_id}
     top, nested = _platform_layers(yaml_cfg, names)
     platforms = merge_platform_sections(top, nested, gw_data={})
     authored = snapshot_authored_extra(platforms)  # no gateway.json layer here: the merge is config.yaml only
     managed_top, managed_nested = _platform_layers(apply_managed_overlay({}), names)
     _apply_managed_extra(authored, {**managed_top, "gateway": managed_nested}, platforms)
-    bridge_platform_shared_keys(top, nested["platforms"], {}, platforms, [platform, Platform.RELAY], authored=authored)
+    bridge_platform_shared_keys(top, nested["platforms"], {}, platforms, [platform], authored=authored)
     for block in platforms.values():
         block.pop("home_channel", None)  # status needs none; HomeChannel.from_dict can raise or name another platform
     config = GatewayConfig.from_dict({"platforms": platforms})

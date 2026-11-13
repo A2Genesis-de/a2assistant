@@ -200,7 +200,6 @@ _LONG_HANDLERS = frozenset({
     "session.resume", "session.save", "session.workspace.move", "shell.exec", "skills.manage", "slash.exec",
     "onboarding.start", "onboarding.state", "subagent.roster",
     "command.dispatch",  # /goal draft invokes the auxiliary model; never block the RPC reader
-    "shared_metrics.set",  # consent reconcile waits on the metrics store's write lock
 })
 
 _rpc_pool_workers = max(2, env_int("HERMES_TUI_RPC_POOL_WORKERS", 8))

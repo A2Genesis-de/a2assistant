@@ -4,12 +4,6 @@ import type {
   MessagingPlatformUpdate,
   PairingResponse,
   PairingUser,
-  RelayLinkCode,
-  RelayLinkCodeState,
-  RelayLinksResponse,
-  TelegramOnboardingApplyResponse,
-  TelegramOnboardingStartResponse,
-  TelegramOnboardingStatusResponse,
   WebhookCreatePayload,
   WebhookCreateResponse,
   WebhookEnableResponse,
@@ -54,92 +48,6 @@ export function testMessagingPlatform(
     ...profileScoped(profile),
     path: `/api/messaging/platforms/${encodeURIComponent(platformId)}/test`,
     method: 'POST'
-  })
-}
-
-// -- Team Gateway account links -----------------------------------------------
-// A relay-fronted instance reaches Telegram/Discord/Slack only through the shared bot; these mint
-// the one-time `/link <code>` that binds a chat account to this agent. The profile tag picks the
-// backend (a profile may point at another host); the relay itself serves that gateway's own profile.
-
-export function getRelayLinks(profile?: null | string): Promise<RelayLinksResponse> {
-  return hermesApi<RelayLinksResponse>({ ...profileScoped(profile), path: '/api/messaging/relay' })
-}
-
-export function requestRelayLink(platform: string, profile?: null | string): Promise<RelayLinkCode> {
-  return hermesApi<RelayLinkCode>({
-    ...profileScoped(profile),
-    path: `/api/messaging/relay/${encodeURIComponent(platform)}/link`,
-    method: 'POST'
-  })
-}
-
-export function getRelayLinkState(code: string, profile?: null | string): Promise<RelayLinkCodeState> {
-  return hermesApi<RelayLinkCodeState>({
-    ...profileScoped(profile),
-    path: `/api/messaging/relay/link/${encodeURIComponent(code)}`
-  })
-}
-
-export function unlinkRelayAccount(
-  platform: string,
-  platformUserId: string,
-  profile?: null | string
-): Promise<{ unlinked: boolean }> {
-  return hermesApi<{ unlinked: boolean }>({
-    ...profileScoped(profile),
-    path: `/api/messaging/relay/${encodeURIComponent(platform)}/accounts/${encodeURIComponent(platformUserId)}`,
-    method: 'DELETE'
-  })
-}
-
-// -- Telegram QR onboarding ---------------------------------------------------
-// Pairing state lives in the memory of the backend process that started it, so
-// every call in one flow carries the SAME profile scope — the Electron router
-// picks the backend from it, and a mismatched apply would 404 the pairing.
-
-export function startTelegramOnboarding(
-  botName?: string,
-  profile?: null | string
-): Promise<TelegramOnboardingStartResponse> {
-  return hermesApi<TelegramOnboardingStartResponse>({
-    ...profileScoped(profile),
-    path: '/api/messaging/telegram/onboarding/start',
-    method: 'POST',
-    body: botName ? { bot_name: botName } : {}
-  })
-}
-
-export function getTelegramOnboardingStatus(
-  pairingId: string,
-  profile?: null | string
-): Promise<TelegramOnboardingStatusResponse> {
-  return hermesApi<TelegramOnboardingStatusResponse>({
-    ...profileScoped(profile),
-    path: `/api/messaging/telegram/onboarding/${encodeURIComponent(pairingId)}`
-  })
-}
-
-export function applyTelegramOnboarding(
-  pairingId: string,
-  allowedUserIds: string[],
-  profile?: null | string
-): Promise<TelegramOnboardingApplyResponse> {
-  const scope = profileScoped(profile)
-
-  return hermesApi<TelegramOnboardingApplyResponse>({
-    ...scope,
-    path: `/api/messaging/telegram/onboarding/${encodeURIComponent(pairingId)}/apply`,
-    method: 'POST',
-    body: { allowed_user_ids: allowedUserIds, profile: scope.profile }
-  })
-}
-
-export function cancelTelegramOnboarding(pairingId: string, profile?: null | string): Promise<{ ok: boolean }> {
-  return hermesApi<{ ok: boolean }>({
-    ...profileScoped(profile),
-    path: `/api/messaging/telegram/onboarding/${encodeURIComponent(pairingId)}`,
-    method: 'DELETE'
   })
 }
 

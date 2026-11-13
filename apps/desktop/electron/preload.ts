@@ -326,15 +326,6 @@ contextBridge.exposeInMainWorld('hermesDesktop', {
   oauthLoginConnectionConfig: (remoteUrl, options) =>
     ipcRenderer.invoke('hermes:connection-config:oauth-login', remoteUrl, options),
   oauthLogoutConnectionConfig: remoteUrl => ipcRenderer.invoke('hermes:connection-config:oauth-logout', remoteUrl),
-  // Hermes Cloud: one portal login powers discovery + silent per-agent sign-in
-  // (cloud-auto-discovery Phase 3).
-  cloud: {
-    status: () => ipcRenderer.invoke('hermes:cloud:status'),
-    login: () => ipcRenderer.invoke('hermes:cloud:login'),
-    logout: () => ipcRenderer.invoke('hermes:cloud:logout'),
-    discover: org => ipcRenderer.invoke('hermes:cloud:discover', org),
-    agentSignIn: dashboardUrl => ipcRenderer.invoke('hermes:cloud:agent-sign-in', dashboardUrl)
-  },
   profile: {
     getDefault: () => ipcRenderer.invoke('hermes:profile:default:get'),
     setDefault: (route: DesktopProfileRoute) => ipcRenderer.invoke('hermes:profile:default:set', route),

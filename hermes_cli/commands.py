@@ -344,8 +344,7 @@ COMMAND_REGISTRY: list[CommandDef] = [
                busy_policy="dispatch", desktop="terminal"),
     CommandDef("version", "Show A2Assistant version", "Info", aliases=("v",),
                busy_policy="dispatch", execute="version"),
-    CommandDef("debug", "Upload debug report (system info + logs) and get shareable links", "Info",
-               args_hint="[nous|local]"),
+    CommandDef("debug", "Show a redacted debug report (system info + logs)", "Info"),
 
     # Exit
     CommandDef("quit", "Exit the CLI (use --delete to also remove session history)", "Exit",

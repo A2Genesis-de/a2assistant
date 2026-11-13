@@ -192,7 +192,7 @@ def busy_reason(runner, *, window: float, count_clients: bool = True) -> str | N
             return "already stopping"
         if runner._active_work_count():
             return "agent work in flight"
-        if runner._scale_to_zero_has_live_background_work():
+        if runner._has_live_background_work():
             return "background work in flight"
         homes = _served_homes(runner)
         return (_messaging_busy(runner) or _ledger_busy(runner) or _profile_start_busy(runner)

@@ -43,7 +43,7 @@ async def test_ready_publication_failure_stops_cron_and_housekeeping(monkeypatch
             thread = threading.Thread(target=stopped.wait, daemon=True)
             thread.start()
             threads.append(thread)
-        return stopped, None, *threads
+        return stopped, *threads
 
     def refuse_ready(runner):
         raise RuntimeError('gateway stopped before session API readiness')

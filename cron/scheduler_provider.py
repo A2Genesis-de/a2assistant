@@ -1,16 +1,10 @@
-"""CronScheduler provider interface (Axis B — the trigger). EXPERIMENTAL: shape MAY change until a
-second provider validates it; growth MUST be additive (optional method with a default), never a
-changed start() signature or new abstractmethod. Providers decide only *when* a job fires —
-execution + delivery stay in cron.scheduler.run_job / _deliver_result; never reimplement them.
-"""
+"""In-process cron scheduler (the trigger): decides only *when* a due job fires — execution +
+delivery stay in cron.scheduler.run_job / _deliver_result."""
 from __future__ import annotations
 
 import contextlib
-import inspect
 import logging
-import threading
 import time
-from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Any
 
@@ -18,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 # Cap for exponential tick backoff during fd exhaustion (interval doubled per failure).
 _EMFILE_BACKOFF_MAX_SECONDS = 15 * 60
-DEFAULT_MISFIRE_GRACE_MINUTES = 10
 
 
 # Cap for the exponential tick backoff applied while consecutive ticks fail with fd exhaustion
@@ -133,41 +126,13 @@ def _profile_cron_scope(home):
         reset_hermes_home_override(home_token)
 
 
-class CronScheduler(ABC):
-    """Decides WHEN a due cron job fires. Only ``name`` + ``start`` are required; keep every other
-    hook NON-abstract with a safe default (``test_abc_growth_stays_additive``)."""
+class InProcessCronScheduler:
+    """Default in-process 60s ticker; ``start()`` blocks until ``stop_event``. ``can_dispatch`` is
+    an optional drain gate; skipped ticks leave due jobs intact for the next allowed tick."""
 
     @property
-    @abstractmethod
     def name(self) -> str:
-        """Short identifier, e.g. 'builtin', 'chronos'."""
-
-    def is_available(self) -> bool:
-        """Whether this provider can run here. MUST NOT make network calls; False → built-in."""
-        return True
-
-    @abstractmethod
-    def start(
-        self, stop_event: threading.Event, *, adapters: Any = None, loop: Any = None,
-        interval: int = 60,
-    ) -> None:
-        """Begin firing due jobs. Built-in BLOCKS until stop_event is set (run in a daemon thread);
-        an external provider may return immediately but must still honor stop_event."""
-
-    def stop(self) -> None:
-        """Optional eager teardown; stop_event is the primary signal."""
-        return
-
-    # Optional hooks for external providers — default-safe; keep NON-abstract.
-
-    def on_jobs_changed(self) -> None:
-        """After a successful store mutation; external providers reconcile. Built-in: no-op."""
-        return
-
-    def register_job(self, job: dict[str, Any]) -> None:
-        """Register the external trigger for a newly persisted job (must complete before callers
-        report it as scheduled). Built-in: no-op."""
-        return
+        return "builtin"
 
     def recover_interrupted(self) -> int:
         """Run profile-local attempt recovery for every provider lifecycle."""
@@ -175,31 +140,23 @@ class CronScheduler(ABC):
 
         return recover_interrupted_executions()
 
-    @property
-    def supports_force_fire(self) -> bool:
-        """Whether ``fire_due`` accepts ``force`` (signature-detected for older providers)."""
-        return provider_supports_force_fire(self)
-
     def fire_due(
         self, job_id: str, *, adapters: Any = None, loop: Any = None, force: bool = False,
         manual: bool = False,
     ) -> bool:
-        """Run one job NOW (inbound fire webhook entry). Store CAS claim (multi-machine
-        at-most-once) then shared ``run_one_job``. True if THIS caller claimed and processed the
-        attempt (even if the job failed); False if the claim was lost or the job is gone.
-        ``manual`` marks an off-tick run-now (dashboard trigger): the claim must not stamp
-        ``next_run_at`` as the occurrence, or that slot is skipped when it arrives. Webhook and
-        misfire fires arriving at/after the due instant run that slot and keep the stamp; a fire
-        arriving BEFORE the stored instant is off-tick like ``manual`` and stays occurrence-free
-        (it cannot be the tick that owns a future slot)."""
+        """Run one job NOW. Store CAS claim (multi-process at-most-once) then shared
+        ``run_one_job``. True if THIS caller claimed and processed the attempt (even if the job
+        failed); False if the claim was lost or the job is gone. ``manual`` marks an off-tick
+        run-now (dashboard trigger): the claim must not stamp ``next_run_at`` as the occurrence,
+        or that slot is skipped when it arrives."""
         claimed_job = self.claim_fire(job_id, force=force, manual=manual)
         if claimed_job is None:
             return False
         return self.fire_claimed(claimed_job, adapters=adapters, loop=loop)
 
     def claim_fire(self, job_id: str, *, force: bool = False, manual: bool = False) -> dict | None:
-        """Durably claim one fire + create its audit attempt. Transports call this synchronously
-        before acknowledging, then pass the exact snapshot to ``fire_claimed`` off-thread."""
+        """Durably claim one fire + create its audit attempt; ``fire_claimed`` runs the exact
+        snapshot."""
         from cron.executions import create_execution, finish_execution, set_execution_occurrence
         from cron.jobs import claim_job_for_fire
 
@@ -229,211 +186,12 @@ class CronScheduler(ABC):
         self, claimed_job: dict, *, adapters: Any = None, loop: Any = None,
         cancel_event: Any = None,
     ) -> bool:
-        """Run an exact ``claim_fire`` snapshot; ``cancel_event`` lets the transport stop it
+        """Run an exact ``claim_fire`` snapshot; ``cancel_event`` lets the caller stop it
         cooperatively (e.g. dashboard lifespan drain)."""
         from cron.scheduler import run_one_job
 
         run_one_job(claimed_job, adapters=adapters, loop=loop, cancel_event=cancel_event)
         return True
-
-    def reconcile(self) -> None:
-        """Converge the external registry toward jobs.json (desired state). Built-in: no-op."""
-        return
-
-
-def provider_supports_force_fire(provider: Any) -> bool:
-    """Return whether a provider can safely receive ``fire_due(force=...)`` (signature-detected)."""
-    return provider_fire_due_accepts(provider, "force")
-
-
-def provider_fire_due_accepts(provider: Any, name: str) -> bool:
-    """Whether ``provider.fire_due`` takes keyword ``name`` (third-party providers may predate it)."""
-    try:
-        parameters = inspect.signature(provider.fire_due).parameters.values()
-    except (TypeError, ValueError):
-        return False
-    return any(
-        p.kind is inspect.Parameter.VAR_KEYWORD
-        or (
-            p.name == name
-            and p.kind in (inspect.Parameter.POSITIONAL_OR_KEYWORD, inspect.Parameter.KEYWORD_ONLY)
-        )
-        for p in parameters
-    )
-
-
-def provider_supports_split_fire(provider: Any) -> bool:
-    """Whether a provider implements the two-phase fire contract. A legacy provider overriding only
-    ``fire_due`` must keep being driven through it — routing around the override would drop its
-    custom claim/re-arm/telemetry behavior."""
-    cls = type(provider)
-
-    def overrides(name: str) -> bool:
-        impl = getattr(cls, name, None)
-        return impl is not None and impl is not getattr(CronScheduler, name)
-
-    if overrides("claim_fire") or overrides("fire_claimed"):
-        return True
-    return not overrides("fire_due")
-
-
-def _misfire_grace_minutes() -> float:
-    """``cron.misfire_grace_minutes`` from config; non-positive disables the catch-up sweep."""
-    try:
-        from hermes_cli.config import cfg_get, load_config
-
-        config = load_config()
-        return float(
-            cfg_get(config, "cron", "misfire_grace_minutes", default=DEFAULT_MISFIRE_GRACE_MINUTES)
-        )
-    except Exception:
-        return float(DEFAULT_MISFIRE_GRACE_MINUTES)
-
-
-def fire_overdue_jobs(
-    provider: CronScheduler, *, adapters: Any = None, loop: Any = None, now: Any = None,
-) -> int:
-    """Misfire backstop (gateway housekeeping loop): fire jobs whose external HTTP fire never
-    arrived, else ``next_run_at`` stays parked in the past forever. No-op for the built-in (its tick
-    loop self-heals). Routes through the provider's own two-phase path so re-arm logic runs and a
-    concurrent late external retry is de-duplicated by the store CAS; waits out
-    ``cron.misfire_grace_minutes`` so the external retry gets first right. Returns jobs dispatched.
-    """
-    # `hermes pause` ESTOP: skip the sweep entirely. No state to unwind — the
-    # next housekeeping pass after `hermes resume` catches overdue work up
-    # through the existing claim_fire path. Distinct component name from the
-    # ticker's "cron" so the log-once mechanism fires independently.
-    with contextlib.suppress(ImportError):
-        from agent.estop import check_paused as _estop_check_paused
-        if _estop_check_paused("cron-misfire", logger):
-            return 0
-
-    from datetime import datetime
-
-    if isinstance(provider, InProcessCronScheduler):
-        return 0
-
-    grace_minutes = _misfire_grace_minutes()
-    if grace_minutes <= 0:
-        return 0
-
-    from cron.jobs import (
-        ONESHOT_GRACE_SECONDS, _elapsed_seconds, _ensure_aware, _hermes_now,
-        is_job_runnable, load_jobs,
-    )
-
-    if now is None:
-        now = _hermes_now()
-
-    fired = 0
-    for job in load_jobs():
-        if not is_job_runnable(job):
-            continue
-        next_run_at = job.get("next_run_at")
-        if not next_run_at:
-            continue
-        try:
-            due_dt = _ensure_aware(datetime.fromisoformat(next_run_at))
-        except (ValueError, TypeError):
-            continue
-        overdue_seconds = _elapsed_seconds(now, due_dt)
-        if overdue_seconds < grace_minutes * 60:
-            continue
-        job_id = str(job.get("id") or "")
-        # One-shots past ONESHOT_GRACE_SECONDS "will never fire"; don't resurrect them hours late.
-        # One-shot jobs share the module-wide policy: more than ONESHOT_GRACE_SECONDS past their run time
-        # means "will never fire" (create/update/resume/recovery and, since #89571, the due-scan all enforce
-        # it). The misfire backstop must not resurrect them hours late after downtime — that's #93526.
-        schedule = job.get("schedule") or {}
-        if str(schedule.get("kind") or "") == "once" and overdue_seconds > ONESHOT_GRACE_SECONDS:
-            logger.warning(
-                "Misfire catch-up: one-shot job %s (%s) was due %s "
-                "(%.0f min overdue) — outside the %ss one-shot grace "
-                "window, not firing.",
-                job_id,
-                job.get("name") or "unnamed",
-                next_run_at,
-                overdue_seconds / 60,
-                ONESHOT_GRACE_SECONDS,
-            )
-            continue
-        logger.warning(
-            "Misfire catch-up: job %s (%s) was due %s (%.0f min overdue) and "
-            "no external fire arrived — firing locally.",
-            job_id,
-            job.get("name") or "unnamed",
-            next_run_at,
-            overdue_seconds / 60,
-        )
-        try:
-            # Claim synchronously (CAS loss = external retry beat us), run off-thread: never block.
-            claimed = provider.claim_fire(job_id)
-            if claimed is None:
-                continue
-            threading.Thread(
-                target=provider.fire_claimed, args=(claimed,),
-                kwargs={"adapters": adapters, "loop": loop}, daemon=True,
-                name=f"cron-misfire-{job_id[:12]}",
-            ).start()
-            fired += 1
-        except Exception as exc:
-            logger.warning(
-                "Misfire catch-up failed for job %s: %s: %s",
-                job_id, type(exc).__name__, exc,
-            )
-    return fired
-
-
-def resolve_cron_scheduler() -> CronScheduler:
-    """Resolve ``cron.provider``; missing/failing/unavailable providers fall back to the built-in
-    with a warning — cron must never be left without a trigger."""
-    name = ""
-    try:
-        from hermes_cli.config import cfg_get, load_config
-        name = (cfg_get(load_config(), "cron", "provider", default="") or "").strip()
-    except Exception:
-        pass
-
-    if not name or name in ("builtin", "in-process", "inprocess"):
-        return InProcessCronScheduler()
-
-    try:
-        from plugins.cron_providers import load_cron_scheduler
-        provider = load_cron_scheduler(name)
-        if provider is None:
-            logger.warning("cron.provider '%s' not found; using built-in ticker", name)
-            return InProcessCronScheduler()
-        if not provider.is_available():
-            logger.warning("cron.provider '%s' not available; using built-in ticker", name)
-            return InProcessCronScheduler()
-        logger.info("Using cron scheduler provider: %s", provider.name)
-        return provider
-    except Exception as e:
-        logger.warning("Failed to load cron.provider '%s' (%s); using built-in ticker", name, e)
-        return InProcessCronScheduler()
-
-
-def scheduler_for_profile_mode(
-    provider: CronScheduler, *, multiplex_profiles: bool
-) -> CronScheduler:
-    """External providers own one unscoped remote registry and cannot reconcile several profile
-    stores: fail closed to the built-in multiplex ticker until the API carries profile identity."""
-    if not multiplex_profiles or isinstance(provider, InProcessCronScheduler):
-        return provider
-    logger.warning(
-        "cron.provider '%s' does not support multiplex_profiles; using built-in ticker",
-        provider.name,
-    )
-    return InProcessCronScheduler()
-
-
-class InProcessCronScheduler(CronScheduler):
-    """Default in-process 60s ticker; ``start()`` blocks until ``stop_event``. ``can_dispatch`` is
-    an optional drain gate; skipped ticks leave due jobs intact for the next allowed tick."""
-
-    @property
-    def name(self) -> str:
-        return "builtin"
 
     def start(
         self, stop_event, *, adapters=None, loop=None, interval=60, can_dispatch=None,

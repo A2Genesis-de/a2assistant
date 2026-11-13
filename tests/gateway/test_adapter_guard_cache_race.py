@@ -6,7 +6,7 @@ its cache read/write completely lock-free there. The original code published
 the verdict with ``Path.write_text`` (open-truncate-write): a sibling process
 reading between the truncate and the write saw an empty file and raised
 ``pytest.UsageError("")`` — surfacing in the flaky-retry frames as a bare
-``ERROR:`` with no message on healthy ``tests/gateway/relay/*`` files
+``ERROR:`` with no message on healthy test files
 (e.g. CI runs 32930243538, 32932008269 on 2026-08-26).
 
 These tests pin the two properties the fix relies on:

@@ -193,7 +193,6 @@ def test_satellite_gateway_identity_does_not_imply_cron_health(served_root, monk
     monkeypatch.setattr(gw, "find_gateway_pids", lambda *a, **k: [])
     monkeypatch.setattr(gw, "get_gateway_runtime_snapshot",
                         lambda system=False: gw.GatewayRuntimeSnapshot(manager="systemd (user)"))
-    monkeypatch.setattr(cr, "_active_cron_provider_name", lambda: "builtin")
     monkeypatch.setattr(cr, "_print_active_jobs_summary", lambda jobs: None)
 
     buf = io.StringIO()

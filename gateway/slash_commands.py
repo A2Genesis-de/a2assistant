@@ -116,9 +116,6 @@ def _restart_notify_payload(event: MessageEvent) -> dict:
     source = event.source
     data = {"platform": source.platform.value if source.platform else None,
             "chat_id": source.chat_id, "chat_type": source.chat_type}
-    if source.delivered_via_upstream_relay is True:
-        data["delivered_via_upstream_relay"] = True
-        data.update({k: getattr(source, k) for k in ("user_id", "scope_id") if getattr(source, k)})
     optional = (("thread_id", source.thread_id), ("message_id", event.message_id),
                 ("profile", getattr(source, "profile", None)))
     data.update({k: v for k, v in optional if v})
@@ -640,24 +637,13 @@ class GatewaySlashCommandsMixin(
         chat_name = source.chat_name or chat_id
         if source.platform is None:
             return t("gateway.set_home.save_failed", error=t("gateway.set_home.err_missing_platform"))
-        via_relay = getattr(source, "delivered_via_upstream_relay", False) is True
-        if via_relay:
-            adapter_for_source = getattr(self, "_intake_adapter_for", None)
-            relay_adapter = adapter_for_source(source) if callable(adapter_for_source) else None
-            fronts_platform = getattr(relay_adapter, "fronts_platform", None)
-            if (source.platform in {None, Platform.LOCAL, Platform.RELAY}
-                    or not getattr(source, "user_id", None)
-                    or not callable(fronts_platform) or not fronts_platform(source.platform)):
-                return t("gateway.set_home.save_failed", error=t("gateway.set_home.err_relay_unauthenticated"))
         thread_id = _home_thread_from_source(source)
         home = HomeChannel(
             platform=source.platform, chat_id=str(chat_id), name=chat_name, thread_id=thread_id,
             user_id=str(source.user_id) if getattr(source, "user_id", None) else None,
             scope_id=str(source.scope_id) if getattr(source, "scope_id", None) else None)
-        # config.yaml is canonical because it can persist the authenticated logical-target
-        # provenance required by Relay after a restart.
         try:
-            persist_home_channel(home, enabled_if_new=not via_relay)
+            persist_home_channel(home, enabled_if_new=True)
         except Exception as e:
             return t("gateway.set_home.save_failed", error=e)
         # Preserve legacy home env vars for existing cron/setup consumers.
@@ -669,7 +655,7 @@ class GatewaySlashCommandsMixin(
             logger.warning("Home config saved but legacy env persistence failed: %s", e)
         # Keep the running gateway config in sync too. The pre-restart notification path reads
         # self.config before the process reloads config.
-        platform_config = self.config.platforms.setdefault(source.platform, PlatformConfig(enabled=not via_relay))
+        platform_config = self.config.platforms.setdefault(source.platform, PlatformConfig(enabled=True))
         platform_config.home_channel = home
         return t("gateway.set_home.success", name=chat_name, chat_id=chat_id)
 
@@ -1257,51 +1243,16 @@ class GatewaySlashCommandsMixin(
         return await self._run_in_executor_with_context(_run)
 
     async def _handle_debug_command(self, event: MessageEvent) -> str:
-        """Handle /debug — upload ONLY the summary (system info + log tails), never full logs, to
-        protect privacy; ``hermes debug share`` from the CLI does full uploads."""
-        from hermes_cli.debug import (_GATEWAY_PRIVACY_NOTICE, _best_effort_sweep_expired_pastes,
-                                      _capture_dump, _is_dpaste_url, _schedule_auto_delete,
-                                      collect_debug_report, upload_to_pastebin)
-        from hermes_cli.debug_redaction import redact_debug_support_text
+        """Handle /debug — the redacted summary report for a local session; chats get a pointer to
+        ``hermes debug share`` on the host, since the report never leaves the machine."""
+        if getattr(event.source, "platform", None) != Platform.LOCAL:
+            return t("gateway.debug.chat_refused")
+        from hermes_cli.debug import collect_share_bundle
 
-        wants_local = "local" in {w.lower() for w in (event.get_command_args() or "").split()}
-        if wants_local and getattr(event.source, "platform", None) != Platform.LOCAL:
-            # From a chat the report can't stay on the machine; `/debug local` must never fall
-            # through to the public paste. Bare `/debug` is the upload form.
-            return t("gateway.debug.local_refused")
-        if wants_local:
-            # A local session's `/debug local` (main's CLI form) asks for the report on this machine:
-            # return the redacted report for the client to show, with no network call at all (not
-            # even the expired-paste sweep). Uploading stays on the explicit `/debug` form (T7).
-            from hermes_cli.debug import collect_share_bundle
+        def _collect_local():
+            return collect_share_bundle(log_lines=200)["report"]
 
-            def _collect_local():
-                return collect_share_bundle(log_lines=200)["report"]
-
-            return await self._run_in_executor_with_context(_collect_local)
-
-        def _collect_and_upload():  # blocking I/O (dump capture, log reads, uploads) -> thread
-            _best_effort_sweep_expired_pastes()
-            report = collect_debug_report(log_lines=200, dump_text=_capture_dump())
-            try:
-                urls = {t("gateway.debug.report_label"): upload_to_pastebin(report)}
-            except Exception as exc:
-                return t("gateway.debug.upload_failed", error=redact_debug_support_text(exc))
-            _schedule_auto_delete(list(urls.values()))  # paste.rs only; dpaste.com has no delete
-            label_width = max(len(k) for k in urls)
-            # The 6-hour line is only true for paste.rs; the privacy notice above already states
-            # the dpaste.com fallback retention, so drop the line rather than contradict it.
-            auto_delete = [] if any(map(_is_dpaste_url, urls.values())) else [
-                t("gateway.debug.auto_delete")]
-            return "\n".join([_GATEWAY_PRIVACY_NOTICE, "", t("gateway.debug.header"), "",
-                              *(f"`{label:<{label_width}}`  {url}" for label, url in urls.items()),
-                              "", *auto_delete, t("gateway.debug.full_logs_hint"),
-                              t("gateway.debug.share_hint")])
-
-        # _run_in_executor_with_context, not a bare hop: this collects the profile's logs/config off
-        # ``get_hermes_home()`` and uploads them to a public paste. Losing the contextvar override
-        # would publish the DEFAULT profile's diagnostics from another profile's chat.
-        return await self._run_in_executor_with_context(_collect_and_upload)
+        return await self._run_in_executor_with_context(_collect_local)
 
     async def _handle_update_command(self, event: MessageEvent) -> str:
         """Handle /update — spawn ``hermes update`` detached (``setsid``) so it survives the gateway

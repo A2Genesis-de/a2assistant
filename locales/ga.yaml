@@ -161,13 +161,7 @@ gateway:
     codex_compacted: "🗜️ Dlúthaíodh snáithe app-server Codex (thread/compact). Tá scáthán na traschríbhinne gan athrú d'aon ghnó — is ag an app-server atá an comhthéacs dlúthaithe anois."
     codex_incomplete: "⚠️ Níor críochnaíodh dlúthú app-server Codex — tá an snáithe gan athrú. Seiceáil logaí an app-server, bain triail eile as /compress, nó /reset le haghaidh seisiún glan."
   debug:
-    upload_failed: "✗ Theip ar uaslódáil tuairisce dífhabhtaithe: {error}"
-    header: "**Tuairisc dhífhabhtaithe uaslódáilte:**"
-    auto_delete: "⏱ Scriosfar na pastes go huathoibríoch i 6 huaire."
-    full_logs_hint: "Le haghaidh uaslódálacha logála iomlána, úsáid `a2assistant debug share` ón CLI."
-    share_hint: "Roinn na naisc seo le foireann A2Assistant le haghaidh tacaíochta."
-    report_label: "Tuairisc"
-    local_refused: "Coinníonn `/debug local` an tuarascáil ar an meaisín a ritheann A2Assistant, mar sin níl sé ar fáil ó chomhrá. Seol `/debug` chun an achoimre a uaslódáil."
+    chat_refused: "Fanann an tuairisc dífhabhtaithe ar an meaisín ina bhfuil A2Assistant ag rith. Rith `hermes debug share` ansin."
   deny:
     stale: "❌ Ordú diúltaithe (bhí an cead imithe i léig)."
     no_pending: "Níl aon ordú ag fanacht le diúltú."
@@ -382,7 +376,6 @@ gateway:
     save_failed: "Theip ar shábháil chainéil bhaile: {error}"
     success: "✅ Cainéal baile socraithe go **{name}** (ID: {chat_id}).\nSeachadfar tascanna cron agus teachtaireachtaí trasardáin anseo."
     err_missing_platform: "Ardán loighciúil ar iarraidh"
-    err_relay_unauthenticated: "Ní fhíordheimhníonn an t-athsheachadán an sprioc bhaile loighciúil seo"
   context:
     header: "🧠 **Fuinneog Chomhthéacs**"
     model: "Samhail: `{model}`"
@@ -1285,7 +1278,7 @@ slash:
   version:
     description: "Taispeáin leagan A2Assistant"
   debug:
-    description: "Uaslódáil tuairisc dhífhabhtaithe (eolas córais + logaí) agus faigh naisc in-roinnte"
+    description: "Taispeáin tuairisc dífhabhtaithe athchóirithe (faisnéis chórais + logaí)"
   quit:
     description: "Scoir den CLI (úsáid --delete chun stair an tseisiúin a bhaint freisin)"
 cli:

@@ -30,7 +30,6 @@ import hermes_cli.web_server_files as _web_server_files
 import hermes_cli.web_server_gateway as _web_server_gateway
 import hermes_cli.web_server_lifecycle as _web_server_lifecycle
 import hermes_cli.web_server_memory as _web_server_memory
-import hermes_cli.web_server_messaging as _web_server_messaging
 import hermes_cli.web_server_sessions as _web_server_sessions
 from datetime import UTC
 
@@ -1267,69 +1266,6 @@ CONFIG_SCHEMA = ProviderConfigSchema(
             platform_registry.unregister("pseudofake")
             Platform._value2member_map_.pop("pseudofake", None)
             Platform._member_map_.pop("PSEUDOFAKE", None)
-
-
-    def test_telegram_onboarding_apply_reports_restart_failure_after_save(
-        self, monkeypatch
-    ):
-        from hermes_cli.config import load_config, load_env
-
-        with _web_server_messaging._telegram_onboarding_lock:
-            _web_server_messaging._telegram_onboarding_pairings.clear()
-
-        def fake_request(method, path, *, body=None, bearer_token=None):
-            if method == "POST":
-                return {
-                    "pairing_id": "pair-restart-fails",
-                    "poll_token": "poll-secret",
-                    "suggested_username": "hermes_pair_restart_fails_bot",
-                    "deep_link": "https://t.me/newbot/HermesSetupBot/hermes_pair_restart_fails_bot",
-                    "qr_payload": "https://t.me/newbot/HermesSetupBot/hermes_pair_restart_fails_bot",
-                    "expires_at": "2027-05-18T00:00:00.000Z",
-                }
-            assert method == "GET"
-            assert path == "/v1/telegram/pairings/pair-restart-fails"
-            assert bearer_token == "poll-secret"
-            return {
-                "status": "ready",
-                "bot_username": "hermes_pair_restart_fails_bot",
-                "owner_user_id": 123456789,
-                "token": "123456:SECRET",
-            }
-
-        monkeypatch.setattr(_web_server_messaging, "_telegram_onboarding_request_sync", fake_request)
-        _web_server_gateway._ACTION_PROCS.pop("gateway-restart", None)
-
-        def fail_spawn_action(subcommand, name):
-            # The default home is named explicitly: a bare child would re-read the sticky active_profile.
-            assert subcommand == ["-p", "default", "gateway", "restart"]
-            assert name == "gateway-restart"
-            raise RuntimeError("supervisor unavailable")
-
-        monkeypatch.setattr(_web_server_gateway, "_spawn_hermes_action", fail_spawn_action)
-
-        start = self.client.post("/api/messaging/telegram/onboarding/start", json={})
-        assert start.status_code == 200
-        ready = self.client.get("/api/messaging/telegram/onboarding/pair-restart-fails")
-        assert ready.status_code == 200
-        assert ready.json()["status"] == "ready"
-
-        applied = self.client.post(
-            "/api/messaging/telegram/onboarding/pair-restart-fails/apply",
-            json={"allowed_user_ids": ["123456789"]},
-        )
-
-        assert applied.status_code == 200
-        applied_data = applied.json()
-        assert applied_data["ok"] is True
-        assert applied_data["needs_restart"] is True
-        assert applied_data["restart_started"] is False
-        assert "supervisor unavailable" in applied_data["restart_error"]
-        assert "token" not in applied_data
-        env = load_env()
-        assert env["TELEGRAM_BOT_TOKEN"] == "123456:SECRET"
-        assert env["TELEGRAM_ALLOWED_USERS"] == "123456789"
-        assert load_config()["platforms"]["telegram"]["enabled"] is True
 
 
     def test_unauthenticated_api_blocked(self):

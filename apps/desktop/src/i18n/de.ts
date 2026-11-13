@@ -24,7 +24,6 @@ import { dePluginPreviewAccess } from './de_plugin_preview_access'
 import { dePluginUpdate } from './de_plugin_update'
 import { dePreviewWeb } from './de_preview_web'
 import { deProjects } from './de_projects'
-import { deSharedMetrics } from './de_shared_metrics'
 import { deThemePicker } from './de_theme_picker'
 import { deUpdateChannel } from './de_update_channel'
 import { defineLocale, type TranslationOverrides } from './define-locale'
@@ -36,7 +35,6 @@ const deBaseOverrides = {
     lookupFailed: "Diese Gruppe konnte auf dem Gateway nicht gefunden werden. Versuche es erneut.",
     missing: "Dieser Gruppenchat existiert nicht mehr."
   },
-  sharedMetrics: deSharedMetrics,
   firstRun: deFirstRun,
   intro: introDe,
   connectors: deConnectorCard,
@@ -511,29 +509,6 @@ const deBaseOverrides = {
     }
   },
   ...deNotices,
-  sendDiagnostics: {
-    title: 'Diagnosedaten an Nous senden',
-    privacyNotice:
-      'Damit laden Sie ein Debug-Paket in den internen Nous-Speicher hoch (kein öffentliches Paste). Es enthält Systeminfos (Betriebssystem, Versionen, Provider, welche API-Keys konfiguriert sind – niemals die Keys selbst) sowie vollständige Agent-, Gateway- und Desktop-Logs (bis zu 512 KB je Datei), die sehr wahrscheinlich Gesprächsinhalte, Tool-Ausgaben und Dateipfade enthalten. Geheimnisse werden vor dem Upload geschwärzt. Das Paket ist nur für Nous-Mitarbeitende und freigeschaltete Discord-Moderatoren einsehbar und wird nach 14 Tagen automatisch gelöscht.',
-    upload: 'Hochladen',
-    uploading: 'Wird hochgeladen…',
-    cancel: 'Abbrechen',
-    close: 'Schließen',
-    copyLink: 'Link kopieren',
-    uploadIdFallback: id => `Kein Link zurückgegeben — zitiere die Upload-ID ${id} im Support`,
-    doneTitle: 'Diagnosedaten gesendet',
-    doneDescription:
-      'Ihr Paket wurde privat hochgeladen. Teilen Sie den Link unten in Ihrem Support-Thread, damit das Team Ihre Logs sehen kann.',
-    failedTitle: 'Hochladen fehlgeschlagen',
-    failedHint:
-      'Sie können auch `hermes debug share --nous` im Terminal ausführen oder `hermes debug share --local`, um den Bericht ohne Hochladen auszugeben.',
-    handoffLead: 'Diskussion hier fortsetzen:',
-    links: {
-      github: 'GitHub Issues',
-      portal: 'Nous-Portal-Support',
-      discord: 'Discord'
-    }
-  },
   titlebar: {
     hideSidebar: 'Sidebar ausblenden',
     showSidebar: 'Sidebar einblenden',
@@ -1649,44 +1624,6 @@ const deBaseOverrides = {
       remoteDesc: 'Verbindet diese Desktop-Shell mit einem entfernten A2Assistant-Backend.',
       remoteAuthHint:
         'Gehostete Gateways verwenden OAuth oder Benutzername und Passwort; selbst gehostete können ein Session-Token verwenden.',
-      cloudTitle: 'Hermes Cloud',
-      cloudDesc:
-        'Melden Sie sich einmal bei Hermes Cloud an und wählen Sie aus den Agents in Ihrem Konto – ohne eine URL einzufügen.',
-      cloudSignInTitle: 'Hermes Cloud',
-      cloudSignIn: 'Bei Hermes Cloud anmelden',
-      cloudSignedIn: 'Bei Hermes Cloud angemeldet',
-      cloudNeedsSignIn: 'Melden Sie sich bei Hermes Cloud an, um die Agents in Ihrem Konto zu finden.',
-      cloudSignedInDesc:
-        'Sie sind angemeldet. Wählen Sie unten einen Agent; die Session wird automatisch aktualisiert.',
-      cloudAgentsTitle: 'Ihre Agents',
-      cloudOrgPickerTitle: 'Organisation auswählen',
-      cloudOrgSelect: 'Auswählen',
-      cloudOrgChange: 'Organisation ändern',
-      cloudOrgRole: role => `Rolle: ${role}`,
-      cloudLoadingAgents: 'Ihre Agents werden geladen…',
-      cloudNoAgents: {
-        before: 'Keine Agents in diesem Konto gefunden. Legen Sie einen im ',
-        linkText: 'Nous-Portal',
-        after: ' an und aktualisieren Sie dann.'
-      },
-      cloudRefresh: 'Aktualisieren',
-      cloudConnect: 'Verbinden',
-      cloudSavedTitle: 'Gespeicherte Cloud-Gateways',
-      cloudSavedDesc:
-        'Verwenden Sie ein gespeichertes Gateway, ohne Ihren Standard zu ändern. Melden Sie sich unten an, um Instanzen hinzuzufügen. Namen und Anmeldung verwalten Sie in der Liste der gespeicherten Verbindungen.',
-      cloudUseSaved: 'Gateway verwenden',
-      cloudActive: 'In diesem Fenster aktiv',
-      cloudConnecting: 'Verbindung wird hergestellt…',
-      cloudDiscoverFailed: 'Ihre A2Assistant-Cloud-Agents konnten nicht geladen werden',
-      cloudConnectFailed: 'Keine Verbindung zu diesem Agent möglich',
-      cloudSignInFailed: 'Anmeldung bei Hermes Cloud fehlgeschlagen',
-      cloudSignedOutTitle: 'Von Hermes Cloud abgemeldet',
-      cloudSignedOutMessage: 'Die A2Assistant-Cloud-Session wurde geleert.',
-      cloudConnectedTitle: 'Verbunden',
-      cloudConnectedPill: 'Verbunden',
-      cloudConnectedTo: name => `Mit ${name} verbunden.`,
-      cloudAgentProvisioning: 'Provisionierung…',
-      cloudStatusLabel: status => `Status: ${status}`,
       remoteUrlTitle: 'Remote-URL',
       remoteUrlDesc: 'Basis-URL für das Remote-Dashboard-Backend. Pfad-Präfixe werden unterstützt, z. B. /hermes.',
       probing: 'Authentifizierungsmethode dieses Gateways wird geprüft…',
@@ -2796,12 +2733,6 @@ const deBaseOverrides = {
       securityAuditDesc: 'Konfiguration und Skills auf riskante Einstellungen scannen',
       backup: 'Backup erstellen',
       backupDesc: 'Konfiguration, Memories, Skills und Sessions als ZIP packen',
-      debugShare: 'Debug-Freigabe',
-      debugShareDesc:
-        'Einen geschwärzten Bericht + Logs hochladen, teilbare Links erhalten (wird nach 6h automatisch gelöscht)',
-      debugShareRunning: 'Debug-Bericht wird hochgeladen...',
-      debugShareLinks: 'Freigabelinks',
-      debugShareFailed: 'Debug-Freigabe fehlgeschlagen',
       copyLink: 'Link kopieren',
       linkCopied: 'Link kopiert',
       curator: 'Skill-Curator',
@@ -2921,63 +2852,6 @@ const deBaseOverrides = {
       'Versuchen Sie den Neustart erneut; wenn er weiterhin fehlschlägt, öffnen Sie die Logs und senden Sie Diagnosedaten.',
     restartAgain: 'Erneut neu starten',
     openLogs: 'Logs öffnen',
-    relayLink: {
-      title: 'Team Gateway',
-      badge: 'Kein Bot-Token nötig',
-      intro: (platform: string) => `${platform} erreicht diesen Agenten über den gemeinsamen A2Assistant-Bot. Verknüpfe dein ${platform}-Konto damit und schreib dem Bot, um mit deinem Agenten zu sprechen.`,
-      link: (platform: string) => `${platform} verknüpfen`,
-      linkAnother: (platform: string) => `Weiteres ${platform}-Konto verknüpfen`,
-      linkedAccounts: 'Verknüpfte Konten',
-      unlink: 'Trennen',
-      unlinkFailed: 'Konto konnte nicht getrennt werden',
-      stepOpen: (platform: string) => `1. Scanne den Code mit dem Handy oder öffne den Bot in ${platform}.`,
-      stepSend: '2. Sende dem Bot diese Nachricht von dem Konto, das du verknüpfen willst:',
-      open: (platform: string) => `${platform} öffnen`,
-      copy: 'Nachricht kopieren',
-      copied: 'Kopiert',
-      copyFailed: (command: string) => `Kopieren fehlgeschlagen. Tippe stattdessen ${command}.`,
-      waiting: 'Warte darauf, dass der Bot deine Nachricht sieht. Der Code gilt einmal.',
-      linked: (platform: string) => `${platform}-Konto verknüpft. Schreib dem Bot, um mit deinem Agenten zu sprechen.`,
-      expired: 'Der Code ist abgelaufen, bevor er benutzt wurde. Hol dir einen neuen Code und versuch es erneut.',
-      refused: (platform: string) => `${platform} hat die Verknüpfung abgelehnt. Hol dir einen neuen Code und versuch es erneut.`,
-      qrAlt: (platform: string) => `QR-Code für den gemeinsamen ${platform}-Bot`,
-      managed: 'Von Team Gateway verwaltet',
-      managedNote: (platform: string) => `Team Gateway übernimmt auf dieser Instanz das Messaging, daher schaltet das Gateway die direkte ${platform}-Verbindung bei jedem Start ab. Um sie parallel zum Relay zu betreiben, setze GATEWAY_RELAY_ALLOW_DIRECT_PLATFORMS=true in der Umgebung des Gateways (eine direkte Verbindung verhindert das Herunterskalieren auf null und kann Nachrichten doppelt zustellen).`,
-      managedIntro: 'Die Konten dieses Agenten werden im Nous Portal verknüpft.',
-      openPortal: 'Konten im Nous Portal verknüpfen',
-      noNewAccount: (platform: string) => `Der Code ist nicht mehr aktiv und es ist kein neues Konto erschienen. Falls dein ${platform}-Konto nicht aufgeführt ist, hol dir einen neuen Code und versuche es erneut.`
-    },
-    telegramQr: {
-      title: 'Wählen Sie, wie Sie Ihren Telegram-Bot verbinden',
-      subtitle:
-        'Beide Optionen verbinden einen Bot, den Sie kontrollieren, und speichern seine Zugangsdaten nur in dieser A2Assistant-Installation.',
-      quickSetup: 'Schnelleinrichtung',
-      recommended: 'Empfohlen',
-      quickHelp:
-        'Scannen Sie einen QR-Code und bestätigen Sie in Telegram. A2Assistant legt den Bot an und erkennt Ihre Telegram-Benutzer-ID automatisch.',
-      createWithQr: 'Mit QR-Code anlegen',
-      starting: 'Wird gestartet…',
-      replaceWarning:
-        'Es sind bereits Telegram-Zugangsdaten konfiguriert. Eine neue QR-Einrichtung oder ein Bot-Token ersetzt beim Speichern den aktuellen Bot.',
-      scanHint: 'Scannen Sie mit der Telegram-App auf Ihrem Handy oder öffnen Sie den Link auf diesem Computer.',
-      waiting: 'Warten auf Telegram…',
-      expiresIn: remaining => `Läuft ab in ${remaining}`,
-      expired: 'Abgelaufen',
-      openTelegram: 'Telegram öffnen',
-      ready: 'Bot angelegt',
-      allowedUsers: 'Erlaubte Benutzer',
-      ownerDetected: 'Eigentümer erkannt',
-      addAtLeastOne: 'Fügen Sie mindestens eine Telegram-Benutzer-ID hinzu.',
-      userIdPlaceholder: 'Telegram-Benutzer-ID',
-      add: 'Hinzufügen',
-      numericOnly: 'Erlaubte Telegram-Benutzer-IDs müssen numerisch sein.',
-      saveAndRestart: 'Speichern und neu starten',
-      applying: 'Wird gespeichert…',
-      pairingExpired: 'Telegram-Kopplung abgelaufen. Starten Sie eine neue QR-Einrichtung, um es erneut zu versuchen.',
-      stillWaiting: detail => `Noch keine Antwort von Telegram. Neuer Versuch nach: ${detail}`,
-      savedRestarting: 'Telegram gespeichert; Gateway wird neu gestartet…',
-      savedRestartFailed: detail => `Telegram gespeichert; Gateway-Neustart fehlgeschlagen${detail}`
-    },
     fieldCopy: {
       TELEGRAM_BOT_TOKEN: {
         label: 'Bot-Token',
@@ -4923,7 +4797,6 @@ const deBaseOverrides = {
       errorOpenLogs: 'Logs öffnen',
       errorOpenLogsFailed: 'Der Logs-Ordner konnte nicht geöffnet werden',
       errorOpenDesktopLogs: 'Desktop-Logs öffnen',
-      errorSendDiagnostics: 'Diagnose senden',
       filesChanged: count => (count === 1 ? '1 Datei geändert' : `${count} Dateien geändert`),
       reviewChanges: 'Prüfen',
       readAloudFailed: 'Vorlesen fehlgeschlagen',
@@ -5393,7 +5266,6 @@ const deBaseOverrides = {
     boundaryDesc:
       'In dieser Ansicht ist ein unerwarteter Fehler aufgetreten. Ihre Chats und Einstellungen sind sicher.',
     boundaryDetails: 'Details',
-    sendDiagnostics: 'Diagnosedaten senden',
     reloadWindow: 'Fenster neu laden',
     openLogs: 'Logs öffnen'
   },

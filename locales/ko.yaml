@@ -161,13 +161,7 @@ gateway:
     codex_compacted: "🗜️ Codex app-server 스레드를 압축했어요(thread/compact). 설계상 트랜스크립트 미러는 바뀌지 않고, 이제 app-server가 압축된 컨텍스트를 가지고 있어요."
     codex_incomplete: "⚠️ Codex app-server 압축이 완료되지 않아 스레드는 그대로예요. app-server 로그를 확인하고 /compress를 다시 시도하거나, /reset으로 깨끗한 세션을 시작하세요."
   debug:
-    upload_failed: "✗ 디버그 보고서 업로드 실패: {error}"
-    header: "**디버그 보고서가 업로드되었습니다:**"
-    auto_delete: "⏱ 페이스트는 6시간 후 자동 삭제됩니다."
-    full_logs_hint: "전체 로그 업로드는 CLI에서 `a2assistant debug share`를 사용하세요."
-    share_hint: "지원을 받으려면 이 링크를 A2Assistant 팀과 공유하세요."
-    report_label: "리포트"
-    local_refused: "`/debug local`은 보고서를 A2Assistant가 실행 중인 컴퓨터에만 보관하므로 채팅에서는 사용할 수 없습니다. 요약 보고서를 업로드하려면 `/debug`를 보내세요."
+    chat_refused: "디버그 보고서는 A2Assistant가 실행 중인 컴퓨터에 남습니다. 그 컴퓨터에서 `hermes debug share`를 실행하세요."
   deny:
     stale: "❌ 명령이 거부되었습니다 (승인이 만료됨)."
     no_pending: "거부 대기 중인 명령이 없습니다."
@@ -382,7 +376,6 @@ gateway:
     save_failed: "홈 채널 저장에 실패했습니다: {error}"
     success: "✅ 홈 채널이 **{name}**(ID: {chat_id})(으)로 설정되었습니다.\n크론 작업과 플랫폼 간 메시지가 여기로 전달됩니다."
     err_missing_platform: "논리 플랫폼이 없어요"
-    err_relay_unauthenticated: "릴레이가 이 논리 홈 대상을 인증하지 않아요"
   context:
     header: "🧠 **컨텍스트 윈도우**"
     model: "모델: `{model}`"
@@ -1285,7 +1278,7 @@ slash:
   version:
     description: "A2Assistant 버전 표시"
   debug:
-    description: "디버그 보고서(시스템 정보 + 로그) 업로드 및 공유 링크 받기"
+    description: "민감 정보를 가린 디버그 보고서(시스템 정보 + 로그) 표시"
   quit:
     description: "CLI 종료 (--delete를 붙이면 세션 기록도 삭제)"
 cli:

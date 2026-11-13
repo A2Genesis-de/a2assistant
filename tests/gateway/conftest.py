@@ -387,8 +387,8 @@ def pytest_configure(config):
     # the cache write must be atomic and the read must tolerate a
     # not-yet-visible cache. Before the atomic-write fix, a reader could
     # observe a sibling's ``write_text`` mid-truncate, read "" and raise
-    # ``UsageError("")`` — the empty ``ERROR:`` flake that hit
-    # tests/gateway/relay/* files under the 96-way per-file runner.
+    # ``UsageError("")`` — the empty ``ERROR:`` flake under the 96-way
+    # per-file runner.
     try:
         from filelock import FileLock
         lock = FileLock(str(lock_file), timeout=120)

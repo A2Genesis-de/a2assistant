@@ -82,7 +82,7 @@ class TestMultiplexConfigFlag:
             def start(self, stop_event, **kwargs):
                 captured.update(kwargs)
 
-        monkeypatch.setattr("cron.scheduler_provider.resolve_cron_scheduler", lambda: _Ticker())
+        monkeypatch.setattr("cron.scheduler_provider.InProcessCronScheduler", _Ticker)
         monkeypatch.setattr(run_mod, "_cron_tick_profile_homes", lambda cfg: [("rex", tmp_path)])
         monkeypatch.setattr(run_mod, "_start_gateway_housekeeping", lambda *a, **k: None)
         runner = SimpleNamespace(
@@ -92,7 +92,7 @@ class TestMultiplexConfigFlag:
         async def _go():
             return run_bootstrap._start_gateway_start_cron_and_housekeeping(runner)
 
-        cron_stop, _provider, cron_thread, hk = asyncio.run(_go())
+        cron_stop, cron_thread, hk = asyncio.run(_go())
         cron_stop.set()
         cron_thread.join(timeout=5)
         hk.join(timeout=5)

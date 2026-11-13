@@ -375,17 +375,16 @@ async def test_failure_exit_still_stops_cron_housekeeping_and_mcp(monkeypatch):
         stopped.append("mcp")
 
     monkeypatch.setattr(gateway_run, "_shutdown_mcp_servers_nonblocking", fake_mcp_shutdown)
-    monkeypatch.setattr(gateway_run, "_stop_cron_provider", lambda provider: stopped.append("provider"))
     monkeypatch.setattr("hermes_cli.nous_auth_keepalive.stop_nous_auth_keepalive", lambda: None)
     runner = MagicMock(should_exit_with_failure=True, exit_reason="boom", exit_code=None)
 
     from gateway.run_bootstrap import _start_gateway_shutdown_tail
     result = await _start_gateway_shutdown_tail(
-        runner, None, cron_stop, object(), threads[0], threads[1], watcher_stop, watcher, [False])
+        runner, None, cron_stop, threads[0], threads[1], watcher_stop, watcher, [False])
 
     assert result is False
     assert cron_stop.is_set() and watcher_stop.is_set()
-    assert stopped == ["provider", "mcp"]
+    assert stopped == ["mcp"]
     for thread in threads + [watcher]:
         thread.join(timeout=2)
         assert not thread.is_alive()

@@ -1,8 +1,7 @@
 """A ``hold_stream`` plugin's session shows the user only the rewritten final, on every chat shape.
 
 Real ``GatewayRunner._run_agent`` + real ``AIAgent`` against a loopback model streaming a reply
-that a ``transform_llm_output`` redactor rewrites. The adapters are recording transports (and the
-real ``RelayAdapter`` over the stub connector for Slack's stream-is-the-message lane); the base
+that a ``transform_llm_output`` redactor rewrites. The adapters are recording transports; the base
 adapter's own ``_process_message_background`` runs the typing loop and the final send. With
 ``hold_stream=True`` no draft, edit, native stream frame, split head or commentary bubble ever
 carries the raw text, the typing indicator runs while the reply is held, and the final goes out
@@ -69,12 +68,6 @@ class _NativeStreamChat(_Chat):
         return True
 
 
-def _frames(chat):
-    if hasattr(chat, "log"):
-        return chat.log
-    return [(frame["op"], frame.get("content") or frame.get("text") or "") for frame in chat._transport.sent]
-
-
 CHATS = {
     "edits_in_place": lambda: _Chat(editable=True),
     "cannot_edit": lambda: _Chat(editable=False),
@@ -102,8 +95,6 @@ async def _deliver(chat, *, hold, monkeypatch):
         runner.adapters[platform] = chat
         runner.config.streaming = StreamingConfig(enabled=True, transport="auto", edit_interval=0.01,
                                                   buffer_threshold=1, cursor="")
-        if hasattr(chat, "_capture_scope"):
-            chat._capture_scope(event)
 
         async def handler(event):
             result = await runner._run_agent(message=event.text, context_prompt="", history=[], source=source,
@@ -116,7 +107,7 @@ async def _deliver(chat, *, hold, monkeypatch):
             await chat._process_message_background(event, session_key)
         finally:
             plugins._reset_plugin_managers_for_tests()
-    return _frames(chat)
+    return chat.log
 
 
 @pytest.mark.asyncio

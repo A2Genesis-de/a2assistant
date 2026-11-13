@@ -11,7 +11,6 @@ Contract pinned here:
 * create with a live gateway → ``gateway_running: true``, no warning;
 * create with no gateway → ``gateway_running: false`` + explicit warning
   telling the model the job is saved but will not fire yet;
-* non-builtin scheduler providers are exempt (they fire without the gateway);
 * a failed liveness probe stays neutral (``gateway_running: null``) instead
   of claiming either way.
 """
@@ -56,7 +55,7 @@ def _create_job() -> dict:
 
 class TestCreateSurfacesGatewayLiveness:
     def test_create_with_gateway_running_has_no_warning(self, hermes_env):
-        with patch_liveness(provider="builtin", pids=[12345]):
+        with patch_liveness(pids=[12345]):
             result = _create_job()
 
         assert result["success"] is True
@@ -65,7 +64,7 @@ class TestCreateSurfacesGatewayLiveness:
 
     def test_create_without_gateway_warns_not_scheduled(self, hermes_env):
         with (
-            patch_liveness(provider="builtin", pids=[]),
+            patch_liveness(pids=[]),
         ):
             result = _create_job()
 
@@ -75,19 +74,9 @@ class TestCreateSurfacesGatewayLiveness:
         assert result["gateway_running"] is False
         assert result.get("warning"), "the model must be told the job won't fire (#87033)"
 
-    def test_non_builtin_provider_is_exempt(self, hermes_env):
-        """External schedulers (e.g. Chronos) fire without the gateway —
-        no false alarm may be raised for them."""
-        with patch_liveness(provider="chronos", pids=[]):
-            result = _create_job()
-
-        assert result["success"] is True
-        assert result["gateway_running"] is True
-        assert "warning" not in result
-
     def test_failed_probe_stays_neutral(self, hermes_env):
         """If liveness cannot be determined, say nothing either way."""
-        with patch_liveness(provider=None, pids=[]):  # probe raises → None
+        with patch_liveness(probe_fails=True, pids=[]):  # probe raises → None
             result = _create_job()
 
         assert result["success"] is True
@@ -106,7 +95,7 @@ class TestListSurfacesGatewayLiveness:
 
     def test_list_with_gateway_running_has_no_warning(self, hermes_env):
         _create_job()  # ensure at least one job exists
-        with patch_liveness(provider="builtin", pids=[12345]):
+        with patch_liveness(pids=[12345]):
             result = self._list_jobs()
 
         assert result["success"] is True
@@ -116,7 +105,7 @@ class TestListSurfacesGatewayLiveness:
 
     def test_list_without_gateway_warns_jobs_inert(self, hermes_env):
         _create_job()
-        with patch_liveness(provider="builtin", pids=[]):
+        with patch_liveness(pids=[]):
             result = self._list_jobs()
 
         assert result["success"] is True
@@ -125,20 +114,11 @@ class TestListSurfacesGatewayLiveness:
 
     def test_list_empty_without_gateway_stays_quiet(self, hermes_env):
         """Nothing scheduled + no gateway → no alarm; there is nothing inert."""
-        with patch_liveness(provider="builtin", pids=[]):
+        with patch_liveness(pids=[]):
             result = self._list_jobs()
 
         assert result["success"] is True
         assert result["count"] == 0
-        assert "warning" not in result
-
-    def test_list_non_builtin_provider_is_exempt(self, hermes_env):
-        _create_job()
-        with patch_liveness(provider="chronos", pids=[]):
-            result = self._list_jobs()
-
-        assert result["success"] is True
-        assert result["gateway_running"] is True
         assert "warning" not in result
 
 # ---------------------------------------------------------------------------
@@ -146,7 +126,7 @@ class TestListSurfacesGatewayLiveness:
 from contextlib import ExitStack
 
 class _LivenessPatches:
-    """Context manager patching the provider/gateway-pid probes.
+    """Context manager patching the gateway-pid probes.
 
     Also pins the gateway runtime lock probe to *inactive* by default so
     these tests are deterministic even when a real gateway (holding the
@@ -156,8 +136,8 @@ class _LivenessPatches:
     to exercise the lock-first path itself.
     """
 
-    def __init__(self, *, provider, pids, lock_active=False):
-        self._provider = provider
+    def __init__(self, *, probe_fails, pids, lock_active=False):
+        self._probe_fails = probe_fails
         self._pids = pids
         self._lock_active = lock_active
 
@@ -166,23 +146,10 @@ class _LivenessPatches:
 
         self._stack = ExitStack()
 
-        def _fake_provider_name():
-            if self._provider is None:
-                raise RuntimeError("probe failure")
-            return self._provider
-
-        self._stack.enter_context(
-            patch(
-                "hermes_cli.cron._active_cron_provider_name",
-                side_effect=_fake_provider_name,
-            )
-        )
-        self._stack.enter_context(
-            patch(
-                "hermes_cli.gateway.find_gateway_pids",
-                return_value=list(self._pids),
-            )
-        )
+        pid_probe = (
+            {"side_effect": RuntimeError("probe failure")} if self._probe_fails
+            else {"return_value": list(self._pids)})
+        self._stack.enter_context(patch("hermes_cli.gateway.find_gateway_pids", **pid_probe))
         self._stack.enter_context(
             patch(
                 "hermes_cli.gateway.named_profile_served_by_running_multiplexer",
@@ -200,8 +167,8 @@ class _LivenessPatches:
     def __exit__(self, *exc):
         return self._stack.__exit__(*exc)
 
-def patch_liveness(*, provider, pids, lock_active=False):
-    return _LivenessPatches(provider=provider, pids=pids, lock_active=lock_active)
+def patch_liveness(*, pids, probe_fails=False, lock_active=False):
+    return _LivenessPatches(probe_fails=probe_fails, pids=pids, lock_active=lock_active)
 
 class TestRuntimeLockFirstLiveness:
     """The gateway runtime lock is the primary liveness signal (#95947).
@@ -216,7 +183,7 @@ class TestRuntimeLockFirstLiveness:
     def test_lock_active_reports_alive_despite_empty_pid_scan(self, hermes_env):
         """The reported false alarm: lock held, pid scan empty → alive."""
         _create_job()
-        with patch_liveness(provider="builtin", pids=[], lock_active=True):
+        with patch_liveness(pids=[], lock_active=True):
             from tools.cronjob_tools import cronjob
 
             result = json.loads(cronjob(action="list"))
@@ -231,7 +198,6 @@ class TestRuntimeLockFirstLiveness:
         import hermes_cli.cron as cron_cli
 
         with (
-            patch("hermes_cli.cron._active_cron_provider_name", return_value="builtin"),
             patch("gateway.status.is_gateway_runtime_lock_active", return_value=False),
             patch("hermes_cli.gateway.find_gateway_pids", return_value=[424242]),
         ):
@@ -243,7 +209,6 @@ class TestRuntimeLockFirstLiveness:
         import hermes_cli.cron as cron_cli
 
         with (
-            patch("hermes_cli.cron._active_cron_provider_name", return_value="builtin"),
             patch("gateway.status.is_gateway_runtime_lock_active", return_value=False),
             patch("hermes_cli.gateway.find_gateway_pids", return_value=[]),
             patch(
@@ -262,7 +227,6 @@ class TestRuntimeLockFirstLiveness:
         import hermes_cli.cron as cron_cli
 
         with (
-            patch("hermes_cli.cron._active_cron_provider_name", return_value="builtin"),
             patch(
                 "gateway.status.is_gateway_runtime_lock_active",
                 side_effect=OSError("lock probe failed"),
@@ -280,7 +244,6 @@ class TestRuntimeLockFirstLiveness:
 
         record_ticker_heartbeat(success=True)
         with (
-            patch("hermes_cli.cron._active_cron_provider_name", return_value="builtin"),
             patch("gateway.status.is_gateway_runtime_lock_active", return_value=False),
             patch("hermes_cli.gateway.find_gateway_pids", return_value=[]),
             patch(

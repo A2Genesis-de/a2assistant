@@ -21,8 +21,6 @@ import logging
 import os
 import re
 import shutil
-import sqlite3
-from datetime import datetime, timezone, UTC
 from pathlib import Path
 from typing import Any
 
@@ -95,39 +93,12 @@ def _mark_recorded(latch: Path) -> None:
         pass
 
 
-def _today_start() -> str:
-    """Today's package ``period_start``, in the store's stamp format (``shared_metrics._isoformat``)."""
-    from .shared_metrics import _isoformat, _utc_now
-
-    return _isoformat(datetime.combine(_utc_now().date(), datetime.min.time(), tzinfo=UTC))
-
-
 def consented_day(home: Path) -> bool:
-    """Whether a row recorded now lands in a package the user agreed to: collection on, and either
-    sending off (it stays local) or a send consent window opened at or before today 00:00Z. The
-    sender's ``CONSENT_GATE_SQL`` passes a day's package only when ``period_start >= opened_at``, so a
-    row recorded on the opt-in day itself would sit in a package that is never sent."""
     from hermes_cli.config import read_raw_config_readonly
 
-    from .shared_metrics_send_config import resolve_send_config
-
-    send = resolve_send_config(read_raw_config_readonly() or {})
-    if not send.enabled:
-        return False
-    if not send.send:
-        return True
-    from .shared_metrics import SharedMetricsStore
-
-    root = home / "telemetry" / "shared_metrics"
-    try:
-        with SharedMetricsStore(root / "metrics.sqlite3", root / "outbox")._connection() as connection:
-            row = connection.execute(
-                "SELECT 1 FROM send_consent_windows WHERE closed_at IS NULL AND opened_at <= ? LIMIT 1",
-                (_today_start(),),
-            ).fetchone()
-    except sqlite3.Error:  # a busy store: try again on a later start
-        return False
-    return row is not None
+    telemetry = (read_raw_config_readonly() or {}).get("telemetry")
+    shared = telemetry.get("shared_metrics") if isinstance(telemetry, dict) else None
+    return isinstance(shared, dict) and shared.get("enabled") is True
 
 
 def _claim_receipt(path: Path) -> Path | None:

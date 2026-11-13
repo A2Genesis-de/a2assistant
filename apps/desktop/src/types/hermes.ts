@@ -369,42 +369,8 @@ export interface MessagingPlatformInfo {
    *  the client (or vendor console) must call. Null for standalone and default-profile platforms. */
   ingress_url?: null | string
   name: string
-  /** Team Gateway's shared bot carries this platform: setup links a chat account to it. */
-  relay_fronted?: boolean
-  /** The relay owns this platform outright, so a direct bot is switched off at every start. */
-  relay_exclusive?: boolean
-  /** Team Gateway switches this platform's direct connection off at every gateway start. */
-  disabled_by_relay?: boolean
   state?: null | string
   updated_at?: null | string
-}
-
-export interface RelayLinkedAccount {
-  displayName?: string
-  handle?: string
-  platformUserId: string
-}
-
-export interface RelayLinksResponse {
-  /** "portal" when the Nous Portal access setting governs this agent: links are made there. */
-  managed_by?: 'connector' | 'portal'
-  portal_url?: string
-  platforms: { accounts: RelayLinkedAccount[]; bot_url: null | string; platform: string }[]
-}
-
-export interface RelayLinkCode {
-  bot_url: null | string
-  code: string
-  /** The exact message to send the shared bot. */
-  command: string
-  expires_at: null | string
-  platform: string
-}
-
-export interface RelayLinkCodeState {
-  reason?: null | string
-  /** pending = not redeemed yet; inactive = used or expired; refused = see reason. */
-  state: 'inactive' | 'pending' | 'refused'
 }
 
 export interface MessagingPlatformsResponse {
@@ -436,35 +402,6 @@ export interface MessagingPlatformTestResponse {
   message: string
   ok: boolean
   state?: null | string
-}
-
-// -- Telegram QR onboarding ---------------------------------------------------
-// The Nous pairing service mints a bot on the user's behalf: the desktop shows
-// a QR/deep link, Telegram confirms, the backend receives the token and writes
-// it (plus the allowlist) into the target profile's .env, then restarts the
-// gateway best-effort.
-
-export interface TelegramOnboardingStartResponse {
-  deep_link: string
-  expires_at: string
-  pairing_id: string
-  qr_payload: string
-  suggested_username: string
-}
-
-export type TelegramOnboardingStatusResponse =
-  | { bot_username: null | string; expires_at: string; owner_user_id?: null | string; status: 'ready' }
-  | { expires_at: string; status: 'waiting' }
-
-export interface TelegramOnboardingApplyResponse {
-  bot_username?: null | string
-  needs_restart: boolean
-  ok: boolean
-  platform: 'telegram'
-  restart_action?: string
-  restart_error?: string
-  restart_pid?: null | number
-  restart_started?: boolean
 }
 
 // -- Webhooks (subscription CRUD) --------------------------------------------
@@ -1941,15 +1878,6 @@ export interface CuratorStatusResponse {
   min_idle_hours: number | null
   stale_after_days: number | null
   archive_after_days: number | null
-}
-
-/** `POST /api/ops/debug-share` — shareable diagnostics upload result. */
-export interface DebugShareResponse {
-  ok: boolean
-  urls: Record<string, string>
-  failures: Record<string, string>
-  redacted: boolean
-  auto_delete_seconds: number | null
 }
 
 export interface ModelAssignmentResponse {

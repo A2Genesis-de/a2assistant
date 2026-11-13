@@ -161,13 +161,7 @@ gateway:
     codex_compacted: "🗜️ Codex app-server 討論串已壓縮（thread/compact）。轉錄鏡像依設計保持不變 — 現在由 app-server 持有壓縮後的上下文。"
     codex_incomplete: "⚠️ Codex app-server 壓縮未完成 — 討論串保持不變。請檢查 app-server 日誌、重試 /compress，或用 /reset 建立乾淨的工作階段。"
   debug:
-    upload_failed: "✗ 無法上傳除錯報告：{error}"
-    header: "**除錯報告已上傳：**"
-    auto_delete: "⏱ 貼上的內容將於 6 小時後自動刪除。"
-    full_logs_hint: "如需上傳完整紀錄，請在 CLI 中使用 `a2assistant debug share`。"
-    share_hint: "請將這些連結分享給 A2Assistant 團隊以取得支援。"
-    report_label: "報告"
-    local_refused: "`/debug local` 會把報告留在執行 A2Assistant 的機器上，因此無法在聊天中使用。傳送 `/debug` 可上傳摘要報告。"
+    chat_refused: "除錯報告會保留在執行 A2Assistant 的電腦上。請在那台電腦上執行 `hermes debug share`。"
   deny:
     stale: "❌ 指令已拒絕（批准已過期）。"
     no_pending: "沒有待拒絕的指令。"
@@ -382,7 +376,6 @@ gateway:
     save_failed: "無法儲存主頻道：{error}"
     success: "✅ 主頻道已設定為 **{name}**（ID：{chat_id}）。\n排程任務和跨平台訊息將傳送至此處。"
     err_missing_platform: "缺少邏輯平台"
-    err_relay_unauthenticated: "中繼未驗證此邏輯主目標"
   context:
     header: "🧠 **上下文視窗**"
     model: "模型：`{model}`"
@@ -1285,7 +1278,7 @@ slash:
   version:
     description: "顯示 A2Assistant 版本"
   debug:
-    description: "上傳除錯報告（系統資訊 + 日誌）並取得可分享的連結"
+    description: "顯示已遮蔽的除錯報告（系統資訊 + 日誌）"
   quit:
     description: "離開 CLI（加上 --delete 同時移除工作階段歷史）"
 cli:

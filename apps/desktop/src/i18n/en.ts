@@ -27,7 +27,6 @@ import { enPluginPreviewAccess } from './en_plugin_preview_access'
 import { enPluginUpdate } from './en_plugin_update'
 import { enPreviewWeb } from './en_preview_web'
 import { enProjects } from './en_projects'
-import { enSharedMetrics } from './en_shared_metrics'
 import { enThemePicker } from './en_theme_picker'
 import { enUninstallSection } from './en_uninstall_section'
 import { enUpdateChannel } from './en_update_channel'
@@ -35,7 +34,6 @@ import type { Translations } from './types'
 
 export const en: Translations = {
   externalOpenFailed: enExternalOpenFailed,
-  sharedMetrics: enSharedMetrics,
   appTour: enAppTour,
   firstRun: enFirstRun,
   // English editorial copy stays in the shipped JSONL; other locales override it.
@@ -496,29 +494,6 @@ export const en: Translations = {
 
   ...enBilling,
 
-  sendDiagnostics: {
-    title: 'Send diagnostics to Nous',
-    privacyNotice:
-      'This uploads a debug bundle to Nous-internal storage (not a public paste). It includes system info (OS, versions, provider, which API keys are configured — never the keys themselves) and full agent, gateway, and desktop logs (up to 512 KB each), which likely contain conversation content, tool outputs, and file paths. Secrets are redacted before upload. The bundle is viewable only by Nous staff and allowlisted Discord moderators, and auto-deletes after 14 days.',
-    upload: 'Upload',
-    uploading: 'Uploading…',
-    cancel: 'Cancel',
-    close: 'Close',
-    copyLink: 'Copy link',
-    uploadIdFallback: id => `No view link returned — quote upload ID ${id} to support`,
-    doneTitle: 'Diagnostics sent',
-    doneDescription:
-      'Your bundle was uploaded privately. Share the link below in your support thread so the team can see your logs.',
-    failedTitle: 'Upload failed',
-    failedHint:
-      'You can also run `hermes debug share --nous` from a terminal, or `hermes debug share --local` to print the report without uploading.',
-    handoffLead: 'Pick up the discussion in:',
-    links: {
-      github: 'GitHub Issues',
-      portal: 'Nous Portal Support',
-      discord: 'Discord'
-    }
-  },
 
   titlebar: {
     hideSidebar: 'Hide sidebar',
@@ -1368,42 +1343,6 @@ export const en: Translations = {
       remoteTitle: 'Remote gateway',
       remoteDesc: 'Connect this desktop shell to a remote A2Assistant backend.',
       remoteAuthHint: 'Hosted gateways use OAuth or a username and password; self-hosted ones may use a session token.',
-      cloudTitle: 'Hermes Cloud',
-      cloudDesc: 'Sign in once to Hermes Cloud and pick from the agents on your account — no URL to paste.',
-      cloudSignInTitle: 'Hermes Cloud',
-      cloudSignIn: 'Sign in to Hermes Cloud',
-      cloudSignedIn: 'Signed in to Hermes Cloud',
-      cloudNeedsSignIn: 'Sign in to Hermes Cloud to discover the agents on your account.',
-      cloudSignedInDesc: 'You are signed in. Pick an agent below; the session refreshes automatically.',
-      cloudAgentsTitle: 'Your agents',
-      cloudOrgPickerTitle: 'Choose an organization',
-      cloudOrgSelect: 'Select',
-      cloudOrgChange: 'Change org',
-      cloudOrgRole: role => `Role: ${role}`,
-      cloudLoadingAgents: 'Loading your agents…',
-      cloudNoAgents: {
-        before: 'No agents found on this account. Create one in the ',
-        linkText: 'Nous portal',
-        after: ', then refresh.'
-      },
-      cloudRefresh: 'Refresh',
-      cloudConnect: 'Connect',
-      cloudSavedTitle: 'Saved Cloud gateways',
-      cloudSavedDesc:
-        'Use a saved gateway without changing your default. Sign in below to add instances. Manage names and sign-in in the saved connections list.',
-      cloudUseSaved: 'Use gateway',
-      cloudActive: 'Active in this window',
-      cloudConnecting: 'Connecting…',
-      cloudDiscoverFailed: 'Could not load your Hermes Cloud agents',
-      cloudConnectFailed: 'Could not connect to that agent',
-      cloudSignInFailed: 'Hermes Cloud sign-in failed',
-      cloudSignedOutTitle: 'Signed out of Hermes Cloud',
-      cloudSignedOutMessage: 'Cleared the Hermes Cloud session.',
-      cloudConnectedTitle: 'Connected',
-      cloudConnectedPill: 'Connected',
-      cloudConnectedTo: name => `Connected to ${name}.`,
-      cloudAgentProvisioning: 'Provisioning…',
-      cloudStatusLabel: status => `Status: ${status}`,
       remoteUrlTitle: 'Remote URL',
       remoteUrlDesc: 'Base URL for the remote dashboard backend. Path prefixes are supported, for example /hermes.',
       probing: 'Checking how this gateway authenticates…',
@@ -2469,11 +2408,6 @@ export const en: Translations = {
       securityAuditDesc: 'Scan config and skills for risky settings',
       backup: 'Create backup',
       backupDesc: 'Zip config, memories, skills, and sessions',
-      debugShare: 'Debug share',
-      debugShareDesc: 'Upload a redacted report + logs, get shareable links (auto-deletes in 6h)',
-      debugShareRunning: 'Uploading debug report...',
-      debugShareLinks: 'Share links',
-      debugShareFailed: 'Debug share failed',
       copyLink: 'Copy link',
       linkCopied: 'Link copied',
       curator: 'Skill curator',
@@ -2589,62 +2523,6 @@ export const en: Translations = {
     restartFailedManualDetail: 'Try Restart again; if it still fails, open the logs and send diagnostics.',
     restartAgain: 'Restart again',
     openLogs: 'Open logs',
-    relayLink: {
-      title: 'Team Gateway',
-      badge: 'No bot token needed',
-      intro: (platform: string) => `${platform} reaches this agent through the shared A2Assistant bot. Link your ${platform} account to it and message the bot to talk to your agent.`,
-      link: (platform: string) => `Link ${platform}`,
-      linkAnother: (platform: string) => `Link another ${platform} account`,
-      linkedAccounts: 'Linked accounts',
-      unlink: 'Unlink',
-      unlinkFailed: 'Couldn’t unlink that account',
-      stepOpen: (platform: string) => `1. Scan the code with your phone, or open the bot in ${platform}.`,
-      stepSend: '2. Send the bot this message from the account you want to link:',
-      open: (platform: string) => `Open ${platform}`,
-      copy: 'Copy message',
-      copied: 'Copied',
-      copyFailed: (command: string) => `Copy failed. Type ${command} instead.`,
-      waiting: 'Waiting for the bot to see your message. The code works once.',
-      linked: (platform: string) => `${platform} account linked. Message the bot to talk to your agent.`,
-      expired: 'That code expired before it was used. Get a new code and try again.',
-      refused: (platform: string) => `${platform} refused the link. Get a new code and try again.`,
-      qrAlt: (platform: string) => `QR code for the shared ${platform} bot`,
-      managed: 'Managed by Team Gateway',
-      managedNote: (platform: string) => `Team Gateway carries messaging on this deployment, so the gateway turns the direct ${platform} connection off at every start. To run it alongside the relay, set GATEWAY_RELAY_ALLOW_DIRECT_PLATFORMS=true in the gateway's environment (a direct connection keeps the instance from scaling to zero and can deliver messages twice).`,
-      managedIntro: "This agent's accounts are linked from Nous Portal.",
-      openPortal: 'Link accounts in Nous Portal',
-      noNewAccount: (platform: string) => `The code is no longer active and no new account appeared. If your ${platform} account isn't listed, get a new code and try again.`
-    },
-    telegramQr: {
-      title: 'Choose how to connect your Telegram bot',
-      subtitle: 'Both options connect a bot you control and save its credentials only to this A2Assistant installation.',
-      quickSetup: 'Quick setup',
-      recommended: 'Recommended',
-      quickHelp:
-        'Scan a QR code and confirm in Telegram. A2Assistant creates the bot and detects your Telegram user ID automatically.',
-      createWithQr: 'Create with QR',
-      starting: 'Starting…',
-      replaceWarning:
-        'Telegram credentials are already configured. A new QR setup or bot token will replace the current bot when you save.',
-      scanHint: 'Scan with the Telegram app on your phone, or open the link on this computer.',
-      waiting: 'Waiting for Telegram…',
-      expiresIn: remaining => `Expires in ${remaining}`,
-      expired: 'Expired',
-      openTelegram: 'Open Telegram',
-      ready: 'Bot created',
-      allowedUsers: 'Allowed users',
-      ownerDetected: 'Owner detected',
-      addAtLeastOne: 'Add at least one Telegram user ID.',
-      userIdPlaceholder: 'Telegram user ID',
-      add: 'Add',
-      numericOnly: 'Allowed Telegram user IDs must be numeric.',
-      saveAndRestart: 'Save and restart',
-      applying: 'Saving…',
-      pairingExpired: 'Telegram pairing expired. Start a new QR setup to try again.',
-      stillWaiting: detail => `Still waiting for Telegram. Retrying after: ${detail}`,
-      savedRestarting: 'Telegram saved; gateway restarting…',
-      savedRestartFailed: detail => `Telegram saved; gateway restart failed${detail}`
-    },
     fieldCopy: {
       TELEGRAM_BOT_TOKEN: {
         label: 'Bot token',
@@ -4452,7 +4330,6 @@ export const en: Translations = {
       errorOpenLogs: 'Open logs',
       errorOpenLogsFailed: 'Could not open the logs folder',
       errorOpenDesktopLogs: 'Open Desktop logs',
-      errorSendDiagnostics: 'Send diagnostics',
       filesChanged: count => (count === 1 ? '1 file changed' : `${count} files changed`),
       reviewChanges: 'Review',
       readAloudFailed: 'Read aloud failed',
@@ -4822,7 +4699,6 @@ export const en: Translations = {
     boundaryTitle: 'Something broke in the interface',
     boundaryDesc: 'The view hit an unexpected error. Your chats and settings are safe.',
     boundaryDetails: 'Details',
-    sendDiagnostics: 'Send diagnostics',
     reloadWindow: 'Reload window',
     openLogs: 'Open logs'
   },

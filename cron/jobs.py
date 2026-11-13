@@ -2376,20 +2376,6 @@ def clear_preflight_alerted(job_id: str) -> None:
     _set_alert_flag(job_id, "preflight_alerted", False)
 
 
-def note_fire_forward_failure(job_id: str, detail: str) -> bool:
-    """Durably record (as ``last_fire_error``) that a scheduled fire could not be handed to the
-    runner — written by the dashboard fire webhook when the loopback forward fails. Without it
-    the miss is invisible (no execution row, last_status only covers started runs); mark_job_run
-    clears it."""
-    def apply(jobs, _i, job):
-        job["last_fire_error"] = {
-            "at": _hermes_now().isoformat(), "detail": str(detail or "")[:500]}
-        save_jobs(jobs)
-        return True
-
-    return _with_job(job_id, apply, False)
-
-
 def _record_run_outcome(
     job: dict[str, Any], success: bool, error: Optional[str], delivery_error: Optional[str],
     status: Optional[str], now: str,
@@ -2407,7 +2393,7 @@ def _record_run_outcome(
     job["last_error"] = None if success or cancelled else error
     if success:
         # Healthy run: drop the alert-once dedup markers so a FUTURE break re-alerts, and clear
-        # the forward-failure stamp so it only describes CURRENT auto-fire health.
+        # the missed-fire stamp so it only describes CURRENT auto-fire health.
         job.pop("preflight_alerted", None)
         job.pop("last_fire_error", None)
         job["failure_streak"] = 0
@@ -2725,7 +2711,7 @@ def claim_job_for_fire(
     manual: bool = False, return_job: bool = False,
 ) -> bool | dict[str, Any]:
     """Atomically claim a job for one external 'fire' (multi-machine at-most-once); True iff THIS
-    caller won (``CronScheduler.fire_due``: exactly one of N replicas runs a job). Under the
+    caller won (``InProcessCronScheduler.fire_due``: exactly one of N replicas runs a job). Under the
     fence + file lock: reject missing/terminal/paused jobs unless ``force`` (explicit manual
     fire, which also resumes the job atomically; external callbacks must leave it false so a
     stale callback cannot resurrect a paused job). ``manual`` = off-tick run-now without the

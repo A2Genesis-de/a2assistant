@@ -179,9 +179,9 @@ function gatewayTicketFailure(error, authMessage, transportMessage) {
   }
 
   // Preserve structured HTTP context when the source error carried an integer
-  // statusCode (the fetch layer attaches err.statusCode). Downstream Cloud
-  // classification (isServerSideHttpError / makeNousCloudBackendDownError) and
-  // the renderer overlay depend on it surviving the ticket-error wrapper. Auth
+  // statusCode (the fetch layer attaches err.statusCode). Downstream
+  // classification (isServerSideHttpError) and the renderer overlay depend on
+  // it surviving the ticket-error wrapper. Auth
   // semantics are unchanged: 401/403 route to reauth, 5xx stays a transport
   // failure, everything else keeps current behavior.
   const sourceStatus = readStatusCode(error)
@@ -713,12 +713,7 @@ const LOCAL_PRIMARY_SCOPED_ROUTES = new Set([
   'PUT /api/dashboard/theme',
   'GET /api/dashboard/font',
   'PUT /api/dashboard/font',
-  'GET /api/dashboard/plugins',
-  // Web Access: each handler takes `?profile=` and acts on the gateway serving it.
-  'GET /api/webapp-access/status',
-  'POST /api/webapp-access/start',
-  'POST /api/webapp-access/stop',
-  'POST /api/webapp-access/restart'
+  'GET /api/dashboard/plugins'
 ])
 
 function localPrimaryRequestScope(opts: ProfileRouteOptions): boolean | null {

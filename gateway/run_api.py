@@ -60,7 +60,6 @@ class GatewayDashboardMount:
         self._lifespan = None
         self._closed = False
         self._replaced_session_token = None
-        self._undo_own_sign_in = None
 
     @property
     def loaded(self) -> bool:
@@ -89,9 +88,6 @@ class GatewayDashboardMount:
             web.app.state.listener_public_url = own_url
         elif hasattr(web.app.state, "listener_public_url"):
             delattr(web.app.state, "listener_public_url")
-        if webapp is not None:  # before the gate looks for a sign-in provider
-            from gateway.webapp_listener import use_own_sign_in
-            self._undo_own_sign_in = use_own_sign_in(webapp)
         web._configure_auth_gate(self._state.bound_host, False, None, None)
         web.app.state.gateway_runner = self.runner
         web.app.state.session_authority = getattr(self.runner, "session_authority", None)
@@ -108,9 +104,6 @@ class GatewayDashboardMount:
             web._SESSION_TOKEN = token
 
     def _unbind_state(self) -> None:
-        undo_own_sign_in, self._undo_own_sign_in = self._undo_own_sign_in, None
-        if undo_own_sign_in is not None:  # a listener mounted next signs in with the configured client
-            undo_own_sign_in()
         if self.web is not None:
             self.web.app.state.gateway_runner = None
             self.web.app.state.session_authority = None

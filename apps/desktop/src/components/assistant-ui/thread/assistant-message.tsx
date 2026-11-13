@@ -90,7 +90,6 @@ import { notifyError } from '@/store/notifications'
 import { startManualProviderOAuth } from '@/store/onboarding'
 import { $activeGatewayProfile, normalizeProfileKey, requestFreshSession } from '@/store/profile'
 import { sessionApprovalRequest } from '@/store/prompts'
-import { requestSendDiagnostics } from '@/store/send-diagnostics'
 import { $connection, $currentModel, setModelPickerOpen } from '@/store/session'
 import { sessionTileDelegate } from '@/store/session-states'
 import { notifyThreadEditOpen } from '@/store/thread-scroll'
@@ -1046,13 +1045,6 @@ const ErrorDetailsBlock: FC<{ errorText: string; hidden: boolean; id: string; su
             {remoteConnection ? copy.errorOpenDesktopLogs : copy.errorOpenLogs}
           </button>
         )}
-        <button
-          className="aui-error-details-link"
-          onClick={() => requestSendDiagnostics(diagnosticsText())}
-          type="button"
-        >
-          {copy.errorSendDiagnostics}
-        </button>
       </div>
     </div>
   )

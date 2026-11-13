@@ -9,20 +9,8 @@ const mutateSessionHttp = createDashboardSessionMutations(fetchJSON);
 
 import type { AuxiliaryModelsResponse, ModelAssignmentResponse } from "./api-aux";
 import type { PluginProvidersPutRequest } from "./api-plugins";
-import type {
-  MessagingPlatform,
-  RelayLinkCode,
-  RelayLinkCodeState,
-  RelayLinksResponse,
-} from "./api-messaging";
-export type {
-  MessagingPlatform,
-  MessagingPlatformEnvVar,
-  RelayLinkCode,
-  RelayLinkCodeState,
-  RelayLinkedAccount,
-  RelayLinksResponse,
-} from "./api-messaging";
+import type { MessagingPlatform } from "./api-messaging";
+export type { MessagingPlatform, MessagingPlatformEnvVar } from "./api-messaging";
 import type {
   ManagedFileReadResponse,
   ManagedFilesResponse,
@@ -119,7 +107,6 @@ const PROFILE_SCOPED_PREFIXES = [
   "/api/env",
   "/api/mcp",
   "/api/messaging/platforms",
-  "/api/messaging/telegram/onboarding",
   // OAuth/account state is profile-owned too: status, login sessions, polling,
   // cancellation, and disconnect must all follow the selected management
   // profile rather than silently targeting the dashboard process's profile.
@@ -158,8 +145,6 @@ const PROFILE_SCOPED_PREFIXES = [
   "/api/dashboard/font",
   "/api/dashboard/plugins",
   "/api/plugins/", // a plugin's backend: the selected profile's copy, as its bundle is (PLG-3)
-  // The shared-metrics answer is one per profile (telemetry.shared_metrics in its config.yaml).
-  "/api/shared-metrics",
 ];
 
 // The dashboard's own profile when nothing else named one. The backend injects it only
@@ -652,14 +637,6 @@ export const api = {
         body: JSON.stringify(body),
       },
     ),
-  getSharedMetricsConsent: (profile = getManagementProfile()) =>
-    fetchJSON<SharedMetricsConsent>(appendProfileParam("/api/shared-metrics/consent", profile)),
-  saveSharedMetricsConsent: (answer: { enabled: boolean; send: boolean }, profile = getManagementProfile()) =>
-    fetchJSON<SharedMetricsConsent>(appendProfileParam("/api/shared-metrics/consent", profile), {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(answer),
-    }),
   saveConfig: (config: Record<string, unknown>, profile = getManagementProfile()) =>
     fetchJSON<{ ok: boolean }>(appendProfileParam("/api/config", profile), {
       method: "PUT",
@@ -982,51 +959,11 @@ export const api = {
         body: JSON.stringify(body),
       },
     ),
-  getRelayLinks: () => fetchJSON<RelayLinksResponse>("/api/messaging/relay"),
-  requestRelayLink: (platform: string) =>
-    fetchJSON<RelayLinkCode>(`/api/messaging/relay/${encodeURIComponent(platform)}/link`, {
-      method: "POST",
-    }),
-  getRelayLinkState: (code: string) =>
-    fetchJSON<RelayLinkCodeState>(`/api/messaging/relay/link/${encodeURIComponent(code)}`),
-  unlinkRelayAccount: (platform: string, platformUserId: string) =>
-    fetchJSON<{ ok: boolean }>(
-      `/api/messaging/relay/${encodeURIComponent(platform)}/accounts/${encodeURIComponent(platformUserId)}`,
-      { method: "DELETE" },
-    ),
   testMessagingPlatform: (id: string) =>
     fetchJSON<MessagingPlatformTestResult>(
       `/api/messaging/platforms/${encodeURIComponent(id)}/test`,
       { method: "POST" },
     ),
-  startTelegramOnboarding: (body: { bot_name?: string }) =>
-    fetchJSON<TelegramOnboardingStartResponse>(
-      "/api/messaging/telegram/onboarding/start",
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      },
-    ),
-  getTelegramOnboardingStatus: (pairingId: string) =>
-    fetchJSON<TelegramOnboardingStatusResponse>(
-      `/api/messaging/telegram/onboarding/${encodeURIComponent(pairingId)}`,
-    ),
-  applyTelegramOnboarding: (
-    pairingId: string,
-    body: { allowed_user_ids: string[]; profile?: string },
-  ) =>
-    fetchJSON<TelegramOnboardingApplyResponse>(
-      `/api/messaging/telegram/onboarding/${encodeURIComponent(pairingId)}/apply`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      },
-    ),
-  cancelTelegramOnboarding: (pairingId: string) =>
-    fetchJSON<{ ok: boolean }>(
-      `/api/messaging/telegram/onboarding/${encodeURIComponent(pairingId)}`,
       { method: "DELETE" },
     ),
 
@@ -1364,15 +1301,6 @@ export const api = {
   runDump: () => fetchJSON<ActionResponse>("/api/ops/dump", { method: "POST" }),
   runConfigMigrate: () =>
     fetchJSON<ActionResponse>("/api/ops/config-migrate", { method: "POST" }),
-  runDebugShare: (opts?: { redact?: boolean; lines?: number }) =>
-    fetchJSON<DebugShareResponse>("/api/ops/debug-share", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        redact: opts?.redact ?? true,
-        lines: opts?.lines ?? 200,
-      }),
-    }),
 
 
   getCheckpoints: () => fetchJSON<CheckpointsResponse>("/api/ops/checkpoints"),
@@ -1455,16 +1383,6 @@ export interface ActionResponse {
   message?: string;
   uploaded_bytes?: number;
   update_command?: string;
-}
-
-export interface DebugShareResponse {
-  ok: boolean;
-  // label -> paste URL, e.g. { Report: "https://paste.rs/abc", "agent.log": "..." }
-  urls: Record<string, string>;
-  // "label: error" strings for optional full-log uploads that failed.
-  failures: string[];
-  redacted: boolean;
-  auto_delete_seconds: number;
 }
 
 export interface SessionStoreStats {
@@ -1913,15 +1831,6 @@ export interface PlatformStatus {
   updated_at: string;
 }
 
-/** One profile's shared-metrics answer; `reask` = a pre-fix "off" asked once more. */
-export interface SharedMetricsConsent {
-  enabled: boolean;
-  send: boolean;
-  decided: boolean;
-  managed: boolean;
-  reask?: boolean;
-}
-
 export interface StatusResponse {
   active_sessions: number;
   /** Phase 7: ``true`` when the dashboard's OAuth gate is engaged
@@ -2081,34 +1990,6 @@ export interface EnvVarInfo {
   channel_managed?: boolean;
   /** True when this key is set in .env but not in any catalog (user-added custom key). */
   custom?: boolean;
-}
-
-export interface TelegramOnboardingStartResponse {
-  pairing_id: string;
-  suggested_username: string;
-  deep_link: string;
-  qr_payload: string;
-  expires_at: string;
-}
-
-export type TelegramOnboardingStatusResponse =
-  | { status: "waiting"; expires_at: string }
-  | {
-      status: "ready";
-      bot_username: string;
-      owner_user_id?: string;
-      expires_at: string;
-    };
-
-export interface TelegramOnboardingApplyResponse {
-  ok: boolean;
-  platform: "telegram";
-  bot_username?: string;
-  needs_restart: boolean;
-  restart_started?: boolean;
-  restart_action?: string;
-  restart_pid?: number | null;
-  restart_error?: string;
 }
 
 export interface SessionMessage {

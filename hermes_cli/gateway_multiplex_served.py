@@ -65,7 +65,7 @@ def served_profile_unserved_platforms(profile: str) -> dict[str, str]:
         key[len(prefix):]: str(entry.get("error_message") or "not served under multiplex")
         for key, entry in platforms.items()
         if isinstance(key, str) and key.startswith(prefix) and isinstance(entry, dict)
-        and entry.get("error_code") in {"multiplex_shared_ingress", "whatsapp_unpaired"}
+        and entry.get("error_code") == "whatsapp_unpaired"
     }
 
 

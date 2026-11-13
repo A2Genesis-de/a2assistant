@@ -31,7 +31,6 @@ async def verify_envelope_guards(runner, source):
     unsupported = [
         MessageEvent(text='MEDIA', source=source, media_urls=['/unretained/image.png']),
         MessageEvent(text='INTERNAL', source=source, internal=True),
-        MessageEvent(text='RELAY', source=replace(source, delivered_via_upstream_relay=True)),
         MessageEvent(text='ROLE', source=replace(source, role_authorized=True)),
     ]
     for event in unsupported:

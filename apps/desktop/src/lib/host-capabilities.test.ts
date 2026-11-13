@@ -62,7 +62,6 @@ const CALL_SITES: [site: string, old: (browser: boolean) => boolean, now: () => 
   ['app/settings/other-subpages.ts:7', b => !b, () => hostHas('gatewayManagement')],
   ['app/settings/sessions-settings.tsx:355', b => b, () => hostHas('originScopedPrefs')],
   ['app/settings/sessions-settings.tsx:386', b => b, () => !hostHas('nativeFolderPicker')],
-  ['app/settings/web-access-settings.tsx:96', b => !b, () => hostHas('webAccessHost')],
   ['app/shell/titlebar-controls.tsx:163', b => b, () => hostHas('narrowOverlayChrome')],
   ['app/shell/use-touch-titlebar.ts:10', b => b, () => hostHas('touchSizedControls')],
   ['components/chat/expandable-block.tsx:33', b => b, () => hostHas('sidewaysCodeFences')],

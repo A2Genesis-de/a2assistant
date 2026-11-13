@@ -90,7 +90,6 @@ def no_platform_env(monkeypatch):
     pytest.param("api_server", _on("api_server", extra={"key": "k" * 24}), "", True, True, id="api-server-key"),
     pytest.param("api_server", {"platforms": {"api_server": {"enabled": False}}}, "API_SERVER_KEY=" + "k" * 32 + "\n",
                  False, True, id="api-server-disabled-env-key"),
-    pytest.param("relay", _on("relay"), "", True, False, id="relay-no-url"),
 ])
 def test_scoped_token_free_platform_status_matches_the_gateway(
     client, isolated_profiles, no_platform_env, platform_id, config, env, enabled, configured
@@ -106,27 +105,6 @@ def test_scoped_token_free_platform_status_matches_the_gateway(
     platform = next((p for p in resp.json()["platforms"] if p["id"] == platform_id), None)
     assert platform is not None, platform_id
     assert (platform["enabled"], platform["configured"]) == (enabled, configured)
-
-
-_WEBHOOK = {"webhook": {"enabled": True}}
-
-
-@pytest.mark.parametrize("config, direct_enabled", [
-    pytest.param({"platforms": {**_WEBHOOK, "relay": {"enabled": False}}}, True, id="relay-opted-out"),
-    pytest.param({"platforms": _WEBHOOK, "relay": {"enabled": False}}, True, id="relay-opted-out-toplevel"),
-])
-def test_scoped_status_follows_the_profiles_relay_block(
-    client, isolated_profiles, no_platform_env, monkeypatch, config, direct_enabled
-):
-    """A container's relay URL disables direct platforms unless the profile's relay is turned off."""
-    monkeypatch.setenv("GATEWAY_RELAY_URL", "https://relay.example.test")
-    worker_home = isolated_profiles["worker_alpha"]
-    (worker_home / "config.yaml").write_text(yaml.safe_dump(config), encoding="utf-8")
-
-    platforms = client.get("/api/messaging/platforms", params={"profile": "worker_alpha"}).json()["platforms"]
-
-    webhook = next(p for p in platforms if p["id"] == "webhook")
-    assert (webhook["enabled"], webhook["configured"]) == (direct_enabled, True)
 
 
 @pytest.mark.parametrize("source_enabled, token, counts", [

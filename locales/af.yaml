@@ -161,13 +161,7 @@ gateway:
     codex_compacted: "🗜️ Codex app-server-draad saamgepers (thread/compact). Die transkripsie-spieël is doelbewus onveranderd — die app-server dra nou die saamgeperste konteks."
     codex_incomplete: "⚠️ Codex app-server-saampersing is nie voltooi nie — die draad is onveranderd. Kyk na die app-server-logs, probeer /compress weer, of /reset vir 'n skoon sessie."
   debug:
-    upload_failed: "✗ Kon nie ontfoutverslag oplaai nie: {error}"
-    header: "**Ontfoutverslag opgelaai:**"
-    auto_delete: "⏱ Plakke sal outomaties oor 6 uur uitgevee word."
-    full_logs_hint: "Vir volledige loglae, gebruik `a2assistant debug share` vanaf die CLI."
-    share_hint: "Deel hierdie skakels met die A2Assistant-span vir ondersteuning."
-    report_label: "Verslag"
-    local_refused: "`/debug local` hou die verslag op die masjien waarop A2Assistant loop, so dit is nie vanuit 'n klets beskikbaar nie. Stuur `/debug` om die opsommingsverslag op te laai."
+    chat_refused: "Die ontfoutingsverslag bly op die rekenaar waarop A2Assistant loop. Voer `hermes debug share` daar uit."
   deny:
     stale: "❌ Opdrag geweier (goedkeuring was verouderd)."
     no_pending: "Geen hangende opdrag om te weier nie."
@@ -382,7 +376,6 @@ gateway:
     save_failed: "Kon nie tuiste-kanaal stoor nie: {error}"
     success: "✅ Tuiste-kanaal gestel op **{name}** (ID: {chat_id}).\nKron-take en kruisplatform-boodskappe sal hier afgelewer word."
     err_missing_platform: "Logiese platform ontbreek"
-    err_relay_unauthenticated: "Relay verifieer nie hierdie logiese tuiste-teiken nie"
   context:
     header: "🧠 **Konteksvenster**"
     model: "Model: `{model}`"
@@ -1285,7 +1278,7 @@ slash:
   version:
     description: "Wys A2Assistant-weergawe"
   debug:
-    description: "Laai ontfoutverslag op (stelselinligting + loglae) en kry deelbare skakels"
+    description: "Wys 'n geredigeerde ontfoutingsverslag (stelselinligting + logs)"
   quit:
     description: "Verlaat die CLI (gebruik --delete om ook sessiegeskiedenis te verwyder)"
 cli:

@@ -5,16 +5,16 @@ lags the issuer's — different VM/container, NTP jitter — fails verification 
 ``ImmatureSignatureError``. Invariants covered here, one per acceptance case:
 
 1. A future-``iat`` token (clock skew) verifies with the default leeway — for the
-   shared ``verify_jwt``, the self-hosted OIDC provider and the Nous provider.
+   shared ``verify_jwt`` and the self-hosted OIDC provider.
 2. ``ImmatureSignatureError`` beyond the leeway is a *validation* failure
    (``InvalidCodeError`` → ``verify_session`` returns ``None`` → the middleware
    retries/refreshes), NOT a ``ProviderError`` (which surfaces as 503
    "provider unreachable" and historically discarded rotated refresh tokens).
-3. The leeway is configurable via config.yaml for both providers, and a typo
+3. The leeway is configurable via config.yaml, and a typo
    (unparseable / negative / non-finite) fails closed to 0 — it can never widen
    the window.
 
-All HTTP and JWKS are stubbed; nothing here talks to a real IdP or Portal.
+All HTTP and JWKS are stubbed; nothing here talks to a real IdP.
 """
 
 from __future__ import annotations
@@ -30,13 +30,11 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 
 import plugins.dashboard_auth._shared as shared
-import plugins.dashboard_auth.nous as nous_plugin
 import plugins.dashboard_auth.self_hosted as oidc_plugin
 from hermes_cli.dashboard_auth import InvalidCodeError, ProviderError
 
 _ISSUER = "https://auth.example.com/application/o/hermes"
 _CLIENT_ID = "hermes-dashboard"
-_PORTAL = "https://portal.example.com"
 _DISCOVERY_DOC = {
     "issuer": _ISSUER,
     "authorization_endpoint": f"{_ISSUER}/authorize",
@@ -92,15 +90,6 @@ def _self_hosted_provider(rsa_keypair, *, leeway: float | None = None) -> Any:
     return p
 
 
-def _nous_provider(rsa_keypair, *, leeway: float | None = None) -> Any:
-    kwargs: dict[str, Any] = {"client_id": "agent:inst123", "portal_url": _PORTAL}
-    if leeway is not None:
-        kwargs["token_leeway"] = leeway
-    p = nous_plugin.NousDashboardAuthProvider(**kwargs)
-    p._jwks_client = _fake_jwks_client(rsa_keypair)
-    return p
-
-
 # ---------------------------------------------------------------------------
 # 1. Future-iat tokens verify with the default leeway (clock skew tolerated)
 # ---------------------------------------------------------------------------
@@ -127,14 +116,6 @@ class TestDefaultLeewayAbsorbsClockSkew:
         assert session is not None
         assert session.user_id == "usr_abc"
 
-    def test_nous_verify_session(self, rsa_keypair):
-        provider = _nous_provider(rsa_keypair)
-        token = _mint_token(rsa_keypair, iss=_PORTAL, aud="agent:inst123", iat_offset=self.SKEW)
-        session = provider.verify_session(access_token=token)
-        assert session is not None
-        assert session.user_id == "usr_abc"
-
-
 # ---------------------------------------------------------------------------
 # 2. ImmatureSignatureError beyond the leeway is a validation failure, not 503
 # ---------------------------------------------------------------------------
@@ -159,12 +140,6 @@ class TestImmatureSignatureClassification:
         provider = _self_hosted_provider(rsa_keypair)
         token = _mint_token(rsa_keypair, iss=_ISSUER, aud=_CLIENT_ID, iat_offset=self.HUGE_SKEW)
         assert provider.verify_session(access_token=token) is None
-
-    def test_nous_verify_session_returns_none(self, rsa_keypair):
-        provider = _nous_provider(rsa_keypair)
-        token = _mint_token(rsa_keypair, iss=_PORTAL, aud="agent:inst123", iat_offset=self.HUGE_SKEW)
-        assert provider.verify_session(access_token=token) is None
-
 
 # ---------------------------------------------------------------------------
 # 3. parse_leeway fails closed
@@ -238,29 +213,3 @@ class TestSelfHostedConfig:
         token = _mint_token(rsa_keypair, iss=_ISSUER, aud=_CLIENT_ID, iat_offset=60)
         assert provider.verify_session(access_token=token) is None
 
-
-class TestNousConfig:
-    @pytest.fixture(autouse=True)
-    def clear_env(self, monkeypatch):
-        monkeypatch.delenv("HERMES_DASHBOARD_OAUTH_CLIENT_ID", raising=False)
-
-    def test_leeway_from_config_yaml(self, monkeypatch):
-        _patch_oauth_config(monkeypatch, {"client_id": "agent:inst123", "token_leeway": 120})
-        ctx = MagicMock()
-        nous_plugin.register(ctx)
-        registered = ctx.register_dashboard_auth_provider.call_args.args[0]
-        assert registered._token_leeway == 120.0
-
-    def test_unset_leeway_uses_default(self, monkeypatch):
-        _patch_oauth_config(monkeypatch, {"client_id": "agent:inst123"})
-        ctx = MagicMock()
-        nous_plugin.register(ctx)
-        registered = ctx.register_dashboard_auth_provider.call_args.args[0]
-        assert registered._token_leeway == shared.DEFAULT_TOKEN_LEEWAY_SECONDS
-
-    def test_invalid_config_leeway_fails_closed(self, monkeypatch):
-        _patch_oauth_config(monkeypatch, {"client_id": "agent:inst123", "token_leeway": -3})
-        ctx = MagicMock()
-        nous_plugin.register(ctx)
-        registered = ctx.register_dashboard_auth_provider.call_args.args[0]
-        assert registered._token_leeway == 0.0

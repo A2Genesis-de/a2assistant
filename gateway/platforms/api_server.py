@@ -897,23 +897,11 @@ try:
         list_jobs as _cron_list, get_job as _cron_get, update_job as _cron_update,
         remove_job as _cron_remove, pause_job as _cron_pause, resume_job as _cron_resume,
         trigger_job as _cron_trigger)
-    from cron.scheduler import (
-        CronSchedulerRegistrationError as _CronSchedulerRegistrationError,
-        create_job_with_scheduler_registration as _cron_create)
+    from cron.jobs import create_job as _cron_create
     _CRON_AVAILABLE = True
 except ImportError:
     _cron_list = _cron_get = _cron_create = _cron_update = None
     _cron_remove = _cron_pause = _cron_resume = _cron_trigger = None
-
-    class _CronSchedulerRegistrationError(RuntimeError):
-        pass
-
-
-def _notify_cron_provider_jobs_changed() -> None:
-    """Best-effort notify of the active cron provider after a REST mutation (built-in: no-op)."""
-    with suppress(Exception):
-        from cron.scheduler import _notify_provider_jobs_changed
-        _notify_provider_jobs_changed()
 
 
 # Defense-in-depth parity with the cronjob tool's prompt injection scan (the REST
@@ -1157,10 +1145,10 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
     def _gateway_is_draining() -> bool:
         """Whether the owning gateway currently refuses new agent turns."""
         try:
-            from gateway.platforms.api_server_fire_startup import runner_is_draining
             from gateway.run import _gateway_runner_ref
             runner = _gateway_runner_ref()
-            return bool(runner) and runner_is_draining(runner)
+            return bool(runner) and bool(
+                getattr(runner, "_draining", False) or getattr(runner, "_external_drain_active", False))
         except Exception:
             return False
 
@@ -1587,9 +1575,6 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             ("POST", "/api/jobs/{job_id}/run", self._handle_run_job)]
         routes.extend(_room_grants._http_routes(self))
         routes.extend(_api_runs._http_routes(self))
-        if _CRON_AVAILABLE:
-            # Chronos fire webhook (NAS -> agent): authenticated by a NAS-minted JWT.
-            routes.append(("POST", "/api/cron/fire", self._handle_cron_fire))
         return routes
 
     # -- Session header helpers -------------------------------------------------------
@@ -3317,21 +3302,19 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
                 return web.json_response({"error": scan_error}, status=400)
         return None
 
-    def _job_response(self, fn, job_id: str, *, notify: bool) -> web.Response:
+    def _job_response(self, fn, job_id: str) -> web.Response:
         """Run ``fn(job_id)``: 404 when falsy, else ``{"job": ...}``; exceptions -> 500."""
         try:
             job = fn(job_id)
             if not job:
                 return web.json_response({"error": "Job not found"}, status=404)
-            if notify:
-                _notify_cron_provider_jobs_changed()
             return web.json_response({"job": job})
         except Exception as e:
             return self._cron_error_response(e)
 
-    async def _job_lookup_or_mutate(self, request: web.Request, fn, *, notify: bool) -> web.Response:
+    async def _job_lookup_or_mutate(self, request: web.Request, fn) -> web.Response:
         job_id, err = self._cron_request_guard(request, need_job_id=True)
-        return err if err else self._job_response(fn, job_id, notify=notify)
+        return err if err else self._job_response(fn, job_id)
 
     async def _handle_list_jobs(self, request: web.Request) -> web.Response:
         """GET /api/jobs — list all cron jobs."""
@@ -3379,8 +3362,6 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
             if repeat is not None:
                 kwargs["repeat"] = repeat
             return web.json_response({"job": _cron_create(**kwargs)})
-        except _CronSchedulerRegistrationError as e:
-            return web.json_response(e.to_dict(), status=424)
         except ValueError as e:
             return web.json_response({"error": str(e)}, status=400)
         except Exception as e:
@@ -3388,7 +3369,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
 
     async def _handle_get_job(self, request: web.Request) -> web.Response:
         """GET /api/jobs/{job_id} — get a single cron job."""
-        return await self._job_lookup_or_mutate(request, _cron_get, notify=False)
+        return await self._job_lookup_or_mutate(request, _cron_get)
 
     async def _handle_update_job(self, request: web.Request) -> web.Response:
         """PATCH /api/jobs/{job_id} — update a cron job."""
@@ -3409,7 +3390,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
                     return prompt_err
         except Exception as e:
             return self._cron_error_response(e)
-        return self._job_response(lambda jid: _cron_update(jid, sanitized), job_id, notify=True)
+        return self._job_response(lambda jid: _cron_update(jid, sanitized), job_id)
 
     async def _handle_delete_job(self, request: web.Request) -> web.Response:
         """DELETE /api/jobs/{job_id} — delete a cron job."""
@@ -3419,18 +3400,17 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
         try:
             if not _cron_remove(job_id):
                 return web.json_response({"error": "Job not found"}, status=404)
-            _notify_cron_provider_jobs_changed()
             return web.json_response({"ok": True})
         except Exception as e:
             return self._cron_error_response(e)
 
     async def _handle_pause_job(self, request: web.Request) -> web.Response:
         """POST /api/jobs/{job_id}/pause — pause a cron job."""
-        return await self._job_lookup_or_mutate(request, _cron_pause, notify=True)
+        return await self._job_lookup_or_mutate(request, _cron_pause)
 
     async def _handle_resume_job(self, request: web.Request) -> web.Response:
         """POST /api/jobs/{job_id}/resume — resume a paused cron job."""
-        return await self._job_lookup_or_mutate(request, _cron_resume, notify=True)
+        return await self._job_lookup_or_mutate(request, _cron_resume)
 
     async def _handle_run_job(self, request: web.Request) -> web.Response:
         """POST /api/jobs/{job_id}/run — trigger immediate execution."""
@@ -3451,88 +3431,7 @@ class APIServerAdapter(OpenAICompatRoutesMixin, BasePlatformAdapter):
                     return prompt_err
                 extra_prompt = extra_prompt or None
         return self._job_response(
-            lambda jid: _cron_trigger(jid, extra_prompt=extra_prompt), job_id, notify=False)
-
-    async def _handle_cron_fire(self, request: web.Request) -> web.Response:
-        """POST /api/cron/fire — Chronos fire webhook (NAS -> agent), authenticated by a
-        NAS-minted JWT via the pluggable verifier, NOT API_SERVER_KEY. 202 + background run so
-        a long turn never trips NAS's timeout; the store CAS claim guards double-fire on retry."""
-        # Startup-wait budget starts here so a slow JWKS fetch cannot outlast the forwarder timeout.
-        received_at = asyncio.get_running_loop().time()
-        from hermes_cli.config import cfg_get, load_config
-        from plugins.cron_providers.chronos.verify import get_fire_verifier
-        auth = request.headers.get("Authorization", "")
-        token = auth[7:].strip() if auth.startswith("Bearer ") else ""
-        cfg = load_config()
-        verifier = get_fire_verifier()
-        verify_kwargs = dict(
-            token=token,
-            expected_audience=cfg_get(cfg, "cron", "chronos", "expected_audience", default=""),
-            jwks_or_key=cfg_get(cfg, "cron", "chronos", "nas_jwks_url", default="") or None,
-            issuer=cfg_get(cfg, "cron", "chronos", "portal_url", default="") or None)
-        try:
-            claims = await _call_verifier(verifier, **verify_kwargs)
-        except Exception:
-            # Fail closed: a crashing verifier must never admit a fire.
-            logger.exception("cron fire: verifier crashed; rejecting token")
-            claims = None
-        if claims is None:
-            logger.warning("cron fire: rejected invalid token: %s", self._request_audit_log_suffix(request))
-            return web.json_response({"error": "invalid fire token"}, status=401)
-        draining = self._draining_response()
-        if draining is not None:
-            return draining
-        with _reserve_pending_api_work(self) as reservation:
-            body = {}
-            with suppress(Exception):
-                body = await request.json()
-            job_id = (body or {}).get("job_id")
-            if not job_id:
-                return web.json_response({"error": "missing job_id"}, status=400)
-            # `hermes pause` ESTOP: refuse the fire and ask NAS to retry later.
-            # Placed after JWT verify (don't leak pause state to unauth callers)
-            # and after the drain check (drain is transient shutdown, ESTOP is
-            # operator override). 503 + Retry-After reschedules the job via NAS
-            # retry or the misfire backstop rather than silently dropping it —
-            # matches _CRON_FIRE_RETRY_AFTER_SECONDS in web_routers/cron.py.
-            with suppress(ImportError):
-                from agent.estop import check_paused as _estop_check_paused
-                if _estop_check_paused("cron-webhook", logger):
-                    return web.json_response(
-                        {"error": "hermes is paused (ESTOP)", "job_id": job_id},
-                        status=503,
-                        headers={"Retry-After": str(60)},
-                    )
-            from cron.scheduler_provider import provider_supports_split_fire, resolve_cron_scheduler
-            provider = resolve_cron_scheduler()
-            loop = asyncio.get_running_loop()
-            from gateway.platforms.api_server_fire_startup import live_adapters_once_started
-            refusal, adapters = await live_adapters_once_started(self, request, job_id, received_at=received_at)
-            if refusal is not None:
-                return refusal
-
-            def _detach_fire(fire_fn, *fire_args) -> web.Response:
-                # The done callback owns the reservation once the task is detached.
-                task = asyncio.create_task(_api_runs.on_turn_executor(fire_fn, *fire_args, adapters=adapters, loop=loop))
-                reservation["detached"] = True
-                task.add_done_callback(lambda _task: _release_pending_api_work(self, reservation))
-                self._track_background_task(task, tolerate_missing=True)
-                return web.json_response({"status": "accepted", "job_id": job_id}, status=202)
-
-            if not provider_supports_split_fire(provider):
-                # A legacy single-phase provider overrides ``fire_due`` but inherits the base
-                # ``claim_fire``; the split path would silently bypass that override.
-                return _detach_fire(provider.fire_due, job_id)
-            # Persist the attempt + exact store owner before acknowledging NAS; a failure here
-            # is retryable and the reservation remains attached.
-            try:
-                claimed_job = await asyncio.to_thread(provider.claim_fire, job_id)
-            except Exception as exc:
-                logger.error("cron fire admission failed for %s: %s", job_id, exc)
-                return web.json_response({"error": "cron fire admission failed", "job_id": job_id}, status=503)
-            if claimed_job is None:
-                return web.json_response({"status": "duplicate", "job_id": job_id}, status=200)
-            return _detach_fire(provider.fire_claimed, claimed_job)
+            lambda jid: _cron_trigger(jid, extra_prompt=extra_prompt), job_id)
 
     # -- Agent execution --------------------------------------------------------------
 

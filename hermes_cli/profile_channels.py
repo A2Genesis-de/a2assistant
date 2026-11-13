@@ -8,10 +8,9 @@ The inventory is OWNERSHIP-based and evaluated in the SOURCE profile's plugin sc
 (built-in ``Platform`` member, a platform that left core — its ``LEFT_CORE`` row, plugin installed or
 not — or a plugin registered under the source's ``HERMES_HOME``) owns the env
 keys it declares outright (``required_env``, allowlist / allow-all / home-channel names, its
-``env_overrides`` / ``env_enable_credentials``, core's ``config_env._ENV_ENABLE_CREDENTIALS``) plus every key
+``env_overrides`` / ``env_enable_credentials``) plus every key
 under its canonical ``<PLATFORM>_`` prefix and its historical alias prefixes. Gateway-wide channel
-policy (``GATEWAY_ALLOW_ALL_USERS`` / ``GATEWAY_ALLOWED_USERS``) and relay enrollment identity
-(``GATEWAY_RELAY_*``) are channel settings too. A prefix an adapter SHARES with a non-channel
+policy (``GATEWAY_ALLOW_ALL_USERS`` / ``GATEWAY_ALLOWED_USERS``) is a channel setting too. A prefix an adapter SHARES with a non-channel
 capability (``TWILIO_*`` is also the telephony skill, ``EMAIL_*`` mail-sending scripts, and a plugin
 platform's ``shared_env_prefixes`` its own tools) is stripped only when the source actually runs that adapter — the credential is
 then the bot's identity; otherwise it is a tool key and survives. Model/provider keys, tool keys,
@@ -34,7 +33,6 @@ logger = logging.getLogger(__name__)
 _PLATFORM_ENV_PREFIX_ALIASES: dict[str, tuple[str, ...]] = {
     "email": ("EMAIL_",),
     "qqbot": ("QQ_",),
-    "relay": ("GATEWAY_RELAY_",),
     "sms": ("TWILIO_",),
 }
 
@@ -142,16 +140,11 @@ def _cred_row_envs(row) -> set[str]:
     return names
 
 
-def config_env_table_keys(entries: Iterable = ()) -> dict[str, str]:
-    """``{ENV_KEY: platform_id}`` for the names the gateway env overrides read outright: core's
-    enable-credential sets plus, for each given registry entry, its ``env_enable_credentials`` and
-    every ``EnvCred`` row of its ``env_overrides``. With no *entries* it is registry-free (core rows
-    only), so it stays cheap at import time; raises if the core table cannot be read."""
-    from gateway import config_env
+def config_env_table_keys(entries: Iterable) -> dict[str, str]:
+    """``{ENV_KEY: platform_id}`` for the names the gateway env overrides read outright: for each given
+    registry entry, its ``env_enable_credentials`` and every ``EnvCred`` row of its ``env_overrides``."""
     from gateway.platform_env import EnvCred
     keys: dict[str, str] = {}
-    for platform, names in config_env._ENV_ENABLE_CREDENTIALS.items():
-        keys.update(dict.fromkeys(names, platform.value))
     for entry in entries:
         keys.update(dict.fromkeys(getattr(entry, "env_enable_credentials", ()) or (), entry.name))
         for step in getattr(entry, "env_overrides", ()) or ():
@@ -225,10 +218,7 @@ def credential_env_keys() -> dict[str, str]:
     for entry in entries:
         keys.update(dict.fromkeys(entry.required_env, entry.name))
     with contextlib.suppress(Exception):
-        from gateway import config_env
         from gateway.platform_env import EnvCred
-        for platform, names in config_env._ENV_ENABLE_CREDENTIALS.items():
-            keys.update(dict.fromkeys(names, platform.value))
         for entry in entries:
             keys.update(dict.fromkeys(entry.env_enable_credentials, entry.name))
         for step in _env_override_steps(entries):
@@ -279,10 +269,6 @@ def _shared_adapters_active(source_dir: Optional[Path], shared: dict[str, tuple[
             raw = read_user_config_raw(source_dir / "config.yaml") or {}
     env = _env_values(source_dir / ".env")
     creds_by_platform: dict[str, set[str]] = {}
-    with contextlib.suppress(Exception):
-        from gateway import config_env
-        for platform, names in config_env._ENV_ENABLE_CREDENTIALS.items():
-            creds_by_platform[platform.value] = set(names)
     with _plugin_scope(source_dir):
         entries = _registry_entries()
     # A declared enable-credential set beats a left-core row and the manifest ``required_env``.

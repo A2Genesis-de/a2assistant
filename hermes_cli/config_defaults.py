@@ -989,13 +989,6 @@ DEFAULT_CONFIG = {
         # leaves disconnected sessions ``ended_at IS NULL`` forever — phantom "active" rows in /resume and
         # dashboards. See #65194.
         "startup_orphan_sweep": True,
-        # OAuth gate (engaged when --host is set and --insecure is not), read by the Nous Portal
-        # plugin. Env HERMES_DASHBOARD_OAUTH_CLIENT_ID / HERMES_DASHBOARD_PORTAL_URL win when
-        # non-empty. Empty client_id = no provider; empty portal_url = production.
-        "oauth": {
-            "client_id": "",  # agent:{instance_id} — Portal provisions this
-            "portal_url": "",
-        },
         # Username/password gate (dashboard_auth/basic plugin, no OAuth IDP). Active when username
         # plus password_hash (preferred) or password (hashed in-memory) are set; empty username =
         # no-op. Env HERMES_DASHBOARD_BASIC_AUTH_USERNAME / _PASSWORD_HASH / _PASSWORD / _SECRET /
@@ -1580,28 +1573,8 @@ DEFAULT_CONFIG = {
         # cron.model > model.default (the main agent model). An unpinned job follows the main
         # model on every run; cron.model decouples the whole fleet from chat. "" = fall through.
         "model": "",
-        # Inference provider paired with cron.model (NOT the scheduler provider below). "" = resolve
-        # from global config.
+        # Inference provider paired with cron.model. "" = resolve from global config.
         "model_provider": "",
-        # Cron SCHEDULER provider (WHEN a due job fires). "" = built-in in-process 60s ticker. Name
-        # an installed provider (plugins/cron_providers/<name>/ or $HERMES_HOME/plugins/ <name>/),
-        # e.g. "chronos" (NAS-mediated managed cron for scale-to-zero). An unknown or unavailable
-        # provider falls back to the built-in so cron never loses its trigger.
-        "provider": "",
-        # Chronos settings; consulted only when provider == "chronos". All non-secret — the agent
-        # holds NO scheduler credentials (provision reuses the Nous Portal token).
-        "chronos": {
-            # NAS/portal base URL that arms/cancels one-shots and mints the inbound fire JWT (used
-            # as the expected issuer).
-            "portal_url": "https://portal.nousresearch.com",
-            # This agent's publicly reachable base URL; NAS POSTs {callback_url}/api/cron/fire. ""
-            # -> Chronos unavailable, resolver falls back to the built-in ticker.
-            "callback_url": "",
-            "expected_audience": "",  # Expected JWT audience (e.g. "agent:{instance_id}").
-            # NAS JWKS URL for verifying the fire JWT signature. "" -> the fire endpoint refuses all
-            # tokens (never an unsigned decode).
-            "nas_jwks_url": "",
-        },
         # Wrap delivered cron responses with a task-name header and "The agent cannot see this
         # message" footer. False = clean output.
         "wrap_response": True,
@@ -1947,12 +1920,6 @@ DEFAULT_CONFIG = {
         # (gateway/profile_routing.py): [{profile, platform, chat_id|user_id|guild_id|...}].
         # Most-specific match wins; only read by the multiplexing default gateway.
         "profile_routes": [],
-        # Scale-to-zero idle TIMEOUT only. When an instance is opted in via the NAS "Labs" toggle
-        # (HERMES_SCALE_TO_ZERO env stamp) AND messaging is relay-only/absent AND a wakeUrl is
-        # registered, the relay transport goes dormant so the platform (e.g. Fly autostop) can
-        # suspend the machine; it wakes on the wakeUrl poke. Enablement is the Labs toggle, never a
-        # config key. 0/negative = default.
-        "scale_to_zero": {"idle_timeout_minutes": 2},
         # Auto-resume restart-loop breaker. A supervisor-revived gateway auto-resumes the
         # SIGTERM-interrupted session; if that turn keeps triggering the kill, boots no more than
         # `max_gap_seconds` apart (floored by `window_seconds`) chain, and after `max_restarts`
@@ -2086,18 +2053,10 @@ DEFAULT_CONFIG = {
         # Desktop first run, root profile only (onboarding_run.py): None = fresh install; true = next launch; false = done
         "run": None,
     },
-    # Privacy-safe aggregate metrics in this profile's local telemetry dir. Collection (`enabled`)
-    # and upload to Nous (`send`) are separate keys that every consent surface sets together; see
-    # website/docs/developer-guide/relay-shared-metrics.md Appendix A for consent/retention.
+    # Privacy-safe aggregate metrics kept only in this profile's local telemetry dir; never uploaded.
     "telemetry": {
         "shared_metrics": {
             "enabled": False,
-            # Requires `enabled` (`send` alone logs an error). A package is sent only if its whole
-            # period is inside a recorded consent window.
-            "send": False,
-            # Ingest endpoint (override for staging/local). Deliberately NOT env- overridable.
-            # Non-HTTPS refused unless the host is localhost.
-            "endpoint": "https://telemetry.nousresearch.com/v1/telemetry",
         },
     },
 

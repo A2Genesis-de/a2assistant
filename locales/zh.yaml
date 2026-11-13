@@ -161,13 +161,7 @@ gateway:
     codex_compacted: "🗜️ Codex app-server 线程已压缩（thread/compact）。转录副本按设计保持不变——压缩后的上下文现由 app-server 承载。"
     codex_incomplete: "⚠️ Codex app-server 压缩未完成——线程保持不变。请检查 app-server 日志、重试 /compress，或用 /reset 开始一个干净的会话。"
   debug:
-    upload_failed: "✗ 无法上传调试报告：{error}"
-    header: "**调试报告已上传：**"
-    auto_delete: "⏱ 粘贴内容将在 6 小时后自动删除。"
-    full_logs_hint: "如需上传完整日志，请在 CLI 中使用 `a2assistant debug share`。"
-    share_hint: "请将这些链接分享给 A2Assistant 团队以获得支持。"
-    report_label: "报告"
-    local_refused: "`/debug local` 会把报告留在运行 A2Assistant 的机器上，因此无法在聊天中使用。发送 `/debug` 可上传摘要报告。"
+    chat_refused: "调试报告保留在运行 A2Assistant 的机器上。请在那台机器上运行 `hermes debug share`。"
   deny:
     stale: "❌ 命令已拒绝（批准已过期）。"
     no_pending: "没有待拒绝的命令。"
@@ -382,7 +376,6 @@ gateway:
     save_failed: "无法保存主频道：{error}"
     success: "✅ 主频道已设置为 **{name}**（ID：{chat_id}）。\n定时任务和跨平台消息将发送到此处。"
     err_missing_platform: "缺少逻辑平台"
-    err_relay_unauthenticated: "中继未对该逻辑主频道目标进行认证"
   context:
     header: "🧠 **上下文窗口**"
     model: "模型：`{model}`"
@@ -1285,7 +1278,7 @@ slash:
   version:
     description: "显示 A2Assistant 版本"
   debug:
-    description: "上传调试报告（系统信息 + 日志）并获取可分享链接"
+    description: "显示脱敏的调试报告（系统信息 + 日志）"
   quit:
     description: "退出 CLI（加 --delete 可同时删除会话历史）"
 cli:

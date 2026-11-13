@@ -65,8 +65,6 @@ export const HOST_CAPABILITIES = Object.freeze({
   touchSizedControls: 'browser',
   /** A session token may ride a URL (plugin socket, file download link). */
   urlTokenAuth: 'native',
-  /** This machine can serve the Webapp (Settings → Web access). */
-  webAccessHost: 'native',
   /** User-facing copy names the Webapp. */
   webappCopy: 'browser',
   /** The preview pane can mount an Electron `<webview>`; otherwise it uses an iframe. */

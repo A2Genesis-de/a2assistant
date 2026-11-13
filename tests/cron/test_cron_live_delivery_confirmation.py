@@ -102,22 +102,15 @@ def _job(thread_id=None):
     }
 
 
-def _gateway_config(relay=False):
+def _gateway_config():
     config = MagicMock()
-    platforms = {Platform.TELEGRAM: PlatformConfig(enabled=True)}
-    if relay:
-        platforms[Platform.RELAY] = PlatformConfig(enabled=True)
-    config.platforms = platforms
+    config.platforms = {Platform.TELEGRAM: PlatformConfig(enabled=True)}
     config.get_home_channel = lambda p: None
     return config
 
 
-def _adapters(relay=False):
-    adapter = MagicMock()
-    if relay:
-        adapter.fronts_platform = lambda p: p == Platform.TELEGRAM
-        return {Platform.RELAY: adapter}
-    return {Platform.TELEGRAM: adapter}
+def _adapters():
+    return {Platform.TELEGRAM: MagicMock()}
 
 
 RECORDED_VERIFICATION = []
@@ -127,7 +120,7 @@ def _record_verification(job, unverified_targets):
     RECORDED_VERIFICATION.append((job["id"], list(unverified_targets)))
 
 
-def _run(job, content, send_result, relay=False, standalone_result=None, cron_cfg=None):
+def _run(job, content, send_result, standalone_result=None, cron_cfg=None):
     """Drive ``_deliver_result`` over the live lane with a stubbed router.
 
     Returns ``(error, router_calls, standalone_calls)``. ``cron_cfg`` extends
@@ -160,14 +153,14 @@ def _run(job, content, send_result, relay=False, standalone_result=None, cron_cf
         standalone_calls.append({"chat_id": chat_id, "text": text, "kwargs": kwargs})
         return standalone_result if standalone_result is not None else {}
 
-    with patch("gateway.config.load_gateway_config", return_value=_gateway_config(relay)), \
+    with patch("gateway.config.load_gateway_config", return_value=_gateway_config()), \
          patch("cron.scheduler.load_config",
                return_value={"cron": {"wrap_response": False, **(cron_cfg or {})}}), \
          patch("cron.scheduler_delivery._record_delivery_verification", side_effect=_record_verification), \
          patch("gateway.delivery.DeliveryRouter", return_value=router), \
          patch("tools.send_message_tool._send_to_platform", _fake_send_to_platform), \
          patch("asyncio.run_coroutine_threadsafe", side_effect=fake_run_coro):
-        error = _deliver_result(job, content, adapters=_adapters(relay), loop=loop)
+        error = _deliver_result(job, content, adapters=_adapters(), loop=loop)
     return error, router_calls, standalone_calls
 
 
@@ -182,14 +175,6 @@ class TestFilteredResultIsNotDelivered:
         assert "via live adapter" not in caplog.text      # but never claimed as delivered
         assert len(standalone_calls) == 1                 # fell back instead of lying
 
-    def test_filtered_dict_fails_closed_on_the_relay_lane(self):
-        """Relay owns the destination, so there is no fallback — report it."""
-        error, _, standalone_calls = _run(_job(), "...", self.FILTERED, relay=True)
-
-        assert error is not None
-        assert "unconfirmed result" in error
-        assert "silence_narration" in error  # names the filter, not "unknown"
-        assert standalone_calls == []
 
     def test_confirmed_send_result_still_delivers(self, caplog):
         with caplog.at_level(logging.INFO, logger="cron.scheduler"):
@@ -222,15 +207,6 @@ class TestEmptyPayloadFailsClosed:
         assert error is not None
         assert "standalone send skipped (empty text and no media)" in error
         assert "delivered to" not in caplog.text
-
-    def test_empty_payload_is_reported_on_the_relay_lane(self):
-        error, router_calls, _ = _run(_job(), "", _SendResult(message_id=1), relay=True)
-
-        assert router_calls == []
-        assert error is not None
-        assert "live adapter send skipped (empty text and no media)" in error
-
-
 
 
 class TestLiveDeliveryIsAFinalNotification:

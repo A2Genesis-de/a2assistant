@@ -33,21 +33,12 @@ import { SESSION_SEARCH_FOCUS_EVENT } from '@/store/layout'
 import { $profiles, $profilesByConnection, normalizeProfileKey } from '@/store/profile'
 import { $modelPickerOpen, $sessionPickerOpen } from '@/store/session'
 import { $switcherOpen } from '@/store/session-switcher'
-import {
-  $sharedMetricsConsent,
-  readSharedMetricsConsent,
-  type SharedMetricsConsent,
-  sharedMetricsProfileRequester
-} from '@/store/shared-metrics'
+import { readSharedMetricsEnabled, sharedMetricsProfileRequester } from '@/store/shared-metrics'
 
 import { observeOnboardingMetrics } from './desktop-onboarding-metrics'
 
 const DAY_TICK_MS = 10 * 60_000
 const INTERACTION_THROTTLE_MS = 1000
-
-function gateFor(consent: SharedMetricsConsent | null): 'off' | 'on' | null {
-  return consent ? (consent.enabled ? 'on' : 'off') : null
-}
 
 function botCount(): number {
   const byConnection = [...$profilesByConnection.get().values()].reduce((sum, list) => sum + list.length, 0)
@@ -137,10 +128,9 @@ export function useDesktopMetrics({
     let cancelled = false
 
     const refresh = () =>
-      void readSharedMetricsConsent(request).then(consent => {
-        // An unreadable answer (older backend, flap) keeps the last known gate.
-        if (!cancelled && consent) {
-          setDesktopMetricsGate(gateFor(consent), consent.decided)
+      void readSharedMetricsEnabled(request).then(enabled => {
+        if (!cancelled && enabled !== null) {
+          setDesktopMetricsGate(enabled ? 'on' : 'off')
         }
       })
 
@@ -153,19 +143,6 @@ export function useDesktopMetrics({
       window.removeEventListener('focus', refresh)
     }
   }, [connectionId, enabled, gatewayOpen, profileKey, request])
-
-  // A first-run answer or a Settings change lands in the consent atom.
-  useEffect(() => {
-    if (!enabled) {
-      return
-    }
-
-    return $sharedMetricsConsent.listen(consent => {
-      if (consent) {
-        setDesktopMetricsGate(gateFor(consent), consent.decided)
-      }
-    })
-  }, [enabled])
 
   useEffect(() => {
     const area = enabled

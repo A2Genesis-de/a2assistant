@@ -60,8 +60,7 @@ async def probe(mode, peer):
     source = adapter.build_source(chat_id='trust-chat', chat_type='dm', user_id='fixture-user')
     if mode == 'guards':
         rejected = []
-        for field, value in [('_authorization_profile_home', state), ('role_authorized', True),
-                             ('delivered_via_upstream_relay', True)]:
+        for field, value in [('_authorization_profile_home', state), ('role_authorized', True)]:
             hostile = adapter.build_source(chat_id='trust-chat', chat_type='dm', user_id='fixture-user')
             setattr(hostile, field, value)
             event = MessageEvent(text='FORGED', source=hostile, message_id=field)

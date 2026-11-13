@@ -15,7 +15,6 @@ import gateway.status as _gw_status
 import hermes_cli.config as _cfg_mod
 import hermes_cli.web_server_chat as _web_server_chat
 import hermes_cli.web_server_gateway as _web_server_gateway
-import hermes_cli.web_server_messaging as _web_server_messaging
 
 
 @pytest.fixture
@@ -563,63 +562,6 @@ class TestProfileScopedGateway:
         data = resp.json()
         assert data["gateway_state"] == "stopped"
         assert data["gateway_platforms"] == {}
-
-
-class TestProfileScopedTelegramOnboarding:
-    def test_apply_writes_target_profile_and_restarts_target(
-        self, client, isolated_profiles, monkeypatch
-    ):
-        import time
-
-        with _web_server_messaging._telegram_onboarding_lock:
-            _web_server_messaging._telegram_onboarding_pairings.clear()
-            _web_server_messaging._telegram_onboarding_pairings["pair-worker"] = (
-                _web_server_messaging._TelegramOnboardingPairing(
-                    poll_token="poll-secret",
-                    expires_at="2027-05-18T00:00:00.000Z",
-                    expires_at_ts=time.time() + 600,
-                    bot_token="123456:SECRET",
-                    bot_username="worker_bot",
-                    owner_user_id="123456789",
-                )
-            )
-
-        calls = []
-
-        class _FakeProc:
-            pid = 889
-
-        monkeypatch.setattr(
-            _web_server_gateway,
-            "_spawn_hermes_action",
-            lambda subcommand, name: calls.append((list(subcommand), name)) or _FakeProc(),
-        )
-        _web_server_gateway._ACTION_PROCS.pop("gateway-restart", None)
-        _web_server_gateway._ACTION_COMMANDS.pop("gateway-restart", None)
-
-        resp = client.post(
-            "/api/messaging/telegram/onboarding/pair-worker/apply",
-            params={"profile": "worker_beta"},
-            json={"allowed_user_ids": ["123456789"]},
-        )
-
-        assert resp.status_code == 200
-        assert resp.json()["restart_started"] is True
-        assert calls == [
-            (["-p", "worker_beta", "gateway", "restart"], "gateway-restart")
-        ]
-
-        worker_env = (isolated_profiles["worker_beta"] / ".env").read_text()
-        assert "TELEGRAM_BOT_TOKEN=123456:SECRET" in worker_env
-        assert "TELEGRAM_ALLOWED_USERS=123456789" in worker_env
-        default_env_path = isolated_profiles["default"] / ".env"
-        if default_env_path.exists():
-            assert "TELEGRAM_BOT_TOKEN" not in default_env_path.read_text()
-
-        worker_cfg = _cfg(isolated_profiles["worker_beta"])
-        default_cfg = _cfg(isolated_profiles["default"])
-        assert worker_cfg["platforms"]["telegram"]["enabled"] is True
-        assert default_cfg.get("platforms", {}).get("telegram", {}).get("enabled") is not True
 
 
 class TestProfileScopedChatPty:
