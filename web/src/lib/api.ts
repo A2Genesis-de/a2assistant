@@ -8,13 +8,7 @@ import { createDashboardSessionMutations } from "./session-mutations";
 const mutateSessionHttp = createDashboardSessionMutations(fetchJSON);
 
 import type { AuxiliaryModelsResponse, ModelAssignmentResponse } from "./api-aux";
-import type {
-  AgentPluginUpdateResponse,
-  AgentPluginsUpdateAllResponse,
-  CatalogResponse,
-  PluginAutoUpdateState,
-  PluginProvidersPutRequest,
-} from "./api-plugins";
+import type { PluginProvidersPutRequest } from "./api-plugins";
 import type {
   WhatsAppOnboardingApplyResponse,
   WhatsAppOnboardingStartRequest,
@@ -1104,9 +1098,6 @@ export const api = {
 
   getPluginsHub: () => fetchJSON<PluginsHubResponse>("/api/dashboard/plugins/hub"),
 
-  getPluginsCatalog: () =>
-    fetchJSON<CatalogResponse>("/api/dashboard/plugins/catalog"),
-
   installAgentPlugin: (body: AgentPluginInstallRequest) =>
     fetchJSON<AgentPluginInstallResponse>("/api/dashboard/agent-plugins/install", {
       method: "POST",
@@ -1132,34 +1123,6 @@ export const api = {
       restart_required?: boolean;
     }>(`/api/dashboard/agent-plugins/${pluginPath(name)}/disable`, {
       method: "POST",
-    }),
-
-  updateAgentPlugin: (
-    name: string,
-    { acceptCapabilities = false, force = false }: { acceptCapabilities?: boolean; force?: boolean } = {},
-  ) =>
-    fetchJSON<AgentPluginUpdateResponse>(
-      `/api/dashboard/agent-plugins/${pluginPath(name)}/update`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ accept_capabilities: acceptCapabilities, force }),
-      },
-    ),
-
-  updateAllAgentPlugins: () =>
-    fetchJSON<AgentPluginsUpdateAllResponse>("/api/dashboard/agent-plugins/update-all", {
-      method: "POST",
-    }),
-
-  getPluginAutoUpdate: () =>
-    fetchJSON<PluginAutoUpdateState>("/api/dashboard/plugins/auto-update"),
-
-  setPluginAutoUpdate: (enabled: boolean) =>
-    fetchJSON<PluginAutoUpdateState>("/api/dashboard/plugins/auto-update", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ enabled }),
     }),
 
   removeAgentPlugin: (name: string) =>
@@ -2511,17 +2474,7 @@ export interface ModelInfoResponse {
 export type { ModelOptionProvider, ModelOptionsResult };
 
 export type { AuxiliaryModelsResponse, AuxiliaryTaskAssignment } from "./api-aux";
-export type {
-  AgentPluginScanFinding,
-  AgentPluginUpdateResponse,
-  AgentPluginsUpdateAllResponse,
-  CatalogCapabilities,
-  CatalogEntry,
-  CatalogRemovedEntry,
-  CatalogResponse,
-  PluginAutoUpdateState,
-  PluginProvidersPutRequest,
-} from "./api-plugins";
+export type { PluginProvidersPutRequest } from "./api-plugins";
 
 export interface MoaModelSlot {
   provider: string;
@@ -2677,12 +2630,9 @@ export interface HubAgentPluginRow {
   dashboard_manifest: PluginManifestResponse | null;
   path: string;
   can_remove: boolean;
-  can_update_git: boolean;
   auth_required: boolean;
   auth_command: string;
   user_hidden: boolean;
-  /** Reason string when this plugin is on the catalog removed blocklist. */
-  removed_reason?: string | null;
 }
 
 export interface PluginsHubProviders {
@@ -2702,8 +2652,6 @@ export interface AgentPluginInstallRequest {
   identifier: string;
   force?: boolean;
   enable?: boolean;
-  /** Install by curated-catalog name (resolves repo + pinned SHA server-side). */
-  catalog_name?: string;
 }
 
 export interface AgentPluginInstallResponse {

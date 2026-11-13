@@ -453,38 +453,9 @@ export const en: Translations = {
     sourceBadge: "Source",
     authRequired: "Auth required",
     authRequiredHint: "Run this command to authenticate:",
-    updateGit: "Git pull",
-    updateAll: "Update all",
-    updatingAll: "Updating plugins…",
-    updateAllDone: (updated: number, needsReview: number, failed: number) =>
-      `Updated ${updated}, needs review ${needsReview}, failed ${failed}`,
-    autoUpdate: "Auto-update",
-    autoUpdateDesc: (hours: number) =>
-      `Apply plugin updates automatically when the gateway checks (every ${hours} h). Updated code loads in new sessions.`,
-    updateConsentBody: (name: string, sha: string) =>
-      `The new catalog pin of ${name} (${sha}) adds surfaces the installed version does not have. Apply it only if you trust them:`,
-    updateScanBody: (name: string, count: number) =>
-      `The security scan flagged ${count} finding${count === 1 ? "" : "s"} in the new code of ${name}. Update anyway only if you trust the source:`,
-    updateScanBlocked: (name: string) =>
-      `The security scan rated the new code of ${name} dangerous. The update was not applied.`,
     versionBadge: "Version",
     showInSidebar: "Show in sidebar",
     hideFromSidebar: "Hide from sidebar",
-    catalogHeading: "Plugin catalog",
-    catalogHint:
-      "Curated, Nous-reviewed plugins pinned to exact commits. Install from here for supply-chain-safe versions.",
-    catalogSearchPlaceholder: "Search catalog...",
-    catalogEmpty: "No catalog entries match.",
-    catalogEmptyDocsLink: "Learn about A2Assistant plugins",
-    catalogInstallBtn: "Install",
-    catalogInstalledBadge: "Installed ✓",
-    catalogUpdateBtn: "Update available",
-    catalogRemovedBadge: "Removed",
-    catalogConfirmTitle: "Install this plugin?",
-    catalogConfirmInstallNote:
-      "Plugins install disabled; enable it after install to activate.",
-    catalogRequiresEnv: "Requires env",
-    removedFromCatalog: "Removed from catalog",
   },
 
   skills: {

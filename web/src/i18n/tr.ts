@@ -367,14 +367,6 @@ export const tr: Translations = {
     sourceBadge: "Kaynak",
     authRequired: "Kimlik doğrulama gerekli",
     authRequiredHint: "Kimlik doğrulamak için bu komutu çalıştırın:",
-    updateGit: "Git pull",
-    updateAll: "Tümünü güncelle",
-    updatingAll: "Eklentiler güncelleniyor…",
-    updateAllDone: (updated: number, needsReview: number, failed: number) =>
-      `Güncellendi ${updated}, inceleme gerekli ${needsReview}, başarısız ${failed}`,
-    autoUpdate: "Otomatik güncelleme",
-    autoUpdateDesc: (hours: number) =>
-      `Ağ geçidi denetlediğinde (her ${hours} saatte) eklenti güncellemelerini otomatik uygula. Güncellenen kod yeni oturumlarda yüklenir.`,
     versionBadge: "Sürüm",
     showInSidebar: "Kenar çubuğunda göster",
     hideFromSidebar: "Kenar çubuğundan gizle",

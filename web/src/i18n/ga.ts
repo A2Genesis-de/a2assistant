@@ -375,14 +375,6 @@ export const ga: Translations = {
     sourceBadge: "Foinse",
     authRequired: "Fíordheimhniú riachtanach",
     authRequiredHint: "Rith an t-ordú seo chun fíordheimhniú a dhéanamh:",
-    updateGit: "Git pull",
-    updateAll: "Nuashonraigh uile",
-    updatingAll: "Plugins á nuashonrú…",
-    updateAllDone: (updated: number, needsReview: number, failed: number) =>
-      `Nuashonraithe ${updated}, athbhreithniú ag teastáil ${needsReview}, theip ${failed}`,
-    autoUpdate: "Uath-nuashonrú",
-    autoUpdateDesc: (hours: number) =>
-      `Cuir nuashonruithe plugin i bhfeidhm go huathoibríoch nuair a sheiceálann an geata (gach ${hours} u). Lódáiltear an cód nuashonraithe i seisiúin nua.`,
     versionBadge: "Leagan",
     showInSidebar: "Taispeáin sa bharra taoibh",
     hideFromSidebar: "Folaigh ón mbarra taoibh",
