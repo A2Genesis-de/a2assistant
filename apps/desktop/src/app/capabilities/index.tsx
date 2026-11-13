@@ -19,7 +19,6 @@ import { PageSearchShell } from '../page-search-shell'
 import type { SetStatusbarItemGroup } from '../shell/statusbar-controls'
 
 import { syncCatalogArcs } from './catalog/catalog-arc'
-import { prefetchCatalogWhenIdle } from './catalog/catalog-data'
 import { ConnectorsTab } from './connectors/connectors-tab'
 import { PluginsTab } from './plugins/plugins-tab'
 import { CapabilityScopeSelector, useCapabilityScope } from './scope-selector'
@@ -98,7 +97,6 @@ export function CapabilitiesView({
 
   // Plugins is small enough to warm from any tab. Skills (~100k rows) only
   // loads when asked for: an idle parse of it would still block the page.
-  useEffect(() => (mode === 'plugins' ? undefined : prefetchCatalogWhenIdle('plugins')), [mode])
   useEffect(syncCatalogArcs, [])
 
   // Rotating placeholder nudges from the user's own data — teach that search

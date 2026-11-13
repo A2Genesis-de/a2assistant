@@ -52,7 +52,7 @@ function serveStream() {
 }
 
 describe('catalog download liveness', () => {
-  it.each(['skills', 'plugins'] as const)(
+  it.each(['skills'] as const)(
     'finishes a progressing %s download beyond the old total deadline',
     async kind => {
       const stream = serveStream()
@@ -133,7 +133,7 @@ describe('catalog download liveness', () => {
       'fetch',
       vi.fn(async () => new Response('', { status: 503 }))
     )
-    await expect(fetchCatalog('plugins')).rejects.toThrow('Catalog HTTP 503')
+    await expect(fetchCatalog('skills')).rejects.toThrow('Catalog HTTP 503')
     expect(vi.getTimerCount()).toBe(0)
   })
 })

@@ -20,7 +20,6 @@ import { DisclosureCaret } from '@/components/ui/disclosure-caret'
 import { Input } from '@/components/ui/input'
 import { useI18n } from '@/i18n'
 import { AlertTriangle, Loader2 } from '@/lib/icons'
-import { lookupPluginCatalogEntry } from '@/lib/plugin-catalog'
 import { cn } from '@/lib/utils'
 import { COMMIT_SHA_RE, inspectAgentPlugin } from '@/store/agent-plugins'
 import {
@@ -45,13 +44,10 @@ import { usePluginProbe } from './use-plugin-probe'
 
 const CAPTION = 'text-[length:var(--conversation-caption-font-size)]'
 
-/** Close the dialog and land on the inventory (Capabilities → Plugins), unless the caller keeps the user in place. */
-function finishInstall(request: PluginInstallRequest, navigate: (to: string) => void): void {
+/** Close the dialog and land on the inventory (Capabilities → Plugins). */
+function finishInstall(navigate: (to: string) => void): void {
   closePluginInstallRequest()
-
-  if (!request.stayAfterInstall) {
-    navigate('/capabilities?tab=plugins')
-  }
+  navigate('/capabilities?tab=plugins')
 }
 
 /** `owner/repo#sub/dir` → `dir`; `https://host/owner/repo.git` → `repo`. */
@@ -68,7 +64,7 @@ function repoName(repo: string): string {
 }
 
 function pluginTitle(request: PluginInstallRequest, probe: null | ProbeResult): string {
-  return request.title || request.catalogName || probe?.agentName || probe?.desktopName || repoName(request.repo)
+  return probe?.agentName || probe?.desktopName || repoName(request.repo)
 }
 
 /** The inspection's one-line reason, when it could not read the repository. An environment that cannot
@@ -152,10 +148,8 @@ function RepositoryEntry({ request }: { request: PluginInstallRequest }) {
 }
 
 /**
- * THE plugin install dialog, for every door: a reviewed catalog pick (Plugins tab, `hermes://` link,
- * the setup chat's plugins card) and a raw git URL. A catalog entry shows its name, one line, "Verified"
- * and Install; its particulars wait behind Advanced. A git URL is marked Unverified with the same
- * particulars open, because there they are the security check. Install always turns the plugin on
+ * THE plugin install dialog for a git source (Plugins tab, `hermes://` link). It is marked Unverified
+ * with its particulars open, because there they are the security check. Install always turns the plugin on
  * (a deep link's explicit `enable=0` aside) and shows one loader until it is done.
  */
 export function PluginInstallModal() {
@@ -205,14 +199,7 @@ export function PluginInstallModal() {
   )
 }
 
-/** The catalog tier as the badge reads it; an unknown tier keeps the generic Verified. */
-function catalogTierLabel(t: ReturnType<typeof useI18n>['t'], tier: string): string {
-  const labels = t.catalog.tierLabels
-
-  return tier in labels ? labels[tier as keyof typeof labels] : t.settings.plugins.installModal.verified
-}
-
-/** Name, Official/Verified/Unverified, the one line on what it does, then who reviewed it and where it lands. */
+/** Name, Unverified, the one line on what it does and where it lands. */
 function InstallHeader({
   line,
   probe,
@@ -224,7 +211,6 @@ function InstallHeader({
 }) {
   const { t } = useI18n()
   const m = t.settings.plugins.installModal
-  const verified = Boolean(request.catalogName)
 
   return (
     <DialogHeader>
@@ -235,12 +221,9 @@ function InstallHeader({
         <div className="min-w-0 space-y-1">
           <div className="flex flex-wrap items-center gap-2">
             <DialogTitle>{pluginTitle(request, probe)}</DialogTitle>
-            <Badge variant={!verified ? 'warn' : request.tier === 'community' ? 'muted' : 'success'}>
-              {!verified ? m.unverified : request.tier ? catalogTierLabel(t, request.tier) : m.verified}
-            </Badge>
+            <Badge variant="warn">{m.unverified}</Badge>
           </div>
-          <DialogDescription>{request.summary || line}</DialogDescription>
-          {request.summary && <p className={cn(CAPTION, 'text-(--ui-text-secondary)')}>{line}</p>}
+          <DialogDescription>{line}</DialogDescription>
         </div>
       </div>
     </DialogHeader>
@@ -336,42 +319,21 @@ function SourceMovedNotice({ copy, failure, probe, request, shown }: SourceMoved
 
   return (
     <p className={cn(CAPTION, 'text-(--ui-text-secondary)')} role="status">
-      {copy.sourceMoved(probe?.ok ? (reviewedCommit({ probe, request })?.slice(0, 12) ?? '') : '')}
+      {copy.sourceMoved(probe?.ok ? (reviewedCommit({ probe })?.slice(0, 12) ?? '') : '')}
     </p>
   )
 }
 
-/** Read the source again after a refusal. A catalog pick whose pin the backend did not read (native Desktop
- *  inspects the branch tip in Electron) also takes the catalog's current pin, or every Install would resend
- *  the one the catalog left; `repin` is that lookup, which Install waits on. */
+/** Read the source again after a refusal; Install waits until the new inspection is on screen. */
 function useReviewAgain(request: PluginInstallRequest, start: (repo: string) => void) {
-  const [repin, setRepin] = useState<Promise<void>>(() => Promise.resolve())
-  // Set once the source is read again: Install then waits until the new inspection AND pin are on screen.
   const [rereview, setRereview] = useState<'idle' | 'pending' | 'shown'>('idle')
 
-  const reviewAgain = (current: ProbeResult) => {
+  const reviewAgain = () => {
     start(request.repo)
-    const name = request.catalogName
-
-    if (name && !current.catalogPin) {
-      setRereview('pending')
-      setRepin(
-        lookupPluginCatalogEntry(name)
-          .then(found => {
-            const open = $pluginInstallRequest.get()
-
-            if (found.ok && open?.catalogName === name) {
-              openPluginInstallRequest({ ...open, sha: found.entry.sha })
-            }
-          })
-          .finally(() => setRereview('shown'))
-      )
-    } else {
-      setRereview('shown')
-    }
+    setRereview('shown')
   }
 
-  return { repin, rereview, reviewAgain }
+  return { rereview, reviewAgain }
 }
 
 interface InstallNoticesProps {
@@ -414,15 +376,14 @@ interface InstallGate {
   probe: null | ProbeResult
   rereview: 'idle' | 'pending' | 'shown'
   uncertain: boolean
-  verified: boolean
 }
 
-/** An unverified repository installs only once its contents are on screen; a reviewed pick may start at once,
- *  except after the source moved: then nothing installs until the new inspection and pin are shown.
+/** A repository installs only once its contents are on screen; after the source moved nothing installs until
+ *  the new inspection is shown.
  *  After a partial install only Force (a replacement of both halves) may proceed. */
 function installEnabled(gate: InstallGate): boolean {
-  const { force, installing, partial, pinInvalid, probe, rereview, uncertain, verified } = gate
-  const reviewed = rereview === 'idle' ? verified || Boolean(probe?.ok) : rereview === 'shown' && Boolean(probe?.ok)
+  const { force, installing, partial, pinInvalid, probe, rereview, uncertain } = gate
+  const reviewed = rereview !== 'pending' && Boolean(probe?.ok)
 
   return !installing && !uncertain && !pinInvalid && (!partial || force) && reviewed
 }
@@ -442,7 +403,6 @@ function InstallView({ request, installing, onInstallingChange }: InstallViewPro
   const activeProfile = useStore($activeGatewayProfile)
   const profiles = useStore($profiles)
   const profileScope = useStore($profileScope)
-  const verified = Boolean(request.catalogName)
   const enable = request.enable ?? true
 
   const [targetProfile, setTargetProfile] = useState(() =>
@@ -451,10 +411,10 @@ function InstallView({ request, installing, onInstallingChange }: InstallViewPro
 
   // Without Electron's inspection (the browser-hosted app) the backend clones and reads the repository.
   const { probe, start, cancel, settled } = usePluginProbe(m.probeUnavailable, repo =>
-    inspectAgentPlugin(requestGateway, { identifier: repo, catalogName: request.catalogName, profile: targetProfile })
+    inspectAgentPlugin(requestGateway, { identifier: repo, profile: targetProfile })
   )
 
-  const [advancedOpen, setAdvancedOpen] = useState(!verified)
+  const [advancedOpen, setAdvancedOpen] = useState(true)
   const [force, setForce] = useState(request.force ?? false)
   const [pinRef, setPinRef] = useState('')
   // The last install's failure, and whether Force (replacing the installed plugin) answers it.
@@ -467,7 +427,7 @@ function InstallView({ request, installing, onInstallingChange }: InstallViewPro
   const [confirmUnreviewed, setConfirmUnreviewed] = useState(false)
   // The agent half installed and the desktop half could not follow it: only a replacement of both proceeds.
   const [partial, setPartial] = useState<null | string>(null)
-  const { repin, rereview, reviewAgain } = useReviewAgain(request, start)
+  const { rereview, reviewAgain } = useReviewAgain(request, start)
 
   useEffect(() => {
     start(request.repo)
@@ -488,7 +448,7 @@ function InstallView({ request, installing, onInstallingChange }: InstallViewPro
 
   // Retrying reruns an install or a read that failed; it cannot add a capability this environment lacks.
   const retryable = Boolean(installError) || !(probe?.unavailable || nothing)
-  const line = `${verified ? m.reviewedByNous : m.securityIntro} ${(enable ? m.installsAndEnables : m.installsOnly)(targetLabel)}`
+  const line = `${m.securityIntro} ${(enable ? m.installsAndEnables : m.installsOnly)(targetLabel)}`
 
   const install = async (withoutReviewedCommit = false) => {
     onInstallingChange(true)
@@ -500,7 +460,7 @@ function InstallView({ request, installing, onInstallingChange }: InstallViewPro
 
     try {
       // A catalog pick may click Install while the inspection is still running: wait for it under the loader.
-      const [detected] = await Promise.all([settled(), repin])
+      const detected = await settled()
 
       if (!detected?.ok) {
         return
@@ -521,20 +481,20 @@ function InstallView({ request, installing, onInstallingChange }: InstallViewPro
       )
 
       const settle: Record<InstallOutcome['status'], () => void> = {
-        done: () => finishInstall(request, navigate),
+        done: () => finishInstall(navigate),
         uncertain: () => setInstallUncertain(true),
         // Never resend the commit the source left: drop that inspection and read the source again, so
         // Install waits on the new commit being on screen.
         stale: () => {
           setSourceMoved(true)
-          reviewAgain(detected)
+          reviewAgain()
         },
         // Never install the desktop half beside it at another commit: show the source as it is now, and
         // Install waits for Force reinstall, which replaces both halves with that version.
         partial: () => {
           setPartial((outcome as Extract<InstallOutcome, { status: 'partial' }>).error)
           setAdvancedOpen(true)
-          reviewAgain(detected)
+          reviewAgain()
         },
         needsConfirm: () => setConfirmUnreviewed(true),
         // "Already exists. Enable force reinstall" points at the Force switch, which a catalog pick
@@ -571,8 +531,7 @@ function InstallView({ request, installing, onInstallingChange }: InstallViewPro
     pinInvalid,
     probe,
     rereview,
-    uncertain: installUncertain,
-    verified
+    uncertain: installUncertain
   })
 
   return (

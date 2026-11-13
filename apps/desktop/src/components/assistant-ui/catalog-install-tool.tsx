@@ -12,18 +12,15 @@ import { Progress } from '@/components/ui/progress'
 import { useI18n } from '@/i18n'
 import { Book, Loader2, Plug } from '@/lib/icons'
 import { cn } from '@/lib/utils'
-import { type AgentPluginInstallResult, installAgentPlugin } from '@/store/agent-plugins'
 import {
   type CatalogEntry,
   connectionOpOf,
-  connectionOwnerFor,
   type ConnectionRequest,
   type ConnectionTarget,
   continueConnectionRequest,
   respondToConnectionRequest,
   toolConnectionRequest
 } from '@/store/connection-request'
-import { requestGatewayForAgent } from '@/store/gateway'
 import { notifyError } from '@/store/notifications'
 import { profileLabel } from '@/store/profile'
 
@@ -55,29 +52,6 @@ function platformName(platform: string): string {
 }
 
 const isCatalogTarget = (target: ConnectionTarget): target is CatalogTarget => Boolean(target.catalog)
-
-/** The row a successful settled Try again draws: the backend's install result for that retry, in the
- *  fields the runner's installed row carries (`tools/connectors/catalog.py::_installed_row`). */
-function retriedRow(target: CatalogTarget, result: AgentPluginInstallResult): CatalogTarget {
-  const servers = result.live.mcpServers
-
-  return {
-    ...target,
-    catalog: {
-      ...target.catalog,
-      alreadyInstalled: false,
-      enabled: result.enabled ?? null,
-      missingEnv: result.missingEnv ?? [],
-      serverErrors: servers
-        .filter(server => !server.connected)
-        .map(({ error, name }) => ({ error: error ?? '', name })),
-      skill: result.skillIds?.[0] ?? null
-    },
-    detail: '',
-    state: 'connected',
-    tools: servers.filter(server => server.connected).flatMap(server => server.tools)
-  }
-}
 
 /** `manage_catalog`: the host's catalog-install card. The model named ids; every word on a row is the
  *  host's resolution of that id. The card lives on the tool row that opened the operation only. */
@@ -159,10 +133,7 @@ export function CatalogRow({ request, target }: CatalogRowProps) {
   // operation answers it, so a second click cannot send the answer twice. Keyed by op so a seq from
   // another operation can never hold this row.
   const [sentAt, setSentAt] = useState<null | { opId: string; seq: number }>(null)
-  // Try again on a failed plugin row after the operation settled: a fresh host install (which enables a
-  // plugin already on disk). The settled operation is frozen, so the row draws that install's result.
-  const [retry, setRetry] = useState<null | { row: CatalogTarget; status: 'done' } | { status: 'running' }>(null)
-  const sending = (sentAt?.opId === request.opId && request.seq <= sentAt.seq) || retry?.status === 'running'
+  const sending = sentAt?.opId === request.opId && request.seq <= sentAt.seq
   const Glyph = KIND_GLYPH[target.kind]
 
   const answer = async (status: 'approved' | 'skipped', env: Record<string, string> | null = null) => {
@@ -180,43 +151,9 @@ export function CatalogRow({ request, target }: CatalogRowProps) {
     }
   }
 
-  const retrySettled = async () => {
-    setRetry({ status: 'running' })
-    const owner = request.sessionId ? await connectionOwnerFor(request.sessionId, 'plugins.manage') : null
+  const shown = target
 
-    if (!owner) {
-      setRetry({ row: { ...target, detail: copy.sendFailed }, status: 'done' })
-
-      return
-    }
-
-    // The choices the user approved on this row, so the retry installs what they asked for.
-    const approved = catalog.approved
-
-    const result = await installAgentPlugin(
-      (method, params, timeoutMs) =>
-        requestGatewayForAgent(owner.connectionId, owner.profile, method, params, timeoutMs),
-      {
-        catalogName: target.name,
-        enable: approved?.enable,
-        force: approved?.force,
-        identifier: '',
-        profile: catalog.targetProfile,
-        ref: approved?.ref ?? undefined
-      }
-    )
-
-    const row = result.ok ? retriedRow(target, result) : { ...target, detail: result.error || target.detail }
-    setRetry({ row, status: 'done' })
-  }
-
-  const shown = retry?.status === 'done' ? retry.row : target
-
-  const onRetry = !request.settled
-    ? () => void answer('approved')
-    : target.kind === 'plugin'
-      ? () => void retrySettled()
-      : undefined
+  const onRetry = !request.settled ? () => void answer('approved') : undefined
 
   return (
     <div className={cn(SHELL_CLASS, 'grid min-w-0 gap-1.5')} data-connector-row={target.name} tabIndex={-1}>

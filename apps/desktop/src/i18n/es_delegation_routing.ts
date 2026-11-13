@@ -24,9 +24,6 @@ export const esDelegationRouting: DelegationRoutingTranslations = {
   pluginDisabled: 'Advanced Delegation está instalado, pero desactivado para este perfil.',
   pluginNotLoaded:
     'Advanced Delegation está activado, pero A2Assistant aún no lo ha cargado. Reinicia A2Assistant para terminar.',
-  installPlugin: 'Instalar plugin',
-  installUnavailable:
-    'Advanced Delegation aún no está en el catálogo de plugins. Instálalo desde Capacidades › Plugins.',
   enablePlugin: 'Activar',
   enableFailed: 'No se pudo activar Advanced Delegation',
   modeFailed: 'No se pudo cambiar el enrutamiento de subagentes',

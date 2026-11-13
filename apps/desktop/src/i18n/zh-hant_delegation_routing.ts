@@ -17,8 +17,6 @@ export const zhHantDelegationRouting: DelegationRoutingTranslations = {
   pluginMissing: '模型路由和設定檔路由來自 Advanced Delegation 外掛。',
   pluginDisabled: 'Advanced Delegation 已安裝，但在此設定檔中為關閉狀態。',
   pluginNotLoaded: 'Advanced Delegation 已開啟，但 A2Assistant 尚未載入。請重新啟動 A2Assistant 以完成設定。',
-  installPlugin: '安裝外掛',
-  installUnavailable: 'Advanced Delegation 尚未加入外掛目錄。請在 技能與工具 › 外掛 中安裝。',
   enablePlugin: '開啟',
   enableFailed: '無法開啟 Advanced Delegation',
   modeFailed: '無法變更子代理路由',

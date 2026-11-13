@@ -82,8 +82,6 @@ function answerText(beat: SetupBeat, answer: SetupBeatAnswerFields, names: Answe
       return connected.length > 0 ? connected.map(connectorTitle).join(', ') : names.none
     }
 
-    case 'plugins':
-      return answer.label || (answer.installed?.length ? answer.installed.join(', ') : names.none)
 
     case 'name':
       return answer.name ?? ''

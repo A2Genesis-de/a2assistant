@@ -866,7 +866,7 @@ const themePick: Handler = ctx => {
   notifyInput(ctx, translateNow(`assistant.themePicker.${picker}`))
 }
 
-const SETUP_BEATS: readonly SetupBeat[] = ['name', 'theme', 'layout', 'connectors', 'plugins', 'tour', 'build']
+const SETUP_BEATS: readonly SetupBeat[] = ['name', 'theme', 'layout', 'connectors', 'tour', 'build']
 
 const setupBeat: Handler = ctx => {
   const { request, sessionId } = ctx

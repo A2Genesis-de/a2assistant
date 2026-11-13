@@ -87,7 +87,7 @@ describe('Subagents routing', () => {
     expect(radio(/^Default/).getAttribute('aria-checked')).toBe('true')
     expect(radio(/^Model routes/).disabled).toBe(true)
     expect(radio(/^Profile routes/).disabled).toBe(true)
-    expect(screen.getByRole('button', { name: 'Install plugin' })).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Install plugin' })).toBeNull()
     expect(writes).toHaveLength(0)
   })
 
@@ -126,7 +126,6 @@ describe('Subagents routing', () => {
     expect(radio(/^Model routes/).getAttribute('aria-checked')).toBe('true')
     expect(radio(/^Default/).getAttribute('aria-checked')).toBe('false')
     expect(screen.getByText('Not running')).toBeTruthy()
-    expect(screen.getAllByRole('button', { name: 'Install plugin' })).toHaveLength(1)
     // The subagent model does not apply in this mode either: it stays inert, never silently "back on".
     expect(screen.getByTestId('subagent-model-row').closest('[inert]')).not.toBeNull()
 

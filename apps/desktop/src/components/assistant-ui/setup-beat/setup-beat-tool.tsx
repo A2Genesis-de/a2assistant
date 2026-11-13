@@ -3,7 +3,6 @@
 import type { ToolCallMessagePartProps } from '@assistant-ui/react'
 import type { SetupBeat } from '@hermes/shared'
 import { useStore } from '@nanostores/react'
-import { Puzzle } from 'lucide-react'
 import { type ComponentType, type ReactNode, useState } from 'react'
 
 import { useSessionView } from '@/app/chat/session-view'
@@ -24,7 +23,6 @@ import {
 
 import { NameCard, OptionsCard } from './beat-cards'
 import { CARD_LABEL_CLASS } from './card-type'
-import { PluginsCard } from './plugins-card'
 import {
   SETUP_BEAT_SHELL_CLASS,
   type SetupBeatOutcome,
@@ -59,14 +57,6 @@ function BeatBody({ answer, request }: { answer: (picks: SetupBeatAnswer) => boo
     case 'layout':
       return <LayoutPickerCard onContinue={layout => commit(applyAppearance({ layout }).success, { layout })} />
 
-    case 'plugins':
-      return (
-        <PluginsCard
-          names={card.plugins ?? []}
-          onContinue={(installed, titles) => answer({ installed, label: titles.join(', ') })}
-        />
-      )
-
     case 'tour':
       return (
         <OptionsCard
@@ -94,7 +84,6 @@ const BEAT_ICONS = {
   connectors: Plug,
   layout: LayoutDashboard,
   name: MessageQuestion,
-  plugins: Puzzle,
   theme: Palette,
   tour: MessageQuestion
 } satisfies Record<SetupBeat, ComponentType<{ className?: string }>>

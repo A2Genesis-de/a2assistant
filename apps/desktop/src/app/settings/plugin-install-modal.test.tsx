@@ -37,11 +37,7 @@ const probePluginRepo = vi.fn()
 const installDesktopPlugin = vi.fn()
 
 const BLENDER = {
-  catalogName: 'blender',
-  repo: 'https://github.com/NousResearch/hermes-official-plugins#blender',
-  sha: 'abec9e822a23089943dd1d476a104bf746f19f86',
-  summary: 'Build and render 3D scenes in your Blender.',
-  title: 'Blender'
+  repo: 'https://github.com/example/blender-plugin'
 }
 
 const installCalls = () =>
@@ -105,92 +101,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('A reviewed catalog pick', () => {
-  it('shows only name, one line and Verified until Advanced reveals source, version and profile', async () => {
-    renderFlow()
-    act(() => openPluginInstallRequest(BLENDER))
-
-    const dialog = await screen.findByRole('dialog', { name: 'Blender' })
-    expect(within(dialog).getByText('Verified')).toBeTruthy()
-    expect(within(dialog).getByText(BLENDER.summary)).toBeTruthy()
-    expect(within(dialog).getByText('Reviewed by Nous. Installs for default and turns on right away.')).toBeTruthy()
-    expect(within(dialog).queryByText(BLENDER.repo)).toBeNull()
-    expect(within(dialog).queryByRole('combobox')).toBeNull()
-    expect(within(dialog).queryByRole('checkbox')).toBeNull()
-    expect(within(dialog).queryByRole('switch')).toBeNull()
-
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Advanced' }))
-
-    expect(within(dialog).getByText(BLENDER.repo)).toBeTruthy()
-    expect(within(dialog).getByText('Reviewed pin abec9e82')).toBeTruthy()
-    expect(await within(dialog).findByText('Agent plugin · blender')).toBeTruthy()
-    expect(within(dialog).getByRole('combobox', { name: 'Install for profile' })).toBeTruthy()
-    // Contents are read-only: the package decides its halves, not a checklist.
-    expect(within(dialog).queryByRole('checkbox')).toBeNull()
-  })
-
-  it('shows one loader, installs once with enable on, then closes', async () => {
-    const reply = deferred<unknown>()
-    requestGateway.mockImplementation(async (method, params) =>
-      method === 'plugins.manage' && params?.action === 'install' ? reply.promise : { plugins: [] }
-    )
-    renderFlow()
-    act(() => openPluginInstallRequest(BLENDER))
-    await waitFor(() => expect(probePluginRepo).toHaveBeenCalled())
-
-    fireEvent.click(installButton())
-
-    await waitFor(() => expect(installButton().textContent).toBe('Installing…'))
-    expect(installButton().disabled).toBe(true)
-    expect((screen.getByRole('button', { name: 'Cancel' }) as HTMLButtonElement).disabled).toBe(true)
-    fireEvent.click(installButton())
-    reply.resolve({ ok: true, plugin_name: 'blender', enabled: true })
-
-    await waitFor(() => expect($pluginInstallRequest.get()).toBeNull())
-    expect(installCalls()).toHaveLength(1)
-    expect(installCalls()[0]?.[1]).toMatchObject({ catalog_name: 'blender', enable: true, force: false })
-  })
-
-  it('waits under the loader for an inspection still running, then installs once', async () => {
-    const probe = deferred<unknown>()
-    probePluginRepo.mockReturnValue(probe.promise)
-    requestGateway.mockImplementation(async (method, params) =>
-      method === 'plugins.manage' && params?.action === 'install'
-        ? { ok: true, plugin_name: 'blender' }
-        : { plugins: [] }
-    )
-    renderFlow()
-    act(() => openPluginInstallRequest(BLENDER))
-    await screen.findByRole('dialog', { name: 'Blender' })
-
-    fireEvent.click(installButton())
-    await waitFor(() => expect(installButton().textContent).toBe('Installing…'))
-    expect(installCalls()).toHaveLength(0)
-
-    probe.resolve({ ok: true, agent: true, agentName: 'blender', desktop: false, warnings: [] })
-
-    await waitFor(() => expect($pluginInstallRequest.get()).toBeNull())
-    expect(installCalls()).toHaveLength(1)
-  })
-
-  it('installs into the profile picked under Advanced', async () => {
-    requestGateway.mockImplementation(async (method, params) =>
-      method === 'plugins.manage' && params?.action === 'install'
-        ? { ok: true, plugin_name: 'blender' }
-        : { plugins: [] }
-    )
-    renderFlow()
-    act(() => openPluginInstallRequest(BLENDER))
-    fireEvent.click(await screen.findByRole('button', { name: 'Advanced' }))
-    fireEvent.click(screen.getByRole('combobox', { name: 'Install for profile' }))
-    fireEvent.click(await screen.findByRole('option', { name: 'Research Bot' }))
-
-    expect(screen.getByText('Reviewed by Nous. Installs for Research Bot and turns on right away.')).toBeTruthy()
-    fireEvent.click(installButton())
-
-    await waitFor(() => expect(installCalls()[0]?.[1]).toMatchObject({ catalog_name: 'blender', profile: 'research' }))
-  })
-
+describe('An install request', () => {
   it('states a failure in one line and retries the install', async () => {
     requestGateway.mockImplementation(async (method, params) =>
       method === 'plugins.manage' && params?.action === 'install'
@@ -208,78 +119,6 @@ describe('A reviewed catalog pick', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
 
     await waitFor(() => expect(installCalls()).toHaveLength(2))
-  })
-
-  it('a desktop-only pick hands Electron its catalog entry, and a refusal shows Force reinstall', async () => {
-    // Accent Picker: the card had no installed state, so a second Install stopped at "already exists"
-    // with Force hidden behind a collapsed Advanced (a catalog pick never offered Force at all).
-    const ACCENT = {
-      ...BLENDER,
-      catalogName: 'accent-picker',
-      repo: `${BLENDER.repo.split('#')[0]}#accent-picker`,
-      title: 'Accent Picker'
-    }
-
-    probePluginRepo.mockResolvedValue({
-      ok: true,
-      agent: false,
-      desktop: true,
-      desktopName: 'accent-picker',
-      warnings: []
-    })
-    installDesktopPlugin.mockResolvedValue({
-      ok: false,
-      exists: true,
-      error: "Desktop plugin 'accent-picker' already exists. Enable force reinstall to replace it."
-    })
-    renderFlow()
-    act(() => openPluginInstallRequest(ACCENT))
-    const dialog = await screen.findByRole('dialog', { name: 'Accent Picker' })
-    await waitFor(() => expect(probePluginRepo).toHaveBeenCalled())
-    fireEvent.click(installButton())
-
-    await waitFor(() =>
-      expect(installDesktopPlugin).toHaveBeenCalledWith(
-        expect.objectContaining({ catalogName: 'accent-picker', sha: ACCENT.sha })
-      )
-    )
-    expect((await within(dialog).findByRole('alert')).textContent).toContain('already exists')
-    const force = within(dialog).getByRole('switch')
-    fireEvent.click(force)
-    installDesktopPlugin.mockResolvedValue({ ok: true, pluginName: 'accent-picker' })
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }))
-
-    await waitFor(() => expect(installDesktopPlugin).toHaveBeenLastCalledWith(expect.objectContaining({ force: true })))
-  })
-
-  it('a refusal Force cannot fix offers no Force', async () => {
-    const ACCENT = {
-      ...BLENDER,
-      catalogName: 'accent-picker',
-      repo: `${BLENDER.repo.split('#')[0]}#accent-picker`,
-      title: 'Accent Picker'
-    }
-
-    probePluginRepo.mockResolvedValue({
-      ok: true,
-      agent: false,
-      desktop: true,
-      desktopName: 'accent-picker',
-      warnings: []
-    })
-    installDesktopPlugin.mockResolvedValue({ ok: false, error: 'git clone failed: network unreachable' })
-    renderFlow()
-    act(() => openPluginInstallRequest(ACCENT))
-    const dialog = await screen.findByRole('dialog', { name: 'Accent Picker' })
-    await waitFor(() => expect(probePluginRepo).toHaveBeenCalled())
-    fireEvent.click(installButton())
-
-    expect((await within(dialog).findByRole('alert')).textContent).toContain('network unreachable')
-    // Advanced stays as it was; opened, it still holds no Force switch.
-    expect(within(dialog).queryByText('Source code')).toBeNull()
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Advanced' }))
-    expect(within(dialog).getByText('Source code')).toBeTruthy()
-    expect(within(dialog).queryByRole('switch')).toBeNull()
   })
 })
 
@@ -437,33 +276,6 @@ describe('Unified package desktop half on a local backend', () => {
     expect(reconcileDesktopPlugins).not.toHaveBeenCalled()
   })
 
-  it('offers no Force for a desktop half refused as installed once the agent half went in', async () => {
-    // Force reinstalls both halves: offered here, it would replace the agent plugin just installed.
-    $connection.set({ mode: 'remote' } as NonNullable<ReturnType<typeof $connection.get>>)
-    probePluginRepo.mockResolvedValue({ ok: true, agent: true, agentName: 'pkg', desktop: true, warnings: [] })
-    requestGateway.mockImplementation(async (method, params) =>
-      method === 'plugins.manage' && params?.action === 'install' ? { ok: true, plugin_name: 'pkg' } : { plugins: [] }
-    )
-    installDesktopPlugin.mockResolvedValue({ ok: false, exists: true, error: "Desktop plugin 'pkg' already exists." })
-    vi.stubGlobal('hermesDesktop', { installDesktopPlugin, probePluginRepo, reconcileDesktopPlugins })
-    renderFlow()
-    act(() =>
-      openPluginInstallRequest({ ...BLENDER, catalogName: 'pkg', repo: 'https://github.com/example/pkg', title: 'Pkg' })
-    )
-    const dialog = await screen.findByRole('dialog', { name: 'Pkg' })
-    await waitFor(() => expect(installButton().disabled).toBe(false))
-    fireEvent.click(installButton())
-
-    expect((await within(dialog).findByRole('alert')).textContent).toContain('already exists')
-    expect(installDesktopPlugin).toHaveBeenCalled()
-
-    if (!within(dialog).queryByText('Source code')) {
-      fireEvent.click(within(dialog).getByRole('button', { name: 'Advanced' }))
-    }
-
-    expect(within(dialog).getByText('Source code')).toBeTruthy()
-    expect(within(dialog).queryByRole('switch')).toBeNull()
-  })
 
   it('turns the desktop half on with the agent half: install means ready for the whole package', async () => {
     // The half lands opt-in (marker => defaultEnabled false); the install turns it on with the agent half.

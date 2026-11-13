@@ -1,7 +1,6 @@
 import { skillCatalogInstallIdentifier } from '@hermes/shared'
 import { queryOptions, useQuery } from '@tanstack/react-query'
 
-import { CATALOG_ORIGIN } from '@/lib/plugin-catalog'
 import { queryClient } from '@/lib/query-client'
 
 import { curatedFeaturedRank, curationOwnsArtwork, officialCatalogArtwork } from './catalog-curation'
@@ -50,6 +49,7 @@ export interface CatalogEntry {
 // The public domain redirects here without CORS headers on the redirect.
 // Use the docs' actual static host, not GitHub's API or repository endpoints.
 const CATALOG_BASE = 'https://nousresearch.github.io/hermes-agent/docs/api'
+export const CATALOG_ORIGIN = 'https://hermes-agent.nousresearch.com'
 /** A download with no new bytes for this long is aborted (inactivity, not total time). */
 const CATALOG_STALL_MS = 60_000
 const text = (value: unknown): string => (typeof value === 'string' ? value : '')
@@ -205,6 +205,10 @@ export function parseCatalog(kind: CatalogKind, data: unknown): CatalogEntry[] {
 }
 
 export async function fetchCatalog(kind: CatalogKind): Promise<CatalogEntry[]> {
+  if (kind === 'plugins') {
+    return []
+  }
+
   // Bound inactivity, not total transfer time: a large skills snapshot can
   // take minutes on a healthy slow connection. Headers and each body chunk
   // get the same deadline; an actually stalled download still terminates.

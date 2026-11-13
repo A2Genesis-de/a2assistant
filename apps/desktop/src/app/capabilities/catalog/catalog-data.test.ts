@@ -88,7 +88,7 @@ describe('public catalog data', () => {
     })
   })
 
-  it.each(['skills', 'plugins'] as const)('fetches only the published %s snapshot and parses it', async kind => {
+  it.each(['skills'] as const)('fetches only the published %s snapshot and parses it', async kind => {
     const rows = [
       {
         name: 'weather',

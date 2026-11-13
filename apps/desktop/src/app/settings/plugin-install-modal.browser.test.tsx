@@ -29,12 +29,7 @@ import { $connection, $gatewayState } from '@/store/session'
 import { PluginInstallModal } from './plugin-install-modal'
 
 const DELEGATION = {
-  catalogName: 'advanced-delegation',
-  repo: 'https://github.com/NousResearch/hermes-official-plugins#advanced-delegation',
-  sha: 'e404b6816b20237a82f6fbe2749b5a576cf75dba',
-  summary: 'Two extra delegation modes for delegate_task.',
-  title: 'Advanced Delegation',
-  tier: 'official'
+  repo: 'https://github.com/example/plugins#advanced-delegation'
 }
 
 const UNAVAILABLE = 'Plugin inspection is unavailable in this environment.'
@@ -91,18 +86,17 @@ afterEach(() => {
 })
 
 describe('Plugin install in the browser-hosted app (no window.hermesDesktop)', () => {
-  it('inspects the catalog pick through the gateway and installs the agent plugin', async () => {
+  it('inspects the source through the gateway and installs the agent plugin', async () => {
     backend(AGENT_ONLY)
     renderModal()
     act(() => openPluginInstallRequest(DELEGATION))
 
-    const dialog = await screen.findByRole('dialog', { name: 'Advanced Delegation' })
+    const dialog = await screen.findByRole('dialog')
     await waitFor(() => expect(installButton()?.disabled).toBe(false))
     expect(within(dialog).queryByText(UNAVAILABLE)).toBeNull()
     expect(callsFor('inspect')[0]?.[1]).toMatchObject({
       action: 'inspect',
       identifier: DELEGATION.repo,
-      catalog_name: 'advanced-delegation',
       profile: 'default'
     })
 
@@ -110,7 +104,7 @@ describe('Plugin install in the browser-hosted app (no window.hermesDesktop)', (
 
     await waitFor(() => expect($pluginInstallRequest.get()).toBeNull())
     expect(callsFor('install')).toHaveLength(1)
-    expect(callsFor('install')[0]?.[1]).toMatchObject({ catalog_name: 'advanced-delegation', enable: true })
+    expect(callsFor('install')[0]?.[1]).toMatchObject({ identifier: DELEGATION.repo, enable: true })
     expect($notifications.get().some(n => n.kind === 'warning' && n.message === DESKTOP_UNAVAILABLE)).toBe(false)
   })
 

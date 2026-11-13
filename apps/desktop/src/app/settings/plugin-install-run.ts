@@ -1,4 +1,4 @@
-import { enableCatalogDesktopPlugin, enablePackageDesktopHalf } from '@/contrib/plugins-store'
+import { enablePackageDesktopHalf } from '@/contrib/plugins-store'
 import { discoverRuntimePlugins } from '@/contrib/runtime-loader'
 import type { useI18n } from '@/i18n'
 import { isBrowserHostedDesktop } from '@/lib/platform'
@@ -133,13 +133,10 @@ function notifyAgentFollowUps(result: AgentPluginInstallResult, name: string, de
   }
 }
 
-/** The commit the dialog showed, which both halves are held to: a branch that moved, or a catalog entry
- *  re-pinned, since must not install a tree nobody reviewed. A catalog pick shows its reviewed pin
- *  (`request.sha`), unless the backend read the entry at that pin (`probe.catalogPin`: the browser-hosted
- *  app), whose commit a re-inspection re-reads. Electron's probe reads the branch tip, which a catalog
- *  install never checks out. */
-export function reviewedCommit({ probe, request }: Pick<InstallPlan, 'probe' | 'request'>): string | undefined {
-  return !request.catalogName || probe.catalogPin ? probe.sha : request.sha
+/** The commit the dialog showed, which both halves are held to: a branch that moved since must not install
+ *  a tree nobody reviewed. */
+export function reviewedCommit({ probe }: Pick<InstallPlan, 'probe'>): string | undefined {
+  return probe.sha
 }
 
 async function installAgentHalf(plan: InstallPlan, deps: InstallDeps, report: Report) {
@@ -149,7 +146,6 @@ async function installAgentHalf(plan: InstallPlan, deps: InstallDeps, report: Re
     identifier: request.repo,
     force: plan.force,
     enable: plan.enable,
-    catalogName: request.catalogName,
     ref: plan.ref,
     inspectedSha: plan.withoutReviewedCommit ? undefined : reviewedCommit(plan),
     profile: plan.profile
@@ -187,12 +183,10 @@ async function cloneDesktopHalf(
     ? await installFn({
         identifier: plan.request.repo,
         force: plan.force,
-        sha: plan.ref ?? reviewedCommit(plan),
-        catalogName: plan.request.catalogName
+        sha: plan.ref ?? reviewedCommit(plan)
       })
     : await installDesktopPluginHalf(deps.requestGateway, {
         identifier: plan.request.repo,
-        catalogName: plan.request.catalogName,
         force: plan.force,
         profile: plan.profile,
         // The pin the user typed, else the commit the dialog showed: the host installs exactly that tree
@@ -213,11 +207,6 @@ async function cloneDesktopHalf(
 
   report.successes.push(copy.desktopSuccess(result.pluginName ?? plan.request.repo))
   await discoverRuntimePlugins()
-
-  // A standalone plugin that ships off by default would otherwise sit off behind a dialog that said it turns on.
-  if (plan.enable && plan.request.catalogName) {
-    await enableCatalogDesktopPlugin(plan.request.catalogName)
-  }
 }
 
 /** Whether the app's desktop-plugins root holds `<name>/plugin.js` after a reconcile, read from the folder

@@ -20,7 +20,6 @@ import { jaNotices } from './ja_notices'
 import { jaNotifications } from './ja_notifications'
 import { jaOnboarding } from './ja_onboarding'
 import { jaPluginPreviewAccess } from './ja_plugin_preview_access'
-import { jaPluginUpdateAll } from './ja_plugin_update_all'
 import { jaPluginSettings, jaPluginsTab } from './ja_plugins'
 import { jaPreviewWeb } from './ja_preview_web'
 import { jaProjects } from './ja_projects'
@@ -1331,7 +1330,7 @@ export const jaOverrides = {
 
   skillDeepLink: jaSkillDeepLink,
   skills: {
-    plugins: { ...jaPluginPreviewAccess, ...jaPluginsTab, ...jaPluginUpdateAll },
+    plugins: { ...jaPluginPreviewAccess, ...jaPluginsTab },
     hub: {
       search: '検索',
       searching: '検索中…',

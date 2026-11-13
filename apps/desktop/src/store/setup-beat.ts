@@ -18,7 +18,6 @@ import type {
   SetupConnectorsAnswer,
   SetupLayoutAnswer,
   SetupNameAnswer,
-  SetupPluginsAnswer,
   SetupThemeAnswer,
   SetupTourAnswer
 } from '@hermes/shared'
@@ -35,10 +34,9 @@ export interface BeatOption {
 }
 
 /** A beat's card data (`agent/onboarding_flow.py::BEATS`, `tools/setup_beat_tool.py::_card`): name `{suggested?}`
- *  (the account's full name), layout/tour/build `{options}`, connectors `{suggested}` (slugs), plugins `{plugins}`. */
+ *  (the account's full name), layout/tour/build `{options}`, connectors `{suggested}` (slugs). */
 export interface SetupBeatCard {
   options?: BeatOption[]
-  plugins?: string[]
   suggested?: string | string[]
 }
 
@@ -52,7 +50,6 @@ export type SetupBeatAnswerFields = Partial<
     SetupConnectorsAnswer &
     SetupLayoutAnswer &
     SetupNameAnswer &
-    SetupPluginsAnswer &
     SetupThemeAnswer &
     SetupTourAnswer
 >
