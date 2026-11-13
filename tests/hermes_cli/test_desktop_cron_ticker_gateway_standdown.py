@@ -6,7 +6,6 @@ Every path (multiplex, and the fail-open single-profile fallback) gates each tic
 
 from __future__ import annotations
 
-import logging
 import threading
 
 import pytest
