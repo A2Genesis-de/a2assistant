@@ -3696,7 +3696,7 @@ tips:
   t123: "Seolann /moa leid dheacair amháin trí do thacar samhlacha Mixture of Agents cumraithe."
   t124: "Tacaíonn orduithe teirminéil le mód cúlra le notify_on_complete le haghaidh tascanna fadrite."
   t125: "Tacaíonn próisis chúlra an teirminéil le watch_patterns chun rabhadh a thabhairt faoi línte aschuir sonracha."
-  t126: "Tacaíonn an uirlis terminal le 6 inneall cúil: local, Docker, SSH, Modal, Daytona, agus Singularity."
+  t126: "Tacaíonn an uirlis terminal le 4 inneall cúil: local, Docker, SSH, agus Singularity."
   t127: "Faigheann gach próifíl a cumraíocht, a heochracha API, a cuimhne, a seisiúin, a scileanna agus a tascanna cron féin."
   t128: "Éiríonn ainmneacha próifílí ina n-orduithe blaoisce — cruthaíonn 'a2assistant profile create coder' an t-ordú 'coder'."
   t129: "Cruthaíonn a2assistant profile export coder -o backup.tar.gz cartlann próifíle iniompartha."

@@ -10,16 +10,13 @@ import { isWindowsAbsolutePath } from '@/lib/path-compare'
 const POSIX_ABSOLUTE_PATH_RE = /^\/(?!\/)/
 
 // Terminal backends whose execution environment has its own filesystem
-// (docker/ssh/singularity/modal/...) cannot see the desktop's host paths —
+// (docker/ssh/singularity/...) cannot see the desktop's host paths —
 // they must be crossed as bytes, like remote attachments. Mirrors the
 // container_backend set in tools/terminal_tool.py::_get_env_config.
 export const CONTAINER_TERMINAL_BACKENDS = new Set([
   'docker',
   'ssh',
-  'singularity',
-  'modal',
-  'daytona',
-  'vercel_sandbox'
+  'singularity'
 ])
 
 // `mode: local` means the gateway was launched locally, not necessarily that

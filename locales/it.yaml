@@ -3696,7 +3696,7 @@ tips:
   t123: "/moa instrada un singolo prompt difficile attraverso il set di modelli Mixture of Agents che hai configurato."
   t124: "I comandi del terminale supportano la modalità in background con notify_on_complete per le attività di lunga durata."
   t125: "I processi in background del terminale supportano watch_patterns per avvisarti su righe di output specifiche."
-  t126: "Lo strumento terminal supporta 6 backend: local, Docker, SSH, Modal, Daytona e Singularity."
+  t126: "Lo strumento terminal supporta 4 backend: local, Docker, SSH e Singularity."
   t127: "Ogni profilo ha la propria configurazione, chiavi API, memoria, sessioni, skill e job cron."
   t128: "I nomi dei profili diventano comandi shell: 'a2assistant profile create coder' crea il comando 'coder'."
   t129: "a2assistant profile export coder -o backup.tar.gz crea un archivio portabile del profilo."

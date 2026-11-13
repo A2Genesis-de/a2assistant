@@ -3696,7 +3696,7 @@ tips:
   t123: "/moa 把一个高难度提示词路由到你配置的 Mixture of Agents 模型组合。"
   t124: "终端命令支持后台模式，配合 notify_on_complete 处理长时间运行的任务。"
   t125: "终端后台进程支持 watch_patterns，可在出现特定输出行时发出提醒。"
-  t126: "terminal 工具支持 6 种后端：本地、Docker、SSH、Modal、Daytona 和 Singularity。"
+  t126: "terminal 工具支持 4 种后端：本地、Docker、SSH 和 Singularity。"
   t127: "每个配置档都有自己独立的配置、API 密钥、记忆、会话、技能和定时任务。"
   t128: "配置档名称会成为 shell 命令——'a2assistant profile create coder' 会创建 'coder' 命令。"
   t129: "a2assistant profile export coder -o backup.tar.gz 创建一个可移植的配置档归档。"

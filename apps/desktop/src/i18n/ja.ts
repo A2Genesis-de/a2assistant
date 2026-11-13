@@ -690,9 +690,7 @@ export const jaOverrides = {
         persistentShell: '永続シェル',
         envPassthrough: '環境変数の引き継ぎ',
         dockerImage: 'Docker イメージ',
-        singularityImage: 'Singularity イメージ',
-        modalImage: 'Modal イメージ',
-        daytonaImage: 'Daytona イメージ'
+        singularityImage: 'Singularity イメージ'
       },
       fileReadMaxChars: 'ファイル読み取り上限',
       toolOutput: {

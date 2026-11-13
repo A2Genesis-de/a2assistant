@@ -1182,9 +1182,7 @@ export const esOverrides = {
         persistentShell: 'Shell persistente',
         envPassthrough: 'Paso de variables de entorno',
         dockerImage: 'Imagen de Docker',
-        singularityImage: 'Imagen de Singularity',
-        modalImage: 'Imagen de Modal',
-        daytonaImage: 'Imagen de Daytona'
+        singularityImage: 'Imagen de Singularity'
       },
       fileReadMaxChars: 'Límite de lectura de archivos',
       toolOutput: {
@@ -1358,9 +1356,7 @@ export const esOverrides = {
         persistentShell: 'Mantiene el estado de la shell entre comandos cuando el backend lo admite.',
         envPassthrough: 'Variables de entorno que se pasan a la ejecución de herramientas.',
         dockerImage: 'Imagen de contenedor usada cuando el backend de ejecución es Docker.',
-        singularityImage: 'Imagen usada cuando el backend de ejecución es Singularity.',
-        modalImage: 'Imagen usada cuando el backend de ejecución es Modal.',
-        daytonaImage: 'Imagen usada cuando el backend de ejecución es Daytona.'
+        singularityImage: 'Imagen usada cuando el backend de ejecución es Singularity.'
       },
       codeExecution: {
         mode: 'Qué tan estrictamente se limita la ejecución de código al proyecto actual.'

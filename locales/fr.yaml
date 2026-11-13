@@ -4021,7 +4021,7 @@ tips:
   t123: "/moa fait passer un prompt difficile par votre ensemble de modèles Mixture of Agents configuré."
   t124: "Les commandes du terminal prennent en charge le mode arrière-plan avec notify_on_complete pour les tâches longues."
   t125: "Les processus d'arrière-plan du terminal prennent en charge watch_patterns pour alerter sur des lignes de sortie précises."
-  t126: "L'outil terminal prend en charge 6 backends : local, Docker, SSH, Modal, Daytona et Singularity."
+  t126: "L'outil terminal prend en charge 4 backends : local, Docker, SSH et Singularity."
   t127: "Chaque profil dispose de sa propre configuration, de ses clés API, de sa mémoire, de ses sessions, de ses skills et de ses tâches cron."
   t128: "Les noms de profil deviennent des commandes shell — 'a2assistant profile create coder' crée la commande 'coder'."
   t129: "a2assistant profile export coder -o backup.tar.gz crée une archive de profil portable."

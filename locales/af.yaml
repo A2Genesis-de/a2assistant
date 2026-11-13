@@ -3696,7 +3696,7 @@ tips:
   t123: "/moa stuur een moeilike prompt deur jou opgestelde Mixture of Agents-modelstel."
   t124: "Terminal-opdragte ondersteun agtergrondmodus met notify_on_complete vir langlopende take."
   t125: "Terminal-agtergrondprosesse ondersteun watch_patterns om oor spesifieke uitvoerreëls te waarsku."
-  t126: "Die terminal-gereedskap ondersteun 6 agterkante: local, Docker, SSH, Modal, Daytona en Singularity."
+  t126: "Die terminal-gereedskap ondersteun 4 agterkante: local, Docker, SSH en Singularity."
   t127: "Elke profiel kry sy eie konfigurasie, API-sleutels, geheue, sessies, vaardighede en cron-take."
   t128: "Profielname word shell-opdragte — 'a2assistant profile create coder' skep die 'coder'-opdrag."
   t129: "a2assistant profile export coder -o backup.tar.gz skep 'n oordraagbare profielargief."

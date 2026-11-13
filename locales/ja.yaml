@@ -3696,7 +3696,7 @@ tips:
   t123: "/moa は難しいプロンプト 1 つを、設定済みの Mixture of Agents モデルセットに通します。"
   t124: "ターミナルコマンドは長時間タスク向けに、notify_on_complete 付きのバックグラウンドモードに対応しています。"
   t125: "ターミナルのバックグラウンドプロセスは watch_patterns に対応しており、特定の出力行で通知できます。"
-  t126: "terminal ツールは local、Docker、SSH、Modal、Daytona、Singularity の 6 つのバックエンドに対応しています。"
+  t126: "terminal ツールは local、Docker、SSH、Singularity の 4 つのバックエンドに対応しています。"
   t127: "各プロファイルは独自の設定、API キー、メモリ、セッション、スキル、cron ジョブを持ちます。"
   t128: "プロファイル名はシェルコマンドになります。'a2assistant profile create coder' で 'coder' コマンドが作られます。"
   t129: "a2assistant profile export coder -o backup.tar.gz は持ち運び可能なプロファイルのアーカイブを作成します。"

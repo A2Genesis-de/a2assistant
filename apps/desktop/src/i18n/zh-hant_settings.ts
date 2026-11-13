@@ -470,9 +470,7 @@ export const zhHantSettings = {
         persistentShell: '持久化 Shell',
         envPassthrough: '環境變數傳遞',
         dockerImage: 'Docker 映像',
-        singularityImage: 'Singularity 映像',
-        modalImage: 'Modal 映像',
-        daytonaImage: 'Daytona 映像'
+        singularityImage: 'Singularity 映像'
       },
       fileReadMaxChars: '檔案讀取上限',
       toolOutput: {
@@ -642,9 +640,7 @@ export const zhHantSettings = {
         persistentShell: '後端支援時，在指令之間保留 Shell 狀態。',
         envPassthrough: '傳入工具執行的環境變數。',
         dockerImage: '執行後端為 Docker 時使用的容器映像。',
-        singularityImage: '執行後端為 Singularity 時使用的映像。',
-        modalImage: '執行後端為 Modal 時使用的映像。',
-        daytonaImage: '執行後端為 Daytona 時使用的映像。'
+        singularityImage: '執行後端為 Singularity 時使用的映像。'
       },
       codeExecution: {
         mode: '程式碼執行被限制在目前專案中的嚴格程度。'

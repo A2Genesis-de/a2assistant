@@ -1184,9 +1184,7 @@ const deBaseOverrides = {
         persistentShell: 'Persistente Shell',
         envPassthrough: 'Umgebungsvariablen-Durchreichung',
         dockerImage: 'Docker-Image',
-        singularityImage: 'Singularity-Image',
-        modalImage: 'Modal-Image',
-        daytonaImage: 'Daytona-Image'
+        singularityImage: 'Singularity-Image'
       },
       fileReadMaxChars: 'Datei-Lesegrenze',
       toolOutput: {
@@ -1358,9 +1356,7 @@ const deBaseOverrides = {
         persistentShell: 'Shell-Zustand zwischen Befehlen beibehalten, wenn das Backend es unterstützt.',
         envPassthrough: 'Umgebungsvariablen, die in die Tool-Ausführung durchgereicht werden.',
         dockerImage: 'Container-Image, das verwendet wird, wenn das Ausführungs-Backend Docker ist.',
-        singularityImage: 'Image, das verwendet wird, wenn das Ausführungs-Backend Singularity ist.',
-        modalImage: 'Image, das verwendet wird, wenn das Ausführungs-Backend Modal ist.',
-        daytonaImage: 'Image, das verwendet wird, wenn das Ausführungs-Backend Daytona ist.'
+        singularityImage: 'Image, das verwendet wird, wenn das Ausführungs-Backend Singularity ist.'
       },
       codeExecution: {
         mode: 'Wie streng die Code-Ausführung auf das aktuelle Projekt begrenzt ist.'

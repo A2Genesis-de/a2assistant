@@ -3810,7 +3810,7 @@ tips:
   t123: "/moa routes one hard prompt through your configured Mixture of Agents model set."
   t124: "Terminal commands support background mode with notify_on_complete for long-running tasks."
   t125: "Terminal background processes support watch_patterns to alert on specific output lines."
-  t126: "The terminal tool supports 6 backends: local, Docker, SSH, Modal, Daytona, and Singularity."
+  t126: "The terminal tool supports 4 backends: local, Docker, SSH, and Singularity."
   t127: "Each profile gets its own config, API keys, memory, sessions, skills, and cron jobs."
   t128: "Profile names become shell commands — 'hermes profile create coder' creates the 'coder' command."
   t129: "hermes profile export coder -o backup.tar.gz creates a portable profile archive."

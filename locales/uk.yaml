@@ -3696,7 +3696,7 @@ tips:
   t123: "/moa проганяє один складний запит через налаштований набір моделей Mixture of Agents."
   t124: "Команди терміналу підтримують фоновий режим із notify_on_complete для тривалих завдань."
   t125: "Фонові процеси терміналу підтримують watch_patterns для сповіщень про певні рядки виводу."
-  t126: "Інструмент terminal підтримує 6 бекендів: local, Docker, SSH, Modal, Daytona та Singularity."
+  t126: "Інструмент terminal підтримує 4 бекенди: local, Docker, SSH та Singularity."
   t127: "Кожен профіль має власну конфігурацію, ключі API, пам'ять, сеанси, навички та cron-завдання."
   t128: "Назви профілів стають командами оболонки — 'a2assistant profile create coder' створює команду 'coder'."
   t129: "a2assistant profile export coder -o backup.tar.gz створює переносний архів профілю."

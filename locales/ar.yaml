@@ -3696,7 +3696,7 @@ tips:
   t123: "يوجّه /moa مطالبة صعبة واحدة عبر مجموعة نماذج Mixture of Agents التي أعددتها."
   t124: "تدعم أوامر الطرفية وضع الخلفية مع notify_on_complete للمهام طويلة الأمد."
   t125: "تدعم عمليات الطرفية في الخلفية watch_patterns للتنبيه عند ظهور أسطر مخرجات محددة."
-  t126: "تدعم أداة terminal ست بيئات تشغيل: local وDocker وSSH وModal وDaytona وSingularity."
+  t126: "تدعم أداة terminal أربع بيئات تشغيل: local وDocker وSSH وSingularity."
   t127: "لكل ملف تعريفي إعداداته ومفاتيح API وذاكرته وجلساته ومهاراته ومهامه المجدولة الخاصة."
   t128: "تتحوّل أسماء الملفات التعريفية إلى أوامر shell — ينشئ 'a2assistant profile create coder' الأمر 'coder'."
   t129: "ينشئ a2assistant profile export coder -o backup.tar.gz أرشيفًا محمولًا للملف التعريفي."

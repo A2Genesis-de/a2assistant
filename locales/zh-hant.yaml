@@ -3696,7 +3696,7 @@ tips:
   t123: "/moa 會將一個困難的提示交由你設定的 Mixture of Agents 模型組處理。"
   t124: "終端機指令支援背景模式，搭配 notify_on_complete 可處理長時間執行的任務。"
   t125: "終端機背景程序支援 watch_patterns，可在出現特定輸出行時發出提醒。"
-  t126: "terminal 工具支援 6 種後端：local、Docker、SSH、Modal、Daytona 與 Singularity。"
+  t126: "terminal 工具支援 4 種後端：local、Docker、SSH 與 Singularity。"
   t127: "每個設定檔都有自己的設定、API 金鑰、記憶、工作階段、技能與排程任務。"
   t128: "設定檔名稱會成為 shell 指令 — 'a2assistant profile create coder' 會建立 'coder' 指令。"
   t129: "a2assistant profile export coder -o backup.tar.gz 會建立可攜式的設定檔封存檔。"

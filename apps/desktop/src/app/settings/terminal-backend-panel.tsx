@@ -44,8 +44,7 @@ function StatusPill({ backend }: { backend: TerminalBackendInfo }) {
 /**
  * Terminal execution backend picker — the Capabilities-tab counterpart of the
  * `terminal.backend` config enum. Each backend row carries a live health probe
- * (Docker daemon reachable, SSH host configured, Modal/Daytona credentials
- * present) so users see Ready / Needs-setup guidance instead of a bare
+ * (Docker daemon reachable, SSH host configured) so users see Ready / Needs-setup guidance instead of a bare
  * dropdown. Selecting a needs-setup backend is still allowed (matching the CLI
  * configurator) but goes through a confirm step first: the write persists
  * immediately and every later session inherits a backend with no terminal or

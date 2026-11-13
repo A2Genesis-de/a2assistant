@@ -3713,7 +3713,7 @@ tips:
   t123: "A /moa egy nehéz promptot a beállított Mixture of Agents modellkészleteden keresztül futtat."
   t124: "A terminálparancsok támogatják a háttérmódot a notify_on_complete opcióval a hosszan futó feladatokhoz."
   t125: "A terminál háttérfolyamatai támogatják a watch_patterns opciót, amely adott kimeneti sorokra riaszt."
-  t126: "A terminal eszköz 6 háttérrendszert támogat: local, Docker, SSH, Modal, Daytona és Singularity."
+  t126: "A terminal eszköz 4 háttérrendszert támogat: local, Docker, SSH és Singularity."
   t127: "Minden profilnak saját konfigurációja, API-kulcsai, memóriája, munkamenetei, skilljei és cron-feladatai vannak."
   t128: "A profilnevek shell-parancsokká válnak — a 'a2assistant profile create coder' létrehozza a 'coder' parancsot."
   t129: "Az a2assistant profile export coder -o backup.tar.gz hordozható profilarchívumot készít."

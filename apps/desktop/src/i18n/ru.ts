@@ -660,9 +660,7 @@ export const ruOverrides = {
         persistentShell: 'Персистентная оболочка',
         envPassthrough: 'Пропуск переменных окружения',
         dockerImage: 'Образ Docker',
-        singularityImage: 'Образ Singularity',
-        modalImage: 'Образ Modal',
-        daytonaImage: 'Образ Daytona'
+        singularityImage: 'Образ Singularity'
       },
       fileReadMaxChars: 'Лимит чтения файла',
       toolOutput: {
@@ -827,9 +825,7 @@ export const ruOverrides = {
         persistentShell: 'Сохранять состояние оболочки между командами, если бэкенд это поддерживает.',
         envPassthrough: 'Переменные окружения, которые передавать в выполнение инструментов.',
         dockerImage: 'Образ контейнера, используемый, когда бэкенд выполнения — Docker.',
-        singularityImage: 'Образ, используемый, когда бэкенд выполнения — Singularity.',
-        modalImage: 'Образ, используемый, когда бэкенд выполнения — Modal.',
-        daytonaImage: 'Образ, используемый, когда бэкенд выполнения — Daytona.'
+        singularityImage: 'Образ, используемый, когда бэкенд выполнения — Singularity.'
       },
       codeExecution: {
         mode: 'Насколько строго выполнение кода ограничено текущим проектом.'

@@ -245,8 +245,8 @@ export const ENUM_OPTIONS: Record<string, string[]> = {
   // shadow that and hide user-installed/pip providers (#49513).
   // Terminal execution backends — kept in sync with the dispatch ladder in
   // tools/terminal_tool.py::_create_environment (local/docker/singularity/
-  // modal/daytona/ssh). Remote backends need extra env (image, tokens, host).
-  'terminal.backend': ['local', 'docker', 'singularity', 'modal', 'daytona', 'ssh'],
+  // ssh). Remote backends need extra env (image, host).
+  'terminal.backend': ['local', 'docker', 'singularity', 'ssh'],
   'stt.elevenlabs.model_id': ['scribe_v2', 'scribe_v1'],
   'stt.local.model': ['tiny', 'base', 'small', 'medium', 'large-v3', 'turbo'],
   // Speech-to-text backends — kept in sync with BUILTIN_STT_PROVIDERS in
@@ -446,9 +446,7 @@ export const FIELD_LABELS: Record<string, string> = defineFieldCopy({
     persistentShell: 'Persistent Shell',
     envPassthrough: 'Environment Passthrough',
     dockerImage: 'Docker Image',
-    singularityImage: 'Singularity Image',
-    modalImage: 'Modal Image',
-    daytonaImage: 'Daytona Image'
+    singularityImage: 'Singularity Image'
   },
   fileReadMaxChars: 'File Read Limit',
   toolOutput: {
@@ -633,9 +631,7 @@ export const FIELD_DESCRIPTIONS: Record<string, string> = defineFieldCopy({
       'SSH backend: keep exported variables between commands. Off starts each command from the login environment; the working directory always carries over.',
     envPassthrough: 'Environment variables to pass into tool execution.',
     dockerImage: 'Container image used when the execution backend is Docker.',
-    singularityImage: 'Image used when the execution backend is Singularity.',
-    modalImage: 'Image used when the execution backend is Modal.',
-    daytonaImage: 'Image used when the execution backend is Daytona.'
+    singularityImage: 'Image used when the execution backend is Singularity.'
   },
   codeExecution: {
     mode: 'How strictly code execution is scoped to the current project.'
@@ -854,8 +850,6 @@ export const SECTIONS: DesktopConfigSection[] = [
       'terminal.timeout',
       'terminal.docker_image',
       'terminal.singularity_image',
-      'terminal.modal_image',
-      'terminal.daytona_image',
       'tool_output.max_bytes',
       'tool_output.max_lines',
       'tool_output.max_line_length',

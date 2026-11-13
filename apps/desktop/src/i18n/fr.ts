@@ -1186,9 +1186,7 @@ export const frOverrides = {
         persistentShell: 'Shell persistant',
         envPassthrough: "Transmission de l'environnement",
         dockerImage: 'Image Docker',
-        singularityImage: 'Image Singularity',
-        modalImage: 'Image Modal',
-        daytonaImage: 'Image Daytona'
+        singularityImage: 'Image Singularity'
       },
       fileReadMaxChars: 'Limite de lecture de fichier',
       toolOutput: {
@@ -1361,9 +1359,7 @@ export const frOverrides = {
         persistentShell: "Conserve l'état du shell entre les commandes lorsque le backend le permet.",
         envPassthrough: "Variables d'environnement à transmettre à l'exécution des outils.",
         dockerImage: "Image de conteneur utilisée lorsque le backend d'exécution est Docker.",
-        singularityImage: "Image utilisée lorsque le backend d'exécution est Singularity.",
-        modalImage: "Image utilisée lorsque le backend d'exécution est Modal.",
-        daytonaImage: "Image utilisée lorsque le backend d'exécution est Daytona."
+        singularityImage: "Image utilisée lorsque le backend d'exécution est Singularity."
       },
       codeExecution: {
         mode: "Degré de restriction de l'exécution du code au projet actuel."

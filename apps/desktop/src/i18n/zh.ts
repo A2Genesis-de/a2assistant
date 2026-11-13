@@ -899,9 +899,7 @@ export const zhOverrides = {
         persistentShell: '持久化 Shell',
         envPassthrough: '环境变量透传',
         dockerImage: 'Docker 镜像',
-        singularityImage: 'Singularity 镜像',
-        modalImage: 'Modal 镜像',
-        daytonaImage: 'Daytona 镜像'
+        singularityImage: 'Singularity 镜像'
       },
       fileReadMaxChars: '文件读取上限',
       toolOutput: {
@@ -1071,9 +1069,7 @@ export const zhOverrides = {
         persistentShell: '当后端支持时，在命令之间保留 Shell 状态。',
         envPassthrough: '传入工具执行的环境变量。',
         dockerImage: '当执行后端为 Docker 时使用的容器镜像。',
-        singularityImage: '当执行后端为 Singularity 时使用的镜像。',
-        modalImage: '当执行后端为 Modal 时使用的镜像。',
-        daytonaImage: '当执行后端为 Daytona 时使用的镜像。'
+        singularityImage: '当执行后端为 Singularity 时使用的镜像。'
       },
       codeExecution: {
         mode: '代码执行被限定到当前项目的严格程度。'
