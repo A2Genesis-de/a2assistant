@@ -103,17 +103,8 @@ def _spill_full_stdout(stdout_text: str) -> Optional[str]:
 
 
 def check_sandbox_requirements() -> bool:
-    """check_fn: available unless the vercel_sandbox backend fails its own checks."""
-    if not SANDBOX_AVAILABLE:
-        return False
-    try:
-        from tools.terminal_tool import _get_env_config
-        from tools.terminal_tool_backends import _check_vercel_sandbox_requirements
-        config = _get_env_config()
-    except Exception:
-        logger.debug("Could not resolve terminal config for execute_code availability", exc_info=True)
-        return False
-    return config.get("env_type") != "vercel_sandbox" or _check_vercel_sandbox_requirements(config)
+    """check_fn: available wherever the sandbox runtime is."""
+    return SANDBOX_AVAILABLE
 
 
 # ---- hermes_tools.py code generator ----

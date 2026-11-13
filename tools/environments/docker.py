@@ -939,8 +939,7 @@ class DockerEnvironment(BaseEnvironment):
         # TERMINAL_DOCKER_IMAGE): the user changed it, so the old container is not their sandbox any
         # more — recreate (the image is immutable after creation). Default image: a default flip
         # (nikolaik base -> hermes-sandbox:desktop) must not replace a sandbox someone has state in;
-        # keep it and let the CLI / Screen pane ask. Same rule Modal (snapshot wins) and Daytona
-        # (labeled sandbox wins) already apply.
+        # keep it and let the CLI / Screen pane ask.
         actual_image = self._container_image(container_id)
         if actual_image is not None and actual_image != self._image:
             if not self._image_pinned:

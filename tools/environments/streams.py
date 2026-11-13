@@ -7,7 +7,7 @@ which must outlive the call that started it. All three are "spawn argv in the sa
 stdin/stdout as pipes". Each spawn-per-call backend has a local argv prefix that gives exactly that
 (``docker exec -i``, ``ssh``); this module is the one place that knows them.
 
-SDK backends (modal, daytona, vercel) have no argv prefix: ``exec_prefix`` returns None there and
+SDK backends have no argv prefix: ``exec_prefix`` returns None there and
 the desktop stays on the gateway host (or refuses, per ``bot_desktop.placement``). Plugin backends
 that declare ``supports_streams`` supply the prefix from their environment's own ``exec_prefix()``.
 """

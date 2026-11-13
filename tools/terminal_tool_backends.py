@@ -3,21 +3,15 @@ shapers, and requirement checkers, routed by dispatch/spec tables. Split out of 
 the terminal tool imports the builders/checkers it uses from here."""
 
 import functools
-import importlib.util
-import inspect
+import importlib
 import logging
 import subprocess
 from typing import Any, Dict, Optional
 
 from tools.environments.docker import DockerEnvironment as _DockerEnvironment
 from tools.environments.local import LocalEnvironment as _LocalEnvironment
-from tools.environments.managed_modal import ManagedModalEnvironment as _ManagedModalEnvironment
-from tools.environments.modal import ModalEnvironment as _ModalEnvironment
 from tools.environments.ssh import SSHEnvironment as _SSHEnvironment
-from tools.managed_tool_gateway import is_managed_tool_gateway_ready
 from tools.terminal_tool_config import _get_plugin_env_provider
-from tools.tool_backend_helpers import (has_direct_modal_credentials, managed_nous_tools_enabled,
-                                        nous_tool_gateway_unavailable_message, resolve_modal_backend_state)
 
 # Log-record parity with the origin module.
 logger = logging.getLogger("tools.terminal_tool")
@@ -47,9 +41,7 @@ def terminal_backend_unavailable_reason() -> Optional[str]:
     return _last_unavailable_reason
 
 
-_VERCEL_SANDBOX_DEFAULT_CWD = "/vercel/sandbox"
-_SUPPORTED_VERCEL_RUNTIMES = ("node24", "node22", "python3.13")
-_BUILTIN_BACKENDS = "local, docker, modal, daytona, vercel_sandbox, ssh"
+_BUILTIN_BACKENDS = "local, docker, ssh"
 
 # Config -> kwargs shapers, driven by (out_key, config_key, default) tables. The container table's
 # (key, default) literal is intentionally greppable; tools/terminal_tool.py keeps its own for the AST test.
@@ -59,7 +51,7 @@ _RESOURCE_KEYS = (("cpu", "container_cpu", 1), ("memory", "container_memory", 51
                   ("disk", "container_disk", 51200), ("persistent_filesystem", "container_persistent", True))
 _CONTAINER_KEYS = (
     ("container_cpu", 1), ("container_memory", 5120), ("container_disk", 51200),
-    ("container_persistent", True), ("modal_mode", "auto"), ("vercel_runtime", ""), ("vercel_image", ""),
+    ("container_persistent", True),
     ("docker_volumes", []), ("docker_mount_cwd_to_workspace", False), ("docker_forward_env", []),
     ("docker_env", {}), ("docker_run_as_host_user", False), ("docker_extra_args", []),
     ("docker_shm_size", "1g"), ("docker_network", True), ("docker_persist_across_processes", True),
@@ -96,38 +88,6 @@ def _resources(cc: dict[str, Any]) -> dict:
     return {out: cc.get(key, default) for out, key, default in _RESOURCE_KEYS}
 
 
-def _is_supported_vercel_runtime(runtime: str) -> bool:
-    return not runtime or runtime in _SUPPORTED_VERCEL_RUNTIMES
-
-
-def _get_modal_backend_state(modal_mode: object | None) -> dict[str, Any]:
-    """Resolve direct vs managed Modal backend selection."""
-    return resolve_modal_backend_state(modal_mode, has_direct=has_direct_modal_credentials(),
-                                       managed_ready=is_managed_tool_gateway_ready("modal"))
-
-
-def _modal_unavailable_reason(modal_state: dict[str, Any]) -> tuple[str, str]:
-    """(log message, ValueError message) for a modal_state with no selected backend.
-    Single decision shared by the requirements checker and the env builder."""
-    gateway = nous_tool_gateway_unavailable_message("managed Modal execution")
-    if modal_state["managed_mode_blocked"] or modal_state["mode"] == "managed":
-        tail = (("Nous Tool Gateway access is not currently available and no direct Modal credentials/config "
-                 f"were found. {gateway} Choose TERMINAL_MODAL_MODE=direct/auto to use direct Modal credentials.")
-                if modal_state["managed_mode_blocked"] else f"the managed tool gateway is unavailable. {gateway}")
-        return (f"Modal backend selected with TERMINAL_MODAL_MODE=managed, but {tail}",
-                f"Modal backend is configured for managed mode, but {tail}")
-    managed = managed_nous_tools_enabled()
-    if modal_state["mode"] == "direct":
-        return ("Modal backend selected with TERMINAL_MODAL_MODE=direct, but no direct Modal credentials/config "
-                f"were found. Configure Modal or choose TERMINAL_MODAL_MODE={'managed/auto' if managed else 'auto'}.",
-                "Modal backend is configured for direct mode, but no direct Modal credentials/config were found.")
-    found = "or managed tool gateway was found" if managed else "was found"
-    fix = ", set up the managed gateway, or" if managed else " or"
-    return (f"Modal backend selected but no direct Modal credentials/config {found}. "
-            f"Configure Modal{fix} choose a different TERMINAL_ENV.",
-            f"Modal backend selected but no direct Modal credentials/config {found}.")
-
-
 # --- Environment builders. Signature: (*, image, cwd, timeout, cc, task_id, ssh_config, local_config, host_cwd)
 # (env_type is only forwarded to the plugin-registry fallback, not to the built-in builders.)
 def _build_local_env(*, cwd, timeout, local_config=None, **_):
@@ -158,48 +118,6 @@ def _build_docker_env(*, image, cwd, timeout, cc, task_id, host_cwd, **_):
         except AttributeError:
             pass
     return docker_env_obj
-
-
-def _build_modal_env(*, image, cwd, timeout, cc, task_id, **_):
-    res = _resources(cc)
-    sandbox_kwargs = {k: res[k] for k in ("cpu", "memory") if res[k] > 0}
-    if res["disk"] > 0:
-        try:
-            import modal
-            if "ephemeral_disk" in inspect.signature(modal.Sandbox.create).parameters:
-                sandbox_kwargs["ephemeral_disk"] = res["disk"]
-        except Exception:
-            pass
-    modal_state = _get_modal_backend_state(cc.get("modal_mode"))
-    selected = modal_state["selected_backend"]
-    if selected not in ("managed", "direct"):
-        raise ValueError(_modal_unavailable_reason(modal_state)[1])
-    cls = _ManagedModalEnvironment if selected == "managed" else _ModalEnvironment
-    return cls(image=image, cwd=cwd, timeout=timeout, modal_sandbox_kwargs=sandbox_kwargs,
-               persistent_filesystem=res["persistent_filesystem"], task_id=task_id)
-
-
-# env_type -> (class getter, takes image, extra kwargs from (cc, resource kwargs)). SDK-backed modules
-# (daytona/vercel) are imported lazily so they are only required when that backend is selected.
-_SANDBOX_ROWS = {
-    "daytona": (lambda: importlib.import_module("tools.environments.daytona").DaytonaEnvironment, True,
-                lambda cc, kw: {"cpu": int(kw["cpu"])}),
-    "vercel_sandbox": (lambda: importlib.import_module("tools.environments.vercel_sandbox").VercelSandboxEnvironment,
-                       False, lambda cc, kw: {"runtime": cc.get("vercel_runtime") or None,
-                                       "image": cc.get("vercel_image") or None}),
-}
-
-
-def _build_sandbox_env(env_type, *, image, cwd, timeout, cc, task_id, **_):
-    cls, with_image, extra = _SANDBOX_ROWS[env_type]
-    kwargs = dict(cwd=cwd, timeout=timeout, task_id=task_id, **_resources(cc),
-                  **({"image": image} if with_image else {}))
-    kwargs.update(extra(cc, kwargs))
-    return cls()(**kwargs)
-
-
-_build_daytona_env = functools.partial(_build_sandbox_env, "daytona")
-_build_vercel_env = functools.partial(_build_sandbox_env, "vercel_sandbox")
 
 
 def _build_ssh_env(*, cwd, timeout, ssh_config, probe_only=False, **_):
@@ -266,9 +184,7 @@ def _build_plugin_env(*, env_type, image, cwd, timeout, cc, task_id, **_):
 
 
 # Built-in backend -> builder. Anything else is looked up in the plugin registry.
-_ENV_BUILDERS = {"local": _build_local_env, "docker": _build_docker_env, "modal": _build_modal_env,
-                 "daytona": _build_daytona_env, "vercel_sandbox": _build_vercel_env,
-                 "ssh": _build_ssh_env}
+_ENV_BUILDERS = {"local": _build_local_env, "docker": _build_docker_env, "ssh": _build_ssh_env}
 
 
 def _create_environment(env_type: str, image: str, cwd: str, timeout: int,
@@ -276,7 +192,7 @@ def _create_environment(env_type: str, image: str, cwd: str, timeout: int,
                         local_config: dict | None = None, task_id: str = "default",
                         host_cwd: Optional[str] = None, probe_only: bool = False):
     """Create an execution environment (instance with ``execute()``) for *env_type*. ``image`` is ignored
-    for local/ssh/vercel; ``container_config`` carries the container_*/docker_* resource keys; ``host_cwd`` is
+    for local/ssh; ``container_config`` carries the container_*/docker_* resource keys; ``host_cwd`` is
     the host dir bound into Docker when cwd mounting is enabled. ``probe_only`` asks ssh for a throwaway
     connection with no remote setup/sync (the prompt-time probe). Unknown types fall through to plugin backends."""
     builder = _ENV_BUILDERS.get(env_type)
@@ -297,43 +213,7 @@ def _create_environment(env_type: str, image: str, cwd: str, timeout: int,
 
 # --- Requirement checkers: one generic path driven by _BACKEND_SPECS; optional fields, checked in order:
 #   pre(config) -> True (satisfied) / False (rejected, already logged) / None (continue);
-#   binary=(finder, version_arg, missing_log_or_None) runs ``<binary> <arg>``, ok iff rc == 0;
-#   module=(find_spec name, log message when absent);  post(config) -> bool.
-def _check_vercel(config: dict[str, Any]) -> bool:
-    """Runtime -> disk -> SDK -> auth (OIDC token, else the full TOKEN/PROJECT_ID/TEAM_ID tuple)."""
-    runtime = (config.get("vercel_runtime") or "").strip()
-    disk = config.get("container_disk", 51200)
-    if not _is_supported_vercel_runtime(runtime):
-        return _reject(f"Vercel Sandbox runtime {runtime!r} is not supported. Set TERMINAL_VERCEL_RUNTIME to one of: "
-                       f"{', '.join(_SUPPORTED_VERCEL_RUNTIMES)}.")
-    if disk not in {0, 51200}:
-        return _reject(f"Vercel Sandbox does not support custom TERMINAL_CONTAINER_DISK={disk}. "
-                       "Use the default shared setting (51200 MB).")
-    if importlib.util.find_spec("vercel") is None:
-
-        return _reject("vercel is required for the Vercel Sandbox terminal backend. Run hermes setup terminal and select Vercel Sandbox.")
-    from agent.secret_scope import get_secret
-    if get_secret("VERCEL_OIDC_TOKEN"):
-        return True
-    present = [bool(get_secret(k)) for k in ("VERCEL_TOKEN", "VERCEL_PROJECT_ID", "VERCEL_TEAM_ID")]
-    if all(present):
-        return True
-    head = ("selected with token auth, but VERCEL_TOKEN, VERCEL_PROJECT_ID, and VERCEL_TEAM_ID must all be "
-            "set together." if any(present) else
-            "selected but no supported auth configuration was found. Set VERCEL_TOKEN, VERCEL_PROJECT_ID, "
-            "and VERCEL_TEAM_ID for normal use.")
-    return _reject(f"Vercel Sandbox backend {head} VERCEL_OIDC_TOKEN is supported for one-off local development only.")
-
-
-def _modal_pre(config: dict[str, Any]) -> Optional[bool]:
-    modal_state = _get_modal_backend_state(config.get("modal_mode"))
-    if modal_state["selected_backend"] == "managed":
-        return True
-    if modal_state["selected_backend"] != "direct":
-        return _reject(_modal_unavailable_reason(modal_state)[0])
-    return None
-
-
+#   binary=(finder, version_arg, missing_log_or_None) runs ``<binary> <arg>``, ok iff rc == 0.
 def _ssh_pre(config: dict[str, Any]) -> bool:
     if config.get("ssh_host") and config.get("ssh_user"):
         return True
@@ -341,21 +221,11 @@ def _ssh_pre(config: dict[str, Any]) -> bool:
                    "run `hermes setup terminal` to enter them or pick the 'local' backend")
 
 
-def _daytona_post(config: dict[str, Any]) -> bool:
-    from daytona import Daytona
-    from agent.secret_scope import get_secret
-    return get_secret("DAYTONA_API_KEY") is not None
-
-
 _BACKEND_SPECS: dict[str, dict[str, Any]] = {
     "local": {},
     "docker": {"binary": (lambda: importlib.import_module("tools.environments.docker").find_docker(), "version",
                           "Docker is not installed — no docker executable in PATH or the usual install locations")},
     "ssh": {"pre": _ssh_pre},
-    "modal": {"pre": _modal_pre,
-              "module": ("modal", "modal is required for direct modal terminal backend. Run hermes setup terminal and select Modal.")},
-    "vercel_sandbox": {"pre": _check_vercel},
-    "daytona": {"post": _daytona_post},
 }
 
 
@@ -378,11 +248,6 @@ def _check_requirements(env_type: str, config: dict[str, Any]) -> bool:
         probe = subprocess.run([executable, arg], capture_output=True, timeout=5, stdin=subprocess.DEVNULL, check=False)
         if probe.returncode != 0:
             return _reject(f"{_PROBE_FAILED_REASONS[env_type]} (`{executable} {arg}` exited with code {probe.returncode})")
-        return True
-    if "module" in spec and importlib.util.find_spec(spec["module"][0]) is None:
-        return _reject(spec["module"][1])
-    if "post" in spec and not spec["post"](config):
-        return _reject(f"the {env_type!r} backend is missing its API key or SDK")
     return True
 
 
@@ -400,4 +265,3 @@ def _check_plugin_requirements(config: dict[str, Any]) -> bool:
 
 # Built-in backend -> requirements checker; unknown backends go to the plugin registry.
 _REQUIREMENT_CHECKERS = {name: functools.partial(_check_requirements, name) for name in _BACKEND_SPECS}
-_check_vercel_sandbox_requirements = _REQUIREMENT_CHECKERS["vercel_sandbox"]  # used by code_execution_tool

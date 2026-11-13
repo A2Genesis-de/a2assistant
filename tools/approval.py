@@ -1163,8 +1163,6 @@ def _should_skip_container_guards(env_type: str, has_host_access: bool = False) 
     exception once host paths are bind-mounted: ``rm -rf /workspace`` then reaches host files."""
     if env_type == "docker":
         return not has_host_access
-    if env_type in ("modal", "daytona", "vercel_sandbox"):
-        return True
     # Plugin backends declare the same classification through the provider ABI (#94400);
     # fail-soft to False so an unknown or raising backend — or a raising registry
     # lookup — keeps the guards on rather than propagating out of the approval predicate.
@@ -1360,9 +1358,7 @@ def check_execute_code_guard(code: str, env_type: str, has_host_access: bool = F
     pattern_key = "execute_code"
     description = _EXECUTE_CODE_DESCRIPTION
 
-    # Isolated backends already sandbox the child. vercel_sandbox has no host-bind concept so it stays always-skipped.
-    if env_type == "vercel_sandbox":
-        return _approved()
+    # Isolated backends already sandbox the child.
     if _should_skip_container_guards(env_type, has_host_access=has_host_access):
         return _approved()
     approval_mode = approval_context._get_approval_mode()

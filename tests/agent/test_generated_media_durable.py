@@ -8,7 +8,7 @@ transcript and the Artifacts panel point at deleted files a day later, with no
 way to recover the bytes.
 
 Living outside the swept dirs means ``cache/generated`` needs its own
-credential-files mount/sync entry: Docker/SSH/Modal backends only reach paths
+credential-files mount/sync entry: Docker/SSH backends only reach paths
 that map through ``tools.credential_files``, and an unmapped path also drops
 ``agent_visible_image`` from the provider result.
 

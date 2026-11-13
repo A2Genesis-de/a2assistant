@@ -268,7 +268,7 @@ _CACHE_DIRS: list[tuple[str, str]] = [
     # Desktop stages a large plain-text paste as a `.txt` under this Hermes-managed dir
     # (apps/desktop/electron/composer-paste.ts; `COMPOSER_PASTES_DIRNAME` in
     # agent/context_references.py) and attaches it as `@file:`. Without a mount/sync
-    # entry, remote execution backends (ssh/daytona/vercel_sandbox) never received the
+    # entry, remote execution backends (ssh) never received the
     # bytes and `to_agent_visible_cache_path` left the gateway-host path dangling on
     # the remote host (#110174). No legacy alias, so both tuple slots match.
     ("composer-pastes", "composer-pastes"),
@@ -345,7 +345,7 @@ def from_agent_visible_cache_path(container_path: str, container_base: str = "/r
 
 # Backends whose file-sync lands under the remote home: ``~/.hermes`` is
 # expanded by the remote shell, so it resolves regardless of the actual home.
-_HOME_RELATIVE_BACKENDS = frozenset({"ssh", "daytona", "vercel_sandbox"})
+_HOME_RELATIVE_BACKENDS = frozenset({"ssh"})
 
 
 def _terminal_backend() -> str:
@@ -358,13 +358,13 @@ def _terminal_backend() -> str:
 def to_agent_visible_cache_path(host_path: str, container_base: str = "/root/.hermes") -> str:
     """Translate a host cache path to where the active backend (TERMINAL_ENV) sees it.
 
-    Mirrors ``_agent_cache_base_for_env`` in tools/image_generation_tool.py: docker/modal mount at
-    ``/root/.hermes``; ssh/daytona/vercel_sandbox under ``~/.hermes``; plugin backends declare
+    Mirrors ``_agent_cache_base_for_env`` in tools/image_generation_tool.py: docker mounts at
+    ``/root/.hermes``; ssh under ``~/.hermes``; plugin backends declare
     ``cache_path_base`` (None = host paths stay correct, e.g. the singularity plugin); local/unknown
     unchanged.
 
-    * docker / modal — bind-mounted (docker) or per-file-synced (modal) at ``/root/.hermes`` (the
-    *container_base* default). * ssh / daytona / vercel_sandbox — file-synced under the remote user's home;
+    * docker — bind-mounted at ``/root/.hermes`` (the *container_base* default).
+    * ssh — file-synced under the remote user's home;
     ``~/.hermes`` is shell-expanded by the remote shell, so tool commands resolve it regardless of the
     actual remote home. Previously these backends synced the bytes but still rendered the dangling host path
     (#76577 gap).
@@ -372,7 +372,7 @@ def to_agent_visible_cache_path(host_path: str, container_base: str = "/root/.he
     backend = _terminal_backend()
     if backend in _HOME_RELATIVE_BACKENDS:
         container_base = "~/.hermes"
-    elif backend not in ("docker", "modal"):
+    elif backend != "docker":
         try:
             from agent.terminal_env_registry import provider_flag
             plugin_base = provider_flag(backend, "cache_path_base", None)

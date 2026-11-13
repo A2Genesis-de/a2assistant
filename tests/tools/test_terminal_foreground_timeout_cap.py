@@ -17,10 +17,7 @@ def _make_env_config(**overrides):
         "timeout": 180,
         "cwd": "/tmp",
         "host_cwd": None,
-        "modal_mode": "auto",
         "docker_image": "",
-        "modal_image": "",
-        "daytona_image": "",
     }
     config.update(overrides)
     return config

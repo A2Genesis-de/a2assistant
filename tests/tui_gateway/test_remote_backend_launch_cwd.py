@@ -1,8 +1,8 @@
 """A TUI/dashboard session on a sandbox backend never sends the gateway's launch directory to the sandbox.
 
 The hosted image runs the gateway with cwd ``/opt/data`` (the Hermes home). A session created with no workspace kept
-that host directory as its cwd, and ``_terminal_task_cwd_with_source`` registered it as the terminal cwd of a modal /
-daytona / sprites / plugin sandbox, where it does not exist: every command failed ``cd: /opt/data: No such file or
+that host directory as its cwd, and ``_terminal_task_cwd_with_source`` registered it as the terminal cwd of an ssh /
+sprites / plugin sandbox, where it does not exist: every command failed ``cd: /opt/data: No such file or
 directory`` (exit 126). The backend's own default applies instead, as on the messaging gateway.
 """
 
@@ -81,8 +81,8 @@ def clean_registry():
     registry._reset_for_tests()
 
 
-@pytest.mark.parametrize("backend", ["modal", "daytona"])
-def test_sandbox_session_does_not_register_the_launch_dir(launch_dir, monkeypatch, backend):
+def test_sandbox_session_does_not_register_the_launch_dir(launch_dir, monkeypatch):
+    backend = "acmebox"
     _backend(monkeypatch, backend)
     session = _fresh_session(f"launch-{backend}")
     assert session["cwd"] == str(launch_dir) and not session["explicit_cwd"]
@@ -136,7 +136,7 @@ def test_plugin_classification_reads_the_bound_profiles_registry(launch_dir, tmp
 
 
 def test_explicit_workspace_still_wins_on_a_sandbox_backend(launch_dir, monkeypatch, tmp_path):
-    _backend(monkeypatch, "modal")
+    _backend(monkeypatch, "acmebox")
     project = tmp_path / "project"
     project.mkdir()
     explicit, cwd, _remote = server._resolve_create_cwd({"cwd": str(project)}, "tui", None)
@@ -147,7 +147,7 @@ def test_explicit_workspace_still_wins_on_a_sandbox_backend(launch_dir, monkeypa
 
 
 def test_configured_sandbox_cwd_still_wins(launch_dir, monkeypatch):
-    _backend(monkeypatch, "modal", TERMINAL_CWD="/workspace")
+    _backend(monkeypatch, "acmebox", TERMINAL_CWD="/workspace")
     session = _fresh_session("configured")
 
     assert server._terminal_task_cwd_with_source(session) == ("/workspace", "process")
@@ -179,7 +179,7 @@ def test_sandbox_resume_drops_a_stored_hermes_home_cwd(launch_dir, monkeypatch):
     (hermes_home / "home").mkdir(exist_ok=True)
     monkeypatch.setenv("TERMINAL_ENV", "ssh")
     assert server._resumable_stored_cwd("/", None) == "/"
-    _backend(monkeypatch, "modal")
+    _backend(monkeypatch, "acmebox")
     for launch in (str(hermes_home), str(hermes_home / "home")):
         assert server._resumable_stored_cwd(launch, None) == ""
 
@@ -194,7 +194,7 @@ def test_sandbox_resume_drops_a_stored_desktop_launch_dir(launch_dir, monkeypatc
     from hermes_state import SessionDB
 
     stored = str(server.Path.home()) if launch == "os-home" else "/"
-    _backend(monkeypatch, "modal")
+    _backend(monkeypatch, "acmebox")
     assert server._resumable_stored_cwd(stored, None) == ""
 
     db = SessionDB(db_path=tmp_path / "state.db")
@@ -218,7 +218,7 @@ def test_sandbox_resume_keeps_a_workspace_picked_under_the_hermes_root(launch_di
     """A folder the user picked under the Hermes root is a workspace, not a launch dir: it persists and resumes."""
     picked = server.get_hermes_home() / "projects" / "chosen"
     picked.mkdir(parents=True)
-    _backend(monkeypatch, "modal")
+    _backend(monkeypatch, "acmebox")
     session = {"session_key": "picked", "source": "desktop", "cwd": str(picked), "explicit_cwd": True,
                "profile_home": None}
 
@@ -236,7 +236,7 @@ def test_sandbox_hydrated_workspace_stays_the_terminal_cwd(launch_dir, monkeypat
     project.mkdir()
     db = SessionDB(db_path=tmp_path / "state.db")
     try:
-        _backend(monkeypatch, "modal")
+        _backend(monkeypatch, "acmebox")
         db.create_session("hydrated", source="tui", model="m", cwd=str(project))
         monkeypatch.setitem(server._sessions, "s-hydrated",
                             {"session_key": "hydrated", "source": "tui", "cwd": str(launch_dir),
@@ -261,7 +261,7 @@ def test_compute_host_carries_workspace_provenance(launch_dir, monkeypatch, tmp_
 
     project = tmp_path / "project"
     project.mkdir()
-    _backend(monkeypatch, "modal")
+    _backend(monkeypatch, "acmebox")
     parent = {"session_key": "picked", "cwd": str(project), "explicit_cwd": True, "history": [],
               "history_lock": threading.Lock(), "profile_home": None, "source": "desktop"}
     frame = server._compute_host_turn_frame("rid", "child", parent, "hi")
@@ -295,7 +295,7 @@ def test_compute_host_minimal_record_keeps_workspace_provenance(launch_dir, monk
 
     project = tmp_path / "project"
     project.mkdir()
-    _backend(monkeypatch, "modal")
+    _backend(monkeypatch, "acmebox")
 
     def failing_init_session(*_a, **_k):
         raise RuntimeError("side machinery unavailable")
@@ -316,7 +316,7 @@ def test_compute_host_minimal_record_keeps_workspace_provenance(launch_dir, monk
 
 def test_sandbox_path_completion_lists_the_backend_cwd(launch_dir, monkeypatch):
     """``complete.path`` with no terminal cwd lists relative to the backend's own cwd, never the host dir."""
-    _backend(monkeypatch, "modal")
+    _backend(monkeypatch, "acmebox")
     seen = {}
 
     def fake_entries(search_dir, session_key):

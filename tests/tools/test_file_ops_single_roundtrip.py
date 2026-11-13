@@ -273,7 +273,7 @@ class TestWriteFileRoundTrips:
 
 
 class TestHeredocStdinBackends:
-    """Modal/Daytona/Vercel embed stdin as a heredoc in the command string (the SDK exec has
+    """Heredoc-mode backends embed stdin as a heredoc in the command string (the SDK exec has
     no stdin; the local env gets DEVNULL, same as there). The atomic write's temp file must
     receive exactly the content, or ``mv`` swaps a wrong file over the target."""
 

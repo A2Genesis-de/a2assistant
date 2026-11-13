@@ -288,8 +288,6 @@ def _silent_bg_base_config(tmp_path):
     return {
         "env_type": "local",
         "docker_image": "",
-        "modal_image": "",
-        "daytona_image": "",
         "cwd": str(tmp_path),
         "timeout": 30,
     }

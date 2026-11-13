@@ -244,7 +244,7 @@ class LintMixin:
 
     def _lsp_local_only(self) -> bool:
         """True iff the backend's files are the host's (``uses_host_filesystem``). LSP servers run on
-        the host and can't see files inside Docker/Modal/SSH/Daytona or a confining local sandbox."""
+        the host and can't see files inside Docker/SSH or a confining local sandbox."""
         from tools.environments.base import env_uses_host_filesystem
 
         return env_uses_host_filesystem(getattr(self, "env", None))  # tests may build via __new__

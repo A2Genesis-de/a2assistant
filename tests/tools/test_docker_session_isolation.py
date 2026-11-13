@@ -270,7 +270,7 @@ class TestSessionScopedMountResolution:
     def test_non_docker_backend_never_mounts(self, monkeypatch):
         _disable_isolation(monkeypatch)
         cfg = self._config()
-        cfg["env_type"] = "modal"
+        cfg["env_type"] = "ssh"
         assert terminal_tool._resolve_task_host_cwd(cfg, "t") is None
 
 

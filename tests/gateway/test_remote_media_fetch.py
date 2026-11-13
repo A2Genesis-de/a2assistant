@@ -1,6 +1,6 @@
 """MEDIA tags pointing into a remote terminal sandbox are fetched for delivery (#466).
 
-The host cannot see files an agent writes inside an ssh/modal/daytona sandbox, so
+The host cannot see files an agent writes inside an ssh sandbox, so
 ``filter_media_delivery_paths`` used to drop them silently. With a remote backend active the path is
 pulled through the environment's ``fetch_file`` into the document cache — after the SAME denylist
 the host applies, so a sandbox path (or a symlink) at ``~/.ssh/...`` never crosses.

@@ -100,7 +100,7 @@ docstrings); never grow them.
 ## Backends and providers inside tools/
 
 Several tools front pluggable backends: terminal environments in `tools/environments/` (local,
-docker, ssh, modal, daytona; `terminal_tool_backends.py`, `tool_backend_helpers.py`),
+docker, ssh; `terminal_tool_backends.py`, `tool_backend_helpers.py`),
 browser (`browser_launcher.py` + `browser_session*.py`: lifecycle, cloud, cdp, real_profile, sandbox), MCP
 client (`mcp_tool_*.py`: config, discovery, transport, registration, content, errors), TTS
 (`tts_tool_providers.py`, `tts_command_provider.py`), skills hub sources (`skills_hub_official.py`

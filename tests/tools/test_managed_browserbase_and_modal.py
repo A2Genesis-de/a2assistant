@@ -205,8 +205,6 @@ def _install_fake_tools_package():
     sys.modules["tools.environments.local"] = types.SimpleNamespace(LocalEnvironment=_DummyEnvironment)
     sys.modules["tools.environments.ssh"] = types.SimpleNamespace(SSHEnvironment=_DummyEnvironment)
     sys.modules["tools.environments.docker"] = types.SimpleNamespace(DockerEnvironment=_DummyEnvironment)
-    sys.modules["tools.environments.modal"] = types.SimpleNamespace(ModalEnvironment=_DummyEnvironment)
-    sys.modules["tools.environments.managed_modal"] = types.SimpleNamespace(ManagedModalEnvironment=_DummyEnvironment)
 
 
 def test_browser_use_explicit_local_mode_stays_local_even_when_managed_gateway_is_ready(tmp_path):
@@ -248,37 +246,6 @@ def test_browserbase_does_not_use_gateway_only_configuration():
         provider = browserbase_module.BrowserbaseBrowserProvider()
 
     assert provider.is_available() is False
-
-
-def test_terminal_tool_respects_direct_modal_mode_without_falling_back_to_managed():
-    _install_fake_tools_package()
-    env = os.environ.copy()
-    env.pop("MODAL_TOKEN_ID", None)
-    env.pop("MODAL_TOKEN_SECRET", None)
-
-    with patch.dict(os.environ, env, clear=True):
-        _load_tool_module("tools.terminal_tool", "terminal_tool.py")
-        terminal_tool_backends = sys.modules["tools.terminal_tool_backends"]
-
-        with (
-            patch.object(terminal_tool_backends, "is_managed_tool_gateway_ready", return_value=True),
-            patch.object(Path, "exists", return_value=False),
-        ):
-            with pytest.raises(ValueError, match="direct Modal credentials"):
-                terminal_tool_backends._create_environment(
-                    env_type="modal",
-                    image="python:3.11",
-                    cwd="/root",
-                    timeout=60,
-                    container_config={
-                        "container_cpu": 1,
-                        "container_memory": 2048,
-                        "container_disk": 1024,
-                        "container_persistent": True,
-                        "modal_mode": "direct",
-                    },
-                    task_id="task-modal-direct-only",
-                )
 
 
 class TestShellEscapeBypass:

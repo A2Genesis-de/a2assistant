@@ -1060,7 +1060,7 @@ def _sanitize_remote_script_text(
     *bytes* (matching the ``head -c`` wire bound): a >1 MiB multibyte file truncated at the byte cap
     decodes to fewer chars, and a char count would scan instead of failing.
 
-    The recursion boundary must not trust its callbacks: any backend (SSH, Modal, Daytona, or a future one)
+    The recursion boundary must not trust its callbacks: any backend (SSH, Docker, a plugin, or a future one)
     can hand back raw binary bytes decoded as text, or arbitrarily large output. Enforced here rather than
     inside each callback so the guarantee holds for every callback, not just the ones we hardened. See
     #76762, #77703.

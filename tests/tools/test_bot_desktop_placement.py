@@ -23,9 +23,8 @@ from tools.environments import streams
         ("auto", "local", placement.GATEWAY),
         ("auto", "docker", placement.TERMINAL),
         ("auto", "ssh", placement.TERMINAL),
-        ("auto", "modal", placement.REFUSED),
-        ("auto", "daytona", placement.REFUSED),
-        ("gateway", "modal", placement.GATEWAY),
+        ("auto", "acmebox", placement.REFUSED),
+        ("gateway", "acmebox", placement.GATEWAY),
         ("gateway", "docker", placement.GATEWAY),
         ("terminal", "docker", placement.TERMINAL),
         ("terminal", "local", placement.GATEWAY),
@@ -42,7 +41,7 @@ def test_placement_follows_the_terminal_backend_and_refuses_unhostable_sandboxes
 
 def test_refused_placement_blocks_start_and_names_the_opt_in(monkeypatch):
     monkeypatch.setattr(placement, "_setting", lambda: "auto")
-    monkeypatch.setattr(placement, "_terminal_backend", lambda: "modal")
+    monkeypatch.setattr(placement, "_terminal_backend", lambda: "acmebox")
     with pytest.raises(RuntimeError, match="placement: gateway"):
         runtime.start()
 
@@ -209,7 +208,7 @@ def test_refused_placement_never_falls_back_to_the_host(monkeypatch, isolated_ho
     from tools.computer_use import cua_backend as cb
 
     host_launches = _local_sessions(monkeypatch)
-    _placed(monkeypatch, "auto", "modal")
+    _placed(monkeypatch, "auto", "acmebox")
     with pytest.raises(RuntimeError, match="placement: gateway"):
         browser_session.get_session_info("t")
     assert host_launches == [], "a refused placement launched the agent's browser on the gateway host"
