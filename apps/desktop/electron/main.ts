@@ -123,8 +123,6 @@ import {
   readBundleSwapStamp,
   relaunchIntoSwappedBundle
 } from './bundle-swap'
-import { CHALLENGE_PARTITION } from './challenge-window'
-import { registerChallengeWindowIpc } from './challenge-window-ipc'
 import { provisionCliLinks } from './cli-provision'
 import { readClipboardImagePng } from './clipboard-image'
 import { registerClipboardTextIpc } from './clipboard-ipc'
@@ -429,7 +427,6 @@ import {
   localRouteFallbackProfiles,
   undialedSshRouteSeeds
 } from './plugin-profile-routes'
-import { resolvePortalBaseUrl } from './portal-session'
 import { readPreUpdateBackupEnabled } from './pre-update-backup-config'
 import { registerPreparedSubmissions } from './prepared-submissions'
 import { capturePreviewContents } from './preview-capture'
@@ -7049,7 +7046,7 @@ const clearRemovedOauthJars = createRemovedConnectionCookieCleaner({
   sessionFor: partition => (partition === OAUTH_SESSION_PARTITION ? getOauthSession() : app.isReady() ? session.fromPartition(partition) : null),
   clearMirror: (partition, url) => remoteSessionCookies.clear(partition, url),
   v1RemoteUrl: () => readDesktopConnectionConfig()?.remote?.url,
-  sharedUrls: () => [resolvePortalBaseUrl(), ...connectionConfigUrls(readDesktopConnectionConfig())]
+  sharedUrls: () => connectionConfigUrls(readDesktopConnectionConfig())
 })
 
 async function clearOauthSession(baseUrl) {
@@ -16366,15 +16363,6 @@ ipcMain.on('hermes:devtools:disable-f12', (_event, on) => {
   } catch (error) {
     rememberLog(`[disable-f12] write failed: ${error.message}`)
   }
-})
-
-// Free-tier browser challenge: a hidden portal window (electron/challenge-window.ts).
-registerChallengeWindowIpc({
-  isReady: () => app.isReady(),
-  getSession: () => session.fromPartition(CHALLENGE_PARTITION),
-  resolvePortalBaseUrl,
-  createWindow: options => new BrowserWindow(options),
-  rememberLog
 })
 
 ipcMain.handle('hermes:openExternal', async (_event, url) => {
