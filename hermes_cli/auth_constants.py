@@ -108,7 +108,7 @@ OPENROUTER_AUTH_URL = "https://openrouter.ai/auth"
 OPENROUTER_AUTH_KEYS_URL = "https://openrouter.ai/api/v1/auth/keys"
 OPENROUTER_OAUTH_DOCS_URL = "https://openrouter.ai/docs/guides/overview/auth/oauth"
 
-OAUTH_OVER_SSH_DOCS_URL = "https://hermes-agent.nousresearch.com/docs/guides/oauth-over-ssh"
+
 # LM Studio's default no-auth mode still needs *some* non-empty bearer for the API-key code paths to
 # treat the provider as configured. Sent only to LM Studio, never to a remote service.
 LMSTUDIO_NOAUTH_PLACEHOLDER = "dummy-lm-api-key"

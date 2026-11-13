@@ -27,6 +27,8 @@
 
 import crypto from 'node:crypto'
 
+import { REPOSITORY_URL } from '../../shared/src/repository'
+
 import { READY_IN_MERGED_OUTPUT_RE } from './backend-ready'
 import { parseRemoteProfileListing } from './connection-registry'
 import { backendProfileArg } from './profile-id-guard'
@@ -264,7 +266,7 @@ async function locateHermes(ssh, remoteHermesPath) {
 
   const err: any = new Error(
     'A2Assistant is not installed on the remote host (could not find a `hermes` executable). ' +
-      'Install it on the remote with:  curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh  ' +
+      `Clone it on the remote with:  git clone ${REPOSITORY_URL}.git  ` +
       '— or set the A2Assistant path explicitly in the SSH connection settings.'
   )
 

@@ -1537,7 +1537,7 @@ export const zhOverrides = {
         'SSH 认证失败。请将密钥加载到 ssh-agent（ssh-add），或在 ~/.ssh/config 中设置 IdentityFile——A2Assistant 以非交互方式运行 ssh。',
       sshErrHostKey: '自上次连接以来主机密钥已更改。请确认这是预期的，然后运行 ssh-keygen -R <host> 并重新连接。',
       sshErrNotInstalled:
-        '远程主机上未安装 A2Assistant。请在远程安装（curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh）或设置 A2Assistant 路径。',
+        '远程主机上未安装 A2Assistant。请在远程安装（git clone https://github.com/A2Genesis-de/a2assistant.git）或设置 A2Assistant 路径。',
       sshErrPlatform: '不支持的远程平台。A2Assistant Desktop 的 SSH 模式支持 Linux、macOS 和 Windows 远程主机。',
       sshErrTimeout: 'SSH 连接超时。主机可能无法访问或处于休眠状态。',
       sshErrUpdateRequired: '使用 Desktop SSH 连接前，请更新远程主机上的 A2Assistant。',

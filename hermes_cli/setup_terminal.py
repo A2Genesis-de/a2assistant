@@ -280,7 +280,7 @@ def setup_terminal_backend(config: dict):
     _setup.print_header("Terminal Backend")
     _setup._info("Choose where A2Assistant runs shell commands and code.",
                  "This affects tool execution, file access, and isolation.",
-                 f"   Guide: {_setup._DOCS_BASE}/user-guide/configuration#terminal-backend-configuration", None)
+                 f"   Guide: {_setup.README_URL}", None)
     current_backend = _setup.cfg_get(config, "terminal", "backend", default="local")
     backends = list(_BUILTIN_TERMINAL_BACKENDS)
     # Plugin-registered backends (~/.hermes/plugins/). Fail-soft: a broken plugin must not take

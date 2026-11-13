@@ -61,8 +61,8 @@ FIRST_TASKS: tuple[FirstTask, ...] = (
         "hermes", "Explain how A2Assistant works", lambda facts, picks: False, ("hermes-agent", "claude-design", "p5js"),
         goal="build a living page that shows how A2Assistant works, from the real docs and this install",
         steps=(
-            "Read https://hermes-agent.nousresearch.com/docs/llms.txt once with web_extract. Open a page only to "
-            "check a fact you show.",
+            "Read https://github.com/A2Genesis-de/a2assistant#readme once with web_extract to check the facts "
+            "you show.",
             "Read this install: the model, how many skills are installed, the connected apps, and what this chat did "
             "(tools called, skills loaded, their name and picks).",
             "Within a minute, open it in the preview pane with the title, those facts and three screen headings. "

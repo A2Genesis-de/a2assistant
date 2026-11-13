@@ -1853,7 +1853,7 @@ const deBaseOverrides = {
       sshErrHostKey:
         'Der Host-Key hat sich seit Ihrer letzten Verbindung GEÄNDERT. Prüfen Sie, ob das erwartet ist, führen Sie dann ssh-keygen -R <host> aus und verbinden Sie sich erneut.',
       sshErrNotInstalled:
-        'A2Assistant ist auf dem Remote-Host nicht installiert. Installieren Sie es dort (curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh) oder legen Sie den A2Assistant-Pfad fest.',
+        'A2Assistant ist auf dem Remote-Host nicht installiert. Installieren Sie es dort (git clone https://github.com/A2Genesis-de/a2assistant.git) oder legen Sie den A2Assistant-Pfad fest.',
       sshErrPlatform:
         'Nicht unterstützte Remote-Plattform. Der Desktop-SSH-Modus von A2Assistant unterstützt Linux-, macOS- und Windows-Remote-Hosts.',
       sshErrTimeout: 'SSH-Verbindung ist ausgelaufen. Der Host ist möglicherweise nicht erreichbar oder schläft.',

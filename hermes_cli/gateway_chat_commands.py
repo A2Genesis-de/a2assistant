@@ -20,7 +20,7 @@ import uuid
 
 from hermes_cli.gateway_client import GatewayClientError
 
-PARITY_DOC = "https://hermes-agent.nousresearch.com/docs/developer-guide/gateway-command-parity"
+
 
 # Registry command (canonical name) -> how the classic view answers it itself. Every other
 # registry command goes to the owner through ``slash.exec``. Read by the parity inventory
@@ -36,7 +36,7 @@ VIEW_ROUTES = {
 
 
 def refusal(name):
-    return f"/{name} is not available on the shared gateway yet. Parity table: {PARITY_DOC}"
+    return f"/{name} is not available on the shared gateway yet."
 
 
 def _user_turns(snapshot):
@@ -233,4 +233,4 @@ def help_text():
     return ("/stop, /approve <id> <choice>, /answer <id> <text>, /discard <admission_id> (turn lost during "
             "restart), /yolo [on|off], /quit (detach). /branch [title], /model <model> [--provider name], "
             "/compress [here [N] | <focus>] [--preview]. /title [name], /undo [N], /retry, /new [title] "
-            f"(/reset), /usage, /tools.\nReports run by the gateway: {reports}.\nParity table: {PARITY_DOC}")
+            f"(/reset), /usage, /tools.\nReports run by the gateway: {reports}.")

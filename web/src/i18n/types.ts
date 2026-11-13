@@ -97,7 +97,6 @@ export interface Translations {
       chat: string;
       config: string;
       cron: string;
-      documentation: string;
       keys: string;
       logs: string;
       models: string;
@@ -109,7 +108,6 @@ export interface Translations {
     modelToolsSheetSubtitle: string;
     modelToolsSheetTitle: string;
     navigation: string;
-    openDocumentation: string;
     openNavigation: string;
     pluginNavSection: string;
     sessionsActiveCount: string;

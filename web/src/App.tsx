@@ -23,7 +23,6 @@ import {
 import {
   Activity,
   BarChart3,
-  BookOpen,
   Clock,
   Code,
   Cpu,
@@ -80,7 +79,6 @@ import type { SystemAction } from "@/contexts/system-actions-context";
 // Route pages are lazy-loaded so the initial dashboard shell does not pay for
 // every admin surface (and heavy deps like xterm) up front.
 const ConfigPage = lazy(() => import("@/pages/ConfigPage"));
-const DocsPage = lazy(() => import("@/pages/DocsPage"));
 const EnvPage = lazy(() => import("@/pages/EnvPage"));
 const FilesPage = lazy(() => import("@/pages/FilesPage"));
 const SessionsPage = lazy(() => import("@/pages/SessionsPage"));
@@ -175,7 +173,6 @@ const BUILTIN_ROUTES_CORE: Record<string, ComponentType> = {
   "/profiles/new": ProfileBuilderPage,
   "/config": ConfigPage,
   "/env": EnvPage,
-  "/docs": DocsPage,
 };
 
 // Route placeholder for /chat.  The persistent ChatPage host (rendered
@@ -218,12 +215,6 @@ const BUILTIN_NAV_REST: NavItem[] = [
   { path: "/config", labelKey: "config", label: "Config", icon: Settings },
   { path: "/env", labelKey: "keys", label: "Keys", icon: KeyRound },
   { path: "/system", label: "System", icon: Wrench },
-  {
-    path: "/docs",
-    labelKey: "documentation",
-    label: "Documentation",
-    icon: BookOpen,
-  },
 ];
 
 const ICON_MAP: Record<string, ComponentType<{ className?: string }>> = {
@@ -401,7 +392,6 @@ export default function App() {
   const isDesktopCollapsed = collapsed && !isMobile;
   const tooltipWarmRef = useRef(0);
   const sidebarStatus = useSidebarStatus();
-  const isDocsRoute = pathname === "/docs" || pathname === "/docs/";
   const normalizedPath = pathname.replace(/\/$/, "") || "/";
   const isChatRoute = normalizedPath === "/chat";
   const embeddedChat = isDashboardEmbeddedChatEnabled();
@@ -770,7 +760,6 @@ export default function App() {
                 isChatRoute
                   ? "pb-0 pt-1 sm:pt-2 lg:pt-4"
                   : "pt-2 sm:pt-4 lg:pt-6",
-                isDocsRoute && "min-h-0 flex-1",
               )}
             >
               <PluginSlot name="pre-main" />
@@ -779,7 +768,7 @@ export default function App() {
                   "w-full min-w-0",
                   !isChatRoute &&
                     "pb-[calc(2rem+env(safe-area-inset-bottom,0px))] lg:pb-8",
-                  (isDocsRoute || isChatRoute) &&
+                  isChatRoute &&
                     "min-h-0 flex flex-1 flex-col",
                 )}
               >

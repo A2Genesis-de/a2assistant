@@ -17,6 +17,7 @@ from contextvars import ContextVar
 from pathlib import Path
 from typing import Callable
 
+from hermes_cli.repository import README_URL
 from hermes_cli.curses_ui import MenuNavigationEvent, MenuNavigationStart
 # Config helpers are re-exported (tests patch them on this module). display_hermes_home is
 # imported lazily at call sites (stale-module safety during hermes update).
@@ -35,7 +36,7 @@ from hermes_cli._startup_fast import project_root_str
 
 PROJECT_ROOT = Path(project_root_str())
 
-_DOCS_BASE = "https://hermes-agent.nousresearch.com/docs"
+
 _BRACKETED_PASTE_PATTERN = re.compile(r"\x1b\[\s*200~|\x1b\[\s*201~")
 
 
@@ -384,7 +385,7 @@ def setup_model_provider(config: dict, *, quick: bool = False):
     from hermes_cli.config import load_config, save_config
     print_header("Inference Provider")
     _info("Choose how to connect to your main chat model.",
-          f"   Guide: {_DOCS_BASE}/integrations/providers", None)
+          f"   Guide: {README_URL}", None)
     from hermes_cli.main import select_provider_and_model
     from hermes_cli.observability.shared_metrics_setup import provider_setup_surface
     try:
@@ -453,7 +454,7 @@ _TOOL_PROGRESS_HELP = (
 def setup_agent_settings(config: dict):
     """Configure agent behavior: iterations, progress display and compression."""
     print_header("Agent Settings")
-    _info(f"   Guide: {_DOCS_BASE}/user-guide/configuration", None)
+    _info(f"   Guide: {README_URL}", None)
 
     # ── Max Iterations ── (config.yaml is authoritative; never surface a stale legacy .env value)
     # If a legacy .env entry is still around (from pre-PR#18413 setups), prefer the config value so we don't

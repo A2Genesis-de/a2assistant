@@ -1,4 +1,5 @@
 import type { ModelOptionProvider } from '@hermes/shared'
+import { README_URL } from '@hermes/shared/repository'
 import { useStore } from '@nanostores/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 
@@ -119,7 +120,7 @@ const API_KEY_OPTIONS: ApiKeyOption[] = [
     id: 'local',
     name: 'Local / custom endpoint',
     envKey: 'OPENAI_BASE_URL',
-    docsUrl: 'https://github.com/NousResearch/hermes-agent#bring-your-own-endpoint',
+    docsUrl: README_URL,
     placeholder: 'http://127.0.0.1:8000/v1'
   }
 ]
