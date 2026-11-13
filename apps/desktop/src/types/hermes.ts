@@ -1805,16 +1805,12 @@ export interface StaleAuxAssignment {
   model: string
 }
 
-/** One skill-hub source (official index, GitHub, skills.sh, …) as reported by
+/** One skill-hub source (official, GitHub, well-known, URL) as reported by
  *  `GET /api/skills/hub/sources`. */
 export interface SkillHubSource {
   id: string
   label: string
-  available?: boolean
   rate_limited?: boolean
-  // False when the centralized index already covers this source, so the UI's
-  // per-source search fan-out skips it (avoids redundant external API calls).
-  searchable?: boolean
 }
 
 /** A searchable/installable hub skill from `GET /api/skills/hub/search`. */
@@ -1836,8 +1832,6 @@ export interface SkillHubInstalledEntry {
 
 export interface SkillHubSourcesResponse {
   sources: SkillHubSource[]
-  index_available: boolean
-  featured: SkillHubResult[]
   installed: Record<string, SkillHubInstalledEntry>
 }
 

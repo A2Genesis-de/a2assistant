@@ -3637,7 +3637,7 @@ tips:
   t064: "a2assistant sessions browse abre um seletor interativo de sessões com busca."
   t065: "a2assistant sessions stats mostra a contagem de sessões por plataforma e o tamanho do banco de dados."
   t066: "a2assistant sessions prune --older-than 30 limpa sessões antigas."
-  t067: "a2assistant skills search react --source skills-sh pesquisa no diretório público skills.sh."
+  t067: "a2assistant skills search pdf --source official pesquisa nas skills opcionais oficiais."
   t068: "a2assistant skills check verifica se as skills instaladas do hub têm atualizações upstream."
   t069: "a2assistant skills tap add myorg/skills-repo adiciona uma fonte personalizada de skills no GitHub."
   t070: "a2assistant skills snapshot export setup.json exporta sua configuração de skills para backup ou compartilhamento."

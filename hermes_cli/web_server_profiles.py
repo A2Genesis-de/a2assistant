@@ -467,11 +467,7 @@ def _installed_hub_identifiers(profile: Optional[str] = None) -> dict:
     """identifier -> installed lock entry for hub-installed skills (UI marks installed search
     results and catalog cards). Scoped to ``profile``'s skills/.hub/lock.json when given —
     HubLockFile takes an explicit path, sidestepping the import-time LOCK_FILE binding. {} when
-    unreadable.
-
-    Keyed by ``HubLockFile.by_identifier``, so a ClawHub install also answers to the
-    ``clawhub/<slug>`` id a catalog card installs. Search lists a ClawHub skill by its bare
-    slug; a client looks such a hit up under that card id, going by the hit's source."""
+    unreadable."""
     try:
         from tools.skills_hub import HubLockFile
         if _is_current_profile(profile):

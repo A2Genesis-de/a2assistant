@@ -3637,7 +3637,7 @@ tips:
   t064: "a2assistant sessions browse maak 'n interaktiewe sessiekieser met soekfunksie oop."
   t065: "a2assistant sessions stats wys sessietellings per platform en die databasisgrootte."
   t066: "a2assistant sessions prune --older-than 30 ruim ou sessies op."
-  t067: "a2assistant skills search react --source skills-sh deursoek die openbare skills.sh-gids."
+  t067: "a2assistant skills search pdf --source official deursoek die amptelike opsionele skills."
   t068: "a2assistant skills check kyk of geïnstalleerde hub-vaardighede stroomop-opdaterings het."
   t069: "a2assistant skills tap add myorg/skills-repo voeg 'n eie GitHub-vaardigheidsbron by."
   t070: "a2assistant skills snapshot export setup.json voer jou vaardigheidskonfigurasie uit vir rugsteun of deel."

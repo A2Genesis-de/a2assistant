@@ -276,7 +276,7 @@ export async function fetchCatalog(kind: CatalogKind): Promise<CatalogEntry[]> {
 const catalogQuery = (kind: CatalogKind) =>
   queryOptions({
     queryKey: ['public-catalog', kind],
-    queryFn: () => fetchCatalog(kind),
+    queryFn: () => (kind === 'skills' ? Promise.resolve([]) : fetchCatalog(kind)),
     staleTime: 30 * 60_000,
     // The skills snapshot parses to ~100k rows; release it once the page has
     // been left long enough that a revisit is a fresh browse anyway.

@@ -3637,7 +3637,7 @@ tips:
   t064: "a2assistant sessions browse는 검색 기능이 있는 대화형 세션 선택기를 열어요."
   t065: "a2assistant sessions stats는 플랫폼별 세션 수와 데이터베이스 크기를 보여줘요."
   t066: "a2assistant sessions prune --older-than 30은 오래된 세션을 정리해요."
-  t067: "a2assistant skills search react --source skills-sh는 skills.sh 공개 디렉터리를 검색해요."
+  t067: "a2assistant skills search pdf --source official는 공식 선택 스킬을 검색해요."
   t068: "a2assistant skills check는 설치된 허브 스킬의 업스트림 업데이트를 검사해요."
   t069: "a2assistant skills tap add myorg/skills-repo는 사용자 지정 GitHub 스킬 소스를 추가해요."
   t070: "a2assistant skills snapshot export setup.json은 백업이나 공유를 위해 스킬 설정을 내보내요."

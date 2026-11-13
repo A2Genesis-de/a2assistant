@@ -1596,15 +1596,10 @@ export interface SkillHubSource {
   label: string;
   /** GitHub only: whether the API is currently rate-limited. */
   rate_limited?: boolean;
-  /** hermes-index only: whether the centralized index loaded. */
-  available?: boolean;
 }
 
 export interface SkillHubSourcesResponse {
   sources: SkillHubSource[];
-  index_available: boolean;
-  /** Featured/popular skills from the centralized index (zero extra API calls). */
-  featured: SkillHubResult[];
   installed: Record<string, SkillHubInstalledEntry>;
 }
 

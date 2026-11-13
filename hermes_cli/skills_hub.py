@@ -23,17 +23,8 @@ _VALID_NAME_RE = re.compile(r"^[a-z][a-z0-9_-]*$")
 _VALID_CATEGORY_RE = re.compile(r"^[a-z][a-z0-9_/-]*$")
 _TRUST_STYLE = {"builtin": "bright_cyan", "trusted": "green", "community": "yellow", "local": "dim"}
 _TRUST_RANK = {"builtin": 3, "trusted": 2, "community": 1}
-# Browse per-source limits. With the centralized index available, parallel_search_sources
-# serves everything from "hermes-index", so that entry MUST exceed the whole catalog or browse
-# silently caps the hub (50 and 5000 both truncated). The index is disk-cached and browse
-# paginates client-side. The external limits only apply when the index is unavailable.
-_BROWSE_LIMITS = {
-    "hermes-index": 1000000, "official": 200, "skills-sh": 200, "well-known": 50,
-    "github": 200, "clawhub": 500, "lobehub": 500, "browse-sh": 500}
-# Programmatic (TUI gateway) browse keeps its own, lower caps.
-_BROWSE_API_LIMITS = {
-    "hermes-index": 5000, "official": 100, "skills-sh": 100, "well-known": 25,
-    "github": 100, "clawhub": 50, "lobehub": 50, "browse-sh": 500}
+_BROWSE_LIMITS = {"official": 200, "well-known": 50, "github": 200}
+_BROWSE_API_LIMITS = {"official": 100, "well-known": 25, "github": 100}
 _EXTRA_META_LABELS = (
     ("repo_url", "Repo"), ("detail_url", "Detail Page"), ("index_url", "Index"),
     ("endpoint", "Endpoint"), ("install_command", "Install Command"),
@@ -194,16 +185,16 @@ def _slug_key(text: str) -> str:
 
 
 def _identifier_slug(identifier: str) -> str:
-    """Trailing path segment of an identifier ("skills-sh/org/repo/blender-animation" -> the slug)."""
+    """Trailing path segment of an identifier ("org/repo/skills/blender-animation" -> the slug)."""
     return str(identifier or "").split("/")[-1]
 
 
 def _exact_name_hits(results, name: str):
     """Results that ARE `name`: display name as written first, then — only when that finds nothing —
     the separator-insensitive form of the display name or of the identifier's trailing slug. Catalogs
-    that carry a prettified title (ClawHub rows read "Blender Bpy Enhanced") or a path-shaped
-    identifier ("@org/my-skill") match by neither, so `hermes skills install my-skill` refused with
-    "No exact match" while printing that very slug on the suggestion line."""
+    that carry a prettified title or a path-shaped identifier match by neither, so
+    `hermes skills install my-skill` refused with "No exact match" while printing that very slug on
+    the suggestion line."""
     query = str(name or "").strip().lower()
     hits = [r for r in results if str(r.name or "").strip().lower() == query]
     if hits:
@@ -256,8 +247,8 @@ def _resolve_short_name(name: str, sources, console: Console, attempt: Optional[
 
 
 def _resolve_source_meta_and_bundle(identifier: str, sources):
-    """(meta, bundle, source) from ONE adapter — mixing skills.sh metadata with a ClawHub zip of
-    a same-named skill once showed the wrong SKILL.md. Falls back to the first meta-only hit.
+    """(meta, bundle, source) from ONE adapter — mixing one registry's metadata with another's
+    bundle of a same-named skill once showed the wrong SKILL.md. Falls back to the first meta-only hit.
     """
     first_meta = None
     first_meta_source = None
@@ -382,7 +373,7 @@ def do_search(query: str, source: str = "all", limit: int = 10, console: Optiona
 
 
 def _rank_and_page(all_results, page: int, page_size: int):
-    """Dedupe by identifier (higher trust wins; names are NOT unique across browse-sh sites),
+    """Dedupe by identifier (higher trust wins; names are NOT unique across taps),
     sort official-first, slice one page -> (deduped, page_items, page, total_pages, start)."""
     rank = lambda r: _TRUST_RANK.get(r.trust_level, 0)
     seen: dict = {}
@@ -474,8 +465,6 @@ def browse_skills(page: int = 1, page_size: int = 20, source: str = "all") -> di
     """Paginated hub browse for programmatic callers (e.g. TUI gateway)."""
     from tools.skills_hub_search import parallel_search_sources
     page_size = max(1, min(page_size, 100))
-    # The shared parallel walker carries the index-aware source-skip logic — querying
-    # hermes-index AND the external APIs at once would double-count every skill.
     all_results, _counts, _timed_out = parallel_search_sources(
         _sources(), query="", per_source_limits=_BROWSE_API_LIMITS,
         source_filter=source, overall_timeout=30)
@@ -747,17 +736,14 @@ def _install_bundled(c: Console, name: str, invalidate_cache: bool) -> tuple:
 
 
 def _registry_prefixes() -> tuple:
-    """Identifier prefixes each adapter accepts, from the adapters themselves (``<SOURCE_ID>/``, the
-    skills.sh spellings, ``well-known:``), so a fetch no adapter answered still names the registry
-    it was meant for. Bare owner/repo/path stays unresolved."""
-    from tools.skills_hub_clawhub import ClawHubSource
+    """Identifier prefixes each adapter accepts, from the adapters themselves (``<SOURCE_ID>/``,
+    ``well-known:``), so a fetch no adapter answered still names the registry it was meant for.
+    Bare owner/repo/path stays unresolved."""
     from tools.skills_hub_official import OptionalSkillSource
-    from tools.skills_hub_skillssh import SkillsShSource
-    from tools.skills_hub_sources import BrowseShSource, LobeHubSource, UrlSource, WellKnownSkillSource
+    from tools.skills_hub_sources import UrlSource, WellKnownSkillSource
 
     return (
-        *((f"{cls.SOURCE_ID}/", cls.SOURCE_ID) for cls in (OptionalSkillSource, ClawHubSource, LobeHubSource, BrowseShSource)),
-        *((prefix, SkillsShSource.SOURCE_ID) for prefix in SkillsShSource._ID_PREFIX_ALIASES),
+        (f"{OptionalSkillSource.SOURCE_ID}/", OptionalSkillSource.SOURCE_ID),
         (f"{WellKnownSkillSource.SOURCE_ID}:", WellKnownSkillSource.SOURCE_ID),
         ("http://", UrlSource.SOURCE_ID), ("https://", UrlSource.SOURCE_ID),
     )
@@ -1338,7 +1324,7 @@ def _read_frontmatter(skill_md: str) -> dict:
 
 def do_publish(skill_path: str, target: str = "github", repo: str = "",
                console: Optional[Console] = None) -> None:
-    """Publish a local skill to a registry (GitHub PR or ClawHub submission)."""
+    """Publish a local skill to a GitHub repository as a pull request."""
     from tools.skills_hub import SKILLS_DIR
     from tools.skills_hub_github import GitHubAuth
     from tools.skills_guard import scan_skill, format_scan_report
@@ -1376,11 +1362,8 @@ def do_publish(skill_path: str, target: str = "github", repo: str = "",
             return
         c.print(f"[bold]Publishing '{name}' to {repo}...[/]")
         _report_pair(c, *_github_publish(path, name, repo, auth))
-    elif target == "clawhub":
-        c.print("[yellow]ClawHub publishing is not yet supported. "
-                "Submit manually at https://clawhub.ai/submit[/]\n")
     else:
-        c.print(f"[bold red]Unknown target:[/] {target}. Use 'github' or 'clawhub'.\n")
+        c.print(f"[bold red]Unknown target:[/] {target}. Use 'github'.\n")
 
 
 def _github_publish(skill_path: Path, skill_name: str, target_repo: str, auth) -> tuple:
@@ -1673,7 +1656,7 @@ _SLASH_ACTIONS = {
 
 # Actions that need at least one argument -> usage lines printed when called bare.
 _SLASH_USAGE = {
-    "search": ("[bold red]Usage:[/] /skills search <query> [--source skills-sh|github|official|nvidia|openai|anthropic|huggingface] [--limit N] [--json]\n",),
+    "search": ("[bold red]Usage:[/] /skills search <query> [--source github|official|well-known|nvidia|openai|anthropic|huggingface] [--limit N] [--json]\n",),
     "install": ("[bold red]Usage:[/] /skills install <identifier-or-url> [--name <name>] [--category <cat>] [--force] [--now]\n",),
     "inspect": ("[bold red]Usage:[/] /skills inspect <identifier>\n",),
     "uninstall": ("[bold red]Usage:[/] /skills uninstall <name> [--now]\n",),

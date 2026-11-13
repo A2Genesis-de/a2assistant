@@ -112,19 +112,17 @@ class HostInstaller:
                             "identifier": meta.identifier or identifier}
         return None
 
-    def install_skill(self, identifier: str, *, force: bool, source: Optional[str] = None) -> dict[str, Any]:
+    def install_skill(self, identifier: str, *, force: bool) -> dict[str, Any]:
         """Install headless; ``{name, already_installed}``. ``do_install`` reports only by printing, so
         success is read from the hub lock file and failure from its last line. A skill that is already
-        installed (force off) is left as it is and reported so. ``source`` is the hub source that
-        resolved ``identifier``; the lock records a ClawHub skill as ``@owner/slug``, so a ClawHub
-        hit's bare slug is read back through its ``clawhub/<slug>`` card id."""
+        installed (force off) is left as it is and reported so."""
         from rich.console import Console
 
         from hermes_cli.skills_hub import do_install
-        from tools.skills_hub import HubLockFile, installed_entry
+        from tools.skills_hub import HubLockFile
 
         def entry() -> Optional[dict[str, Any]]:
-            return installed_entry(HubLockFile().by_identifier(), identifier, source)
+            return HubLockFile().by_identifier().get(identifier)
 
         before = entry()
         if before is not None and not force:
@@ -269,7 +267,7 @@ class _Runner:
                 meta = self.facts[target.name]
                 identifier = str(meta.get("identifier") or target.name)
                 step(InstallPhase.downloading)
-                return self.installer.install_skill(identifier, force=options["force"], source=meta.get("source"))
+                return self.installer.install_skill(identifier, force=options["force"])
             result = self.installer.install_plugin(target.name, force=options["force"], enable=options["enable"],
                                                    ref=options["ref"], on_step=step)
         if not result.get("ok"):

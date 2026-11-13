@@ -42,20 +42,6 @@ describe('public catalog data', () => {
     })
   })
 
-  it('keeps catalog identity separate from the source-qualified skill install target', () => {
-    const [entry] = parseCatalog('skills', [
-      {
-        name: 'Apple Design',
-        identifier: 'apple-design',
-        source: 'ClawHub',
-        installCmd: 'hermes skills install clawhub/apple-design'
-      }
-    ])
-
-    expect(entry.identifier).toBe('apple-design')
-    expect(entry.installIdentifier).toBe('clawhub/apple-design')
-  })
-
   it('keeps each plugin tier, pinned install target, and published detail metadata together', () => {
     const rows = ['official', 'community', 'future-tier'].map(tier => ({
       name: `${tier}-plugin`,

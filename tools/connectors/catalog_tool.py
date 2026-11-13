@@ -174,12 +174,12 @@ def _plugin_rows(query: str) -> list[dict[str, Any]]:
 
 
 def _skill_rows(query: str) -> list[dict[str, Any]]:
-    from tools.skills_hub import HubLockFile, installed_entry
+    from tools.skills_hub import HubLockFile
     from tools.skills_hub_github import GitHubAuth
     from tools.skills_hub_search import create_source_router, unified_search
 
     installed = HubLockFile().by_identifier()
     return [{"id": r.identifier, "kind": "skill", "display": r.name,
              "tier": "official" if r.source == "official" else "community", "platforms": [],
-             "installed": installed_entry(installed, r.identifier, r.source) is not None}
+             "installed": r.identifier in installed}
             for r in unified_search(query, create_source_router(GitHubAuth()), limit=SEARCH_LIMIT)]

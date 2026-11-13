@@ -260,11 +260,7 @@ def extension_registry(kind: str, registry: Any) -> str:
     """The skills-hub adapter id for a skill row; plugin and MCP rows are ``none``."""
     if kind != "skill":
         return "none"
-    # The hub's own alias table (`--source skills.sh`); already imported by the install it records.
-    from tools.skills_hub_install import _SOURCE_ID_ALIASES
-
     value = _norm(registry) or "none"
-    value = _SOURCE_ID_ALIASES.get(value, value)
     return value if value in contract.EXTENSION_REGISTRIES else "other"
 # ---- end iuf c1 ----
 

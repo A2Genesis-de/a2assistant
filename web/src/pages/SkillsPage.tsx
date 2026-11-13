@@ -65,7 +65,6 @@ import { en } from "@/i18n/en";
 import { usePageHeader } from "@/contexts/usePageHeader";
 import { PluginSlot } from "@/plugins";
 import { errorMessage } from "@/lib/api-error";
-import { installedHubEntry } from "@/lib/skill-hub-installed";
 
 /* ------------------------------------------------------------------ */
 /*  Types & helpers                                                    */
@@ -903,9 +902,8 @@ function HubBrowser({
   const [timedOut, setTimedOut] = useState<string[]>([]);
   const [searchMs, setSearchMs] = useState<number | null>(null);
 
-  // Landing state: which hubs are wired up + featured skills.
+  // Landing state: which hubs are wired up.
   const [sources, setSources] = useState<SkillHubSource[]>([]);
-  const [featured, setFeatured] = useState<SkillHubResult[]>([]);
   const [sourcesLoading, setSourcesLoading] = useState(true);
 
   // identifier -> installed entry (drives "Installed" badges).
@@ -919,7 +917,7 @@ function HubBrowser({
   // Detail dialog (preview + scan for a single skill).
   const [detail, setDetail] = useState<SkillHubResult | null>(null);
 
-  /* ---- Load connected hubs + featured skills on mount ---- */
+  /* ---- Load connected hubs on mount ---- */
   useEffect(() => {
     let cancelled = false;
     api
@@ -927,7 +925,6 @@ function HubBrowser({
       .then((r) => {
         if (cancelled) return;
         setSources(r.sources);
-        setFeatured(r.featured);
         setInstalled(r.installed);
       })
       .catch(() => {
@@ -1025,7 +1022,7 @@ function HubBrowser({
   }, [showToast, profile]);
 
   const isInstalled = useCallback(
-    (hit: SkillHubResult) => Boolean(installedHubEntry(installed, hit)),
+    (hit: SkillHubResult) => hit.identifier in installed,
     [installed],
   );
 
@@ -1103,33 +1100,12 @@ function HubBrowser({
         </Card>
       )}
 
-      {/* ── Landing: featured skills (before any search) ── */}
+      {/* ── Landing (before any search) ── */}
       {showLanding && (
         <>
           {sourcesLoading ? (
             <div className="flex items-center justify-center py-12">
               <Spinner className="text-xl text-primary" />
-            </div>
-          ) : featured.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-2 px-1">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-                <span className="font-mondwest text-display text-xs tracking-[0.12em] text-text-secondary uppercase">
-                  Featured skills
-                </span>
-                <span className="text-xs text-text-tertiary">
-                  from the skills index — search above for thousands more
-                </span>
-              </div>
-              {featured.map((r) => (
-                <HubResultCard
-                  key={r.identifier}
-                  result={r}
-                  installed={isInstalled(r)}
-                  onOpen={() => setDetail(r)}
-                  onInstall={() => void install(r.identifier)}
-                />
-              ))}
             </div>
           ) : (
             <Card className="rounded-none">
@@ -1220,20 +1196,16 @@ function ConnectedHubs({
         Connected hubs:
       </span>
       {sources.map((s) => {
-        const down =
-          (s.id === "hermes-index" && s.available === false) ||
-          (s.id === "github" && s.rate_limited === true);
+        const down = s.id === "github" && s.rate_limited === true;
         return (
           <Badge
             key={s.id}
             tone={down ? "outline" : "secondary"}
             className={cn("text-xs", down && "opacity-60")}
             title={
-              s.id === "github" && s.rate_limited
+              down
                 ? "GitHub API rate-limited — set GITHUB_TOKEN to raise the limit"
-                : s.id === "hermes-index" && s.available === false
-                  ? "Centralized index unavailable — falling back to live sources"
-                  : undefined
+                : undefined
             }
           >
             {s.label}

@@ -3637,7 +3637,7 @@ tips:
   t064: "a2assistant sessions browse يفتح منتقي جلسات تفاعليًا مع بحث."
   t065: "a2assistant sessions stats يعرض عدد الجلسات حسب المنصة وحجم قاعدة البيانات."
   t066: "a2assistant sessions prune --older-than 30 ينظّف الجلسات القديمة."
-  t067: "a2assistant skills search react --source skills-sh يبحث في دليل skills.sh العام."
+  t067: "a2assistant skills search pdf --source official يبحث في المهارات الرسمية الاختيارية."
   t068: "a2assistant skills check يفحص مهارات المركز المثبّتة بحثًا عن تحديثات من المصدر."
   t069: "a2assistant skills tap add myorg/skills-repo يضيف مصدر مهارات مخصصًا من GitHub."
   t070: "a2assistant skills snapshot export setup.json يصدّر إعدادات مهاراتك للنسخ الاحتياطي أو المشاركة."

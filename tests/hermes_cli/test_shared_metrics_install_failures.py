@@ -63,8 +63,8 @@ def test_a_raised_install_error_is_classified_by_type_and_never_carries_its_text
         assert dims["failure_class"] == expected, (kind, error)
         assert leaky not in json.dumps(dims)
         assert contract.counter_dimensions_are_valid(contract.EXTENSION_INSTALL_METRIC, dims)
-    ok = fields.extension_install_fields(kind="skill", source="hub", name="x", outcome="success", registry="skills.sh")
-    assert (ok["failure_class"], ok["registry"]) == ("none", "skills-sh")
+    ok = fields.extension_install_fields(kind="skill", source="hub", name="x", outcome="success", registry="github")
+    assert (ok["failure_class"], ok["registry"]) == ("none", "github")
     assert fields.extension_install_fields(kind="plugin", source="url", name=None, outcome="ok")["registry"] == "none"
 
 
@@ -217,8 +217,8 @@ def test_a_declined_dependency_consent_carries_its_class_not_its_copy(monkeypatc
 
 
 @pytest.mark.parametrize(("identifier", "registry"), [
-    ("skills.sh/acme/x", "skills-sh"), ("skils-sh/acme/x", "skills-sh"), ("OFFICIAL/x/y", "official"),
-    ("lobehub/x", "lobehub"), ("well-known:https://h/x", "well-known"), ("https://h/.well-known/skills/x", "well-known"),
+    ("OFFICIAL/x/y", "official"),
+    ("well-known:https://h/x", "well-known"), ("https://h/.well-known/skills/x", "well-known"),
     ("https://h/a/SKILL.md", "url"), ("acme-corp/skills/x", "unresolved"),
 ])
 def test_an_unserved_identifier_names_the_registry_its_adapter_accepts(identifier, registry):

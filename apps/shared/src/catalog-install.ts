@@ -19,9 +19,7 @@ export function skillCatalogInstallIdentifier(skill: SkillCatalogTarget): string
     return skill.source === 'built-in' ? null : skill.source === 'optional' ? `official/${skill.name}` : skill.name
   }
 
-  return skill.source.toLowerCase() === 'clawhub' && !identifier.startsWith('clawhub/')
-    ? `clawhub/${identifier}`
-    : identifier
+  return identifier
 }
 
 export function skillCatalogInstallUrl(skill: SkillCatalogTarget): string | null {

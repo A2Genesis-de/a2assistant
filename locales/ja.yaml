@@ -3637,7 +3637,7 @@ tips:
   t064: "a2assistant sessions browse は検索付きの対話型セッションピッカーを開きます。"
   t065: "a2assistant sessions stats はプラットフォーム別のセッション数とデータベースのサイズを表示します。"
   t066: "a2assistant sessions prune --older-than 30 は古いセッションを整理します。"
-  t067: "a2assistant skills search react --source skills-sh は skills.sh の公開ディレクトリを検索します。"
+  t067: "a2assistant skills search pdf --source official は公式のオプションスキルを検索します。"
   t068: "a2assistant skills check はインストール済みのハブスキルに上流の更新がないかスキャンします。"
   t069: "a2assistant skills tap add myorg/skills-repo はカスタムの GitHub スキルソースを追加します。"
   t070: "a2assistant skills snapshot export setup.json はバックアップや共有のためにスキル設定をエクスポートします。"

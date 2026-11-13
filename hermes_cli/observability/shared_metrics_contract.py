@@ -486,9 +486,7 @@ EXTENSION_FAILURE_CLASSES = (
 # tools/skills_hub_search.py::create_source_router builds. ``none`` = no adapter was involved
 # (bundled restores, plugin and MCP rows), ``unresolved`` = a hub lookup no adapter answered,
 # ``other`` = an adapter id this list does not name.
-EXTENSION_REGISTRY_IDS = frozenset({
-    "browse-sh", "clawhub", "github", "hermes-index", "lobehub", "official", "skills-sh", "url", "well-known",
-})
+EXTENSION_REGISTRY_IDS = frozenset({"github", "official", "url", "well-known"})
 EXTENSION_REGISTRIES = EXTENSION_REGISTRY_IDS | frozenset({"none", "other", "unresolved"})
 # Why a `hermes update` run failed or was refused, derived from the FINAL receipt only
 # (shared_metrics_update.update_failure_class); ``none`` unless outcome is failed/refused/partial.

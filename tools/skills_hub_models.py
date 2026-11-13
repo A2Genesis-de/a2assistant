@@ -1,7 +1,6 @@
 """Skills Hub data models, path validators, and SKILL.md helpers. Leaf module (no imports from
 tools.skills_hub) so every source adapter module can import it at top level without cycles."""
 
-import json
 import logging
 import re
 from abc import ABC, abstractmethod
@@ -10,7 +9,6 @@ from pathlib import PurePosixPath
 from typing import Any, Callable, Dict, Iterable, List, Optional, Union
 from urllib.parse import unquote, urlsplit
 
-import httpx
 import hermes_yaml as yaml
 
 logger = logging.getLogger("tools.skills_hub")
@@ -28,7 +26,7 @@ class SkillMeta:
     """Minimal metadata returned by search results."""
     name: str
     description: str
-    source: str           # "official", "github", "clawhub", "lobehub"
+    source: str           # "official", "github", "well-known", "url"
     identifier: str       # source-specific ID (e.g. "openai/skills/skill-creator")
     trust_level: str      # "builtin" | "trusted" | "community"
     repo: Optional[str] = None
@@ -74,40 +72,10 @@ def _memo_json(key: str, compute: Callable[[], Any], valid: Callable[[Any], bool
     return data
 
 
-def _get_json(url: str, *, timeout: int = 20, **kwargs) -> Optional[Any]:
-    """Plain (unguarded) GET + JSON decode; None on non-200 or transport/decode error."""
-    try:
-        resp = hub()._skills_hub_http_get(url, timeout=timeout, **kwargs)
-        return resp.json() if resp.status_code == 200 else None
-    except (httpx.HTTPError, json.JSONDecodeError):
-        return None
-
-
-def _get_text(url: str, *, timeout: int = 20, **kwargs) -> Optional[str]:
-    """Plain (unguarded) GET; body text on 200, None on any other status or transport error."""
-    try:
-        resp = hub()._skills_hub_http_get(url, timeout=timeout, **kwargs)
-    except httpx.HTTPError:
-        return None
-    return resp.text if resp.status_code == 200 else None
-
-
 def _matches_query(query_lower: str, *fields: Any) -> bool:
     """Case-insensitive substring match against joined fields (lists space-joined; empty query matches all)."""
     parts = [" ".join(str(t) for t in f) if isinstance(f, list) else str(f) for f in fields]
     return query_lower in " ".join(parts).lower()
-
-
-def _first_matching(query_lower: str, items: Iterable[Any], fields_of: Callable[[Any], tuple],
-                    to_meta: Callable[[Any], Optional[SkillMeta]], limit: int) -> list[SkillMeta]:
-    """Substring-search ``items`` in order, converting hits with ``to_meta`` until ``limit``."""
-    results: list[SkillMeta] = []
-    for item in items:
-        if _matches_query(query_lower, *fields_of(item)) and (meta := to_meta(item)):
-            results.append(meta)
-        if len(results) >= limit:
-            break
-    return results
 
 
 TRUST_RANK = {"builtin": 2, "trusted": 1, "community": 0}
@@ -115,7 +83,7 @@ TRUST_RANK = {"builtin": 2, "trusted": 1, "community": 0}
 
 def _dedupe_by_trust(results: Iterable[SkillMeta]) -> list[SkillMeta]:
     """Dedupe by identifier, keeping the higher-trust copy (first wins on ties). identifier is unique per
-    skill; name is not — two taps can publish same-named skills, and browse-sh reuses task names across sites."""
+    skill; name is not — two taps can publish same-named skills."""
     seen: dict[str, SkillMeta] = {}
     for r in results:
         kept = seen.get(r.identifier)
@@ -126,7 +94,7 @@ def _dedupe_by_trust(results: Iterable[SkillMeta]) -> list[SkillMeta]:
 
 class SkillSource(ABC):
     """Abstract base for all skill registry adapters. ``SOURCE_ID`` is the unique source id (e.g. 'github',
-    'clawhub'); ``TRUST_LEVEL`` the trust every identifier gets unless ``trust_level_for`` is overridden."""
+    'official'); ``TRUST_LEVEL`` the trust every identifier gets unless ``trust_level_for`` is overridden."""
 
     SOURCE_ID: str = ""
     TRUST_LEVEL: str = "community"

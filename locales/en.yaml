@@ -3751,7 +3751,7 @@ tips:
   t064: "hermes sessions browse opens an interactive session picker with search."
   t065: "hermes sessions stats shows session counts by platform and database size."
   t066: "hermes sessions prune --older-than 30 cleans up old sessions."
-  t067: "hermes skills search react --source skills-sh searches the skills.sh public directory."
+  t067: "hermes skills search pdf --source official searches the official optional skills."
   t068: "hermes skills check scans installed hub skills for upstream updates."
   t069: "hermes skills tap add myorg/skills-repo adds a custom GitHub skill source."
   t070: "hermes skills snapshot export setup.json exports your skill configuration for backup or sharing."

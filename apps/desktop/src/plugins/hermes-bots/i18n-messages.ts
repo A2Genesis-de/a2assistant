@@ -302,7 +302,6 @@ export type BotsMessages = {
     installed: (name: string) => string
     installFailed: (name: string) => string
     searchHint: string
-    resizeHint: string
     addServerFailed: string
     noTarget: string
     setKeyFailed: (name: string) => string

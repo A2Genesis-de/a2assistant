@@ -3637,7 +3637,7 @@ tips:
   t064: "Osclaíonn a2assistant sessions browse roghnóir seisiún idirghníomhach le cuardach."
   t065: "Taispeánann a2assistant sessions stats líon na seisiún de réir ardáin agus méid an bhunachair sonraí."
   t066: "Glanann a2assistant sessions prune --older-than 30 seanseisiúin."
-  t067: "Cuardaíonn a2assistant skills search react --source skills-sh eolaire poiblí skills.sh."
+  t067: "Cuardaíonn a2assistant skills search pdf --source official na scileanna roghnacha oifigiúla."
   t068: "Scanann a2assistant skills check scileanna mol suiteáilte le haghaidh nuashonruithe ón bhfoinse."
   t069: "Cuireann a2assistant skills tap add myorg/skills-repo foinse scileanna GitHub shaincheaptha leis."
   t070: "Easpórtálann a2assistant skills snapshot export setup.json do chumraíocht scileanna le haghaidh cúltaca nó roinnte."

@@ -289,8 +289,6 @@ def test_inspect_reuses_one_ssrf_safe_client_for_metadata_and_bundle(monkeypatch
     """A preview's (and an install's) sequential resolver calls must share one guarded connection pool."""
     import hermes_cli.skills_hub as cli_hub
     import tools.skills_hub as hub
-    import tools.skills_hub_search as search
-    import tools.skills_hub_clawhub as clawhub
     from tools.skills_hub_models import SkillBundle, SkillMeta
 
     clients = []
@@ -321,8 +319,6 @@ def test_inspect_reuses_one_ssrf_safe_client_for_metadata_and_bundle(monkeypatch
 
         def inspect(self, _identifier):
             hub._guarded_http_get("https://example.com/metadata")
-            # The Hermes-index fetch must ride the same pool (no cache → real GET).
-            assert search._load_hermes_index() == {"skills": []}
             return SkillMeta("example", "metadata", "test", "example/id", "community")
 
         def fetch(self, _identifier):
@@ -339,8 +335,7 @@ def test_inspect_reuses_one_ssrf_safe_client_for_metadata_and_bundle(monkeypatch
     monkeypatch.setattr(hub, "create_ssrf_safe_client", create_client, raising=False)
     monkeypatch.setattr(hub, "is_safe_url", lambda _url: True)
     monkeypatch.setattr(hub, "check_website_access", lambda _url: None)
-    monkeypatch.setattr(search, "_hermes_index_cache_file", lambda: tmp_path / "hermes-index.json")
-    monkeypatch.setattr(search.httpx, "get", lambda *_a, **_k: pytest.fail("index fetch bypassed the pool"))
+
 
     result = cli_hub.inspect_skill("example/id")
 
@@ -680,8 +675,7 @@ def _stub_search(monkeypatch, results):
 
 
 @pytest.mark.parametrize("identifier", [
-    "computer-use", "NousResearch/hermes-agent/skills/productivity/pdf",
-    "skills-sh/nousresearch/hermes-agent/google-workspace", "blender-bpy-enhanced"])
+    "computer-use", "A2Genesis-de/a2assistant/skills/productivity/pdf", "blender-bpy-enhanced"])
 def test_install_by_name_resolves_to_the_skill_it_names(monkeypatch, tmp_path, identifier):
     """`hermes skills install <bundled skill>` failed every time: the name resolved to a stranger's
     same-named hub skill or an ambiguity table, and this repo's own copy was rescanned as community
